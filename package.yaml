@@ -1,0 +1,64 @@
+name: warehouse-planner
+version: '0.0.1'
+license: UnspecifiedLicense
+dependencies:
+- containers
+- base
+- text
+- cassava >=0.4.5 && <0.5
+- classy-prelude >=0.10.2
+- bytestring >=0.9 && <0.11
+- directory >=1.1 && <1.4
+- vector
+- split
+- cryptohash
+- regex-tdfa >= 1.2.2 && < 1.3
+- regex-base
+- regex-compat-tdfa
+- diagrams-lib >= 1.4.1.2 && < 1.5
+- diagrams-cairo >= 1.4 && < 1.5
+- diagrams-svg >= 1.4 && < 1.5
+- parsec >= 3.1 && < 3.2
+- Glob
+- mtl
+- colour >= 2.3.3 && < 2.4
+- palette >= 0.3 && < 0.4
+- filepath >= 1.4.1.1  && < 1.5
+- time
+- tabular >= 0.2.2.7 && < 0.3
+- ghc
+- mono-traversable
+  
+language: GHC2021
+default-extensions:
+- BlockArguments
+- FlexibleInstances
+- NoImplicitPrelude
+- OverloadedStrings
+- PartialTypeSignatures
+- PatternGuards
+- PatternSynonyms
+- RecordWildCards
+- TypeFamilies
+- ViewPatterns
+- MultiWayIf
+- LambdaCase
+  
+library:
+  source-dirs:
+  - src
+  - ./.
+    
+tests:
+  test:
+    main: Spec.hs
+    source-dirs: test
+    ghc-options:
+    - -w
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - hspec >=2.0.0
+    - warehouse-planner
+ 
