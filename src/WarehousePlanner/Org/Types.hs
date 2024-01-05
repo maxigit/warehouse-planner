@@ -1,5 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
-module WarehousePlanner.Exec.Org.Types where
+module WarehousePlanner.Org.Types where
 
 import ClassyPrelude
 

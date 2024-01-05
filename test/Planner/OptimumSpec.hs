@@ -2,7 +2,7 @@ module Planner.OptimumSpec where
 
 import ClassyPrelude
 import Test.Hspec
-import WarehousePlanner.Exec.Org.Types
+import WarehousePlanner.Org.Types
 import WarehousePlanner.Base
 
 spec :: Spec

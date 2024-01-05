@@ -1,6 +1,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# OPTIONS_GHC -Wno-orphans #-}
-module WarehousePlanner.Exec.Colour
+module WarehousePlanner.Colour
 ( readFromPalette
 )
 where

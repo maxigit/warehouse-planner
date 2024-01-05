@@ -169,7 +169,7 @@ renderBox boxStyling shelf box = do
     return $ [(3, diagram),
               (2, offsetBar backBag),
               (1, offsetBar boxBar)]
-pies :: _radius -> [Colour Double] -> Diagram B 
+pies :: Double -> [Colour Double] -> Diagram B 
 pies _ [] = mempty
 pies radius (col1:colours) = let
   angle = 1  / fromIntegral (length colours + 1)

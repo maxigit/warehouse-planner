@@ -12,13 +12,14 @@ build-type:     Simple
 library
   exposed-modules:
       WarehousePlanner.Base
+      WarehousePlanner.Colour
       WarehousePlanner.Csv
       WarehousePlanner.Display
-      WarehousePlanner.Exec.Colour
-      WarehousePlanner.Exec.Org.Internal
-      WarehousePlanner.Exec.Org.Types
       WarehousePlanner.Expr
       WarehousePlanner.Optimum
+      WarehousePlanner.Org.Exec
+      WarehousePlanner.Org.Internal
+      WarehousePlanner.Org.Types
       WarehousePlanner.Rearrange
       WarehousePlanner.Report
       WarehousePlanner.ShelfOp

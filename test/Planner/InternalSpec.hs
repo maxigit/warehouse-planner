@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Planner.InternalSpec where
 
-import WarehousePlanner.Exec.Org.Types
-import WarehousePlanner.Exec.Org.Internal
+import WarehousePlanner.Org.Types
+import WarehousePlanner.Org.Internal
 import Test.Hspec
 import ClassyPrelude
 

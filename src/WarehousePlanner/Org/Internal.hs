@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-module WarehousePlanner.Exec.Org.Internal
+module WarehousePlanner.Org.Internal
 ( scenarioKey
 , scenarioLayoutSize
 , runWH
@@ -26,7 +26,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Csv
-import WarehousePlanner.Exec.Org.Types
+import WarehousePlanner.Org.Types
 import Control.Monad.ST (stToIO)
 import Control.Monad.State (evalStateT,runStateT)
 import Control.Monad.Except (ExceptT(..), runExceptT)
@@ -495,6 +495,7 @@ importDispatch plannerDir dispatch (Section ImportH (Right content) _) = runExce
         return $ concat sss
       _ -> ExceptT $ dispatch main tags
   return $ concat sectionss
+importDispatch _ _ section = return $ Right [section]
 
 -- | Read local files using glob pattern(s)
 -- Uses the same directory as the planner
