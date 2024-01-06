@@ -12,7 +12,6 @@ build-type:     Simple
 library
   exposed-modules:
       WarehousePlanner.Base
-      WarehousePlanner.Colour
       WarehousePlanner.Csv
       WarehousePlanner.Display
       WarehousePlanner.Expr
@@ -25,6 +24,7 @@ library
       WarehousePlanner.ShelfOp
       WarehousePlanner.SimilarBy
       WarehousePlanner.Slices
+      WarehousePlanner.Styling
       WarehousePlanner.Type
   other-modules:
       Paths_warehouse_planner
