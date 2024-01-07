@@ -1,10 +1,14 @@
 {-# LANGUAGE ImplicitParams #-}
 module WarehousePlanner.Org.Exec 
 ( renderScenario
+, renderReport
 , execWithCache
 , execScenario
 , copyWarehouse
 , noCache
+, CacheFn(..)
+, cacheScenarioIn
+, cacheScenarioOut
 )where
 
 import ClassyPrelude

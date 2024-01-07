@@ -16,6 +16,7 @@ library
       WarehousePlanner.Display
       WarehousePlanner.Expr
       WarehousePlanner.Optimum
+      WarehousePlanner.Org
       WarehousePlanner.Org.Exec
       WarehousePlanner.Org.Internal
       WarehousePlanner.Org.Types
