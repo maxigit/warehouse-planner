@@ -135,6 +135,7 @@ parseDrawer h = case splitOn "_" (toLower h) of
                                       , ["moves", "and", "tags"]
                                       , ["movesandtags"]
                                       , ["mats"]
+                                      , ["mat"]
                                       , ["tags and moves"]
                                       , ["tagsandmoves"]
                                       , ["tam"]
