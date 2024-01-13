@@ -10,7 +10,7 @@ import WarehousePlanner.Org.Internal
             , contentPathM
             , execWH
             , fileValid
-            , importDispatch
+            , importDispatch, importDispatchDef
             , parseScenarioFile
             , readScenario
             , readScenarioFromPath

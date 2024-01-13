@@ -19,7 +19,7 @@ module WarehousePlanner.Org.Internal
 , writeHeader
 , addTagsToHeader
 , scenarioToFullText
-, importDispatch
+, importDispatch, importDispatchDef
 )
 where 
 
@@ -498,6 +498,9 @@ importDispatch plannerDir dispatch (Section ImportH (Right content) _) = runExce
   return $ concat sectionss
 importDispatch _ _ section = return $ Right [section]
 
+importDispatchDef :: (MonadIO io) => FilePath -> Section -> io (Either Text [Section])
+importDispatchDef plannerDir = importDispatch plannerDir err where
+  err main tags = return $ Left $ intercalate "#" (main:tags) <> " is not a valid import"
 -- | Read local files using glob pattern(s)
 -- Uses the same directory as the planner
 readLocalFiles :: (Monad io, MonadIO io) => FilePath -> String -> [Text] -> io (Either Text [Section])

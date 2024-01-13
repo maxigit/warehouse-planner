@@ -21,6 +21,7 @@ library
       WarehousePlanner.Org.Internal
       WarehousePlanner.Org.Types
       WarehousePlanner.Rearrange
+      WarehousePlanner.Repl
       WarehousePlanner.Report
       WarehousePlanner.ShelfOp
       WarehousePlanner.SimilarBy

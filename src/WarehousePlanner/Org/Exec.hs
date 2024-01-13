@@ -26,8 +26,8 @@ import Control.Monad.State (put,get)
 -- | Typeable version of Warehouse. Needed to be cached.
 
 instance Show (Warehouse s) where
-  show wh = "Warehouse : " ++ "\nBOXES:" ++ show (length $ boxes wh)
-                           ++ "\nSHELVES:\n" ++ show (length $ shelves wh)
+  show wh = "Warehouse : " ++ "\n\tBOXES: " ++ show (length $ boxes wh)
+                           ++ "\n\tSHELVES: " ++ show (length $ shelves wh)
                            -- ++ "\nGROUPS\n" ++ show (length $ shelfGroup wh)
 data WarehouseCache = WarehouseCache (Warehouse ()) deriving (Show, Typeable)
 -- * Caching 
