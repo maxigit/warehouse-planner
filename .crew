@@ -1,0 +1,5 @@
+stack:
+   cmd: real-stack
+   sub:
+     build: build --flag warehouse-planner:brick
+     repl: repl --flag warehouse-planner:brick

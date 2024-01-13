@@ -9,6 +9,11 @@ version:        1.0.0
 license:        UnspecifiedLicense
 build-type:     Simple
 
+flag brick
+  description: use brick to visualize warehouse
+  manual: False
+  default: False
+
 library
   exposed-modules:
       WarehousePlanner.Base
@@ -74,6 +79,15 @@ library
     , time
     , vector
   default-language: GHC2021
+  if flag(brick)
+    build-depends:
+        brick
+  if flag(brick)
+    other-modules:
+        WarehousePlanner.Brick
+        WarehousePlanner.Brick.Repl
+    hs-source-dirs:
+        brick
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -130,3 +144,6 @@ test-suite test
     , vector
     , warehouse-planner
   default-language: GHC2021
+  if flag(brick)
+    build-depends:
+        brick

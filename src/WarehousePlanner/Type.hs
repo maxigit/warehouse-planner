@@ -245,6 +245,10 @@ data ShelfGroup' s = ShelfGroup [ShelfGroup' s] Direction
                 deriving (Show, Functor, Foldable)
 type ShelfGroup s = ShelfGroup' (ShelfId s)
 
+toGroups :: ShelfGroup' s -> [ShelfGroup' s]
+toGroups (ShelfGroup groups _) = groups
+toGroups proxy = [proxy]
+
 -- | State containing bays of boxes
 -- boxOrientations : function returning a list
 -- of possible box orientiations within a shelf for a given box.

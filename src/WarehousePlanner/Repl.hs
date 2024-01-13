@@ -5,11 +5,12 @@ module WarehousePlanner.Repl
 , load
 , loads
 , summary
--- summary
+, exec
 ) where 
 import ClassyPrelude hiding(init)
 import WarehousePlanner.Base
 import WarehousePlanner.Org
+import WarehousePlanner.Csv (readWarehouse)
 import System.IO.Unsafe
 import qualified WarehousePlanner.Report as Report
 
@@ -49,7 +50,13 @@ loads paths = do
           let scenario = mconcat scenarios
           contentPath <- contentPathM
           wh <- execScenario scenario
-          writeIORef stateRef state { warehouse = wh }
+          groups <- case sLayout scenario of
+                      Nothing -> return $ shelfGroup wh
+                      Just layout -> do
+                           gw <- readWarehouse (contentPath layout)
+                           execWH wh gw
+          writeIORef stateRef state { warehouse = wh { shelfGroup = groups}
+                                    }
           print wh
 
 summary :: IO ()
@@ -62,6 +69,11 @@ summary = do
   -- mapM_ print extra
 
 
+exec :: WH a RealWorld -> IO a
+exec wh = do
+  state <- readIORef stateRef
+  r <- execWH (warehouse state) wh
+  return r
   
 
   

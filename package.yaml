@@ -48,6 +48,12 @@ library:
   source-dirs:
   - src
   - ./.
+  when:
+  - condition: flag(brick)
+    source-dirs:
+      # - src
+      - brick
+    
     
 tests:
   test:
@@ -62,3 +68,14 @@ tests:
     - hspec >=2.0.0
     - warehouse-planner
  
+      
+when:
+- condition: flag(brick)
+  dependencies:
+  - brick
+    
+flags:
+ brick:
+   description: use brick to visualize warehouse
+   manual: false
+   default: false
