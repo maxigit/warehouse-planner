@@ -8,26 +8,21 @@ in if stack_ghc != null && stack_ghc.version != pkgs.ghc.version
    then abort ("stack ghc " + stack_ghc.version + " different from " + pkgs.ghc.version)
    else with pkgs;
 let ghc = pkgs.ghc ;
-    glabels-qr = glabels.overrideAttrs (oldAttrs: {nativeBuildInputs = oldAttrs.nativeBuildInputs ++ barcode-libs;});
     runtime-inputs = [ 
-                    curl
-                    openssl
-                    libmysqlclient
-                    pcre
-                    zlib
-                    glib
-                    cairo
-                    pango
-                    glabels-qr
+                    # pcre
+                    # zlib
+                    # glib
+                    # cairo
+                    # pango
+                    # glabels-qr
 		   barcode
                ] ;
-    barcode-libs = [qrencode ];
     dev-inputs = [
-                 pkg-config
-                 # to compile FAY
-                 haskellPackages.cpphs
-                 ghc
-                 which # to find the executable using stack exec which 
+                 # pkg-config
+                 # # to compile FAY
+                 # haskellPackages.cpphs
+                 # ghc
+                 # which # to find the executable using stack exec which 
                ];
     inputs = runtime-inputs
              ++ (if  stack_ghc == null
