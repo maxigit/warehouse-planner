@@ -1,0 +1,258 @@
+* Extra
+Miscelaneous shelves which doesn't exist as such
+:SHELVES:
+name,comment,length,width,height,type
+error#summary=_error#bg=pink#out,error,3800,100,1200,Shelf
+C[123]#summary=_pending#_coming#bg=lightgreen;_white#out,coming,3800,100,1200,Shelf
+TL#summary=_pending,Trolley Tall,127,90,172,Shelf
+TS#summary=_pending,Trolley Short,127,90,152,Shelf
+ignore#sep,ignore,3800,100,1200,Shelf
+pendin[g g2 g3 g4 g5 g6]#summary=_pending#bg=lightgreen;_white#out,pending,3800,100,1200,Shelf
+:END:      
+* Warehouse
+** West
+:SHELVES:
+name,comment,length,width,height,type,bottom
+W01.01/0#wall,new wall of death,398,91,250;450,Shelf,0
+W01.03/0#wall,new wall of death,387,91,{W01.01/0},Shelf,0
+W01.05/0#wall,new wall of death,384,91,{W01.01/0};450,Shelf,0
+W01.07/0#wall,new wall of death,477,91,{W01.01/0},Shelf,0
+W01.09/0#wall,new wall of death,491,91,{W01.01/0},Shelf,0
+W01.11/0#wall,new wall of death,506,91,{W01.01/0},Shelf,0
+W01.0[28]/0#wall,pillar ,43,74,{W01.01/0},Shelf,0
+W01.[06 10]/0#wall,pillar,45,74,{W01.01/0},Shelf,0
+W01.0[4]/0#wall,pillar + plugs ,44,74,136,Shelf,0
+-- SEPARATORS
+W0[24].050/0#sep#boyes,separator,140,0,500,Separator,11
+W0[35].030/0#sep#boyes,separator,140,0,500,Separator,11
+W06.005/sep#sep#boyes|W07.045/sep#sep,separator,140,0,500,Separator,11
+-- NORMAL
+W02.0[123]/1#boyes,opposite to wall,224,80,151,Shelf,8.5
+W02.0[45]/1#boyes,opposite to wall,300,32,146,Shelf,11
+W02.0[12345]/2#boyes,opposite to wall,{%-},{%-},146,Shelf,{%-}
+W02.0[12345]/3#top#boyes,opposite to wall,{%-},{%-},146;250,Shelf,{%-}
+W02.0[678]/1#boyes,opposite to wall after pillar,300,42,171,Shelf,11
+W02.0[678]/[2]#boyes,opposite to wall after pillar,{%-},{%-},124,Shelf,11
+W02.0[678]/[3#top]#boyes,opposite to wall after pillar,{%-},{%-},180,Shelf,11
+-- TILL THERE
+W03.01/[1]#boyes,,300,114-{W0-.08%},171,Shelf,11
+W03.01/[2]#boyes,,300,114-{W0-.08%},124,Shelf,11
+W03.01/[3#top]#boyes,,300,114-{W0-.08%},180,Shelf,11
+W03.02/[1]#boyes,,300,113-{W0-.07%},169,Shelf,11
+W03.02/[2]#boyes,,300,113-{W0-.07%},123,Shelf,11
+W03.02/[3#top]#boyes,,300,113-{W0-.07%},180,Shelf,11
+W03.03/[1]#boyes,,300,113-{W0-.06%},169,Shelf,11
+W03.03/[2]#boyes,,300,113-{W0-.06%},123,Shelf,11
+W03.03/[3#top]#boyes,,300,113-{W0-.06%},180,Shelf,11
+W03.04/[123#top]#boyes,,300,113-{W0-.05%},146,Shelf,11
+W03.05/[123#top]#boyes,,300,113-{W0-.04%},146,Shelf,11
+W03.06/[12]#boyes,,224,113-{W0-.03%},146,Shelf,8.5
+W03.06/[3#top]#boyes,,224,113-{W0-.03%},180,Shelf,8.5
+W03.07/[123#top]#boyes,,224,113-{W0-.02%},146,Shelf,8.5
+W03.08/[123#top]#boyes,,224,113-{W0-.01%},146,Shelf,8.5
+W04.0[123]/[12]#boyes,,224,30,151,Shelf,8.5
+W04.0[123]/[3#top]#boyes,,224,30,180,Shelf,8.5
+W04.04/[12]#boyes,,300,30,148,Shelf,11
+W04.05/[12]#boyes,,300,35,148,Shelf,11
+W05.0[123]/[12]#boyes,For CF1,300,42,146,Shelf,11
+W05.0[123]/[3#top]#boyes,For CF1,300,62,146,Shelf,11
+W05.0[45]/[3#top]#boyes,MW-AD1 stickout,300,79,146,Shelf,11
+W05.04/[12]#boyes,,300,91,146,Shelf,11
+W05.05/[12]#boyes,,300,115-{W0-.04%},146,Shelf,11
+W05.06/[123#top]#boyes,,224,115-{W0-.03%},146,Shelf,8.5
+W05.07/[123#top]#boyes,,224,115-{W0-.02%},146,Shelf,8.5
+W05.08/[123#top]#boyes,,224,115-{W0-.01%},146,Shelf,8.5
+W04.04/[3#top]#boyes, after pillar,300,130-{W0+.05%},180,Shelf,11
+W04.05/[3#top]#boyes, after pillar,300,130-{W0+.04%},180,Shelf,11
+W04.06/[12]#boyes, after pillar,300,110-{W0+.03%},146,Shelf,11
+W04.0[67]/[3#top]#boyes, stickout after pillar,300,68,146,Shelf,11
+W04.07/[12]#boyes, after pillar,300,112-{W0+.02%},146,Shelf,11
+W04.08/[123#top]#boyes, after pillar,300,112-{W0+.01%},146,Shelf,11
+W06.01/[12]#blue,old AD1,270,90,151,Shelf,8.5
+W06.01/3#top#blue,old AD1,270,62,151,Shelf,8.5
+W06.02/[1]#blue,old AD1,270,86,151,Shelf,8.5
+W06.02/[2]#blue,old AD1,270,86,151,Shelf,8.5
+W06.03/1#blue,old AD1,270,86,151,Shelf,8.5
+W06.03/2#blue,old AD1,270,86,151,Shelf,8.5
+W06.04/[12]#blue,old AD1,180,80,151,Shelf,8.5
+W06.0[4]/3#top#blue,old AD1,180,80,151,Shelf,8.5
+W06.0[23]/3#top#blue,old AD1,270,86,151,Shelf,8.5
+W07.01/[123#top]#blue,old AD1,180,122-{W06.04%},151,Shelf,8.5
+W07.02/[3#top]#blue,old AD1,270,130-{W06.03%},151,Shelf,8.5
+W07.02/2#blue,old AD1,270,80,151,Shelf,8.5
+W07.02/1#blue,old AD1,270,50,151,Shelf,8.5
+W07.03/[123#top]#blue,old AD1,270,122-{W06.02%},151,Shelf,8.5
+W07.04/[123#top]#blue,old AD1,270,122-{W06.01%},151,Shelf,8.5
+W07.05/[1]#setam,SETAM,117,60,88,Shelf,3.5
+W07.05/[2]#setam,SETAM,117,60,60,Shelf,3.5
+W07.05/3#setam,SETAM,117,60,100,Shelf,3.5
+W06.00/[123]#setam,SETAM,117,48,48,Shelf,3.5
+W06.00/4#setam,SETAM,117,48,100,Shelf,3.5
+W08.025/sep#sep#setam|W00.sep#sep#wall|W09.015/sep#sep,,270,0,300,Separator,3.5
+W08.00/[12]#setam,,89,45,32,Shelf,3.5
+W08.00/3#setam,,89,46,48,Shelf,3.5
+W08.00/4#setam,,89,46,39,Shelf,3.5
+W08.00/5#setam,,89,46,100,Shelf,3.5
+W08.0[12]/[12]#blue,,270,58,151,Shelf,8.5
+W08.0[12]/3#top#blue,,270,60,74,Shelf,8.5
+W08.0[3]/[1234567#top]#blue,,270,52,48,Shelf,8.5
+W09.01/[1234567#top]#blue,,270,114-{W08.03%},48,Shelf,8.5
+W09.02/[123#top]#blue,,270,100-{W08.02%},151,Shelf,8.5
+W09.03/[123#top]#blue,,270,102-{W08.01%},151,Shelf,8.5
+W09.04/[123]#setam,SETAM,117,60,87,Shelf,3.5
+W10.sep#sep,,254,0,300,Separator,0
+W1[01].0[12]/[12345]#waitrose,Scarves shelves,340,60,45,Shelf,11
+W1[01].0[12]/6#top#blue,Scarves shelves,340,60,70,Shelf,8.5
+W1[23].0[12]/[123]#blue,AX2 dedicated shelves,270,32,77,Shelf,8.5
+W1[23].0[12]/[4#top]#blue,AX2 dedicated shelves,270,32,140;200,Shelf,8.5
+W11.03/[123]#setam,SETAM,117,60,90,Shelf,3.5
+W14.01/[12]#setam,petals,115,61,26,Shelf,3.5
+W14.01/[345]#setam,petals,115,61,27,Shelf,3.5
+W14.01/[67]#setam,petals,115,61,22,Shelf,3.5
+W14.02/[12]#setam,petals,119,61,26,Shelf,3.5
+W14.02/[345]#setam,petals,119,61,27,Shelf,3.5
+W14.02/[67]#setam,petals,119,61,22,Shelf,3.5
+W14.03/0#setam,plastic trays,60,24,93,Shelf,3.5
+W00.01/1#darkBoyes,against wall,179,95,145,Shelf,8
+W00.01/2#darkBoyes,against wall,179,95,98,Shelf,8
+W00.01/3#top#darkBoyes,against wall,179,95,165,Shelf,8
+W00.02/1#darkBoyes,against wall,179,95,252,Shelf,8
+W00.02/2#top#darkBoyes,against wall,179,95,165,Shelf,8
+W51.01/1#darkBoyes,against wall,180,95,141,Shelf,8
+W51.01/2#darkBoyes,against wall,180,95,119,Shelf,8
+W51.01/3#top#darkBoyes,against wall,179,95,165,Shelf,8
+W51.02/1#darkBoyes,against wall,180,95,269,Shelf,8
+W51.02/2#top#darkBoyes,against wall,179,95,165,Shelf,8
+:END:      
+** East
+:SHELVES:
+name,comment,length,width,height,type,bottom
+E00.01/[12]#blue,against start,185,91,156,Shelf,8.5
+E00.01/[3#top]#blue,against start,185,91,171,Shelf,8.5
+E00.02/[12]#blue,against start,270,91,156,Shelf,8.5
+E00.02/[3#top]#blue,against start,270,91,171,Shelf,8.5
+E01.01/1#blue,against wall,180,80,171,Shelf,8.5
+E01.01/2#blue,against wall,180,92,117,Shelf,8.5
+E01.01/3#top#blue,against wall,180,80,171,Shelf,8.5
+E01.0[234567]/1#blue,wall,270,80,171,Shelf,8.5
+E01.0[234567]/2#blue,wall,270,80,117,Shelf,8.5
+E01.0[234567]/3#top#blue,wall,270,80,171,Shelf,8.5
+E02.0[1234]/[123]#boyes,,360.00,120.00,93.5,Shelf,11
+E02.0[1234]/4#top#boyes,,360.00,120.00,135.5;150,Shelf,11
+E0[2345].025/sep#sep#boyes,,140.00,0.00,435.5,Separator,11
+E03.0[1234]/[123]#boyes,,360.00,132,93.5,Shelf,11
+E03.0[12]/4#top#boyes,,360.00,132,150,Shelf,11
+E03.0[34]/4#top#boyes,,360.00,132,150,Shelf,11
+E05.0[123]/[123]#boyes,,360.00,102.00,93.5,Shelf,11
+E05.0[123]/4#top#boyes,,360.00,{%1},150,Shelf,11
+E05.04/[123]#boyes,,360.00,{%3/1},93.5,Shelf,11
+E05.04/4#top#boyes,,360.00,140.00,150,Shelf,11
+E04.01/[123]#boyes,,360.00,244-{E05.04%},93.5,Shelf,11
+E04.01/4#top#boyes,,360.00,100,150,Shelf,11
+E04.02/[123]#boyes,,360.00,240-{E05.03%},93.5,Shelf,11
+E04.02/4#top#boyes,,360.00,240-{E05.03%},150,Shelf,11
+E04.03/[123]#boyes,,360.00,240-{E05.02%},93.5,Shelf,11
+E04.03/4#top#boyes,,360.00,240-{E05.02%},150,Shelf,11
+E04.04/[123]#boyes,,360.00,240-{E05.01%},93.5,Shelf,11
+E04.04/4#top#boyes,,360.00,240-{E05.01%},150,Shelf,11
+E06.01/[13#top#summary=top]#gavin,Gav rack near door,320,55,171,Shelf,0
+E06.01/2#gavin,Gav rack near door,320,55,121,Shelf,0
+E06.02/1#sep#gavin,Over the door,333,0,247,Separator,0
+E06.02/2#top#summary=top#gavin,Over the door,333,90,171,Shelf,0
+E06.0[3]/[13#top#summary=top]#gavin,,270,56,171,Shelf,0
+E06.0[3]/[2]#gavin,,270,55,110,Shelf,0
+E06.0[4]/[1]#gavin,,270,55,172,Shelf,0
+E06.0[4]/[3#top#summary=top]#gavin,,270,55,172,Shelf,0
+E06.0[4]/[2]#gavin,,270,55,110,Shelf,0
+E06.05/[13]#gavin,Gav Racking,320,58,171,Shelf,0
+E06.05/[2]#gavin,,320,58,110,shelf,0
+E06.06/[13#top#summary=top]#gavin,,320,58,171,Shelf,0
+E06.06/[2]#gavin,,320,58,121,shelf,0
+E07.06/[13#top]#gavin,Gav rack near door,320,112-{E06.01%},{E06.01%},Shelf,0
+E07.06/2#gavin,Gav rack near door,320,110-{E06.01%},{E06.01%},Shelf,0
+E07.05/1#sep#gavin,Over the door,333,0,{E06.02%},Separator,0
+E07.05/2#top#gavin,Over the door,333,110-{E06.02%},{E06.02%},Shelf,0
+E07.0[4]/[12]#gavin,,270,110-{E06.03%},{E06.03%},Shelf,0
+E07.0[4]/[3#top]#gavin,,270,110-{E06.03%},{E06.03%},Shelf,0
+E07.0[3]/[12]#gavin,,270,112-{E06.04%},{E06.04%},Shelf,0
+E07.0[3]/[3#top]#gavin,,270,112-{E06.04%},{E06.04%},Shelf,0
+E07.02/[12]#gavin,Gav Racking,320,113-{E06.05%},{E06.05%},Shelf,0
+E07.02/[3#top]#gavin,,320,110-{E06.05%},{E06.05%},shelf,0
+E07.01/[13#top]#gavin,,320,110-{E06.06%},{E06.06%},Shelf,0
+E07.01/[2]#gavin,,320,110-{E06.06%},{E06.06%},shelf,0
+E08.01/0#wall,floor,70,46,200,Shelf,0
+E08.02/0#wall,floor,503,46,200,Shelf,0
+E08.03/0#wall,floor,501,46,200,Shelf,0
+E2[2345].01/[1234]#blue,AX1,180,55,67,Shelf,8.5
+E26.01/[1234]#blue,AX1,180,37,67,Shelf,8.5
+E27.01/[1234]#blue,,180,73,67,Shelf,8.5
+E27.015/sep,,50,0,360,Shelf,0
+E2[234567].01/5#blue,,180,55,200,Shelf,8.5
+E28.01/1#blue,AT1,185,81,37,Shelf,8.5
+E28.01/2#blue,AT1,185,81,39,Shelf,8.5
+E28.01/3#blue,AT1,185,81,38,Shelf,8.5
+E28.01/4#blue,AT1,185,81,37,Shelf,8.5
+E28.01/5#blue,Behind SD8 Bases,185,34,82,Shelf,8.5
+E29.01/1#blue,Behind AT1,185,19,37,Shelf,8.5
+E29.01/2#blue,Behind AT1,185,19,39,Shelf,8.5
+E29.01/3#blue,Behind AT1,185,19,38,Shelf,8.5
+E29.01/4#blue,Behind AT1,185,19,37,Shelf,8.5
+E29.01/5#blue,SD8 Bases,185,78,82,Shelf,8.5
+E2[89].01/6#top#blue,,180,50,200,Shelf,8.5
+E27.0[23]/[123]#setam,METAL SHELVES,117,50,86,Shelf,3.5
+E30.01/[123#top]#blue,ELA,270,81,170,shelf,8.5
+E30.02/0#blue,floor,200,80,225,Shelf,8.5
+:END:
+** Mezannine
+:SHELVES:
+name,comment,length,width,height,type,bottom
+M01.0[12]/1#darkBoyes,edging strips,300,120,60,Shelf,0
+M01.0[12]/[23]#darkBoyes,edging strips,300,120,56,Shelf,0
+M02.01/1#darkBoyes,hold,120,55,95,Shelf,0
+M02.01/2#darkBoyes,hold,120,55,76,Shelf,0
+M02.01/3#darkBoyes,hold,120,55,51,Shelf,0
+M02.02/1#darkBoyes,hold,115,55,95,Shelf,0
+M02.02/2#darkBoyes,hold,115,55,76,Shelf,0
+M02.02/3#darkBoyes,hold,115,55,51,Shelf,0
+M02.sep#sep#darkBoyes,,106,0,221,Separator,0
+M02.03/1#darkBoyes,hold,120,55,95,Shelf,0
+M02.03/2#darkBoyes,hold,120,55,74,Shelf,0
+M02.03/3#darkBoyes,hold,120,55,52,Shelf,0
+M02.04/1#darkBoyes,hold,115,55,95,Shelf,0
+M02.04/2#darkBoyes,hold,115,55,74,Shelf,0
+M02.04/3#darkBoyes,hold,115,55,52,Shelf,0
+N01.0[12]/1#blue,near mezzanine,330,88,220,Shelf,8.5
+N01.03/1#sep,way to mezza,330,0,220,Separator,0
+N01.0[123]/2#top#blue,near mezzanine,330,85,95,Shelf,8.5
+N01.0[123]/3#sep,top mezzanine,330,0,145,Sep,0
+N03.0[1]/[12]#boyes,extra thickness,345,80,144,Shelf,17
+N03.0[1]/3#top#boyes,extra thickness,345,80,144,Shelf,17
+N03.0[23]/[123#top]#boyes,extra thickness,345,80,144,Shelf,17
+N02.0[1]/[123#top]#boyes,,345,50,144,Shelf,17
+N02.0[2]/[123#top]#boyes,,345,50,144,Shelf,17
+N02.0[3]/[23#top]#boyes,,345,50,144,Shelf,17
+/N0[23].0[123]/3,,{%},{%},130;230,Update,17
+N02.0[3]/1#boyes,,345,50,144,Shelf,17
+:END:      
+
+* Summary tags
+:SHELFTAGS:
+selector,tags
+/#top,#summary=top
+:END:
+
+* Adjust height of existing shelves
+:SHELVES:
+name,comment,length,width,height,type,bottom
+/*.*/1#setam,,{%},{%},{%},Update,6.5
+-- We don't do [2-5] to be shure shelves are updated in the right order
+-- Selector find shelves in their creation order
+/*.*/2,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/3,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/4,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/5,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/6,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/7,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/8,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/9,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+

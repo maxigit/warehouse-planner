@@ -1,0 +1,15 @@
+* Shelves colours
+:SHELFTAGS:
+selector,tag
+-- /#wall,#bar-bg=_white;royalblue
+/#wall,#bar-bg=black#bar-fg=white#bg=gray#border=black
+/#boyes,#bg=lightgray#border=dimgray#bar-bg=gold;orange
+/#darkBoyes,#bg=lightgray#border=dimgray#bar-bg=Goldenrod
+/#gavin,#bg=tan;_white#border=saddlebrown;black
+/#setam,#bg=white;Lavender#bar-bg=silver#border=LightSlateGray
+/#waitrose,#bar-bg=firebrick#bg=lightgray#border=dimgray
+/??[13579]*/*#-blue#-sep,#bg=+__white
+/??[13579]*/*#blue#-sep,#bg=__white;lightsteelblue;_lightsteelblue
+/#sep,bg=white#fg=gray
+
+:END:

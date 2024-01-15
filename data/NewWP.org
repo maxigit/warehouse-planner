@@ -1,0 +1,6 @@
+* Main
+:IMPORT:
+files/Shelves/*.org
+file/Stock/with-position.org#@include#barcode#date#slotted
+:END:
+
