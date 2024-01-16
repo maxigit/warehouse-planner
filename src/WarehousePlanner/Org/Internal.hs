@@ -3,10 +3,8 @@
 module WarehousePlanner.Org.Internal
 ( scenarioKey
 , scenarioLayoutSize
-, runWH
 , warehouseScenarioKey
 , executeStep
-, execWH
 , contentPathM
 , sSortedSteps
 , readScenariosFromDir
@@ -422,11 +420,6 @@ sSortedSteps Scenario{..} = let
   in  map snd sorted
 
 -- * Rendering 
-execWH :: MonadIO m => Warehouse RealWorld -> WH a RealWorld -> m a
-execWH warehouse0 wh = liftIO $ stToIO $ evalStateT wh warehouse0
-
-runWH :: MonadIO m => Warehouse RealWorld -> WH a RealWorld -> m (a, Warehouse RealWorld)
-runWH warehouse0 wh = liftIO $ stToIO $ runStateT wh warehouse0
 
 executeStep :: Step -> IO (WH () s)
 executeStep SavingPoint = return (return ())

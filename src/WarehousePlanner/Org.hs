@@ -3,12 +3,11 @@ module WarehousePlanner.Org
 where
 
 import WarehousePlanner.Org.Exec as X
+import WarehousePlanner.Exec as X (runWH, execWH)
 import WarehousePlanner.Org.Types as X
 import WarehousePlanner.Org.Internal
-       as X (runWH
-            , addTagsToHeader
+       as X ( addTagsToHeader
             , contentPathM
-            , execWH
             , fileValid
             , importDispatch, importDispatchDef
             , parseScenarioFile

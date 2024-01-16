@@ -68,6 +68,16 @@ tests:
     - hspec >=2.0.0
     - warehouse-planner
  
+benchmarks:
+  bench:
+    source-dirs:
+    - benchmarks
+    main: bench.hs
+    dependencies:
+    - criterion
+    - warehouse-planner
+    ghc-options:
+    - -rtsopts
       
 when:
 - condition: flag(brick)

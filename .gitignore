@@ -1,3 +1,4 @@
 .stack-work
 tags
 data/scramble.vim
+*.prof

@@ -4,7 +4,6 @@ module WarehousePlanner.Org.Exec
 , renderReport
 , execWithCache
 , execScenario
-, copyWarehouse
 , noCache
 , CacheFn(..)
 , cacheScenarioIn
@@ -21,6 +20,7 @@ import WarehousePlanner.Display
 -- import Util.Cache
 import Unsafe.Coerce (unsafeCoerce)
 import Control.Monad.State (put,get)
+import WarehousePlanner.Exec
 
 -- * Type 
 -- | Typeable version of Warehouse. Needed to be cached.
@@ -74,43 +74,6 @@ cacheScenarioIn sc = do
 cacheScenarioOut :: (?cache :: CacheFn io, MonadIO io) =>  Text -> io (Maybe (Scenario, Int))
 cacheScenarioOut key = do
   (cache ?cache) ("scenario", key) (return Nothing)
-
--- * Deep copy 
-copyWarehouse :: forall t s . WH (WH (Warehouse s) s) t
-copyWarehouse = do
-  wh0 <- get
-  shelfBuilders <- mapM copyShelf (toList $ shelves wh0)
-  boxBuilders <- mapM (findBox >=> copyBox) (toList do boxes wh0)
-
-  return $ do
-    put (emptyWarehouse $ whDay wh0) { boxStyling = unsafeCoerce $ boxStyling wh0
-                                    , shelfStyling = unsafeCoerce $ shelfStyling wh0
-                                    , boxOrientations = unsafeCoerce $ boxOrientations wh0
-                                    }
-    n'shelfIds <- sequence shelfBuilders
-    shelf0 <- defaultShelf
-    -- build shelf id map (from old to new one)
-    let shelfIdMap = mapFromList n'shelfIds
-    void $ mapM (\b -> b shelf0 shelfIdMap) boxBuilders
-    get
-
-
-copyShelf :: ShelfId t -> WH (WH (ShelfId t, ShelfId s) s) t
-copyShelf sId = do
-  Shelf{..} <- findShelf sId
-  return $ do
-    nshelf <- (newShelf shelfName (Just $ intercalate "#" $ flattenTags $ shelfTag) minDim maxDim bottomOffset shelfBoxOrientator shelfFillingStrategy)
-    let nId = shelfId nshelf
-    updateShelf (\s ->  s {flow = flow} ) nshelf
-    return (sId, nId)
-  
-copyBox :: Box t -> WH (ShelfId s -> Map (ShelfId t) (ShelfId s) -> WH (Box s) s) t
-copyBox box@Box{..} = return $ \defaultShelf shelfMapId -> do
-  let shelf = case boxShelf of
-                Just s -> findWithDefault defaultShelf s shelfMapId 
-                Nothing ->  defaultShelf
-  newBox <- newBox boxStyle boxContent _boxDim orientation shelf boxBoxOrientations (getTagList box)
-  updateBox (\b -> b { boxOffset = boxOffset, boxTags = boxTags}) newBox
 
 -- * Exec 
 

@@ -19,6 +19,7 @@ library
       WarehousePlanner.Base
       WarehousePlanner.Csv
       WarehousePlanner.Display
+      WarehousePlanner.Exec
       WarehousePlanner.Expr
       WarehousePlanner.Optimum
       WarehousePlanner.Org
@@ -130,6 +131,61 @@ test-suite test
     , filepath >=1.4.1.1 && <1.5
     , ghc
     , hspec >=2.0.0
+    , mono-traversable
+    , mtl
+    , palette ==0.3.*
+    , parsec ==3.1.*
+    , regex-base
+    , regex-compat-tdfa
+    , regex-tdfa >=1.2.2 && <1.3
+    , split
+    , tabular >=0.2.2.7 && <0.3
+    , text
+    , time
+    , vector
+    , warehouse-planner
+  default-language: GHC2021
+  if flag(brick)
+    build-depends:
+        brick
+
+benchmark bench
+  type: exitcode-stdio-1.0
+  main-is: bench.hs
+  other-modules:
+      Paths_warehouse_planner
+  hs-source-dirs:
+      benchmarks
+  default-extensions:
+      BlockArguments
+      FlexibleInstances
+      NoImplicitPrelude
+      OverloadedStrings
+      PartialTypeSignatures
+      PatternGuards
+      PatternSynonyms
+      RecordWildCards
+      TypeFamilies
+      ViewPatterns
+      MultiWayIf
+      LambdaCase
+  ghc-options: -rtsopts
+  build-depends:
+      Glob
+    , base
+    , bytestring >=0.9 && <0.11
+    , cassava >=0.4.5 && <0.5
+    , classy-prelude >=0.10.2
+    , colour >=2.3.3 && <2.4
+    , containers
+    , criterion
+    , cryptohash
+    , diagrams-cairo ==1.4.*
+    , diagrams-lib >=1.4.1.2 && <1.5
+    , diagrams-svg ==1.4.*
+    , directory >=1.1 && <1.4
+    , filepath >=1.4.1.1 && <1.5
+    , ghc
     , mono-traversable
     , mtl
     , palette ==0.3.*

@@ -12,8 +12,8 @@ let ghc = pkgs.ghc ;
                     # pcre
                     # zlib
                     # glib
-                    # cairo
-                    # pango
+                    cairo
+                    pango
                     # glabels-qr
 		   barcode
                ] ;
