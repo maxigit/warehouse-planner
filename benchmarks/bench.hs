@@ -5,6 +5,8 @@ import WarehousePlanner.Base
 import WarehousePlanner.Exec
 import Text.Printf
 
+import Control.Monad.State (get, gets)
+
 
 
 benchLoad paths = do
@@ -16,9 +18,21 @@ main = defaultMain
   [ bgroup "load" [ bench ("with " <> show l <> "position") $ nfIO $ benchLoad ["Shelves/01-Shelves", "Stock/with-position-" <> show l]
                   | l <- [1000, 2000, 3000, 4300]
                   ]
-  , bgroup "mocked" [ bench (printf "create mocked %dx%d" nstyle nshelf) $ nfIO $ withMock [1..nstyle] [1..nshelf] (return ())l
-                    | nstyle <- [1, 10, 20, 50]
-                    , nshelf <- [1, 10, 20, 50]
+  , bgroup "mocked" [ bench (printf "%s %dx%d" name nstyle nshelf) 
+                          $ nfIO $ withMock @Int [1..nstyle] [1..nshelf] action
+                    | nstyle <- [10, 20, 30,40, 50]
+                    , nshelf <- [10, 20, 30,40, 50]
+                    , (name :: String, action) <- [ ("empty", return 0)
+                                        , ("move", do
+                                              boxes_ <- gets boxes
+                                              shelves_ <- gets shelves
+                                              errors <-  moveBoxes ExitLeft  PRightOnly DontSortBoxes 
+                                                        (toList boxes_)
+                                                        (toList shelves_)
+                                              return (length errors)
+                                          )
+                                        ]
+
                     ]
   ]
                  
@@ -42,10 +56,8 @@ mockWH styles shelves = do
                    void $ newBox style (tshow content) bdim tiltedForward shelf allOrientations ("index-" <> tshow i : [])
                    
                    
-withMock :: Show n => [n] -> [n] -> WH a s -> IO a
+withMock :: Show n => [n] -> [n] -> WH a RealWorld -> IO a
 withMock styles shelves action = do
-  execWH emptyWarehouse action
-
-
-          
+  initRepl ""
+  exec (mockWH styles shelves >> action)
   

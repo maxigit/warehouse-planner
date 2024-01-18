@@ -72,7 +72,8 @@ summary = do
 exec :: WH a RealWorld -> IO a
 exec wh = do
   state <- readIORef stateRef
-  r <- execWH (warehouse state) wh
+  (r, state') <- runWH (warehouse state) wh
+  writeIORef stateRef state'
   return r
   
 
