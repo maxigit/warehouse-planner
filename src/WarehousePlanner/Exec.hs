@@ -50,6 +50,6 @@ copyBox box@Box{..} = return $ \defaultShelf shelfMapId -> do
   let shelf = case boxShelf of
                 Just s -> findWithDefault defaultShelf s shelfMapId 
                 Nothing ->  defaultShelf
-  newBox <- newBox boxStyle boxContent _boxDim orientation shelf boxBoxOrientations (getTagList box)
+  newBox <- newBox boxStyle boxContent _boxDim orientation shelf boxBoxOrientations []
   updateBox (\b -> b { boxOffset = boxOffset, boxTags = boxTags}) newBox
 
