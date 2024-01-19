@@ -34,6 +34,7 @@ main = defaultMain
                                         ]
 
                     ]
+  , bgroup "full" [bench "with moves" $ nfIO $ benchLoad ["full-with-moves"]]
   ]
                  
                  

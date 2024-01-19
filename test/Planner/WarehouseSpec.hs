@@ -6,6 +6,7 @@ import Test.Hspec
 import WarehousePlanner.Csv
 import WarehousePlanner.Base
 import WarehousePlanner.Org.Internal
+import WarehousePlanner.Exec
 
 spec :: Spec
 spec = parallel pureSpec 
