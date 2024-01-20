@@ -161,7 +161,7 @@ buildRack xs = do
                 name ->  findShelfBySelector (parseSelector name)
             ) xs
     shelves <- mapM findShelf (concat idsS)
-    let sorted = sortBy (comparing shelfName) shelves
+    let sorted = sortOn shelfName shelves
 
     return $ rackUp sorted
 
@@ -339,17 +339,17 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
 -- | Limit a box selections by numbers
 limitByNumber :: BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
 limitByNumber selector boxes0 = let
-  sorted = sortBy (comparing  $ boxFinalPriority selector) boxes0
+  sorted = sortOn (boxFinalPriority selector) boxes0
   sndOrSel (box, shelf) = keyFromLimitM (nsPerShelf selector) (Right $ shelfName shelf) box shelf
   boxes1 = maybe id (limitBy (pure . pure . boxSku . fst)) (nsPerContent selector) $ sorted
   boxes2 = maybe id (limitBy sndOrSel) (nsPerShelf selector) $ boxes1
-  boxes3 = maybe id take_ (nsTotal selector) $ sortBy (comparing  $ boxFinalPriority selector) boxes2
+  boxes3 = maybe id take_ (nsTotal selector) $ sortOn (boxFinalPriority selector) boxes2
   --                            -- ^ things might have been shuffle by previous sorting , so resort them                                                         
   -- limitBy :: Ord  k => ((Box s, Text) -> k) -> Limit -> [(Box s, Text)] -> [(Box s, Text)]
   limitBy key n boxes = let
-    sorted = sortBy (comparing  $ boxFinalPriority selector) boxes
+    sorted = sortOn (boxFinalPriority selector) boxes
     group_ = Map'.fromListWith (flip(<>)) [(key box, [box]) | box <- sorted]
-    limited = fmap (take_ n . sortBy (comparing $ snd . boxFinalPriority selector) ) group_
+    limited = fmap (take_ n . sortOn (snd . boxFinalPriority selector) ) group_
     in concat (Map'.elems limited)
   take_ :: Limit -> [a] -> [a]
   take_ sel = maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel) . rev
@@ -1009,7 +1009,7 @@ moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes
 moveBoxes exitMode partitionMode sortMode bs ss = do
   boxes <- mapM findBox bs
   let layers = groupBy ((==)  `on` boxBreak)
-               $ (if sortMode == SortBoxes then sortBy (comparing boxGlobalRank) else id)
+               $ (if sortMode == SortBoxes then sortOn boxGlobalRank else id)
                $ boxes
       boxGlobalRank box = (boxGlobalPriority box, boxStyle box, boxStylePriority box,  _boxDim box, boxContent box, boxContentPriority box)
       boxBreak box = (boxStyle box, _boxDim box)

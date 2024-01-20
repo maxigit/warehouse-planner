@@ -416,7 +416,7 @@ sSortedSteps Scenario{..} = let
                     Step ShelvesH _ _  -> 1
                     Step OrientationsH _ _  -> 2
                     _ -> 3
-  sorted = sortBy (comparing fst) steps
+  sorted = sortOn fst steps
   in  map snd sorted
 
 -- * Rendering 

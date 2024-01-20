@@ -4,8 +4,7 @@ module WarehousePlanner.Optimum
 where
 import Prelude
 import WarehousePlanner.Base
-import Data.List(sortBy)
-import Data.Function(on)
+import Data.List(sortOn)
 
 data Ranking = Rank3D 
              | Rank2D -- ^ ignores the depth when sorting and reporting % of use. Handy if we know we can adjust the depth of a shelf.
@@ -17,7 +16,7 @@ bestShelves rankingMode box ors ss  = let
             | s <- ss
             , let (or, tilingMode,_) = bestArrangement (ors s) [(minDim s, maxDim s, s)] (_boxDim box)
             ]
-    in map snd $ sortBy (compare `on` fst) tries
+    in map snd $ sortOn fst tries
 
 -- | used ratio volume boxes / vol shelf
 usedRatio :: Ranking -> Box s -> Shelf s -> TilingMode -> Double

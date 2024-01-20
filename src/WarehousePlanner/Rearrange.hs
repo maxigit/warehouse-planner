@@ -32,9 +32,9 @@ rearrangeBoxesByContent ::  ForUnused -> ForGrouping -> [Tag'Operation] -> (Box 
 rearrangeBoxesByContent deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
   boxes <- findBoxByNameAndShelfNames boxsel >>= mapM findBox
   -- group boxes by style and content
-  let onContent = (`on` \b -> (boxStyle b, boxContent b))
+  let content b = (boxStyle b, boxContent b)
       boxByContent = case groupByContent of
-                     GroupByContent ->  groupBy (onContent (==)) $ sortBy (onContent compare) boxes
+                     GroupByContent ->  groupBy ((==) `on` content) $ sortOn content boxes
                      Don'tGroup ->  [boxes]
   newss <- mapM (\boxes ->  shiftUsedBoxes isUsed isSticky boxes actions) boxByContent
   let news = concat newss

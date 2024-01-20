@@ -66,7 +66,7 @@ bestBoxesFor (extractRanking -> (ranking, shelf)) = do
             , let (or, tilingMode,_) = bestArrangement (ors s) [(minDim s, maxDim s, s)] (_boxDim box)
             ]
 
-        bests = sortBy (compare `on` fst) tries
+        bests = sortOn fst tries
 
     mapM (report ranking s) (map snd bests)
 
@@ -88,7 +88,7 @@ bestHeightForShelf shelf = do
                 , let (or,tilingMode,_) = bestArrangement (ors s) [(minDim s, maxDim s, s)] (_boxDim box)
                 ]
 
-        bests = sortBy (compare `on` fst) tries
+        bests = sortOn fst tries
         reportHeight shelf_  (box, or, tilingMode) = do
           similarBoxes <- findBoxByNameSelector (matchName $ boxStyle box)
           let box' = box { orientation = or }
@@ -179,7 +179,7 @@ bestAvailableShelvesFor pmode (extractRanking -> (ranking, style'shelf)) = do
     let go (shelf, n) = do
             r <- report ranking shelf  (headEx boxes)
             return $  (pack $ printf "%d/%d => " n (length boxes)) <> r
-    mapM go ( sortBy (comparing (Down . snd))
+    mapM go ( sortOn (Down . snd)
                      (filter ((/=0).snd) shelfInfos)
                    )
 
@@ -582,7 +582,7 @@ groupShelves exclude = do
                                                                        shelfTag) ss
                                       , exclude s == False
                                       ]
-      regroup ss_ = let sorted = sortBy (comparing shelfName) ss_
+      regroup ss_ = let sorted = sortOn shelfName ss_
                    in (headEx sorted, map shelfName sorted)
 
   return $ map (regroup) (Map'.elems groups)
@@ -592,7 +592,7 @@ groupShelves exclude = do
 groupShelvesReport :: WH [Text] s
 groupShelvesReport = do
   groups <- groupShelves (const False)
-  let sorted = sortBy (comparing ( headEx . snd  )) groups
+  let sorted = sortOn ( headEx . snd  ) groups
   forM sorted $ \(s, names) -> do
       let d = maxDim s
       return $ tshow (length names) <> " x " <> (headEx names) <> " -- " <> (lastEx names)
@@ -604,7 +604,7 @@ groupShelvesReport' :: WH (IO ()) s
 groupShelvesReport' = do
   groups <- groupShelves (const False)
   return $ do
-    forM_ (sortBy (comparing (shelfName . fst)) groups) $ \(_, names) -> do
+    forM_ (sortOn (shelfName . fst) groups) $ \(_, names) -> do
       forM_ names $ \name -> putStrLn $ name <> " => " <> (headEx names)
 
 type BoxKey = (Dimension, Text, [Orientation])
@@ -631,7 +631,7 @@ groupBoxesReport :: [Box s] -> WH [Text] s
 groupBoxesReport boxes = do
   groups <- groupBoxes' boxes
   let withVolumes = [(volume (boxDim b) * (fromIntegral q), b'q) | b'q@(b,q) <- groups ]
-  let sorted = map snd $ sortBy (comparing (\(rank, (volume_, _)) -> (rank, Down volume_))) (zip [1..] withVolumes)
+  let sorted = map snd $ sortOn (\(rank, (volume_, _)) -> (rank, Down volume_)) (zip [1..] withVolumes)
   forM sorted $ \(v, (box, qty)) -> do
       let d = _boxDim box
       return $ (boxStyle box ) <> (concatMap showOrientation (boxBoxOrientations box )) <>   " x "  <> tshow qty
@@ -783,7 +783,7 @@ findBestPairings wh residualMap boxes box =
           res <- maybeToList $ Map'.lookup (shelfKey shelf) resMap
           maybeToList $ newPair wh res (Just res')
 
-  in sortBy (comparing pWastedVolume) (pairs <> monopairs)
+  in sortOn pWastedVolume (pairs <> monopairs)
 
 
 lookupResidual :: Map'.Map BoxKey [Residual s] -> Box s -> [Residual s]
@@ -827,7 +827,7 @@ reportPairs percThreshold = do
         ]
 
   let boxGroupWeight (box, qty) = Down $ (fromIntegral qty) * boxVolume box
-  let sortedBoxGroups = sortBy (comparing boxGroupWeight) boxGroups
+  let sortedBoxGroups = sortOn (boxGroupWeight) boxGroups
   let boxes = map fst sortedBoxGroups
 
   let pairsS = map (findBestPairings wh residualMap boxes) boxes
