@@ -7,6 +7,12 @@ prof1_%:
 	
 prof_%:
 	stack --work-dir .stack-profile bench --profile --ba '--iters 5 -m prefix $* '
-	mv bench.prof results/bench-$$(date +"%F:%H:%M").prof
+	mv bench.prof results/$*-$$(date +"%F:%H:%M").prof
+	ln -sf $*-$$(date +"%F:%H:%M").prof results/$*.last.prof
+
 %.prof.html:
 	profiteur $*.prof
+	
+pview_%: results/$*.last.prof.html
+				 rifle $<
+  
