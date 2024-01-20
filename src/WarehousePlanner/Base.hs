@@ -671,7 +671,7 @@ bestArrangement orientations shelves box = let
               , let tilingMode = clampTilingMode maxLM (Just (minW, maxW)) maxHM tilingMode0
               ]
 
-    bests = sortBy (compare `on` fst)
+    bests = 
                 [ ( ( tilingMode
                     , tmLength tilingMode
                     , vol
@@ -684,7 +684,7 @@ bestArrangement orientations shelves box = let
                  ]
     in
         -- trace ({-show shelves ++ show box ++-}  show bests) $
-        (snd . headEx) bests
+        snd $ minimumByEx (compare `on` fst) bests
 
 
 -- | * test
@@ -769,12 +769,12 @@ howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) =
                       )
                       n
       options = [nForDiag i | i <- [2.. (1 + min ln hn)] ]
-      bests = sort $ (Regular normal): options
+      bests = (Regular normal): options
   in if outer /= minOuter
      then Regular normal
      else case bests of
       [] -> error "Shouldn't happen"
-      (best:_) -> best
+      _ -> minimumEx bests
 
 
         
@@ -797,7 +797,7 @@ howManyWithSplitH minOuter outer inner =  let
           , let rightMode =  howManyWithDiagonal (minOuter <> used) (outer <> used) (rotate tiltedRight inner)
           , tmTotal rightMode + tmTotal leftMode > currentTotal
           ]
-  in headEx $ sort (tmode: tries)
+  in minimumEx (tmode: tries)
 howManyWithSplitV :: Dimension -> Dimension -> Dimension -> TilingMode
 howManyWithSplitV minOuter outer inner = let
   rot = rotate tiltedRight 
