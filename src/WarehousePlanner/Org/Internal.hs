@@ -350,7 +350,7 @@ makeScenario sections0 = do -- Either
 
   let steps = concatMap (\(header , (sha, title)) ->
                            (case header of
-                            TitleH | take 2 title == "* " || take 3 title == "** " -> [SavingPoint]
+                            TitleH | take 2 title == "* " -> [SavingPoint]
                             _ -> []
                             ) ++ [Step header sha title]) sections3
 
