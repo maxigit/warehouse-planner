@@ -20,7 +20,18 @@ checkFull path = do
   load path
   rows <- exec (generateStockTakes Nothing)
   expected <- readFileUtf8 (dir </> path <.> "stocktake")
-  rows `shouldBe` lines expected
+  writeFileUtf8 "result.org" $ unlines rows
+  rows `shouldBe'` lines expected
+  
+  
+keepDiff :: Eq a => Int -> [a] -> [a] -> ([a], [a])
+keepDiff n xs ys= unzip $ take n $ filter (not . same) $ zip xs ys
+  where same = uncurry (==)
+  
+  
+shouldBe' xs ys = uncurry shouldBe $ keepDiff 5 xs ys
+  
+
 
 
 

@@ -9,6 +9,8 @@ import WarehousePlanner.Base
 import Control.Monad.State (get, put, State, evalStateT,runStateT)
 import Control.Monad.ST (stToIO)
 import Unsafe.Coerce (unsafeCoerce)
+import Data.Semigroup(Arg(..))
+
 -- * Exec 
 execWH :: MonadIO m => Warehouse RealWorld -> WH a RealWorld -> m a
 execWH warehouse0 wh = liftIO $ stToIO $ evalStateT wh warehouse0
@@ -40,6 +42,9 @@ copyShelf :: ShelfId t -> WH (WH (ShelfId t, ShelfId s) s) t
 copyShelf sId = do
   Shelf{..} <- findShelf sId
   return $ do
+    w <- get
+    let ShelfId_ (Arg i _) = _shelfId
+    put  w { whUnique = i - 1 }
     nshelf <- (newShelf shelfName (Just $ intercalate "#" $ flattenTags $ shelfTag) minDim maxDim bottomOffset shelfBoxOrientator shelfFillingStrategy)
     let nId = shelfId nshelf
     updateShelf (\s ->  s {flow = flow} ) nshelf
@@ -50,6 +55,9 @@ copyBox box@Box{..} = return $ \defaultShelf shelfMapId -> do
   let shelf = case boxShelf of
                 Just s -> findWithDefault defaultShelf s shelfMapId 
                 Nothing ->  defaultShelf
+  w <- get
+  let BoxId_ (Arg bId _) = _boxId
+  put  w { whUnique = bId - 1 }
   newBox <- newBox boxStyle boxContent _boxDim orientation shelf boxBoxOrientations []
   updateBox (\b -> b { boxOffset = boxOffset, boxTags = boxTags}) newBox
 
