@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        1.0.1
+version:        1.0.2
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -67,6 +67,7 @@ library
     , directory >=1.1 && <1.4
     , filepath >=1.4.1.1 && <1.5
     , ghc
+    , ghc-prim
     , mono-traversable
     , mtl
     , palette ==0.3.*
@@ -131,6 +132,7 @@ test-suite test
     , directory >=1.1 && <1.4
     , filepath >=1.4.1.1 && <1.5
     , ghc
+    , ghc-prim
     , hspec >=2.0.0
     , mono-traversable
     , mtl
@@ -187,6 +189,7 @@ benchmark bench
     , directory >=1.1 && <1.4
     , filepath >=1.4.1.1 && <1.5
     , ghc
+    , ghc-prim
     , mono-traversable
     , mtl
     , palette ==0.3.*

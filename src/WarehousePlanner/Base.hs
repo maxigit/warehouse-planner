@@ -106,6 +106,7 @@ import qualified System.FilePath.Glob as Glob
 import qualified Text.Parsec as P
 import qualified Text.Parsec.Text as P
 import Control.Monad.Fail 
+import GHC.Prim 
 
 
 -- import qualified Debug.Trace as T
@@ -194,8 +195,15 @@ findBoxByShelf shelf = do
 
 findBoxByNameSelector :: (NameSelector (Box s)) -> WH [Box s] s
 findBoxByNameSelector selector = do
-  boxIds <- toList <$> gets boxes
-  filterByNameSelector (mapM findBox boxIds) (boxStyle)  selector
+  boxIdMap <- gets boxMap
+  let matcher = applyNameSelector (coerce selector) id
+  boxess <- forM (Map.toList boxIdMap)
+                \(style, ids) ->
+                  if matcher style
+                  then
+                    mapM findBox ids
+                  else return mempty
+  return $ toList $  mconcat boxess
 
 findShelfByBox :: Box' box => box s -> WH (Maybe (ShelfId s)) s
 findShelfByBox box' = do
@@ -479,7 +487,11 @@ newBox style content dim or_ shelf ors tagTexts = do
     shelf' <- findShelf shelf
     linkBox (BoxId_ uniqueRef) shelf'
     lift $ writeSTRef ref box
-    modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
+    -- modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
+    modify \warehouse ->  warehouse { boxMap = snd $ Map.insertLookupWithKey (\_ new old -> old <> new)
+                                                                      style (Seq.singleton $ BoxId_ uniqueRef)
+                                                                      (boxMap warehouse)
+                                    }
     return box
 -- |  create #content1=A, #content2=B from A&B
 makeContentTags :: Text -> [Tag'Operation]
@@ -618,7 +630,9 @@ deleteBoxes boxes_ = do
                 mapM_ (unlinkBox $ boxId box) oldShelfM
                 return box
   wh <- get
-  put wh { boxes = filter (`notElem` boxIds)  (boxes wh) }
+  put wh { boxMap = Map.filter (not . null)
+                 $ fmap (filter (`notElem` boxIds)) (boxMap wh) 
+         }
   return deleted
     
 
@@ -2005,7 +2019,7 @@ computePropertyStats :: OrderingKey -> WH PropertyStats s
 computePropertyStats prop = do
   -- scann all object and make a map of the different values
   wh <- get
-  boxList <- mapM findBox $ toList (boxes wh)
+  boxList <- mapM findBox $ boxes wh
   values <- mapM do \box -> expandOrdkey box Nothing prop
                  do boxList
   let stats = mkPropertyStats $ concat values

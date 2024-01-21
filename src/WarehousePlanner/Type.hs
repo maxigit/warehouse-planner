@@ -254,7 +254,7 @@ toGroups proxy = [proxy]
 -- of possible box orientiations within a shelf for a given box.
 -- as well as the number of boxes which can be used for the depth (min and max)
 -- setting min to 1, allow forcing boxes stick out
-data Warehouse s = Warehouse { boxes :: Seq (BoxId s)
+data Warehouse s = Warehouse { boxMap :: Map Text  (Seq (BoxId s))
                            , shelves :: Seq (ShelfId s)
                            , shelfGroup :: ShelfGroup s
                            , boxStyling :: Box s -> BoxStyling
@@ -267,6 +267,10 @@ data Warehouse s = Warehouse { boxes :: Seq (BoxId s)
                            , whUnique :: Int
                            
              } -- deriving Show
+             
+boxes :: Warehouse s -> Seq (BoxId s)
+boxes warehouse = mconcat $ map snd $ Map.toAscList $ boxMap  warehouse
+
 type WH a s = StateT  (Warehouse s) (ST s) a
 data ExitMode = ExitOnTop | ExitLeft deriving (Show, Eq, Ord, Enum)
 -- | Strategry to find available rectangle to fill in

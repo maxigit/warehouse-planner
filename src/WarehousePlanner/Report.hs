@@ -491,8 +491,10 @@ generateGenericReport' today prefix s'bs = generateMovesFor SortBoxes Nothing bo
 generateStockTakes :: Maybe (BoxSelector s) ->  WH [Text] s
 generateStockTakes selectorm= do
     boxes_ <- case selectorm of
-            Nothing -> findBoxByNameSelector (NameMatches [])
-            Just sel -> findBoxByNameAndShelfNames sel
+            Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
+            Just sel -> do
+              findBoxByNameAndShelfNames sel
+                
     shelf0 <- defaultShelf
     sb <- mapM (\b -> (,b) <$> findShelf (fromMaybe shelf0 $ boxShelf b )) boxes_
     return $ [":STOCKTAKE:"

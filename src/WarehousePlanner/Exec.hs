@@ -6,7 +6,7 @@ module WarehousePlanner.Exec
 
 import ClassyPrelude
 import WarehousePlanner.Base
-import Control.Monad.State (get, put, State, evalStateT,runStateT)
+import Control.Monad.State (get, put, State, evalStateT,runStateT, modify)
 import Control.Monad.ST (stToIO)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Semigroup(Arg(..))
@@ -23,7 +23,7 @@ copyWarehouse :: forall t s . WH (WH (Warehouse s) s) t
 copyWarehouse = do
   wh0 <- get
   shelfBuilders <- mapM copyShelf (toList $ shelves wh0)
-  boxBuilders <- mapM (findBox >=> copyBox) (toList do boxes wh0)
+  boxBuilders <- mapM (findBox >=> copyBox) (toList $ boxes wh0)
 
   return $ do
     put (emptyWarehouse $ whDay wh0) { boxStyling = unsafeCoerce $ boxStyling wh0
@@ -35,6 +35,8 @@ copyWarehouse = do
     -- build shelf id map (from old to new one)
     let shelfIdMap = mapFromList n'shelfIds
     void $ mapM (\b -> b shelf0 shelfIdMap) boxBuilders
+    modify \w -> w { whUnique = maximumEx $ fromList [0] <>  (fmap (\s -> let (ShelfId_ (Arg i _)) = shelfId s in i) (shelves w)
+                                           <> fmap (\b -> let (BoxId_ (Arg i _)) = boxId b in i)  (boxes w)) }
     get
 
 

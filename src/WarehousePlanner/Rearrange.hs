@@ -197,7 +197,7 @@ freezeOrder boxesInOrder =  do
                 if b `member` inOrderSet
                 then o : go os bs
                 else b : go os bs
-  modify \warehouse -> warehouse {boxes = Seq.fromList $ go boxesInOrder (toList $ boxes warehouse) }
+  modify \warehouse -> warehouse {boxMap = fmap (fromList . go (toList boxesInOrder) . toList) (boxMap warehouse) }
             
   
 

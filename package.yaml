@@ -1,5 +1,5 @@
 name: warehouse-planner
-version: '1.0.1'
+version: '1.0.2'
 license: UnspecifiedLicense
 dependencies:
 - containers
@@ -28,6 +28,7 @@ dependencies:
 - tabular >= 0.2.2.7 && < 0.3
 - ghc
 - mono-traversable
+- ghc-prim
   
 language: GHC2021
 default-extensions:
