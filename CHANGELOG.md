@@ -1,3 +1,12 @@
+# 1.1.0
+
+Remove auto save point (based on heading levels).
+Heading endind wih '!' instead are saving points.
+
+Should remove unnecessay saving points resulting
+in less memory usage and better performance
+(saving point are time costly).
+
 # 1.0.2
 
 More performance optimisation.
