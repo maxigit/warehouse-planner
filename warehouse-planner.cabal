@@ -84,12 +84,14 @@ library
   if flag(brick)
     build-depends:
         brick
+      , vty
   if flag(brick)
     other-modules:
         WarehousePlanner.Brick
         WarehousePlanner.Brick.Repl
     hs-source-dirs:
         brick
+        vty
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -151,6 +153,7 @@ test-suite test
   if flag(brick)
     build-depends:
         brick
+      , vty
 
 benchmark bench
   type: exitcode-stdio-1.0
@@ -207,3 +210,4 @@ benchmark bench
   if flag(brick)
     build-depends:
         brick
+      , vty
