@@ -68,7 +68,10 @@ percUsed shelves = do
   boxess <- mapM findBoxByShelf shelves
   let boxesV = sum $ map boxVolume $ concat boxess
       shelvesV = sum $ map shelfVolume shelves
-  return $ boxesV / shelvesV
+  traceShowM (map shelfName (take 1 shelves), boxesV, shelvesV, boxesV / shelvesV * 100)
+  if shelvesV < 1e-2 
+  then return 0
+  else return $ boxesV / shelvesV
 
   
 
@@ -114,7 +117,7 @@ percToAttrName p1 p2 = levelsToAttrName (percToLevel p1) (percToLevel p2)
 
 generateLevelAttrs :: [(AttrName, V.Attr)]
 generateLevelAttrs = 
-    [ (levelsToAttrName l1 l1, fg `on` bg)
+    [ (levelsToAttrName l1 l2, fg `on` bg)
     | l1 <- [minBound..maxBound]
     , l2 <- [minBound..maxBound]
     , let fg = levelToColor l1
@@ -123,10 +126,10 @@ generateLevelAttrs =
     
     
 levelToColor = \case
-  Empty -> V.blue
+  Empty -> V.brightBlue
   Low -> V.green
   Medium -> V.yellow
-  Used -> V.brightYellow
+  Used -> V.magenta
   Full -> V.red
 
 
