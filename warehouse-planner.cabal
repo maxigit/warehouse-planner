@@ -90,6 +90,7 @@ library
         WarehousePlanner.Brick
         WarehousePlanner.Brick.Repl
         WarehousePlanner.Brick.Util
+        WarehousePlanner.Types
     hs-source-dirs:
         brick
         vty
