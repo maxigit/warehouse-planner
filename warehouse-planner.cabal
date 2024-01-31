@@ -89,6 +89,7 @@ library
     other-modules:
         WarehousePlanner.Brick
         WarehousePlanner.Brick.Repl
+        WarehousePlanner.Brick.Util
     hs-source-dirs:
         brick
         vty
