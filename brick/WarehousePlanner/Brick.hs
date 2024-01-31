@@ -23,7 +23,7 @@ renderWarehouse = do
    -- g <- gets shelves
    -- let groups = ShelfGroup (map ShelfProxy $ toList g) (error "X")
    slices <- mapM renderSlice $ toGroups groups
-   return $ vBox $ slices
+   return $ vBox {- $ intersperse hBorder -} $  slices
    
 renderSlice :: ShelfGroup s -> WH (Widget n) s
 renderSlice slice = do
@@ -53,7 +53,7 @@ renderShelf group = renderSlice group
 
 -- | render one bay to 
 renderBayTo2Halves :: [Shelf s ] -> [Shelf s] -> WH (Widget  n) s
-renderBayTo2Halves tops bottoms = do
+renderBayTo2Halves bottoms tops = do
   -- calculate the percentage in 8th of bottom vs top shelfs
   let [nb, nt] = map length [bottoms, tops]
   let perc8 = case nb + nt of 
@@ -68,7 +68,7 @@ percUsed shelves = do
   boxess <- mapM findBoxByShelf shelves
   let boxesV = sum $ map boxVolume $ concat boxess
       shelvesV = sum $ map shelfVolume shelves
-  traceShowM (map shelfName (take 1 shelves), boxesV, shelvesV, boxesV / shelvesV * 100)
+  -- traceShowM (map shelfName (take 1 shelves), boxesV, shelvesV, boxesV / shelvesV * 100)
   if shelvesV < 1e-2 
   then return 0
   else return $ boxesV / shelvesV
@@ -120,17 +120,17 @@ generateLevelAttrs =
     [ (levelsToAttrName l1 l2, fg `on` bg)
     | l1 <- [minBound..maxBound]
     , l2 <- [minBound..maxBound]
-    , let fg = levelToColor l1
-    , let bg= levelToColor l2
+    , let fg = levelToColor 255 l1
+    , let bg= levelToColor 127 l2
     ]
     
     
-levelToColor = \case
-  Empty -> V.brightBlue
-  Low -> V.green
-  Medium -> V.yellow
-  Used -> V.magenta
-  Full -> V.red
+levelToColor v = \case
+  Empty -> V.color240 0 v v -- cyan
+  Low -> V.color240 0 v 0 -- green
+  Medium -> V.color240 v v 0  -- yellow
+  Used -> V.color240 v (v `div` 2) 0 -- orange
+  Full -> V.color240 v 0 0 -- red
 
 
 
