@@ -56,7 +56,7 @@ renderBayTo2Halves bottoms tops = do
   let [nb, nt] = map length [bottoms, tops]
   let perc8 = case nb + nt of 
                   0 -> 0 
-                  n -> 8 * nb `div` n
+                  n -> 1 + (6 * nb `div` n)
   usedBottom <- percUsed bottoms
   usedTop <- percUsed tops
   return $ withAttr (percToAttrName usedBottom usedTop) . str $ (eigthV perc8):[]
