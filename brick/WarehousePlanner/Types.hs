@@ -47,7 +47,7 @@ data Shelves a = Shelves
                , sBoxMeasure :: Measures
                , sShelvesMeasure :: Measures
                }
-     deriving (Functor, Foldable)
+     deriving (Foldable)
      
 instance Semigroup (Shelves a) where
   s1 <> s2 = Shelves (commonPrefix (sName s1) (sName s2))

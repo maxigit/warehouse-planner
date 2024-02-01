@@ -553,7 +553,7 @@ boxDim box = rotate (orientation box) (_boxDim box)
 
 
 boxVolume :: Box s -> Double
-boxVolume = volume . boxDim
+boxVolume = volume . _boxDim
 
 -- | Returns box offset <> box itself
 boxCorner :: Box s -> Dimension

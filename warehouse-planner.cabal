@@ -33,6 +33,7 @@ library
       WarehousePlanner.SimilarBy
       WarehousePlanner.Slices
       WarehousePlanner.Styling
+      WarehousePlanner.Summary
       WarehousePlanner.Type
   other-modules:
       Paths_warehouse_planner
