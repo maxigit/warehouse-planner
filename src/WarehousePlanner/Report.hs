@@ -23,6 +23,7 @@ module WarehousePlanner.Report
 
 import WarehousePlanner.Base
 import WarehousePlanner.Optimum
+import WarehousePlanner.Summary
 import ClassyPrelude hiding(or)
 import Control.Monad.ST.Unsafe(unsafeSTToIO)
 import System.IO.Unsafe(unsafePerformIO)
@@ -217,10 +218,13 @@ mPlus (Just x) (Just y) = Just (x+y)
 mPlus x Nothing =  x
 
 summarizeShelves :: Seq (Shelf s) -> WH (SummaryInfo) s
+summarizeShelves shelves | null shelves = return $ SummaryInfo Nothing Nothing 0
 summarizeShelves shelves = do
-    let totalVolume = (/1000000) . sum $ map shelfVolume shelves
-        totalFloor = (/10000) . sum $ map (floorSpace.minDim) shelves
-    used <- (/1000000) <$> sum `fmap` mapM occupiedVolume shelves
+    summaries <- traverse summaryFromShelf shelves
+    let ShelvesSummary{..} = sconcat $ toNonEmpty $ impureNonNull summaries
+    let totalVolume = suVolume sShelvesSummary / 1e6
+        totalFloor = suSurfaceLW sShelvesSummary / 1e4
+        used = suVolume sBoxSummary / 1e6
     return $ SummaryInfo (Just totalFloor) (Just totalVolume) used
 
 summary :: forall s. WH ([[Text]], [Text])  s
@@ -268,12 +272,6 @@ _unused_isShelfEmpty s = null `fmap` findBoxByShelf s
 -- @todo optimize
 _unused_seqFilterM :: (Functor m, Monad m) => (a -> m Bool) -> Seq a -> m (Seq a)
 _unused_seqFilterM test s = fmap Seq.fromList (filterM test (toList s))
-
-occupiedVolume :: Shelf' shelf => shelf s -> WH Double s
-occupiedVolume s = do
-    boxes <- findBoxByShelf s
-    return $ sum $ map  (volume ._boxDim) boxes
-
 
 
 -- * Shelve report 

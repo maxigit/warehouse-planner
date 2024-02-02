@@ -21,18 +21,14 @@ spec = describe "Full scenario" do
    it "summarizes it " do
       sums <- execFull Report.summary
       sums `shouldBe` 
-             (  [ [""        , "used", "total", "free", "%used", "floor"]
-                , ["<main>"  , "299" , "738"  , "439" , "40"   , "655"]
-                , ["_error"  , "60"  , ""     , ""    , ""     , ""]
-                , ["_pending", "370" , ""     , ""    , ""     , ""]
-                , ["top"     , "53"  , "328"  , "274" , "16"   , "224"]
-                ]
-              ,   [            "782" , "1066",  "284" , "73"   , "879"]
-              )
-
-
-     
-       
+             ( [ [""        , "used", "total", "free", "%used", "floor"]
+               , ["<main>"  , "299" , "801"  , "503" , "37"   , "662"]
+               , ["_error"  , "60"  , ""     , ""    , ""     , ""   ]
+               , ["_pending", "370" , ""     , ""    , ""     , ""   ]
+               , ["top"     , "53"  , "353"  , "300" , "15"   , "224"]
+               ]
+             , [              "782" , "1155" , "373" , "68"   , "886"]
+             )
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
 -- to a given result.

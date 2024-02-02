@@ -90,7 +90,9 @@ library
   if flag(brick)
     other-modules:
         WarehousePlanner.Brick
+        WarehousePlanner.Brick.RenderBar
         WarehousePlanner.Brick.Repl
+        WarehousePlanner.Brick.Types
         WarehousePlanner.Brick.Util
         WarehousePlanner.Types
     hs-source-dirs:
