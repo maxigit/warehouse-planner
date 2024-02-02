@@ -3,6 +3,7 @@ import Criterion.Main
 import WarehousePlanner.Repl
 import WarehousePlanner.Base
 import WarehousePlanner.Exec
+import qualified WarehousePlanner.Report as Report
 import Text.Printf
 
 import Control.Monad.State (get, gets)
@@ -18,6 +19,11 @@ main = defaultMain
   [ bgroup "load" [ bench ("with " <> show l <> "position") $ nfIO $ benchLoad ["Shelves/01-Shelves", "Stock/with-position-" <> show l]
                   | l <- [1000, 2000, 3000, 4300]
                   ]
+  , bgroup "summarize" [ bench ("with " <> show l <> "position") $ nfIO do
+                              benchLoad ["Shelves/01-Shelves", "Stock/with-position-" <> show l ]
+                              exec (Report.summary)
+                       | l <- [1000, 2000, 3000, 4300]
+                       ]
   , bgroup "mocked" [ bench (printf "%s %dx%d" name nstyle nshelf) 
                           $ nfIO $ withMock @Int [1..nstyle] [1..nshelf] action
                     | nstyle <- [10, 20, 30,40, 50]
@@ -34,7 +40,7 @@ main = defaultMain
                                         ]
 
                     ]
-  , bgroup "full" [bench "with moves" $ nfIO $ benchLoad ["full-with-moves"]]
+  , bgroup "full" [ bench "with moves" $ nfIO $ benchLoad ["full-with-moves"] ]
   ]
                  
                  
