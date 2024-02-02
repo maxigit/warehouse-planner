@@ -216,22 +216,24 @@ mPlus Nothing x = x
 mPlus (Just x) (Just y) = Just (x+y)
 mPlus x Nothing =  x
 
-summarizeShelves :: [Shelf s] -> WH (SummaryInfo) s
+summarizeShelves :: Seq (Shelf s) -> WH (SummaryInfo) s
 summarizeShelves shelves = do
     let totalVolume = (/1000000) . sum $ map shelfVolume shelves
         totalFloor = (/10000) . sum $ map (floorSpace.minDim) shelves
     used <- (/1000000) <$> sum `fmap` mapM occupiedVolume shelves
     return $ SummaryInfo (Just totalFloor) (Just totalVolume) used
 
-summary :: WH ([[Text]], [Text])  s
+summary :: forall s. WH ([[Text]], [Text])  s
 summary = do
-    ss <- toList <$> gets shelves >>= mapM findShelf
+    ss <- gets shelves >>= mapM findShelf
     -- group shelves using summary property
     -- summary=no mean don't display
-    let groups = Map'.fromListWith (<>) [ (summaryGroup, [s])
-                                        | s <- filter (applyTagSelectors (maybeToList $ parseTagSelector "!sep")  shelfTag) ss
-                                        , let summaryGroup = flattenTagValues <$>lookup "summary" (shelfTag s)
-                                        ]
+    let groups :: Map'.Map (Maybe Text) (Seq (Shelf s))
+        groups = Map'.fromList  [ (summaryGroup s, ss')
+                                | ss'@(s:<_) <- grouped
+                                ]
+        grouped = groupAllOn  summaryGroup $ filter (not . flip tagIsPresent "sep") ss
+        summaryGroup s = flattenTagValues <$>lookup "summary" (shelfTag s)
     infos' <- traverse summarizeShelves groups
     let infos = Map'.mapWithKey adjust infos'
         adjust tag si = case tag of
