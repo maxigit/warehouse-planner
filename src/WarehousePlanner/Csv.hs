@@ -911,7 +911,7 @@ readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
                 groups = List.groupBy (\a b -> snd a == snd b)
                        $ List.sortBy (comparing snd) rows0
 
-            v <- forM groups $ \rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
+            (_,v) <- mapAccumLM  ( \previousMatch rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
                         s0 <- defaultShelf
                         let dim = Dimension l w h
                             boxOrs = readOrientations newBoxOrientations os
@@ -926,7 +926,9 @@ readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
                                    (readTagAndPatterns tagOrPatterns tags)
                         let boxes = concat boxesS
                             pmode = POr PAboveOnly PRightOnly
-                        shelves <- (mapM findShelf) =<< findShelfBySelector (Selector (NameMatches [MatchFull shelf]) [])
+                        shelves <- if shelf == fst previousMatch  -- check previous match
+                                   then return $ snd previousMatch
+                                   else (mapM findShelf) =<< findShelfBySelector (Selector (NameMatches [MatchFull shelf]) [])
                         leftOvers <- moveBoxes ExitLeft pmode SortBoxes boxes shelves
 
                         let errs = if not (null leftOvers)
@@ -945,7 +947,12 @@ readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
                         --           ++ show (length shelves) ++ " shelves :  " ++ show shelves
                         --      ]
                                     -- else []
-                        return (boxes, errs)
+                        return ( (shelf, shelves) -- last found
+                               , (boxes, errs)
+                               )
+                        ) 
+                        ("", [])
+                        groups
             let (boxes, errors) = unzip (v)
 
             return (concat boxes, concat errors)
@@ -956,14 +963,17 @@ processStockTakeWithPosition :: [Text] -> [Orientation] -> (Text -> (Text, Text)
 processStockTakeWithPosition tagOrPatterns newBoxOrientations splitter rows  =  do
   s0 <- defaultShelf
   let -- go :: Map Text FillState -> _ -> WH (FillState, _) s
-      go fillStateMap (shelfname, posSpec, style', l, w, h, os) =  do
+      go (previousShelf, fillStateMap) (shelfname, posSpec, style', l, w, h, os) =  do
               let fillState = findWithDefault emptyFillState {fLastBox_ = Dimension l w h} shelfname fillStateMap
                   (name, tags ) = extractTags style'
                   (style, content) = splitter name
                   dim = Dimension l w h
                   boxOrientations = readOrientations newBoxOrientations os
-              shelfs <- findShelfBySelector (Selector (matchName shelfname) [])
-              shelf <- findShelf $ headEx $ shelfs ++ [s0]
+              shelf <- if shelfname == fst previousShelf
+                       then return $ snd previousShelf
+                       else do
+                        shelfs <- findShelfBySelector (Selector (matchName shelfname) [])
+                        findShelf $ headEx $ shelfs ++ [s0]
               -- If not orientation is provided, use the best possible as if the shelf was empty
               let (bestOrientation, _, _) = bestArrangement [ OrientationStrategy orientation 1 1 Nothing Nothing False 
                                                             | orientation <- case boxOrientations of
@@ -1001,12 +1011,14 @@ processStockTakeWithPosition tagOrPatterns newBoxOrientations splitter rows  =  
                               _ ->  setCurrent : coms
                      
               case commandsE of
-                  Left e -> return $ (updateM fillState, Left e)
+                  Left e -> return $ (((shelfname, shelf) , updateM fillState), Left e)
                   Right commands -> do
                         (newState, boxems) <- mapAccumLM (executeFillCommand shelf) fillState $ addBoxDimToCommands commands
-                        return $ (updateM newState, Right $ catMaybes boxems)
+                        return $ ( ((shelfname, shelf), updateM newState)
+                                 , Right $ catMaybes boxems
+                                 )
 
-  (_, boxeEs) <- mapAccumLM go mempty rows
+  (_, boxeEs) <- mapAccumLM go (("", error "BOOM"), mempty) rows
   let (errors, boxes) = partitionEithers boxeEs
   return $ (concat boxes, errors)
       
