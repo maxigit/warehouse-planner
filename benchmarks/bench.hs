@@ -41,6 +41,23 @@ main = defaultMain
 
                     ]
   , bgroup "full" [ bench "with moves" $ nfIO $ benchLoad ["full-with-moves"] ]
+  , bgroup "diagonal" ( (bench "66" $ nfIO do
+                                           return . show $ howManyWithDiagonal (Dimension 66 1 36)
+                                                                        (Dimension 66 1 36)
+                                                                        (Dimension 10 1 13)
+                        )
+                      : [ bench (show i <> "x" <> show k) 
+                              $ nfIO do
+                                     let dim = Dimension 50 1 50
+                                         in_ = Dimension i 1 k
+                                     return . show $ howManyWithDiagonal dim dim in_
+                        | (i,k) <- [(1, 1), (1,3) , (25,5)]
+                        ]
+
+                      )
+
+                                                                
+                        
   ]
                  
                  
@@ -68,3 +85,4 @@ withMock styles shelves action = do
   initRepl ""
   exec (mockWH styles shelves >> action)
   
+-- | Test howManyWith Diagonal

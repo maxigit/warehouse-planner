@@ -54,7 +54,7 @@ boxArrangements = describe "boxArrangements @F" $ do
                         (Dimension 32 1 36) 
             (Dimension 10 1 13)
             `shouldBe` Regular (HowMany 6 3 1 2)
-  it "finds complex arrangement 2 square" $ do
+  it "finds complex arrangement 2 squares" $ do
     --    1477adgg
     --    14 8ad h
     --    2558beeh
@@ -64,6 +64,16 @@ boxArrangements = describe "boxArrangements @F" $ do
                         (Dimension 66 1 36) 
             (Dimension 10 1 13)
             `shouldBe` Diagonal (HowMany 18 6 1 3) 3
+  it "finds complex arrangement 2.5 square" $ do
+    --  |   |        
+    --  |-- |--      
+    --  --| --|      
+    --  | | | |      
+    --  |-- |--       
+    howManyWithDiagonal (Dimension 38 1 29) 
+                        (Dimension 38 1 29) 
+                        (Dimension 10 1 9)
+            `shouldBe` Diagonal (HowMany 12 4 1 3) 2
 
 
 shouldExpandTo attribute expected = do
