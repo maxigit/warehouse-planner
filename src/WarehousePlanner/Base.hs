@@ -761,22 +761,33 @@ howMany (Dimension l0 w0 h0) (Dimension l w h) (Dimension lb wb hb) =
 --    3369
 --  3, 5 and 7 box are rotated down allowing f
 howManyWithDiagonal :: Dimension -> Dimension -> Dimension -> TilingMode
-howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) =
-  let normal@(HowMany _ ln wn hn) = howMany minOuter outer inner
+howManyWithDiagonal minOuter outer inner@(Dimension lb _ hb) | lb == hb =
+  Regular $ howMany minOuter outer inner
+howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) | lb < hb = 
+  let normal@(HowMany _ _ wn hn) = howMany minOuter outer inner
       fit d db = floor (max 0 (d-0) /(db+0))
-      -- how many feet for a given size of a square
+      -- how many extra can we squeeze horizontally
+      -- if we turn the box
+      diff = hb - lb -- >0 
+      -- check how many squares actually fit height wise
+      minSquareNumberV = max 1 do  (diff - 1 + fromIntegral (hn+1) * hb - h) `fit` diff
+      maxSquareWidth = case minSquareNumberV of
+                       0 -> hn 
+                       _ -> (hn + 1) `div` minSquareNumberV
       nForDiag n =
-         --  | = = | = =
-         --  = = | = = |     1 square x 2
-         --  = | = = | =
-         --  | = = | = =
+         --  | = =  | = =
+         --
+         --  = = |  = = |     1 square x 2
+         --  = | =  = | =
+         --  | = =  | = =
+         --
          let squareL = fromIntegral (n-1)*lb+hb
              squareH = fromIntegral (n-1)*hb+lb
              sqNL = fit l squareL
              sqNH = fit h squareH
              leftL = l - squareL * fromIntegral sqNL
              leftH = h - squareH * fromIntegral sqNH
-             mb = max lb hb
+             mb = hb -- max lb hb
              -- find how many row/column can we use
              -- in a partial square
              -- We use mb because the first row/column
@@ -785,7 +796,6 @@ howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) =
               if remaining < mb
               then 0
               else -- traceShow ("Remaining", remaining, remaining-mb, "b" , b)
-                   -- $ traceShowId
                    fit (remaining -  mb) b +1
               
          in Diagonal (mkHowMany (sqNL * n + leftOver leftL lb)
@@ -793,16 +803,21 @@ howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) =
                                  (sqNH * n + leftOver leftH hb)
                       )
                       n
-      options = [nForDiag i | i <- [2.. (1 + min ln hn)] ]
-      bests = (Regular normal): options
-  in if outer /= minOuter
-     then Regular normal
-     else case bests of
-      [] -> error "Shouldn't happen"
-      _ -> minimumEx bests
+   -- in case (min maxSquareNumberH minSquareNumberV , [max 2 minSquareWidth .. maxSquareWidth]) of
+   in case (minSquareNumberV, [2 .. maxSquareWidth]) of
+         (0, _) -> Regular normal
+         (_, []) -> Regular normal
+         (_, ds) -> let options = map nForDiag ds
+                        bests = (Regular normal): options
+                    in if outer /= minOuter
+                       then Regular normal
+                       else case bests of
+                        [] -> error "Shouldn't happen"
+                        _ -> minimumEx bests
+howManyWithDiagonal minOuter outer inner = 
+  rotateTM $ howManyWithDiagonal (r minOuter) (r outer) (r inner) where
+  r = rotate tiltedRight
 
-
-        
 -- | Find how many  boxes  fit using two regular tiling as 
 -- For example
 --  44 55 66 7 8
@@ -826,17 +841,17 @@ howManyWithSplitH minOuter outer inner =  let
 howManyWithSplitV :: Dimension -> Dimension -> Dimension -> TilingMode
 howManyWithSplitV minOuter outer inner = let
   rot = rotate tiltedRight 
-  rotateTM (Regular hmany) = Regular (rotateH hmany)
-  rotateTM (Diagonal hmany n) = Diagonal (rotateH hmany) n
-  rotateTM (TilingCombo dir m1 m2) = let
-            dir' = case dir of
-                    Horizontal -> Vertical
-                    Vertical -> Horizontal
-                    Depth -> Depth
-            in TilingCombo dir' (rotateTM m1) (rotateTM m2)
-  rotateH (HowMany n l w h) = HowMany n h w l
   in rotateTM $ howManyWithSplitH (rot minOuter) (rot outer) (rot inner)
   
+rotateTM (Regular hmany) = Regular (rotateH hmany)
+rotateTM (Diagonal hmany n) = Diagonal (rotateH hmany) n
+rotateTM (TilingCombo dir m1 m2) = let
+         dir' = case dir of
+                 Horizontal -> Vertical
+                 Vertical -> Horizontal
+                 Depth -> Depth
+         in TilingCombo dir' (rotateTM m1) (rotateTM m2)
+rotateH (HowMany n l w h) = HowMany n h w l
   
 -- | Given a box and a tiling mode, returns the bounding box
 tmBoundingBox :: TilingMode -> Dimension -> Dimension

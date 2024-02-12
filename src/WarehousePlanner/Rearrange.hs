@@ -14,7 +14,6 @@ import Control.Monad (zipWithM)
 import Control.Monad.State (modify)
 import qualified Data.Set as Set
 import qualified Data.Map as Map
-import qualified Data.Sequence as Seq
 import GHC.Utils.Monad (mapAccumLM)
 import Data.List (unfoldr)
 

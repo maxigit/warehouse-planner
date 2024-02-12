@@ -1,3 +1,7 @@
+# 1.1.1
+Performance optimisation.
+HowManyWithDiagonal tries less.
+
 # 1.1.0
 
 Remove auto save point (based on heading levels).

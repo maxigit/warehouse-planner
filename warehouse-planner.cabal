@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        1.1.0
+version:        1.1.1
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -53,6 +53,7 @@ library
       ViewPatterns
       MultiWayIf
       LambdaCase
+  ghc-options: -W -Werror -fwarn-tabs -Wno-type-defaults -Wno-partial-type-signatures
   build-depends:
       Glob
     , base

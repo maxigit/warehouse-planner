@@ -6,7 +6,7 @@ module WarehousePlanner.Exec
 
 import ClassyPrelude
 import WarehousePlanner.Base
-import Control.Monad.State (get, put, State, evalStateT,runStateT, modify)
+import Control.Monad.State (get, put, evalStateT,runStateT, modify)
 import Control.Monad.ST (stToIO)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Semigroup(Arg(..))
@@ -53,7 +53,7 @@ copyShelf sId = do
     return (sId, nId)
   
 copyBox :: Box t -> WH (ShelfId s -> Map (ShelfId t) (ShelfId s) -> WH (Box s) s) t
-copyBox box@Box{..} = return $ \defaultShelf shelfMapId -> do
+copyBox Box{..} = return $ \defaultShelf shelfMapId -> do
   let shelf = case boxShelf of
                 Just s -> findWithDefault defaultShelf s shelfMapId 
                 Nothing ->  defaultShelf

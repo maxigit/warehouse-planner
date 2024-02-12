@@ -1,7 +1,9 @@
 module WarehousePlanner.Summary
 ( Summary(..)
-, makeShelfSummary
+, summaryFromShelf
 , ShelvesSummary(..)
+, ratio
+, 
 )
 where 
 

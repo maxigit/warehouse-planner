@@ -8,21 +8,16 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
 module WarehousePlanner.Type where
 import ClassyPrelude
-import Data.NonNull
 import Control.Monad.State
 import Diagrams.Prelude(Colour)
 import Data.STRef
 import Control.Monad.ST
-import Data.Set (Set)
 import qualified Data.Set as Set
-import Data.Map (Map)
 import qualified Data.Map as Map 
-import Data.Sequence (Seq)
 import qualified System.FilePath.Glob as Glob
 -- import Data.List(intercalate)
 import Data.Semigroup(Arg(..))
 import qualified Data.Text as Text
-import Data.Maybe(fromMaybe, isJust)
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -116,7 +111,7 @@ affineToDimensions rec = let
   
 
 data HowMany = HowMany 
-             { perShelf :: Int
+             { perShelf :: !Int
              , perLength :: Int
              , perDepth :: Int
              , perHeight :: Int

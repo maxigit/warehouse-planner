@@ -10,7 +10,7 @@ eigthH, eigthV
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import Brick
-import Brick.Widgets.Border as Brick
+-- import Brick.Widgets.Border as Brick
 import Brick.Util
 import qualified Graphics.Vty.Attributes as V
 import qualified Graphics.Vty.Attributes.Color as V

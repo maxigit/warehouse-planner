@@ -62,7 +62,7 @@ loads paths = do
 summary :: IO ()
 summary = do
   state <- readIORef stateRef
-  r@(tables, extra) <- execWH (warehouse state) Report.summary
+  (tables, extra) <- execWH (warehouse state) Report.summary
   mapM_ print tables
   print "------------"
   print extra

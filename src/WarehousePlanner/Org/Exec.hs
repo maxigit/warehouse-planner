@@ -19,7 +19,7 @@ import WarehousePlanner.Csv
 import WarehousePlanner.Display
 -- import Util.Cache
 import Unsafe.Coerce (unsafeCoerce)
-import Control.Monad.State (put,get)
+import Control.Monad.State (put)
 import WarehousePlanner.Exec
 
 -- * Type 
