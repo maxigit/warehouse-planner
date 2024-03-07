@@ -238,6 +238,8 @@ data FillingStrategy = RowFirst | ColumnFirst deriving (Show, Eq, Enum, Ord)
 data ShelfGroup' s = ShelfGroup [ShelfGroup' s] Direction
                 | ShelfProxy (s)
                 deriving (Show, Functor, Foldable)
+type instance Element (ShelfGroup' s) = s
+instance MonoFoldable (ShelfGroup' s)
 type ShelfGroup s = ShelfGroup' (ShelfId s)
 
 toGroups :: ShelfGroup' s -> [ShelfGroup' s]

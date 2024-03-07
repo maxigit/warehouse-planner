@@ -90,6 +90,7 @@ library
   if flag(brick)
     other-modules:
         WarehousePlanner.Brick
+        WarehousePlanner.Brick.App
         WarehousePlanner.Brick.RenderBar
         WarehousePlanner.Brick.Repl
         WarehousePlanner.Brick.Types

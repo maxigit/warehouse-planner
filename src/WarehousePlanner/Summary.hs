@@ -1,6 +1,7 @@
 module WarehousePlanner.Summary
 ( Summary(..)
 , summaryFromShelf
+, summaryFromShelves
 , ShelvesSummary(..)
 , ratio
 , 
@@ -79,6 +80,9 @@ summaryFromShelf shelf = do
                            (shelf :| [])                          
                            (makeBoxesSummary $ toList boxes)
                            (makeShelfSummary shelf)
+                           
+summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary (Shelf s)) s
+summaryFromShelves shelves = sconcat <$> mapM summaryFromShelf shelves
 
 makeShelfSummary :: Shelf s -> Summary
 makeShelfSummary shelf = Summary{..} where

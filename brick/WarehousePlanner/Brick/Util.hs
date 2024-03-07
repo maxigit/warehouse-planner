@@ -5,13 +5,12 @@ eigthH, eigthV
 , percToLevel
 , percToAttrName
 , generateLevelAttrs
+, succ', pred'
 ) where
 
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import Brick
--- import Brick.Widgets.Border as Brick
-import Brick.Util
 import qualified Graphics.Vty.Attributes as V
 import qualified Graphics.Vty.Attributes.Color as V
 
@@ -87,6 +86,10 @@ levelToColor v = \case
 
 
 
-    
+succ', pred' :: (Eq a, Enum a, Bounded a) => a -> a
+succ' s | s == maxBound = minBound
+succ' s = succ s
   
+pred' s | s == minBound = maxBound
+pred' s = pred s
   
