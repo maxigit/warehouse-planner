@@ -146,27 +146,18 @@ maxUsedOffset shelf = do
 
 -- | Nested groups of shelves, used for display
 
-__unused_groupToShelfIds :: ShelfGroup s -> [ShelfId s]
-__unused_groupToShelfIds (ShelfProxy sid) = [sid]
-__unused_groupToShelfIds (ShelfGroup  groups _ ) = concatMap __unused_groupToShelfIds groups
-
-
-rackUp :: Shelf' shelf => [shelf s] -> ShelfGroup s
-rackUp ss = ShelfGroup (reverse g) Vertical where
-    g = map (ShelfProxy . shelfId) ss
-
-buildWarehouse :: [[[Text]]] -> WH (ShelfGroup s) s
+buildWarehouse :: [[[Text]]] -> WH (RunsWithId s) s
 buildWarehouse xsss = do
-    bays <- mapM buildBay xsss
-    return $ ShelfGroup bays  Vertical
+    runs <- mapM buildRun xsss
+    return $ fromList runs
 
-buildBay :: [[Text]] -> WH (ShelfGroup s) s
-buildBay xss = do
-    racks <- mapM buildRack xss
-    return $ ShelfGroup racks Horizontal
+buildRun :: [[Text]] -> WH (Run [] (ShelfId s) ) s
+buildRun xss = do
+    bays <- mapM buildBay xss
+    return $ fromList bays 
 
-buildRack :: [Text] -> WH (ShelfGroup s) s
-buildRack xs = do
+buildBay :: [Text] -> WH (Bay [] (ShelfId s) ) s
+buildBay xs = do
     idsS <- mapM ( \x ->  do
             case x of
                 (uncons -> Just ('-', name)) ->  fmap (map shelfId) $ updateShelfByName (\s -> s { flow = RightToLeft }) name
@@ -175,7 +166,7 @@ buildRack xs = do
     shelves <- mapM findShelf (concat idsS)
     let sorted = sortOn shelfName shelves
 
-    return $ rackUp sorted
+    return $ map shelfId sorted
 
  -- -| shelf use as error, ie everything not fitting anywhere
 defaultShelf :: WH (ShelfId s) s

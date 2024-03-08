@@ -1,7 +1,7 @@
 {-# LANGUAGE ExplicitForAll #-}
 module WarehousePlanner.Brick
-( renderWarehouse
-, generateLevelAttrs
+( -- renderWarehouse
+-- , generateLevelAttrs
 )
 where
 
@@ -14,16 +14,14 @@ import Brick.Widgets.Border as Brick
 import qualified Data.Foldable as Foldable
 import Data.Text (commonPrefixes)
 
-
+{-
 renderWarehouse :: WH (Widget n) s
 renderWarehouse = do
    groups <- gets shelfGroup
-   -- g <- gets shelves
-   -- let groups = ShelfGroup (map ShelfProxy $ toList g) (error "X")
    slices <- mapM renderSlice $ toGroups groups
    return $ vBox {- $ intersperse hBorder -} $  slices
    
-renderSlice :: ShelfGroup s -> WH (Widget n) s
+renderSlice :: RunsWithId s -> WH (Widget n) s
 renderSlice slice = do
   bays <- mapM renderBay $ toGroups slice
   shelves <- mapM (findShelf @(ShelfId)) (Foldable.toList slice)
@@ -33,14 +31,14 @@ renderSlice slice = do
   return $ hBox $ {- intersperse vBorder -} txt (title <> ": ") : bays
   where commonPrefix a b = maybe "" (\(p,_,_) -> p) (commonPrefixes a b)
   
-renderBay :: forall s n. ShelfGroup s -> WH (Widget n) s
+renderBay :: forall s n. RunsWithId s -> WH (Widget n) s
 renderBay bay = do
   shelves <- mapM (findShelf @(ShelfId)) (Foldable.toList bay)
   let (bottoms, tops) = partition (not . isTop) shelves
   renderBayTo2Halves bottoms tops
   where isTop s = tagIsPresent s "top"
   
-renderShelf :: ShelfGroup s -> WH (Widget n) s
+renderShelf :: RunsWithId s -> WH (Widget n) s
 renderShelf (ShelfProxy sid) = do
     shelf <- findShelf sid 
     return $ txt $ shelfName shelf
@@ -60,3 +58,5 @@ renderBayTo2Halves bottoms tops = do
   usedBottom <- percUsed bottoms
   usedTop <- percUsed tops
   return $ withAttr (percToAttrName usedBottom usedTop) . str $ (eigthV perc8):[]
+  
+  -}

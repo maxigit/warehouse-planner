@@ -140,7 +140,7 @@ renderScenario sc layoutM = do
             colourMap = concat colourMaps
         diags <- execWH wh0 ( do
                                 group <- groupW
-                                renderSlices shelfStyling boxStyling group
+                                fmap return $ renderRuns shelfStyling boxStyling group
                            )
         return (Right diags)
 

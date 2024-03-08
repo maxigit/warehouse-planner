@@ -6,41 +6,33 @@ module WarehousePlanner.Display where
 import ClassyPrelude
 import WarehousePlanner.Base hiding(up, rotate)
 import Diagrams.Prelude hiding(Box,offset,direction)
-import Control.Monad.State(get)
+import Control.Monad.State(gets)
 import Diagrams.Backend.Cairo 
 -- import Data.Maybe
 import qualified Data.Map as Map
 
 display :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> WH (Diagram B) s
 display shelfStyling boxStyling= do
-    warehouse <- get
-    g <- renderGroup shelfStyling boxStyling (shelfGroup warehouse)
+    runs <- gets shelfGroup
+    g <- renderRuns shelfStyling boxStyling runs
     s0 <- defaultShelf
-    base <- renderGroup shelfStyling boxStyling (ShelfProxy (s0))
+    base <- renderShelf shelfStyling boxStyling s0
     return $ g === base
     
+renderRuns shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat renderRun
+renderRun shelfStyling boxStyling = renderGroup shelfStyling boxStyling hcat renderBay
+renderBay shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat renderShelf
 
-renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> ShelfGroup s -> WH (Diagram B) s
-renderGroup shelfStyling boxStyling (ShelfGroup gs direction) = do
-    rendered <- mapM (renderGroup shelfStyling boxStyling) gs
-    return $ pad (1.05) $ cat_ direction (map alignB rendered)
-    where cat_  Vertical = vcat 
-          cat_  Horizontal = hcat
-          cat_  Depth = hcat -- should not happen
+-- renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> RunsWithId s -> WH (Diagram B) s
+renderGroup shelfStyling boxStyling cat_ renderChildren gs = do
+    rendered <- mapM (renderChildren shelfStyling boxStyling) gs
+    return $ pad (1.05) $ cat_ (map alignB rendered)
     
-renderGroup shelfStyling boxStyling (ShelfProxy i) = do
-    shelf <- findShelf i
-    renderShelf (shelfStyling shelf) boxStyling shelf
-
-renderSlices :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> ShelfGroup s -> WH [Diagram B] s
-renderSlices shelfStyling boxStyling (ShelfGroup gs __direction) = mapM (renderGroup shelfStyling boxStyling) gs
-renderSlices shelfStyling boxStyling shelf@(ShelfProxy _) = do
-    diag <- renderGroup shelfStyling boxStyling shelf
-    return [diag]
-
-renderShelf :: ShelfStyling -> (Box s -> BoxStyling) -> Shelf s -> WH (Diagram B) s
-renderShelf styling@ShelfStyling{..} boxStyling shelf = do            
+renderShelf :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> ShelfId s -> WH (Diagram B) s
+renderShelf shelfStyling boxStyling shelfId = do            
+    shelf <- findShelf shelfId
     (_, used) <- usedDepth shelf
+    let styling@ShelfStyling{..}  = shelfStyling shelf
     let (Dimension (max 1 -> l) __w (max 1 -> h)) = maxDim shelf
         (Dimension ln wn hn) = minDim shelf
         lborder = lc border # lwL 2

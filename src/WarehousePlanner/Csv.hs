@@ -599,7 +599,7 @@ readColourMap filename = do
        Right rows -> return $ mapFromList $ Vec.toList rows
 
     
-readWarehouse :: FilePath -> IO (WH (ShelfGroup s) s)
+readWarehouse :: FilePath -> IO (WH (RunsWithId s) s)
 readWarehouse filename = buildWarehouse `fmap` readLayout filename
 
 

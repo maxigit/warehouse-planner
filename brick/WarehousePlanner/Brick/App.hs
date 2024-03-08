@@ -24,7 +24,7 @@ data WHEvent = ENextMode
 initState :: forall s . WH (AppState) s
 initState = do
   groups <- gets shelfGroup
-  let idss :: [[ShelfId s]] = map toList (toGroups groups) 
+  let idss :: [[ShelfId s]] = map concat (groups) 
   shelvess :: [[Shelf s]] <- mapM (mapM findShelf) idss
   asShelvesSummary <- mapM (fmap erase . summaryFromShelves ) (mapMaybe nonEmpty shelvess)
   let asViewMode = ViewSummary SVVolume

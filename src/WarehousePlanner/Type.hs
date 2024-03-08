@@ -235,16 +235,8 @@ newtype Shelfname = Shelfname Text deriving Show
 -- | Which way fill shelves
 
 data FillingStrategy = RowFirst | ColumnFirst deriving (Show, Eq, Enum, Ord)
-data ShelfGroup' s = ShelfGroup [ShelfGroup' s] Direction
-                | ShelfProxy (s)
-                deriving (Show, Functor, Foldable)
-type instance Element (ShelfGroup' s) = s
-instance MonoFoldable (ShelfGroup' s)
-type ShelfGroup s = ShelfGroup' (ShelfId s)
+type RunsWithId s = Runs [] (ShelfId s)
 
-toGroups :: ShelfGroup' s -> [ShelfGroup' s]
-toGroups (ShelfGroup groups _) = groups
-toGroups proxy = [proxy]
 
 -- | State containing bays of boxes
 -- boxOrientations : function returning a list
@@ -253,7 +245,7 @@ toGroups proxy = [proxy]
 -- setting min to 1, allow forcing boxes stick out
 data Warehouse s = Warehouse { boxMap :: Map Text  (Seq (BoxId s))
                            , shelves :: Seq (ShelfId s)
-                           , shelfGroup :: ShelfGroup s
+                           , shelfGroup :: RunsWithId s
                            , boxStyling :: Box s -> BoxStyling
                            , shelfStyling :: Shelf s -> ShelfStyling
                            , boxOrientations :: Box s -> Shelf s -> [OrientationStrategy]
@@ -393,18 +385,6 @@ instance Shelf' ShelfId where
 instance HasTags (Box s) where getTags = boxTags
 instance HasTags (Shelf s) where getTags = shelfTag
 instance HasTags (Tags) where getTags = id
-
-instance Semigroup (ShelfGroup s) where
-    sg@(ShelfGroup g d) <> sg'@(ShelfGroup g' d')
-        | d == d' = ShelfGroup (g <> g') d
-        | otherwise = ShelfGroup [sg, sg'] Vertical
-
-    (ShelfGroup g d) <> s = ShelfGroup (g<>[s]) d
-    s <> (ShelfGroup g d) = ShelfGroup (s:g) d
-    sg <> sg' = ShelfGroup [sg, sg'] Vertical
-
-instance Monoid (ShelfGroup s) where
-    mempty = ShelfGroup [] Vertical
 
 -- * Utilities 
 -- ** Dimensions 
@@ -642,5 +622,8 @@ selectAllBoxes = BoxSelector SelectAnything
 
 -- ** Warehouse 
 
+type Run f a = f (Bay f a)
+type Bay f a = f a
+type Runs f a = f (Run f a)
 
 -- ** Similar 
