@@ -18,6 +18,7 @@ import qualified System.FilePath.Glob as Glob
 -- import Data.List(intercalate)
 import Data.Semigroup(Arg(..))
 import qualified Data.Text as Text
+import Data.List.NonEmpty (NonEmpty(..))
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -235,7 +236,7 @@ newtype Shelfname = Shelfname Text deriving Show
 -- | Which way fill shelves
 
 data FillingStrategy = RowFirst | ColumnFirst deriving (Show, Eq, Enum, Ord)
-type RunsWithId s = Runs [] (ShelfId s)
+type RunsWithId s = Runs NonEmpty (ShelfId s)
 
 
 -- | State containing bays of boxes
@@ -625,5 +626,14 @@ selectAllBoxes = BoxSelector SelectAnything
 type Run f a = f (Bay f a)
 type Bay f a = f a
 type Runs f a = f (Run f a)
+
+  
+fromRuns :: (Functor f) => (f (Run g a) -> Runs g a) -> (f (Bay g a) -> Run g a)  -> (f a -> Bay g a) -> Runs f a -> Runs g a
+fromRuns f1 f2 f3 runs = f1 $ fmap fromRun runs where
+  fromRun bays = f2 $ fmap fromBay bays 
+  fromBay shelves = f3 shelves 
+
+mapRuns :: Functor f => (a -> b) -> Runs f a -> Runs f b
+mapRuns f = fmap  (fmap (fmap f) )
 
 -- ** Similar 

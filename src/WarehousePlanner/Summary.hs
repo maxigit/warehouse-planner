@@ -4,7 +4,7 @@ module WarehousePlanner.Summary
 , summaryFromShelves
 , ShelvesSummary(..)
 , ratio
-, 
+, makeRunsSummary
 )
 where 
 
@@ -48,16 +48,16 @@ instance Monoid Summary where
   
 -- * Shelves
 
-data ShelvesSummary a = ShelvesSummary
+data ShelvesSummary f a = ShelvesSummary
                { sName :: !Text
-               , sShelves :: !(NonEmpty a)
+               , sShelves :: f a
                -- lazy , sort of caches
                , sBoxSummary :: Summary
                , sShelvesSummary :: Summary
                }
      deriving (Foldable)
      
-instance Semigroup (ShelvesSummary a) where
+instance Semigroup (f a)  => Semigroup (ShelvesSummary f a) where
   s1 <> s2 = ShelvesSummary (commonPrefix (sName s1) (sName s2))
                             (sShelves s1        <> sShelves s2)
                             (sBoxSummary s1     <> sBoxSummary s2)
@@ -67,13 +67,13 @@ instance Semigroup (ShelvesSummary a) where
                     Just (common, _, _) -> common
                     Nothing             -> t1 <> "|" <> t2
 
-ratio :: (Summary -> Double) -> ShelvesSummary s -> Double
+ratio :: (Summary -> Double) -> ShelvesSummary f s -> Double
 ratio f ShelvesSummary{sShelvesSummary,sBoxSummary} = case f sShelvesSummary of
   0 -> 1
   x -> f sBoxSummary / x
   
 
-summaryFromShelf :: Shelf s -> WH (ShelvesSummary (Shelf s)) s
+summaryFromShelf :: Shelf s -> WH (ShelvesSummary NonEmpty (Shelf s)) s
 summaryFromShelf shelf = do
    boxes <- mapM findBox (_shelfBoxes shelf)
    return $ ShelvesSummary (shelfName shelf)
@@ -81,7 +81,7 @@ summaryFromShelf shelf = do
                            (makeBoxesSummary $ toList boxes)
                            (makeShelfSummary shelf)
                            
-summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary (Shelf s)) s
+summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary NonEmpty (Shelf s)) s
 summaryFromShelves shelves = sconcat <$> mapM summaryFromShelf shelves
 
 makeShelfSummary :: Shelf s -> Summary
@@ -104,6 +104,20 @@ makeBoxesSummary boxes = Summary{..} where
   suSurfaceWH = sum [w * h | Dimension _ w h <- dims ]
   suCount = 1
 
+data R' f a = R' (Runs f a)
+     deriving (Functor, Foldable, Traversable)
 
+makeRunsSummary :: Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary NonEmpty) (ShelvesSummary NonEmpty (Shelf s))) s
+makeRunsSummary runs = do
+  runs' <- (traverse (traverse (traverse summaryFromShelf))) runs
+  return $ fromRuns (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'
+
+
+promote :: ShelvesSummary NonEmpty a -> ShelvesSummary  NonEmpty (ShelvesSummary NonEmpty a)
+promote sum@ShelvesSummary{..} = ShelvesSummary{sShelves=pure sum , ..}
+
+
+  
+  
 
   

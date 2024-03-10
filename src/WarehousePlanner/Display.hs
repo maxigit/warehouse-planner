@@ -26,7 +26,7 @@ renderBay shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat ren
 -- renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> RunsWithId s -> WH (Diagram B) s
 renderGroup shelfStyling boxStyling cat_ renderChildren gs = do
     rendered <- mapM (renderChildren shelfStyling boxStyling) gs
-    return $ pad (1.05) $ cat_ (map alignB rendered)
+    return $ pad (1.05) $ cat_ (map alignB $ toList rendered)
     
 renderShelf :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> ShelfId s -> WH (Diagram B) s
 renderShelf shelfStyling boxStyling shelfId = do            

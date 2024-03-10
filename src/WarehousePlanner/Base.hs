@@ -107,6 +107,7 @@ import qualified Text.Parsec as P
 import qualified Text.Parsec.Text as P
 import Control.Monad.Fail 
 import GHC.Prim 
+import Data.List.NonEmpty (NonEmpty, nonEmpty)
 
 
 -- import qualified Debug.Trace as T
@@ -146,17 +147,13 @@ maxUsedOffset shelf = do
 
 -- | Nested groups of shelves, used for display
 
-buildWarehouse :: [[[Text]]] -> WH (RunsWithId s) s
-buildWarehouse xsss = do
-    runs <- mapM buildRun xsss
-    return $ fromList runs
+buildWarehouse :: NonEmpty (NonEmpty (NonEmpty Text)) -> WH (RunsWithId s) s
+buildWarehouse xsss = mapM buildRun xsss
 
-buildRun :: [[Text]] -> WH (Run [] (ShelfId s) ) s
-buildRun xss = do
-    bays <- mapM buildBay xss
-    return $ fromList bays 
+buildRun :: NonEmpty (NonEmpty Text) -> WH (Run NonEmpty (ShelfId s) ) s
+buildRun xss = mapM buildBay xss
 
-buildBay :: [Text] -> WH (Bay [] (ShelfId s) ) s
+buildBay :: NonEmpty Text -> WH (Bay NonEmpty (ShelfId s) ) s
 buildBay xs = do
     idsS <- mapM ( \x ->  do
             case x of
@@ -166,7 +163,9 @@ buildBay xs = do
     shelves <- mapM findShelf (concat idsS)
     let sorted = sortOn shelfName shelves
 
-    return $ map shelfId sorted
+    case nonEmpty $ map shelfId sorted of
+      Nothing -> error $ "Bay '" ++ (unpack $ unwords $ toList xs ) ++ "' is empty"
+      Just bay -> return bay
 
  -- -| shelf use as error, ie everything not fitting anywhere
 defaultShelf :: WH (ShelfId s) s
@@ -444,7 +443,7 @@ defaultShelfStyling = ShelfStyling{..} where
   barTitle = Nothing
   displayBarGauge = True
 emptyWarehouse :: Day -> Warehouse s
-emptyWarehouse today = Warehouse mempty mempty mempty
+emptyWarehouse today = Warehouse mempty mempty (error "No shelves defined")
                                  (const defaultBoxStyling)
                                  (const defaultShelfStyling)
                                  defaultBoxOrientations Nothing today

@@ -49,6 +49,7 @@ import Data.Text(splitOn)
 import Data.Text.IO(readFile)
 import GHC.Utils.Monad (mapAccumLM)
 import qualified System.FilePath.Glob as Glob
+import Data.List.NonEmpty (NonEmpty, nonEmpty)
 
 -- | Dimension info to construct a Shelf
 data ShelfDimension = ShelfDimension
@@ -579,17 +580,19 @@ readDeletes filename = do
 -- Line starting with < will be reversed
 -- < a|b|c => c b a
 -- > stays as normal (just there so on can disable and reenable easily << by transforming then to >>
-readLayout :: FilePath -> IO [[[ Text ]]]
+readLayout :: FilePath -> IO (Runs NonEmpty Text)
 readLayout filename = do
     content <- readFile filename
 
-    return $ map (processLine) (filter (not . comment) $ lines content)
+    return $ fromRuns unsafeNonEmpty $  fmap (processLine) (filter (not . comment) $ lines content)
     where processLine (uncons -> Just ('<', line)) = reverse (processLine line)
           processLine (uncons -> Just ('>', line)) = processLine line
           processLine line = map (splitOn "|")  (words line)
           comment (uncons -> Just ('#',_)) = True -- line starting with #
           comment "" = True -- or empty line
           comment _ = False
+          unsafeNonEmpty :: [a] -> NonEmpty a
+          unsafeNonEmpty = fromMaybe (error $ show filename <> " contains null lines") . nonEmpty 
 
 readColourMap :: FilePath -> IO (Map Text Text)
 readColourMap filename = do
