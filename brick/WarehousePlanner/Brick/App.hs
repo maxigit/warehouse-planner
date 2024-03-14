@@ -44,9 +44,11 @@ whApp =
       app = B.App {..}
       appDraw = \s -> case asViewMode s of
                            -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
-                           ViewSummary smode -> [B.renderList (\_ e -> shelfSummaryToBar VerticalBar smode e)
-                                                              True
-                                                              (sShelves $ asShelvesSummary s)
+                           ViewSummary smode -> [ B.hBox $ renderSummaryAsList "Runs" smode (asShelvesSummary s)
+                                                         : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
+                                                                Nothing -> []
+                                                                Just (_, run) -> [ renderSummaryAsList "Run" smode ( run)
+                                                                            ]
                                                 ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent
@@ -64,7 +66,15 @@ whMain wh = do
 whHandleEvent :: B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
 whHandleEvent ev = case ev of 
   B.AppEvent e -> handleWH e
-  B.VtyEvent (V.EvKey (V.KChar _) [] ) -> handleWH ENextMode
+  B.VtyEvent (V.EvKey (V.KChar ' ') [] ) -> handleWH ENextMode
+  B.VtyEvent ev -> do
+             l0 <- gets asShelvesSummary
+             l <- B.nestEventM' (sShelves l0)
+                                (B.handleListEventVi B.handleListEvent ev
+                                )
+             modify (\s -> s { asShelvesSummary  = l0 { sShelves = l } } )
+             return ()
+
   _ -> B.resizeOrQuit ev
  
 handleWH ENextMode = modify nextMode
@@ -77,4 +87,9 @@ nextMode state = case asViewMode state of
   
 
 
+-- * 
+renderSummaryAsList name smode ShelvesSummary{..} =
+  B.renderList (\_ e -> shelfSummaryToBar VerticalBar smode e)
+               True
+               (sShelves {B.listName = name })
 
