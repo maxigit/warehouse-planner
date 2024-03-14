@@ -636,4 +636,6 @@ fromRuns f1 f2 f3 runs = f1 $ fmap fromRun runs where
 mapRuns :: Functor f => (a -> b) -> Runs f a -> Runs f b
 mapRuns f = fmap  (fmap (fmap f) )
 
+traverseRuns :: (Monad m, Traversable f) => (a -> m b) -> Runs f a -> m (Runs f b)
+traverseRuns f = traverse (traverse (traverse f))
 -- ** Similar 

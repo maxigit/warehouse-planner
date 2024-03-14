@@ -15,22 +15,25 @@ import qualified Brick as B
 import qualified Graphics.Vty.Attributes as V
 import qualified Graphics.Vty.Input.Events as V
 import Control.Monad.State (get, gets, modify)
-import Data.List.NonEmpty(nonEmpty)
+import Data.List.NonEmpty(nonEmpty, NonEmpty)
+import qualified Brick.Widgets.List as B
+import qualified Data.Foldable as F
 
-type Resource = ()
+type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode
 
 initState :: forall s . WH (AppState) s
 initState = do
-  groups <- gets shelfGroup
-  let idss :: [[ShelfId s]] = map concat (groups) 
-  shelvess :: [[Shelf s]] <- mapM (mapM findShelf) idss
-  asShelvesSummary <- mapM (fmap erase . summaryFromShelves ) (mapMaybe nonEmpty shelvess)
+  runs <- gets shelfGroup
+  shelvesSummary <- traverseRuns findShelf runs >>= makeRunsSummary 
+  let toL :: forall a . ShelvesSummary NonEmpty a -> SumZip a
+      toL ShelvesSummary{..} = let
+          sumZip = B.listMoveTo 0 $ B.list sName (fromList $ F.toList sShelves) 1 
+          in ShelvesSummary{sShelves=sumZip,..}
+  let asShelvesSummary = fromRuns toL toL toL $ mapRuns (const ())  shelvesSummary
   let asViewMode = ViewSummary SVVolume
   return AppState{..}
-  where erase :: ShelvesSummary a -> ShelvesSummary ()
-        erase ShelvesSummary{..} = ShelvesSummary{sShelves = map (const ()) sShelves, ..}
 
 
   
@@ -40,7 +43,11 @@ whApp =
   let
       app = B.App {..}
       appDraw = \s -> case asViewMode s of
-                           ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
+                           -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
+                           ViewSummary smode -> [B.renderList (\_ e -> shelfSummaryToBar VerticalBar smode e)
+                                                              True
+                                                              (sShelves $ asShelvesSummary s)
+                                                ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent
       appAttrMap = const $ B.attrMap V.defAttr generateLevelAttrs 

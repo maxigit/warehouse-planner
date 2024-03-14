@@ -55,7 +55,7 @@ data ShelvesSummary f a = ShelvesSummary
                , sBoxSummary :: Summary
                , sShelvesSummary :: Summary
                }
-     deriving (Foldable)
+     deriving (Functor, Foldable, Traversable)
      
 instance Semigroup (f a)  => Semigroup (ShelvesSummary f a) where
   s1 <> s2 = ShelvesSummary (commonPrefix (sName s1) (sName s2))
@@ -109,7 +109,7 @@ data R' f a = R' (Runs f a)
 
 makeRunsSummary :: Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary NonEmpty) (ShelvesSummary NonEmpty (Shelf s))) s
 makeRunsSummary runs = do
-  runs' <- (traverse (traverse (traverse summaryFromShelf))) runs
+  runs' <- traverseRuns summaryFromShelf runs
   return $ fromRuns (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'
 
 

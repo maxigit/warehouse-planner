@@ -12,7 +12,7 @@ import Brick
 import Brick.Widgets.Border as Brick
 
 
-shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary a -> Widget n
+shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary f a -> Widget n
 shelfSummaryToBar dir view ssum =  let
   r = ratio (fromSummary view) ssum
   perc8 = floor $ 8 * r

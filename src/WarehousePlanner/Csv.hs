@@ -584,7 +584,7 @@ readLayout :: FilePath -> IO (Runs NonEmpty Text)
 readLayout filename = do
     content <- readFile filename
 
-    return $ fromRuns unsafeNonEmpty $  fmap (processLine) (filter (not . comment) $ lines content)
+    return $ fromRuns unsafeNonEmpty unsafeNonEmpty unsafeNonEmpty $  fmap (processLine) (filter (not . comment) $ lines content)
     where processLine (uncons -> Just ('<', line)) = reverse (processLine line)
           processLine (uncons -> Just ('>', line)) = processLine line
           processLine line = map (splitOn "|")  (words line)
