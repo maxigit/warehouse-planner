@@ -72,7 +72,9 @@ generateLevelAttrs =
     | l1 <- [minBound..maxBound]
     , l2 <- [minBound..maxBound]
     , let fg = levelToColor 255 l1
-    , let bg= levelToColor 127 l2
+    , let bg= case l2 of 
+                 Empty -> V.black 
+                 _ -> levelToColor 127 l2
     ]
     
     

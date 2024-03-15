@@ -104,15 +104,18 @@ prevMode state = case asViewMode state of
 
 
 -- * 
-renderSummaryAsList name smode ShelvesSummary{..} =
-  B.renderList (\selected e -> B.hBox $ shelfSummaryToBar HorizontalBar smode e
+renderSummaryAsList name smode ssum@ShelvesSummary{..} =
+  B.renderList (\selected e -> B.hBox $ shelfSummaryToAllBars e
                                       : B.str (if selected then "*" else " ")
                                       : B.txt (S.sName e)
                                       : B.str " "
-                                      : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
+                                      -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
+                                      -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sShelves e) )
+                                      : (  map (renderS smode) (F.toList $ S.sShelves e) )
                )
                True
                (sShelves {B.listName = name })
+  where -- renderS = shelfSummaryToAllBars 
 
 -- renderStatus :: AppState -> Widgets
 renderStatus AppState{..} = let
