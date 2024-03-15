@@ -6,7 +6,7 @@ where
 
 import ClassyPrelude
 import WarehousePlanner.Type
-import WarehousePlanner.Summary
+import WarehousePlanner.Summary as S
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
@@ -18,10 +18,11 @@ import Control.Monad.State (get, gets, modify)
 import Data.List.NonEmpty(nonEmpty, NonEmpty)
 import qualified Brick.Widgets.List as B
 import qualified Data.Foldable as F
+import Brick.Widgets.Center as B
 
 type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
-data WHEvent = ENextMode
+data WHEvent = ENextMode | EPrevMode
 
 initState :: forall s . WH (AppState) s
 initState = do
@@ -31,7 +32,7 @@ initState = do
       toL ShelvesSummary{..} = let
           sumZip = B.listMoveTo 0 $ B.list sName (fromList $ F.toList sShelves) 1 
           in ShelvesSummary{sShelves=sumZip,..}
-  let asShelvesSummary = fromRuns toL toL toL $ mapRuns (const ())  shelvesSummary
+  let asShelvesSummary = fromRuns toL toL toL $ mapRuns (\s -> s { sShelves = B.list (S.sName s) mempty 1   } )  shelvesSummary
   let asViewMode = ViewSummary SVVolume
   return AppState{..}
 
@@ -42,14 +43,21 @@ whApp :: WHApp
 whApp =
   let
       app = B.App {..}
-      appDraw = \s -> case asViewMode s of
+      appDraw = \s -> 
+              let main = case asViewMode s of
                            -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
-                           ViewSummary smode -> [ B.hBox $ renderSummaryAsList "Runs" smode (asShelvesSummary s)
+                           ViewSummary smode ->   B.hBox $ renderSummaryAsList "Runs" smode (asShelvesSummary s)
                                                          : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
                                                                 Nothing -> []
                                                                 Just (_, run) -> [ renderSummaryAsList "Run" smode ( run)
                                                                             ]
-                                                ]
+                  mainRun = renderHorizontalRun (currentRun s)
+              in  [ B.vBox [ mainRun
+                           , main
+                           , B.vLimit 1 $ B.fill '-'
+                           , renderStatus s
+                           ]
+                  ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent
       appAttrMap = const $ B.attrMap V.defAttr generateLevelAttrs 
@@ -66,7 +74,10 @@ whMain wh = do
 whHandleEvent :: B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
 whHandleEvent ev = case ev of 
   B.AppEvent e -> handleWH e
-  B.VtyEvent (V.EvKey (V.KChar ' ') [] ) -> handleWH ENextMode
+  B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
+  B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
+  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+  B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
   B.VtyEvent ev -> do
              l0 <- gets asShelvesSummary
              l <- B.nestEventM' (sShelves l0)
@@ -78,6 +89,7 @@ whHandleEvent ev = case ev of
   _ -> B.resizeOrQuit ev
  
 handleWH ENextMode = modify nextMode
+handleWH EPrevMode = modify prevMode
 
   
 nextMode :: AppState -> AppState
@@ -85,11 +97,28 @@ nextMode state = case asViewMode state of
          ViewSummary vmode ->  state { asViewMode = ViewSummary $ succ' vmode }
          _ -> state
   
+prevMode :: AppState -> AppState
+prevMode state = case asViewMode state of
+         ViewSummary vmode ->  state { asViewMode = ViewSummary $ pred' vmode }
+         _ -> state
 
 
 -- * 
 renderSummaryAsList name smode ShelvesSummary{..} =
-  B.renderList (\_ e -> shelfSummaryToBar VerticalBar smode e)
+  B.renderList (\selected e -> B.hBox $ shelfSummaryToBar HorizontalBar smode e
+                                      : B.str (if selected then "*" else " ")
+                                      : B.txt (S.sName e)
+                                      : B.str " "
+                                      : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
+               )
                True
                (sShelves {B.listName = name })
 
+-- renderStatus :: AppState -> Widgets
+renderStatus AppState{..} = let
+  mode = case asViewMode of
+          ViewSummary v -> B.str (show v)
+  legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
+  current = B.txt $ maybe "" (sName . snd) $ B.listSelectedElement (sShelves asShelvesSummary)
+  in B.vLimit 1 $ B.hBox $ [current, B.center mode, B.padLeft B.Max legend]
+             

@@ -1,5 +1,6 @@
 module WarehousePlanner.Brick.RenderBar
 ( shelfSummaryToBar
+, renderHorizontalRun
 )
 where
 
@@ -9,9 +10,12 @@ import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
 import WarehousePlanner.Brick
 import Brick
-import Brick.Widgets.Border as Brick
+import Brick.Widgets.Border as B
+import WarehousePlanner.Type
+import qualified Data.Foldable as F
 
 
+-- * Bar
 shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary f a -> Widget n
 shelfSummaryToBar dir view ssum =  let
   r = ratio (fromSummary view) ssum
@@ -19,7 +23,7 @@ shelfSummaryToBar dir view ssum =  let
   bar = case dir of
          HorizontalBar -> eigthH
          VerticalBar -> eigthV
-  in txt (sName ssum) <+> withAttr (percToAttrName r 0) (str (bar perc8 : []))
+  in withAttr (percToAttrName r 0) (str (bar perc8 : []))
   
   
   
@@ -35,8 +39,17 @@ fromSummary mode = case mode of
 
   
   
+-- * 
+renderHorizontalRun :: Run SumZip (SumZip ()) -> Widget n
+renderHorizontalRun run = hBox $ F.toList $ fmap (B.border . padBottom Max . renderBay) (sShelves run)
 
+renderBay :: Bay SumZip (SumZip ()) -> Widget n
+renderBay bay = let
+  ws =  F.toList $ fmap renderShelf (sShelves bay)
+  in vBox $ ws <> [txt $ sName bay ]
 
+renderShelf :: SumZip a -> Widget n
+renderShelf = shelfSummaryToBar VerticalBar SVMaxLength 
 
 
 
