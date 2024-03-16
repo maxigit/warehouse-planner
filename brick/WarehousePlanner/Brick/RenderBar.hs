@@ -86,7 +86,7 @@ renderS smode s = let
 renderWithStyleName :: ShelvesSummary f a -> Widget n
 renderWithStyleName s | null (sStyles s)  = str "∅"
 renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sStyles s where
-  forStyle (style, bsum) = hBox [ txt style 
+  forStyle (style, bsum) = hBox [ styleNameWithAttr style 
                                 , str "x"
                                 , str (show $ suCount bsum)
                                 , str " " 

@@ -12,6 +12,7 @@ import ClassyPrelude
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
 import qualified Brick.Widgets.List as B
+import qualified Brick as B
 import Data.Maybe (fromJust)
 
 data BarDirection = HorizontalBar

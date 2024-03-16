@@ -20,6 +20,8 @@ import Data.List.NonEmpty(nonEmpty, NonEmpty)
 import qualified Brick.Widgets.List as B
 import qualified Data.Foldable as F
 import Brick.Widgets.Center as B
+import Data.List (cycle)
+import qualified Data.Map as Map
 
 type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
@@ -38,10 +40,8 @@ initState = do
   return AppState{..}
 
 
-  
-
-whApp :: WHApp
-whApp =
+whApp :: _ -> WHApp
+whApp extraAttrs =
   let
       app = B.App {..}
       appDraw = \s -> 
@@ -64,14 +64,24 @@ whApp =
                   ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent
-      appAttrMap = const $ B.attrMap V.defAttr generateLevelAttrs 
+      appAttrMap = const $ B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs
       appStartEvent = return ()
   in app
   
 whMain :: Warehouse RealWorld -> IO ()
 whMain wh = do
   state0 <- execWH wh initState
-  void $ B.defaultMain whApp state0
+  -- to avoid styles to have the same colors in the same shelf
+  -- we sort them by order of first shelves
+  let style'shelfs = [ (style, sName shelfSum)
+                    | run <- F.toList $ sShelves (asShelvesSummary state0)
+                    , bay <- F.toList $ sShelves run
+                    , shelfSum <- F.toList $ sShelves bay
+                    , style <- keys (sStyles shelfSum)
+                    ]
+  let styles = reverse $ map fst style'shelfs
+      attrs = zip (map makeStyleAttrName styles) (cycle defaultStyleAttrs)
+  void $ B.defaultMain (whApp attrs) state0
 
 
 

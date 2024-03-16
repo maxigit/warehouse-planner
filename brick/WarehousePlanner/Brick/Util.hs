@@ -5,14 +5,17 @@ eigthH, eigthV
 , percToLevel
 , percToAttrName
 , generateLevelAttrs
+, defaultStyleAttrs
+, makeStyleAttrName
 , succ', pred'
+, styleNameWithAttr
+, withStyleAttr
 ) where
 
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import Brick
 import qualified Graphics.Vty.Attributes as V
-import qualified Graphics.Vty.Attributes.Color as V
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
@@ -95,3 +98,29 @@ succ' s = succ s
 pred' s | s == minBound = maxBound
 pred' s = pred s
   
+makeStyleAttrName :: Text -> AttrName
+makeStyleAttrName style = attrName "style" <> attrName (unpack style)
+
+styleNameWithAttr style = withStyleAttr style (txt style)
+withStyleAttr style w = withAttr (makeStyleAttrName style) w
+
+defaultStyleAttrs :: [V.Attr]
+defaultStyleAttrs = [ with $ fg `on` V.black
+                    | with <- id : [] -- map withStyle [{- V.underline, -} V.italic]
+                                  -- ++ [withStyle V.italic . withStyle V.underline ]
+                    , fg <- [ V.red, V.green, V.yellow, V.blue, V.magenta, V.cyan
+                            -- , V.brightRed, V.green, V.brightYellow, V.brightBlue, V.brightMagenta, V.brightCyan
+                            ] ++
+                            concat[ [ V.color240 a b c -- orange
+                                    , V.color240 a c b
+                                    , V.color240 b c a
+                                    , V.color240 b a c
+                                    , V.color240 c b a
+                                    , V.color240 c a b
+                                    ]
+                                  | (a, b, c) <- [(0,100,200), (50,150,200), (0, 50,255)]
+                                  ]
+                    ]
+  where withStyle = flip V.withStyle
+
+                                 
