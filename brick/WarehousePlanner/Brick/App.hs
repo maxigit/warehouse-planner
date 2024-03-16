@@ -12,6 +12,7 @@ import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
 import WarehousePlanner.Exec (execWH)
 import qualified Brick as B
+import qualified Brick.Widgets.Border as B
 import qualified Graphics.Vty.Attributes as V
 import qualified Graphics.Vty.Input.Events as V
 import Control.Monad.State (get, gets, modify)
@@ -47,14 +48,17 @@ whApp =
               let main = case asViewMode s of
                            -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
                            ViewSummary smode ->   B.hBox $ renderSummaryAsList "Runs" smode (asShelvesSummary s)
+                                                         : B.vBorder
                                                          : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
                                                                 Nothing -> []
                                                                 Just (_, run) -> [ renderSummaryAsList "Run" smode ( run)
                                                                             ]
-                  mainRun = renderHorizontalRun (currentRun s)
+                  mainRun = case asViewMode s of 
+                              ViewSummary smode -> renderHorizontalRun smode (currentRun s)
               in  [ B.vBox [ mainRun
+                           , B.hBorder
                            , main
-                           , B.vLimit 1 $ B.fill '-'
+                           , B.hBorder
                            , renderStatus s
                            ]
                   ]
@@ -118,10 +122,14 @@ renderSummaryAsList name smode ssum@ShelvesSummary{..} =
   where -- renderS = shelfSummaryToAllBars 
 
 -- renderStatus :: AppState -> Widgets
-renderStatus AppState{..} = let
+renderStatus state@AppState{..} = let
   mode = case asViewMode of
           ViewSummary v -> B.str (show v)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   current = B.txt $ maybe "" (sName . snd) $ B.listSelectedElement (sShelves asShelvesSummary)
-  in B.vLimit 1 $ B.hBox $ [current, B.center mode, B.padLeft B.Max legend]
+  content = renderWithStyleName (currentRun state)
+  in B.vLimit 1 $ B.hBox $ [current
+                           , content
+                           , B.center mode
+                           , B.padLeft B.Max legend]
              

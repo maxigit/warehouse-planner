@@ -13,6 +13,7 @@ import WarehousePlanner.Type
 import GHC.Generics
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (commonPrefixes)
+import qualified Data.Map as Map
 
 data Summary = Summary
   { suVolume 
@@ -51,6 +52,7 @@ instance Monoid Summary where
 data ShelvesSummary f a = ShelvesSummary
                { sName :: !Text
                , sShelves :: f a
+               , sStyles :: Map Text Summary -- box summary by styles
                -- lazy , sort of caches
                , sBoxSummary :: Summary
                , sShelvesSummary :: Summary
@@ -60,6 +62,7 @@ data ShelvesSummary f a = ShelvesSummary
 instance Semigroup (f a)  => Semigroup (ShelvesSummary f a) where
   s1 <> s2 = ShelvesSummary (commonPrefix (sName s1) (sName s2))
                             (sShelves s1        <> sShelves s2)
+                            (unionWith (<>) (sStyles s1) (sStyles s2))
                             (sBoxSummary s1     <> sBoxSummary s2)
                             (sShelvesSummary s1 <> sShelvesSummary s2)
            where commonPrefix t1 t2 = 
@@ -76,9 +79,13 @@ ratio f ShelvesSummary{sShelvesSummary,sBoxSummary} = case f sShelvesSummary of
 summaryFromShelf :: Shelf s -> WH (ShelvesSummary NonEmpty (Shelf s)) s
 summaryFromShelf shelf = do
    boxes <- mapM findBox (_shelfBoxes shelf)
+   let styleMap = Map.fromListWith (<>) [ (boxStyle box, makeBoxesSummary [box])
+                                        | box <- toList boxes
+                                        ]
    return $ ShelvesSummary (shelfName shelf)
                            (shelf :| [])                          
-                           (makeBoxesSummary $ toList boxes)
+                           styleMap
+                           (mconcat $ toList styleMap) -- makeBoxesSummary $ toList boxes)
                            (makeShelfSummary shelf)
                            
 summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary NonEmpty (Shelf s)) s

@@ -5,6 +5,7 @@ module WarehousePlanner.Brick.RenderBar
 , fromSummary
 , charWithPerc2
 , renderS
+, renderWithStyleName
 )
 where
 
@@ -18,6 +19,7 @@ import Brick.Widgets.Border as B
 import WarehousePlanner.Type
 import qualified Data.Foldable as F
 import Data.Text (takeEnd)
+import qualified Data.Map as Map
 
 
 -- * Bar
@@ -45,16 +47,16 @@ fromSummary mode = case mode of
   
   
 -- * 
-renderHorizontalRun :: Run SumZip (SumZip ()) -> Widget n
-renderHorizontalRun run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay) (sShelves run)
+renderHorizontalRun :: SummaryView -> Run SumZip (SumZip ()) -> Widget n
+renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay sview ) (sShelves run)
 
-renderBay :: Bay SumZip (SumZip ()) -> Widget n
-renderBay bay = let
-  ws =  reverse $ F.toList $ fmap renderShelf (sShelves bay)
-  in vBox $ ws <> [txt $ takeEnd 3 $ dropEnd 1$ sName bay ]
+renderBay :: SummaryView -> Bay SumZip (SumZip ()) -> Widget n
+renderBay sview bay = let
+  ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sShelves bay)
+  in joinBorders $ vBox $ ws <> [hBox ( txt ( sName bay) : map (renderS sview) (F.toList $ sShelves bay))]
 
 renderShelf :: SumZip a -> Widget n
-renderShelf = shelfSummaryToAllBars 
+renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
 
 
 shelfSummaryToAllBars :: ShelvesSummary f a -> Widget n
@@ -80,3 +82,12 @@ renderS smode s = let
               SVSurfaceLW -> '▼'
               SVVolume -> '★'
        in charWithPerc2 c (ratio (fromSummary smode) s) 0
+       
+renderWithStyleName :: ShelvesSummary f a -> Widget n
+renderWithStyleName s | null (sStyles s)  = str "∅"
+renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sStyles s where
+  forStyle (style, bsum) = hBox [ txt style 
+                                , str "x"
+                                , str (show $ suCount bsum)
+                                , str " " 
+                                ]
