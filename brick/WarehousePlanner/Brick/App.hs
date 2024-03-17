@@ -19,25 +19,38 @@ import Control.Monad.State (get, gets, modify)
 import Data.List.NonEmpty(nonEmpty, NonEmpty)
 import qualified Brick.Widgets.List as B
 import qualified Data.Foldable as F
-import Brick.Widgets.Center as B
+import Brick.Widgets.Center qualified as B
+import Brick.Widgets.Table qualified as B
 import Data.List (cycle)
 import qualified Data.Map as Map
+import WarehousePlanner.Brick.Table
 
 type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode | EPrevMode
 
-initState :: forall s . WH (AppState) s
+initState :: WH (AppState) RealWorld
 initState = do
   runs <- gets shelfGroup
-  shelvesSummary <- traverseRuns findShelf runs >>= makeRunsSummary 
+  shelvesSummary <- traverseRuns findShelf runs
+                 >>= makeRunsSummary
+                 >>= traverseRuns findBoxes
   let toL :: forall a . ShelvesSummary NonEmpty a -> SumZip a
       toL ShelvesSummary{..} = let
           sumZip = B.listMoveTo 0 $ B.list sName (fromList $ F.toList sShelves) 1 
           in ShelvesSummary{sShelves=sumZip,..}
-  let asShelvesSummary = fromRuns toL toL toL $ mapRuns (\s -> s { sShelves = B.list (S.sName s) mempty 1   } )  shelvesSummary
+  let asShelvesSummary = fromRuns toL toL toL
+                       $ mapRuns (\s -> s { sShelves = B.list (S.sName s)
+                                                              (fromList $ sShelves s)
+                                                              1
+                                          }
+                                 )  shelvesSummary
   let asViewMode = ViewSummary SVVolume
   return AppState{..}
+  where findBoxes ShelvesSummary{sShelves=shelves,..} = do
+            let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
+            sShelves <- mapM findBox boxIds
+            return ShelvesSummary{..}
 
 
 whApp :: _ -> WHApp
@@ -47,12 +60,24 @@ whApp extraAttrs =
       appDraw = \s -> 
               let main = case asViewMode s of
                            -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
-                           ViewSummary smode ->   B.hBox $ renderSummaryAsList "Runs" smode (asShelvesSummary s)
-                                                         : B.vBorder
-                                                         : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
-                                                                Nothing -> []
-                                                                Just (_, run) -> [ renderSummaryAsList "Run" smode ( run)
-                                                                            ]
+                           ViewSummary smode ->
+                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" smode (asShelvesSummary s))
+                                              : B.vBorder
+                                              -- : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
+                                              -- : case currentBay s of
+                                              --        -- Nothing -> []
+                                              --        -- current -> [ (B.hBox 
+                                              --        --                . map B.renderTable
+                                              --        --                . shelfSummaryToTable  (const B.emptyWidget) -- (B.vBox . map renderBoxOrientation)
+                                              --        --                )
+                                              --        --                $ current]
+                                              --        -- current -> [ B.hBox . map B.renderTable $ shelfSummaryToTable (B.vBox. map renderBoxOrientation) current ]
+                                              --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
+                                              --             -- [ renderSummaryAsList "Run" smode ( run) ]
+                                              : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sShelves $ currentRun s)
+                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (F.toList . sShelves $ currentRun s)
+                                                         ]
+                                              ]
                   mainRun = case asViewMode s of 
                               ViewSummary smode -> renderHorizontalRun smode (currentRun s)
               in  [ B.vBox [ mainRun

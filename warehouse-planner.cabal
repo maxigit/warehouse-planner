@@ -93,6 +93,7 @@ library
         WarehousePlanner.Brick.App
         WarehousePlanner.Brick.RenderBar
         WarehousePlanner.Brick.Repl
+        WarehousePlanner.Brick.Table
         WarehousePlanner.Brick.Types
         WarehousePlanner.Brick.Util
     hs-source-dirs:

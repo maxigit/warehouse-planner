@@ -4,7 +4,7 @@ module WarehousePlanner.Brick.Types
 , SummaryView(..)
 , BarDirection(..)
 , SumZip
-, currentRun
+, currentRun, currentBay, currentShelf
 )
 where
 
@@ -12,7 +12,6 @@ import ClassyPrelude
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
 import qualified Brick.Widgets.List as B
-import qualified Brick as B
 import Data.Maybe (fromJust)
 
 data BarDirection = HorizontalBar
@@ -37,7 +36,7 @@ data ViewMode = ViewSummary SummaryView
 type SumZip = ShelvesSummary (B.GenericList Text Vector)
 data AppState = AppState
      { asViewMode  :: ViewMode
-     , asShelvesSummary :: Runs SumZip (SumZip ()) 
+     , asShelvesSummary :: Runs SumZip (SumZip (Box RealWorld)) 
      }
      
 listSelectedElement :: B.GenericList Text Vector a -> a
@@ -46,8 +45,11 @@ listSelectedElement glist =
     Nothing -> fromJust $ B.listSelectedElement $ B.listMoveTo 0 glist
     Just e -> e
 
--- currentRun :: AppState -> Run SumZip _a
+currentRun :: AppState -> Run SumZip (Bay SumZip _)
 currentRun state = listSelectedElement (sShelves $ asShelvesSummary state)
 
--- currentBay :: AppState -> Bay SumZip ()
+currentBay :: AppState -> Bay SumZip _a
+currentBay = listSelectedElement . sShelves . currentRun 
 
+currentShelf :: AppState -> _a
+currentShelf = listSelectedElement . sShelves . currentBay

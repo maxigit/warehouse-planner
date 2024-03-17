@@ -13,12 +13,10 @@ import ClassyPrelude
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
-import WarehousePlanner.Brick
 import Brick
 import Brick.Widgets.Border as B
 import WarehousePlanner.Type
 import qualified Data.Foldable as F
-import Data.Text (takeEnd)
 import qualified Data.Map as Map
 
 
@@ -47,10 +45,10 @@ fromSummary mode = case mode of
   
   
 -- * 
-renderHorizontalRun :: SummaryView -> Run SumZip (SumZip ()) -> Widget n
+renderHorizontalRun :: SummaryView -> Run SumZip (SumZip a) -> Widget n
 renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay sview ) (sShelves run)
 
-renderBay :: SummaryView -> Bay SumZip (SumZip ()) -> Widget n
+renderBay :: SummaryView -> Bay SumZip (SumZip a) -> Widget n
 renderBay sview bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sShelves bay)
   in joinBorders $ vBox $ ws <> [hBox ( txt ( sName bay) : map (renderS sview) (F.toList $ sShelves bay))]
@@ -65,7 +63,7 @@ shelfSummaryToAllBars sum =
        , go SVMaxWidth SVSurfaceWH 'o'
        , go SVMaxHeight SVSurfaceLW '^'
        ]
-  where go m m' c = renderS m sum
+  where go m _m' c = renderS m sum
 
 
 charWithPerc2 :: Char -> Double -> Double -> Widget n
