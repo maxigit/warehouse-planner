@@ -15,7 +15,7 @@ eigthH, eigthV
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import Brick
-import qualified Graphics.Vty.Attributes as V
+import Graphics.Vty.Attributes qualified as V
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do

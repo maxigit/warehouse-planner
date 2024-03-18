@@ -29,26 +29,26 @@ module WarehousePlanner.Csv
 import WarehousePlanner.Base
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
-import qualified Data.Csv as Csv
-import qualified Data.ByteString.Lazy as BL
-import qualified Data.ByteString as BS
-import qualified Data.Vector as Vec
-import qualified Data.Map as Map
+import Data.Csv qualified as Csv
+import Data.ByteString.Lazy qualified as BL
+import Data.ByteString qualified as BS
+import Data.Vector qualified as Vec
+import Data.Map qualified as Map
 import Control.Monad hiding(mapM_,foldM)
 -- import Data.List.Split (splitOn)
-import qualified Data.List as List
+import Data.List qualified as List
 import Data.Char(ord,chr)
 import ClassyPrelude hiding(readFile)
 import Text.Read(readMaybe)
-import qualified Text.Parsec as P
-import qualified Text.Parsec.Text as P
+import Text.Parsec qualified as P
+import Text.Parsec.Text qualified as P
 import Control.Monad.State hiding(fix,mapM_,foldM)
-import qualified Text.Regex as Rg
-import qualified Text.Regex.Base.RegexLike as Rg
+import Text.Regex qualified as Rg
+import Text.Regex.Base.RegexLike qualified as Rg
 import Data.Text(splitOn)
 import Data.Text.IO(readFile)
 import GHC.Utils.Monad (mapAccumLM)
-import qualified System.FilePath.Glob as Glob
+import System.FilePath.Glob qualified as Glob
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 
 -- | Dimension info to construct a Shelf

@@ -3,7 +3,7 @@ import Criterion.Main
 import WarehousePlanner.Repl
 import WarehousePlanner.Base
 import WarehousePlanner.Exec
-import qualified WarehousePlanner.Report as Report
+import WarehousePlanner.Report qualified as Report
 import Text.Printf
 
 import Control.Monad.State (get, gets)

@@ -8,12 +8,12 @@ import qualified Prelude
 import  WarehousePlanner.Base
 import  WarehousePlanner.Expr
 import Data.Text(splitOn, split)
-import qualified Data.Text as Text
--- import qualified Data.Map as Map
+import Data.Text qualified as Text
+-- import Data.Map qualified as Map
 import Control.Monad (zipWithM)
 import Control.Monad.State (modify)
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import Data.Set qualified as Set
+import Data.Map qualified as Map
 import GHC.Utils.Monad (mapAccumLM)
 import Data.List (unfoldr)
 

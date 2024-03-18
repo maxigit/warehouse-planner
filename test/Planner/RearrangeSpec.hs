@@ -4,9 +4,9 @@ import ClassyPrelude
 import Test.Hspec
 import WarehousePlanner.Rearrange
 import Data.Char (isLower)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.List.Split (splitOn)
-import qualified Data.Set as Set
+import Data.Set qualified as Set
 
 spec :: Spec
 spec = parallel pureSpec

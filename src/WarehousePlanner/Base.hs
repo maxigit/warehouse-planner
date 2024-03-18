@@ -80,37 +80,37 @@ where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import qualified Prelude
 import Text.Printf(printf)
-import qualified Data.Map.Strict as Map'
-import qualified Data.Map.Lazy as Map
+import Data.Map.Strict qualified as Map'
+import Data.Map.Lazy qualified as Map
 import Control.Monad.State(gets, get, put, modify)
 import Data.Map.Merge.Lazy(merge, preserveMissing, mapMaybeMissing, zipWithMaybeMatched)
 -- import Data.List(sort, sortBy, groupBy, nub, (\\), union, maximumBy, delete, stripPrefix, partition)
 import Data.List(cycle)
 import Data.List.NonEmpty(unzip)
-import qualified Data.List as List
+import Data.List qualified as List
 import Data.STRef
 import Data.Sequence ((|>))
-import qualified Data.Sequence as Seq
-import qualified Data.Set as Set
+import Data.Sequence qualified as Seq
+import Data.Set qualified as Set
 import WarehousePlanner.Type
 import WarehousePlanner.Slices
 import WarehousePlanner.SimilarBy
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
 import Data.Text (splitOn, uncons, stripPrefix)
-import qualified Data.Text as T 
+import Data.Text qualified as T 
 import Data.Char (isLetter, isDigit)
 import Data.Time (diffDays)
 import Data.Semigroup (Arg(..))
 
-import qualified System.FilePath.Glob as Glob
-import qualified Text.Parsec as P
-import qualified Text.Parsec.Text as P
+import System.FilePath.Glob qualified as Glob
+import Text.Parsec qualified as P
+import Text.Parsec.Text qualified as P
 import Control.Monad.Fail 
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 
 
--- import qualified Debug.Trace as T
+-- import Debug.Trace qualified as T
 
 sortOnIf f xs0 = 
   if isSorted snd xs

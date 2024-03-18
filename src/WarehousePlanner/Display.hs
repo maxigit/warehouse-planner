@@ -9,7 +9,7 @@ import Diagrams.Prelude hiding(Box,offset,direction)
 import Control.Monad.State(gets)
 import Diagrams.Backend.Cairo 
 -- import Data.Maybe
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 
 display :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> WH (Diagram B) s
 display shelfStyling boxStyling= do

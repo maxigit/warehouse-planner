@@ -11,18 +11,18 @@ import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
 import WarehousePlanner.Exec (execWH)
-import qualified Brick as B
-import qualified Brick.Widgets.Border as B
-import qualified Graphics.Vty.Attributes as V
-import qualified Graphics.Vty.Input.Events as V
+import Brick qualified as B
+import Brick.Widgets.Border qualified as B
+import Graphics.Vty.Attributes qualified as V
+import Graphics.Vty.Input.Events qualified as V
 import Control.Monad.State (get, gets, modify)
 import Data.List.NonEmpty(nonEmpty, NonEmpty)
-import qualified Brick.Widgets.List as B
-import qualified Data.Foldable as F
+import Brick.Widgets.List qualified as B
+import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
 import Brick.Widgets.Table qualified as B
 import Data.List (cycle)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import WarehousePlanner.Brick.Table
 
 type Resource = Text

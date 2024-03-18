@@ -12,7 +12,7 @@ import WarehousePlanner.Base
 import WarehousePlanner.Org
 import WarehousePlanner.Csv (readWarehouse)
 import System.IO.Unsafe
-import qualified WarehousePlanner.Report as Report
+import WarehousePlanner.Report qualified as Report
 
 
 data ReplState =

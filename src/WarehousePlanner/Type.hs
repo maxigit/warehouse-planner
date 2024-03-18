@@ -12,12 +12,12 @@ import Control.Monad.State
 import Diagrams.Prelude(Colour)
 import Data.STRef
 import Control.Monad.ST
-import qualified Data.Set as Set
-import qualified Data.Map as Map 
-import qualified System.FilePath.Glob as Glob
+import Data.Set qualified as Set
+import Data.Map qualified as Map 
+import System.FilePath.Glob qualified as Glob
 -- import Data.List(intercalate)
 import Data.Semigroup(Arg(..))
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 import Data.List.NonEmpty (NonEmpty(..))
 
 -- * Types 

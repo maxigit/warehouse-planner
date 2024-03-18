@@ -28,12 +28,12 @@ import WarehousePlanner.Org.Types
 import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Writer (tell, execWriter)
 import Data.Text(strip,splitOn)
-import qualified Data.Text as Text
+import Data.Text qualified as Text
 import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
 import System.FilePath (takeExtension)
-import qualified Data.List as List
+import Data.List qualified as List
 import GHC.Generics
-import qualified Crypto.Hash as Crypto
+import Crypto.Hash qualified as Crypto
 import System.FilePath.Glob(globDir1, compile, match)
 
 -- * Parsing 

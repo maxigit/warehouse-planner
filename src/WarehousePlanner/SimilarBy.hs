@@ -13,7 +13,7 @@ where
 import Prelude
 import Data.List(groupBy, sortOn)
 import Data.Function(on)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 import Data.Map (Map)
 
 data SimilarBy k a = SimilarByPrivate k a [a] deriving Show

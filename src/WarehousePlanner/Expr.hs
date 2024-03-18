@@ -6,8 +6,8 @@ module WarehousePlanner.Expr
 , evalExpr
 ) where
 import ClassyPrelude hiding(readFile)
-import qualified Text.Parsec as P
-import qualified Text.Parsec.Text as P
+import Text.Parsec qualified as P
+import Text.Parsec.Text qualified as P
 import Text.Read(readMaybe)
 
 data Expr extra = AddE (Expr extra) (Expr extra)

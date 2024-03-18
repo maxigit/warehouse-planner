@@ -29,10 +29,10 @@ import Control.Monad.ST.Unsafe(unsafeSTToIO)
 import System.IO.Unsafe(unsafePerformIO)
 import Control.Monad.State(get, gets, evalStateT)
 import Text.Printf(printf)
-import qualified Data.Map.Strict as Map'
-import qualified Data.Set as Set
-import qualified Data.Sequence as Seq
-import qualified Data.List as List
+import Data.Map.Strict qualified as Map'
+import Data.Set qualified as Set
+import Data.Sequence qualified as Seq
+import Data.List qualified as List
 import Data.Text(splitOn)
 import Text.Tabular as Tabul
 import Data.Text(replace)

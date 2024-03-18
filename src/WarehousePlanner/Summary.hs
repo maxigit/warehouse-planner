@@ -13,7 +13,7 @@ import WarehousePlanner.Type
 import GHC.Generics
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (commonPrefixes)
-import qualified Data.Map as Map
+import Data.Map qualified as Map
 
 data Summary = Summary
   { suVolume 

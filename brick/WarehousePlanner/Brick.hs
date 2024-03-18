@@ -11,7 +11,7 @@ import WarehousePlanner.Base
 import WarehousePlanner.Brick.Util
 import Brick
 import Brick.Widgets.Border as Brick
-import qualified Data.Foldable as Foldable
+import Data.Foldable qualified as Foldable
 import Data.Text (commonPrefixes)
 
 {-

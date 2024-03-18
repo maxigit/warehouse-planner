@@ -16,8 +16,8 @@ import WarehousePlanner.Summary
 import Brick
 import Brick.Widgets.Border as B
 import WarehousePlanner.Type
-import qualified Data.Foldable as F
-import qualified Data.Map as Map
+import Data.Foldable qualified as F
+import Data.Map qualified as Map
 
 
 -- * Bar
