@@ -14,7 +14,7 @@ import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
-import Data.List (nub)
+import Data.List (nub, transpose)
 import Data.Foldable qualified as F
 
 
@@ -34,15 +34,37 @@ shelfSummaryToTable renderBoxes ShelvesSummary{..} = let
    xs = nub $ sort $ map dLength offsets
    ys = nub $ sort $ map dWidth offsets
    zs = nub $ sort $ map dHeight offsets
-   widgets = [ [ [ renderBoxes $ findWithDefault [] (Dimension x y z) boxesByOffset
-                 | x <- xs
-                 ]
-               | z <- reverse zs
+   cells = [ [ [ lookup (Dimension x y z) boxesByOffset
+               | x <- xs
                ]
-             | y <- ys
+             | z <- reverse zs
              ]
+           | y <- ys
+           ]
+   widgets = map (map (map $ renderBoxes . fromMaybe [] ))
+           $ map (collapseColumns . collapseRows) cells
    in map (rowBorders False . columnBorders False . table) widgets
                                          
+-- | merge rows if nothing collide
+-- example
+--       a _ b   => a x b
+--       _ x _
+--
+collapseRows :: [[Maybe a]] -> [[Maybe a]]
+collapseRows [] = []
+collapseRows rows@[_] = rows
+collapseRows (row1:row2:rows) =
+  case mergeRows row1 row2 of
+    Nothing -> row1 : collapseRows (row2:rows)
+    Just merged -> collapseRows (merged:rows)
+
+mergeRows xs ys = sequence $ zipWith mergeCells  xs ys where
+   mergeCells xm ym = case (xm, ym) of 
+                      (Just _, Just _) -> Nothing
+                      _ -> Just (xm <|> ym)
+    
+collapseColumns = transpose . collapseRows . transpose
+
 
                     
 renderBoxContent box = withStyleAttr (boxStyle box) $ txt $ boxContent box <> " "
