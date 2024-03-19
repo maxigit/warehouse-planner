@@ -24,10 +24,24 @@ import Brick.Widgets.Table qualified as B
 import Data.List (cycle)
 import Data.Map qualified as Map
 import WarehousePlanner.Brick.Table
+import Data.Vector qualified as V
 
 type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
-data WHEvent = ENextMode | EPrevMode
+data WHEvent = ENextMode
+             | EPrevMode
+             | ENextRun
+             | EPrevRun
+             | ENextBay
+             | EPrevBay
+             | ENextShelf
+             | EPrevShelf
+             | ENextBox
+             | EPrevBox
+             | EFirstRun
+             | ELastRun
+             | EFirstBay
+             | ELastBay
 
 initState :: WH (AppState) RealWorld
 initState = do
@@ -35,18 +49,16 @@ initState = do
   shelvesSummary <- traverseRuns findShelf runs
                  >>= makeRunsSummary
                  >>= traverseRuns findBoxes
-  let toL :: forall a . ShelvesSummary NonEmpty a -> SumZip a
+  let toL :: forall a . ShelvesSummary NonEmpty a -> SumVec a
       toL ShelvesSummary{..} = let
-          sumZip = B.listMoveTo 0 $ B.list sName (fromList $ F.toList sShelves) 1 
+          sumZip = fromList $ toList sShelves
           in ShelvesSummary{sShelves=sumZip,..}
   let asShelvesSummary = fromRuns toL toL toL
-                       $ mapRuns (\s -> s { sShelves = B.list (S.sName s)
-                                                              (fromList $ sShelves s)
-                                                              1
-                                          }
-                                 )  shelvesSummary
+                       $ mapRuns (\s -> s { sShelves = fromList $ sShelves s }
+                                     )  shelvesSummary
   let asViewMode = ViewSummary SVVolume
-  return AppState{..}
+  return AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
+                 , ..}
   where findBoxes ShelvesSummary{sShelves=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
             sShelves <- mapM findBox boxIds
@@ -75,7 +87,7 @@ whApp extraAttrs =
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sShelves $ currentRun s)
-                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (F.toList . sShelves $ currentRun s)
+                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop (asCurrentBay s) $ sShelfList $ currentRun s)
                                                          ]
                                               ]
                   mainRun = case asViewMode s of 
@@ -115,20 +127,38 @@ whHandleEvent ev = case ev of
   B.AppEvent e -> handleWH e
   B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
   B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
+  B.VtyEvent (V.EvKey (V.KChar 'j') [] ) -> handleWH ENextRun
+  B.VtyEvent (V.EvKey (V.KChar 'k') [] ) -> handleWH EPrevRun
+  B.VtyEvent (V.EvKey (V.KChar 'J') [] ) -> handleWH ENextShelf
+  B.VtyEvent (V.EvKey (V.KChar 'K') [] ) -> handleWH EPrevShelf
+  B.VtyEvent (V.EvKey (V.KChar 'l') [] ) -> handleWH ENextBay
+  B.VtyEvent (V.EvKey (V.KChar 'h') [] ) -> handleWH EPrevBay
+  B.VtyEvent (V.EvKey (V.KChar 'g') [] ) -> handleWH EFirstRun
+  B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
+  B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
+  B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
   B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
   B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
-  B.VtyEvent ev -> do
-             l0 <- gets asShelvesSummary
-             l <- B.nestEventM' (sShelves l0)
-                                (B.handleListEventVi B.handleListEvent ev
-                                )
-             modify (\s -> s { asShelvesSummary  = l0 { sShelves = l } } )
-             return ()
-
   _ -> B.resizeOrQuit ev
  
-handleWH ENextMode = modify nextMode
-handleWH EPrevMode = modify prevMode
+handleWH = \case 
+         ENextMode -> modify nextMode
+         EPrevMode -> modify prevMode
+         --
+         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
+         ENextBay -> modify \s -> s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
+         ENextShelf -> modify \s -> s { asCurrentShelf = nextOf (asCurrentShelf s) (currentBay s) }
+         -- ENextBox -> modify \s -> s { asCurrentBox = nextOf (asCurrentBox s) (currentShelf s) }
+         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
+         EPrevBay -> modify \s -> s { asCurrentBay = prevOf (asCurrentBay s) (currentRun s) }
+         EPrevShelf -> modify \s -> s { asCurrentShelf = prevOf (asCurrentShelf s) (currentBay s) }
+         -- EPrevBox -> modify \s -> s { asCurrentBox = prevOf (asCurrentBox s) (currentShelf s) }
+         EFirstRun -> modify \s -> s { asCurrentRun = 0 }
+         ELastRun -> modify \s -> s { asCurrentRun = lastOf (asShelvesSummary s) }
+         EFirstBay -> modify \s -> s { asCurrentBay = 0 }
+         ELastBay -> modify \s -> s { asCurrentBay = lastOf (currentRun s) }
+
+         _ -> return ()
 
   
 nextMode :: AppState -> AppState
@@ -140,20 +170,33 @@ prevMode :: AppState -> AppState
 prevMode state = case asViewMode state of
          ViewSummary vmode ->  state { asViewMode = ViewSummary $ pred' vmode }
          _ -> state
+         
+nextOf :: Int -> SumVec a -> Int
+nextOf i ShelvesSummary{sShelves} = min (V.length sShelves - 1) (i+1)
+
+prevOf :: Int -> SumVec a -> Int
+prevOf i ShelvesSummary{sShelves} = max 0 ((min i (V.length sShelves - 1) )  - 1)
+                    -- ^ 
+                    -- +--- in case i was bigger that the sShelvesector length
+                    --      this can happen when changing parents
+lastOf :: SumVec a -> Int
+lastOf ShelvesSummary{sShelves} = V.length sShelves - 1
 
 
 -- * 
+renderSummaryAsList :: Text -> SummaryView -> (SumVec _a) -> B.Widget Text
 renderSummaryAsList name smode ssum@ShelvesSummary{..} =
-  B.renderList (\selected e -> B.hBox $ shelfSummaryToAllBars e
-                                      : B.str (if selected then "*" else " ")
-                                      : B.txt (S.sName e)
-                                      : B.str " "
-                                      -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
-                                      -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sShelves e) )
-                                      : (  map (renderS smode) (F.toList $ S.sShelves e) )
-               )
-               True
-               (sShelves {B.listName = name })
+  let list = B.list name sShelves 0
+  in B.renderList (\selected e -> B.hBox $ shelfSummaryToAllBars e
+                                         : B.str (if selected then "*" else " ")
+                                         : B.txt (S.sName e)
+                                         : B.str " "
+                                         -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
+                                         -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sShelves e) )
+                                         : [] -- : (  map (renderS smode) (sShelfList e) )
+                  )
+                  True
+                  list
   where -- renderS = shelfSummaryToAllBars 
 
 -- renderStatus :: AppState -> Widgets
@@ -161,9 +204,10 @@ renderStatus state@AppState{..} = let
   mode = case asViewMode of
           ViewSummary v -> B.str (show v)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
-  current = B.txt $ maybe "" (sName . snd) $ B.listSelectedElement (sShelves asShelvesSummary)
+  current = B.hBox [ B.txt $ " #" <> pack (show i)     | (i) <- [(asCurrentRun) , (asCurrentBay ), (asCurrentShelf)] ]
   content = renderWithStyleName (currentRun state)
-  in B.vLimit 1 $ B.hBox $ [current
+  in B.vLimit 1 $ B.hBox $ [B.txt (sName $ currentShelf state) 
+                           , current
                            , content
                            , B.center mode
                            , B.padLeft B.Max legend]

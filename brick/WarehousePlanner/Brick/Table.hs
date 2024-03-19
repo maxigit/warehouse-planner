@@ -24,7 +24,7 @@ import Data.Foldable qualified as F
 -- with row correspending to 8 and 10 
 -- and column to 1 and 3
 -- One table is returned for each depth 
-shelfSummaryToTable :: ([Box RealWorld] ->  Widget n) -> SumZip (Box RealWorld) -> [ Table n ]
+shelfSummaryToTable :: ([Box RealWorld] ->  Widget n) -> SumVec (Box RealWorld) -> [ Table n ]
 shelfSummaryToTable renderBoxes ShelvesSummary{..} = let
    boxes = F.toList $ sShelves 
    boxesByOffset = Map.fromListWith (<>) [ (boxOffset box , [box])
@@ -73,7 +73,7 @@ renderBoxOrientation box = withStyleAttr (boxStyle box) $ txt $ showOrientation'
   
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
-baySummaryToTable :: ([Box RealWorld] -> Widget n) -> Bay SumZip (SumZip (Box RealWorld)) -> Table n
+baySummaryToTable :: ([Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (Box RealWorld)) -> Table n
 baySummaryToTable renderBoxes ShelvesSummary{..} = let
   shelves = F.toList $ sShelves
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)

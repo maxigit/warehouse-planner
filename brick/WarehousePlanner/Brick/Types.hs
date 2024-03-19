@@ -3,7 +3,7 @@ module WarehousePlanner.Brick.Types
 , ViewMode(..)
 , SummaryView(..)
 , BarDirection(..)
-, SumZip
+, SumVec, sShelfList
 , currentRun, currentBay, currentShelf
 )
 where
@@ -11,8 +11,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
-import Brick.Widgets.List qualified as B
-import Data.Maybe (fromJust)
+import Data.Vector qualified as V
 
 data BarDirection = HorizontalBar
              | VerticalBar
@@ -33,23 +32,28 @@ data ViewMode = ViewSummary SummaryView
               -- | ViewSplitBoxes (Box s -> Bool)
               -- 
 -- | Summary with a "list" with current position
-type SumZip = ShelvesSummary (B.GenericList Text Vector)
+type SumVec = ShelvesSummary Vector
 data AppState = AppState
      { asViewMode  :: ViewMode
-     , asShelvesSummary :: Runs SumZip (SumZip (Box RealWorld)) 
+     , asShelvesSummary :: Runs SumVec (SumVec (Box RealWorld)) 
+     , asCurrentRun :: Int
+     , asCurrentBay :: Int
+     , asCurrentShelf :: Int
      }
      
-listSelectedElement :: B.GenericList Text Vector a -> a
-listSelectedElement glist = 
-  snd case B.listSelectedElement glist of
-    Nothing -> fromJust $ B.listSelectedElement $ B.listMoveTo 0 glist
-    Just e -> e
+selectFromSumVec :: Int -> SumVec a -> a
+selectFromSumVec i ShelvesSummary{sShelves} = sShelves V.! (i `min` (length sShelves - 1))
 
-currentRun :: AppState -> Run SumZip (Bay SumZip _)
-currentRun state = listSelectedElement (sShelves $ asShelvesSummary state)
+currentRun :: AppState -> Run SumVec (Bay SumVec _)
+currentRun state = selectFromSumVec (asCurrentRun state) (asShelvesSummary state)
 
-currentBay :: AppState -> Bay SumZip _a
-currentBay = listSelectedElement . sShelves . currentRun 
+-- currentBay :: AppState -> Bay SumVec _a
+currentBay state = selectFromSumVec (asCurrentBay state) (currentRun state)
 
 currentShelf :: AppState -> _a
-currentShelf = listSelectedElement . sShelves . currentBay
+currentShelf state = selectFromSumVec (asCurrentShelf state) (currentBay state)
+
+sShelfList :: SumVec a -> [a]
+sShelfList ssum = toList (sShelves ssum)
+
+

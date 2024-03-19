@@ -45,15 +45,15 @@ fromSummary mode = case mode of
   
   
 -- * 
-renderHorizontalRun :: SummaryView -> Run SumZip (SumZip a) -> Widget n
+renderHorizontalRun :: SummaryView -> Run SumVec (SumVec a) -> Widget n
 renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay sview ) (sShelves run)
 
-renderBay :: SummaryView -> Bay SumZip (SumZip a) -> Widget n
+renderBay :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
 renderBay sview bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sShelves bay)
   in joinBorders $ vBox $ ws <> [hBox ( txt ( sName bay) : map (renderS sview) (F.toList $ sShelves bay))]
 
-renderShelf :: SumZip a -> Widget n
+renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
 
 

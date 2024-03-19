@@ -57,10 +57,13 @@ library:
       - vty
   ghc-options:
   - -W
-  - -Werror
+  - -Wmissing-fields
   - -fwarn-tabs
   - -Wno-type-defaults
   - -Wno-partial-type-signatures
+  - -Wincomplete-patterns
+  - -Werror
+  - -Werror=missing-fields
     
     
 tests:
