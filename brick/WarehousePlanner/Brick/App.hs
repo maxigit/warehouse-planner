@@ -56,7 +56,7 @@ initState = do
   let asShelvesSummary = fromRuns toL toL toL
                        $ mapRuns (\s -> s { sShelves = fromList $ sShelves s }
                                      )  shelvesSummary
-  let asViewMode = ViewSummary SVVolume
+  let asSummaryView = SVVolume
   return AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
                  , ..}
   where findBoxes ShelvesSummary{sShelves=shelves,..} = do
@@ -69,11 +69,11 @@ whApp :: _ -> WHApp
 whApp extraAttrs =
   let
       app = B.App {..}
-      appDraw = \s -> 
-              let main = case asViewMode s of
+      appDraw = \s@AppState{..} -> 
+              let main = case () of
                            -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
-                           ViewSummary smode ->
-                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" smode (asShelvesSummary s))
+                          ()  ->
+                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" asSummaryView asShelvesSummary)
                                               : B.vBorder
                                               -- : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
                                               -- : case currentBay s of
@@ -87,11 +87,10 @@ whApp extraAttrs =
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sShelves $ currentRun s)
-                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop (asCurrentBay s) $ sShelfList $ currentRun s)
+                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop asCurrentBay $ sShelfList $ currentRun s)
                                                          ]
                                               ]
-                  mainRun = case asViewMode s of 
-                              ViewSummary smode -> renderHorizontalRun smode (currentRun s)
+                  mainRun = renderHorizontalRun asSummaryView (currentRun s)
               in  [ B.vBox [ mainRun
                            , B.hBorder
                            , main
@@ -162,14 +161,10 @@ handleWH = \case
 
   
 nextMode :: AppState -> AppState
-nextMode state = case asViewMode state of
-         ViewSummary vmode ->  state { asViewMode = ViewSummary $ succ' vmode }
-         _ -> state
+nextMode state = state { asSummaryView = succ' $ asSummaryView state }
   
 prevMode :: AppState -> AppState
-prevMode state = case asViewMode state of
-         ViewSummary vmode ->  state { asViewMode = ViewSummary $ pred' vmode }
-         _ -> state
+prevMode state = state { asSummaryView = pred' $ asSummaryView state }
          
 nextOf :: Int -> SumVec a -> Int
 nextOf i ShelvesSummary{sShelves} = min (V.length sShelves - 1) (i+1)
@@ -201,8 +196,7 @@ renderSummaryAsList name smode ssum@ShelvesSummary{..} =
 
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
-  mode = case asViewMode of
-          ViewSummary v -> B.str (show v)
+  mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   current = B.hBox [ B.txt $ " #" <> pack (show i)     | (i) <- [(asCurrentRun) , (asCurrentBay ), (asCurrentShelf)] ]
   content = renderWithStyleName (currentRun state)

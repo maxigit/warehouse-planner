@@ -34,7 +34,8 @@ data ViewMode = ViewSummary SummaryView
 -- | Summary with a "list" with current position
 type SumVec = ShelvesSummary Vector
 data AppState = AppState
-     { asViewMode  :: ViewMode
+     { -- asViewMode  :: ViewMode
+     asSummaryView :: SummaryView
      , asShelvesSummary :: Runs SumVec (SumVec (Box RealWorld)) 
      , asCurrentRun :: Int
      , asCurrentBay :: Int
