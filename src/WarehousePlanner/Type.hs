@@ -68,47 +68,6 @@ data Position = Position
               }
      deriving (Eq, Show, Ord)
 
-data AffDimension = AffDimension { aBottomLeft , aTopRight :: Dimension }
-     deriving (Eq, Show, Ord)
-     
-instance Semigroup AffDimension where 
-         (AffDimension bl tr)  <> (AffDimension bl' tr') = AffDimension (minDimension [bl, bl']) (maxDimension [tr, tr'])
-instance Monoid AffDimension where
-  mempty = AffDimension mempty mempty
-  
--- | Check weither a point is within
--- the rectange boundaries (excluding top and right edge)
-inAffDimension :: Dimension -> AffDimension -> Bool
-inAffDimension (Dimension x y z ) rec = let
-  Dimension x' y' z' = aBottomLeft rec
-  Dimension x'' y'' z'' = aTopRight rec
-  in x' <= x && x < x''
-    && y' <= y && y < y''
-    && z' <= z && z < z''
-    
--- | Check weither two rectangle overlaps
-affDimensionOverlap :: AffDimension -> AffDimension -> Bool
-affDimensionOverlap a b = isJust $ affDimensionIntersection a b
-affDimensionIntersection :: AffDimension -> AffDimension -> Maybe AffDimension
-affDimensionIntersection a b = let
-  bottomLeft = maxDimension [aBottomLeft a, aBottomLeft b]
-  topRight = minDimension [aTopRight a, aTopRight b]
-  in
-     if and $ zipWith (<) (dimensionToList bottomLeft) (dimensionToList topRight)
-     then Just (AffDimension bottomLeft topRight)
-     else Nothing
-
-
-  
-affineToDimensions :: AffDimension -> [Dimension]
-affineToDimensions rec = let
-  Dimension x' y' z' = aBottomLeft rec
-  Dimension x'' y'' z'' = aTopRight rec
-  in [ Dimension x y z 
-     | x <- [x',x'']
-     , y <- [y', y'']
-     , z <- [z', z'']
-     ]
   
 
 data HowMany = HowMany 
@@ -538,8 +497,6 @@ boxCorner :: Box s -> Dimension
 boxCorner b = boxOffset b <> boxDim b
 
 
-boxAffDimension :: Box s -> AffDimension
-boxAffDimension b = AffDimension (boxOffset b) (boxOffset b <> boxDim b)
 -- ** Tags 
 flattenTagValues :: Set Text -> Text
 flattenTagValues = intercalate ";" . Set.toList

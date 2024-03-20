@@ -6,6 +6,7 @@ module WarehousePlanner.Brick.RenderBar
 , charWithPerc2
 , renderS
 , renderWithStyleName
+, renderHorizontalSummary
 )
 where
 
@@ -51,19 +52,14 @@ renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (pa
 renderBay :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
 renderBay sview bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sDetails bay)
-  in joinBorders $ vBox $ ws <> [hBox ( txt ( sName bay) : map (renderS sview) (F.toList $ sDetails bay))]
+  in joinBorders $ vBox $ ws <> [txt ( sName bay) <+> renderHorizontalSummary sview bay ]
 
 renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
 
 
 shelfSummaryToAllBars :: ShelvesSummary f a -> Widget n
-shelfSummaryToAllBars sum =
-  hBox [ go SVMaxLength SVSurfaceWH '>'  
-       , go SVMaxWidth SVSurfaceWH 'o'
-       , go SVMaxHeight SVSurfaceLW '^'
-       ]
-  where go m _m' c = renderS m sum
+shelfSummaryToAllBars sum = hBox [ renderS v sum | v <- [minBound .. maxBound] ]
 
 
 charWithPerc2 :: Char -> Double -> Double -> Widget n
@@ -79,8 +75,13 @@ renderS smode s = let
               SVSurfaceLH -> '◆'
               SVSurfaceLW -> '▼'
               SVVolume -> '★'
-       in charWithPerc2 c (ratio (fromSummary smode) s) 0
+       in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
+renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
+-- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
+renderHorizontalSummary _sview ssum = hBox . map (renderS sview) $ sDetailsList ssum  where
+   [sview] = fmap snd $ take 1 $ sortOn fst $ [(ratio (fromSummary v)  ssum, v) | v <- [SVSurfaceLW, SVSurfaceLH, SVSurfaceWH ] ]
+
 renderWithStyleName :: ShelvesSummary f a -> Widget n
 renderWithStyleName s | null (sStyles s)  = str "∅"
 renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sStyles s where

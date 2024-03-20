@@ -3,19 +3,22 @@ module WarehousePlanner.Brick.Table
 , renderBoxContent
 , renderBoxOrientation
 , baySummaryToTable
+, runsToTable
 )
 where
 
 import Brick
 import Brick.Widgets.Table
 import ClassyPrelude 
+import Data.Foldable qualified as F
+import Data.List (nub, transpose)
 import Data.Map qualified as Map
+import WarehousePlanner.Brick.RenderBar 
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
-import Data.List (nub, transpose)
-import Data.Foldable qualified as F
+import Data.Vector qualified as V
 
 
 -- | Create a table with one cell per "offset"
@@ -25,8 +28,8 @@ import Data.Foldable qualified as F
 -- and column to 1 and 3
 -- One table is returned for each depth 
 shelfSummaryToTable :: ([Box RealWorld] ->  Widget n) -> SumVec (Box RealWorld) -> [ Table n ]
-shelfSummaryToTable renderBoxes ShelvesSummary{..} = let
-   boxes = F.toList $ sDetails 
+shelfSummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
+   boxes = sDetailsList ssum
    boxesByOffset = Map.fromListWith (<>) [ (boxOffset box , [box])
                                          | box <- boxes
                                          ]
@@ -43,8 +46,9 @@ shelfSummaryToTable renderBoxes ShelvesSummary{..} = let
            ]
    widgets = map (map (map $ renderBoxes . fromMaybe [] ))
            $ map (collapseColumns . collapseRows) cells
-   in map (rowBorders False . columnBorders False . table) widgets
+   in map (noBorders . table) widgets
                                          
+noBorders = rowBorders False . columnBorders False
 -- | merge rows if nothing collide
 -- example
 --       a _ b   => a x b
@@ -74,8 +78,8 @@ renderBoxOrientation box = withStyleAttr (boxStyle box) $ txt $ showOrientation'
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
 baySummaryToTable :: ([Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (Box RealWorld)) -> Table n
-baySummaryToTable renderBoxes ShelvesSummary{..} = let
-  shelves = F.toList $ sDetails
+baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
+  shelves = sDetailsList ssum
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)
                     . shelfSummaryToTable renderBoxes
                     ) $ reverse shelves
@@ -91,4 +95,19 @@ baySummaryToTable renderBoxes ShelvesSummary{..} = let
   in case maxDepth of 
           0 -> table [[emptyWidget]]
           _ -> table tableCells
+
+
+-- * Runs
+-- | Displays a vertical table with all the runs
+runsToTable :: SummaryView -> Int -> Runs SumVec _ -> Table Text
+runsToTable smode current runs = let
+     rows = V.imap mkRow (sDetails runs)
+     mkRow i run = [ str $ if i == current then "[" else " "
+                   , shelfSummaryToAllBars run 
+                   , selectAttr current i $ padLeftRight 1 $ txt (sName run)
+                   , renderHorizontalSummary smode run
+                   , str if i == current then "]" else " "
+                   ]
+     in surroundingBorder False . noBorders . table $ toList  rows
+
 

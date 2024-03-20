@@ -16,6 +16,7 @@ import Data.Set qualified as Set
 import Data.Map qualified as Map
 import GHC.Utils.Monad (mapAccumLM)
 import Data.List (unfoldr)
+import WarehousePlanner.Affine
 
 -- * Type {{{1
 data ShiftStrategy = ShiftAll | StayInPlace deriving (Show, Eq)

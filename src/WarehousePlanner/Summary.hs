@@ -14,6 +14,7 @@ import GHC.Generics
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (commonPrefixes)
 import Data.Map qualified as Map
+import WarehousePlanner.Affine
 
 data Summary = Summary
   { suVolume 
@@ -85,7 +86,7 @@ summaryFromShelf shelf = do
    return $ ShelvesSummary (shelfName shelf)
                            (shelf :| [])                          
                            styleMap
-                           (mconcat $ toList styleMap) -- makeBoxesSummary $ toList boxes)
+                           (makeBoxesSummary $ toList boxes)
                            (makeShelfSummary shelf)
                            
 summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary NonEmpty (Shelf s)) s
@@ -105,11 +106,10 @@ makeBoxesSummary boxes = Summary{..} where
   suVolume = sum $ map boxVolume boxes
   maxCorner = mconcat $ map boxAffDimension boxes
   Dimension suMaxLength suMaxWidth suMaxHeight = aTopRight maxCorner
-  dims = map boxDim boxes
-  suSurfaceLW = sum [l * w | Dimension l w _ <- dims ]
-  suSurfaceLH = sum [l * h | Dimension l _ h <- dims ]
-  suSurfaceWH = sum [w * h | Dimension _ w h <- dims ]
-  suCount = 1
+  suSurfaceLW = boxesSurface dLength dWidth boxes
+  suSurfaceLH = boxesSurface dLength dHeight boxes
+  suSurfaceWH = boxesSurface dWidth dHeight boxes
+  suCount = length boxes
 
 data R' f a = R' (Runs f a)
      deriving (Functor, Foldable, Traversable)

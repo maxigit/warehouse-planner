@@ -50,10 +50,10 @@ initState = do
                  >>= makeRunsSummary
                  >>= traverseRuns findBoxes
   let toL :: forall a . ShelvesSummary NonEmpty a -> SumVec a
-      toL ShelvesSummary{..} = let
-          sumZip = fromList $ toList sDetails
+      toL ssum@ShelvesSummary{..} = let
+          sumZip = fromList $ sDetailsList ssum
           in ShelvesSummary{sDetails=sumZip,..}
-  let asDetailsSummary = fromRuns toL toL toL
+  let asShelvesSummary = fromRuns toL toL toL
                        $ mapRuns (\s -> s { sDetails = fromList $ sDetails s }
                                      )  shelvesSummary
   let asSummaryView = SVVolume
@@ -71,11 +71,11 @@ whApp extraAttrs =
       app = B.App {..}
       appDraw = \s@AppState{..} -> 
               let main = case () of
-                           -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asDetailsSummary s) ]
+                           -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
                           ()  ->
-                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" asSummaryView asDetailsSummary)
+                                       B.hBox $ B.hLimit 30 (runsSideBar s)
                                               : B.vBorder
-                                              -- : case B.listSelectedElement (sDetails $ asDetailsSummary s) of
+                                              -- : case B.listSelectedElement (sDetails $ asShelvesSummary s) of
                                               -- : case currentBay s of
                                               --        -- Nothing -> []
                                               --        -- current -> [ (B.hBox 
@@ -87,11 +87,12 @@ whApp extraAttrs =
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sDetails $ currentRun s)
-                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop asCurrentBay $ sShelfList $ currentRun s)
+                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop asCurrentBay $ sDetailsList $ currentRun s)
                                                          ]
                                               ]
                   mainRun = renderHorizontalRun asSummaryView (currentRun s)
               in  [ B.vBox [ mainRun
+                           , debugShelf s
                            , B.hBorder
                            , main
                            , B.hBorder
@@ -110,13 +111,14 @@ whMain wh = do
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let style'shelfs = [ (style, sName shelfSum)
-                    | run <- F.toList $ sDetails (asDetailsSummary state0)
-                    , bay <- F.toList $ sDetails run
-                    , shelfSum <- F.toList $ sDetails bay
+                    | run <- sDetailsList (asShelvesSummary state0)
+                    , bay <- sDetailsList run
+                    , shelfSum <- sDetailsList bay
                     , style <- keys (sStyles shelfSum)
                     ]
   let styles = reverse $ map fst style'shelfs
-      attrs = zip (map makeStyleAttrName styles) (cycle defaultStyleAttrs)
+      attrs = selectedAttr
+            : zip (map makeStyleAttrName styles) (cycle defaultStyleAttrs)
   void $ B.defaultMain (whApp attrs) state0
 
 
@@ -144,16 +146,16 @@ handleWH = \case
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          --
-         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asDetailsSummary s) }
+         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
          ENextShelf -> modify \s -> s { asCurrentShelf = nextOf (asCurrentShelf s) (currentBay s) }
          -- ENextBox -> modify \s -> s { asCurrentBox = nextOf (asCurrentBox s) (currentShelf s) }
-         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asDetailsSummary s) }
+         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
          EPrevBay -> modify \s -> s { asCurrentBay = prevOf (asCurrentBay s) (currentRun s) }
          EPrevShelf -> modify \s -> s { asCurrentShelf = prevOf (asCurrentShelf s) (currentBay s) }
          -- EPrevBox -> modify \s -> s { asCurrentBox = prevOf (asCurrentBox s) (currentShelf s) }
          EFirstRun -> modify \s -> s { asCurrentRun = 0 }
-         ELastRun -> modify \s -> s { asCurrentRun = lastOf (asDetailsSummary s) }
+         ELastRun -> modify \s -> s { asCurrentRun = lastOf (asShelvesSummary s) }
          EFirstBay -> modify \s -> s { asCurrentBay = 0 }
          ELastBay -> modify \s -> s { asCurrentBay = lastOf (currentRun s) }
 
@@ -179,20 +181,8 @@ lastOf ShelvesSummary{sDetails} = V.length sDetails - 1
 
 
 -- * 
-renderSummaryAsList :: Text -> SummaryView -> (SumVec _a) -> B.Widget Text
-renderSummaryAsList name smode ssum@ShelvesSummary{..} =
-  let list = B.list name sDetails 0
-  in B.renderList (\selected e -> B.hBox $ shelfSummaryToAllBars e
-                                         : B.str (if selected then "*" else " ")
-                                         : B.txt (S.sName e)
-                                         : B.str " "
-                                         -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sDetails e)
-                                         -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sDetails e) )
-                                         : [] -- : (  map (renderS smode) (sShelfList e) )
-                  )
-                  True
-                  list
-  where -- renderS = shelfSummaryToAllBars 
+runsSideBar :: AppState -> B.Widget Text
+runsSideBar AppState{..} = B.renderTable $ runsToTable asSummaryView asCurrentRun asShelvesSummary 
 
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
@@ -206,4 +196,20 @@ renderStatus state@AppState{..} = let
                            , B.center mode
                            , B.padLeft B.Max legend]
              
+debugShelf :: AppState -> B.Widget Text
+debugShelf state = let
+  ssum = currentShelf state
+  in B.vBox [ B.hBox $ intersperse (B.str " ") 
+                     $ [  B.str (show m)
+                       , B.txt $ sName ssum
+                       , renderS m ssum
+                       , B.txt "shelf" 
+                       , B.str . show $ suCount $ sShelvesSummary ssum
+                       , B.str . show $ fromSummary m $ shelvesSummary ssum
+                       , B.txt "box" 
+                       , B.str . show $ suCount $ sBoxSummary ssum
+                       , B.str . show $ fromSummary m $ sBoxSummary ssum
+                       ]
+          | m <- [minBound .. maxBound ]
+          ]
   

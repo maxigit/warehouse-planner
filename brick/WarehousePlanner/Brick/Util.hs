@@ -10,6 +10,7 @@ eigthH, eigthV
 , succ', pred'
 , styleNameWithAttr
 , withStyleAttr
+, selectedAttr, selectAttr
 ) where
 
 import ClassyPrelude hiding (on)
@@ -123,4 +124,10 @@ defaultStyleAttrs = [ with $ fg `on` V.black
                     ]
   where withStyle = flip V.withStyle
 
+selected_ = attrName "selected"
+selectedAttr = (selected_, V.defAttr `V.withStyle` V.reverseVideo)
                                  
+selectAttr n i w = 
+  if i == n 
+  then withAttr selected_ w
+  else w

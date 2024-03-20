@@ -108,6 +108,7 @@ import Text.Parsec.Text qualified as P
 import Control.Monad.Fail 
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
+import WarehousePlanner.Affine
 
 
 -- import Debug.Trace qualified as T
