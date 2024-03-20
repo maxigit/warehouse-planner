@@ -1,6 +1,8 @@
 .stack-work
 .stack-profile
 tags
+.tags
+TAGS
 data/scramble.vim
 *.prof
 results/*.html
