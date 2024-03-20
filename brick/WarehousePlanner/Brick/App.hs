@@ -51,17 +51,17 @@ initState = do
                  >>= traverseRuns findBoxes
   let toL :: forall a . ShelvesSummary NonEmpty a -> SumVec a
       toL ShelvesSummary{..} = let
-          sumZip = fromList $ toList sShelves
-          in ShelvesSummary{sShelves=sumZip,..}
-  let asShelvesSummary = fromRuns toL toL toL
-                       $ mapRuns (\s -> s { sShelves = fromList $ sShelves s }
+          sumZip = fromList $ toList sDetails
+          in ShelvesSummary{sDetails=sumZip,..}
+  let asDetailsSummary = fromRuns toL toL toL
+                       $ mapRuns (\s -> s { sDetails = fromList $ sDetails s }
                                      )  shelvesSummary
   let asSummaryView = SVVolume
   return AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
                  , ..}
-  where findBoxes ShelvesSummary{sShelves=shelves,..} = do
+  where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
-            sShelves <- mapM findBox boxIds
+            sDetails <- mapM findBox boxIds
             return ShelvesSummary{..}
 
 
@@ -71,11 +71,11 @@ whApp extraAttrs =
       app = B.App {..}
       appDraw = \s@AppState{..} -> 
               let main = case () of
-                           -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asShelvesSummary s) ]
+                           -- ViewSummary smode -> [ B.vBox $ map (shelfSummaryToBar VerticalBar smode) (asDetailsSummary s) ]
                           ()  ->
-                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" asSummaryView asShelvesSummary)
+                                       B.hBox $ B.hLimit 20 (renderSummaryAsList "Runs" asSummaryView asDetailsSummary)
                                               : B.vBorder
-                                              -- : case B.listSelectedElement (sShelves $ asShelvesSummary s) of
+                                              -- : case B.listSelectedElement (sDetails $ asDetailsSummary s) of
                                               -- : case currentBay s of
                                               --        -- Nothing -> []
                                               --        -- current -> [ (B.hBox 
@@ -86,7 +86,7 @@ whApp extraAttrs =
                                               --        -- current -> [ B.hBox . map B.renderTable $ shelfSummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
-                                              : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sShelves $ currentRun s)
+                                              : [ B.vBox $ (map B.hBox) [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxOrientation)) (F.toList . sDetails $ currentRun s)
                                                          , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop asCurrentBay $ sShelfList $ currentRun s)
                                                          ]
                                               ]
@@ -110,9 +110,9 @@ whMain wh = do
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let style'shelfs = [ (style, sName shelfSum)
-                    | run <- F.toList $ sShelves (asShelvesSummary state0)
-                    , bay <- F.toList $ sShelves run
-                    , shelfSum <- F.toList $ sShelves bay
+                    | run <- F.toList $ sDetails (asDetailsSummary state0)
+                    , bay <- F.toList $ sDetails run
+                    , shelfSum <- F.toList $ sDetails bay
                     , style <- keys (sStyles shelfSum)
                     ]
   let styles = reverse $ map fst style'shelfs
@@ -144,16 +144,16 @@ handleWH = \case
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          --
-         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
+         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asDetailsSummary s) }
          ENextBay -> modify \s -> s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
          ENextShelf -> modify \s -> s { asCurrentShelf = nextOf (asCurrentShelf s) (currentBay s) }
          -- ENextBox -> modify \s -> s { asCurrentBox = nextOf (asCurrentBox s) (currentShelf s) }
-         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
+         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asDetailsSummary s) }
          EPrevBay -> modify \s -> s { asCurrentBay = prevOf (asCurrentBay s) (currentRun s) }
          EPrevShelf -> modify \s -> s { asCurrentShelf = prevOf (asCurrentShelf s) (currentBay s) }
          -- EPrevBox -> modify \s -> s { asCurrentBox = prevOf (asCurrentBox s) (currentShelf s) }
          EFirstRun -> modify \s -> s { asCurrentRun = 0 }
-         ELastRun -> modify \s -> s { asCurrentRun = lastOf (asShelvesSummary s) }
+         ELastRun -> modify \s -> s { asCurrentRun = lastOf (asDetailsSummary s) }
          EFirstBay -> modify \s -> s { asCurrentBay = 0 }
          ELastBay -> modify \s -> s { asCurrentBay = lastOf (currentRun s) }
 
@@ -167,27 +167,27 @@ prevMode :: AppState -> AppState
 prevMode state = state { asSummaryView = pred' $ asSummaryView state }
          
 nextOf :: Int -> SumVec a -> Int
-nextOf i ShelvesSummary{sShelves} = min (V.length sShelves - 1) (i+1)
+nextOf i ShelvesSummary{sDetails} = min (V.length sDetails - 1) (i+1)
 
 prevOf :: Int -> SumVec a -> Int
-prevOf i ShelvesSummary{sShelves} = max 0 ((min i (V.length sShelves - 1) )  - 1)
+prevOf i ShelvesSummary{sDetails} = max 0 ((min i (V.length sDetails - 1) )  - 1)
                     -- ^ 
-                    -- +--- in case i was bigger that the sShelvesector length
+                    -- +--- in case i was bigger that the sDetailsector length
                     --      this can happen when changing parents
 lastOf :: SumVec a -> Int
-lastOf ShelvesSummary{sShelves} = V.length sShelves - 1
+lastOf ShelvesSummary{sDetails} = V.length sDetails - 1
 
 
 -- * 
 renderSummaryAsList :: Text -> SummaryView -> (SumVec _a) -> B.Widget Text
 renderSummaryAsList name smode ssum@ShelvesSummary{..} =
-  let list = B.list name sShelves 0
+  let list = B.list name sDetails 0
   in B.renderList (\selected e -> B.hBox $ shelfSummaryToAllBars e
                                          : B.str (if selected then "*" else " ")
                                          : B.txt (S.sName e)
                                          : B.str " "
-                                         -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sShelves e)
-                                         -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sShelves e) )
+                                         -- : map (shelfSummaryToBar VerticalBar smode) (F.toList $ S.sDetails e)
+                                         -- : (intersperse (B.str "|") $ map renderS (F.toList $ S.sDetails e) )
                                          : [] -- : (  map (renderS smode) (sShelfList e) )
                   )
                   True
@@ -206,3 +206,4 @@ renderStatus state@AppState{..} = let
                            , B.center mode
                            , B.padLeft B.Max legend]
              
+  

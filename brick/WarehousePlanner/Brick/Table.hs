@@ -26,7 +26,7 @@ import Data.Foldable qualified as F
 -- One table is returned for each depth 
 shelfSummaryToTable :: ([Box RealWorld] ->  Widget n) -> SumVec (Box RealWorld) -> [ Table n ]
 shelfSummaryToTable renderBoxes ShelvesSummary{..} = let
-   boxes = F.toList $ sShelves 
+   boxes = F.toList $ sDetails 
    boxesByOffset = Map.fromListWith (<>) [ (boxOffset box , [box])
                                          | box <- boxes
                                          ]
@@ -75,7 +75,7 @@ renderBoxOrientation box = withStyleAttr (boxStyle box) $ txt $ showOrientation'
 -- one row per shelf and one column per different depth
 baySummaryToTable :: ([Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (Box RealWorld)) -> Table n
 baySummaryToTable renderBoxes ShelvesSummary{..} = let
-  shelves = F.toList $ sShelves
+  shelves = F.toList $ sDetails
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)
                     . shelfSummaryToTable renderBoxes
                     ) $ reverse shelves

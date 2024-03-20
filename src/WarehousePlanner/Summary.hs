@@ -51,7 +51,7 @@ instance Monoid Summary where
 
 data ShelvesSummary f a = ShelvesSummary
                { sName :: !Text
-               , sShelves :: f a
+               , sDetails :: f a
                , sStyles :: Map Text Summary -- box summary by styles
                -- lazy , sort of caches
                , sBoxSummary :: Summary
@@ -61,7 +61,7 @@ data ShelvesSummary f a = ShelvesSummary
      
 instance Semigroup (f a)  => Semigroup (ShelvesSummary f a) where
   s1 <> s2 = ShelvesSummary (commonPrefix (sName s1) (sName s2))
-                            (sShelves s1        <> sShelves s2)
+                            (sDetails s1        <> sDetails s2)
                             (unionWith (<>) (sStyles s1) (sStyles s2))
                             (sBoxSummary s1     <> sBoxSummary s2)
                             (sShelvesSummary s1 <> sShelvesSummary s2)
@@ -121,7 +121,7 @@ makeRunsSummary runs = do
 
 
 promote :: ShelvesSummary NonEmpty a -> ShelvesSummary  NonEmpty (ShelvesSummary NonEmpty a)
-promote sum@ShelvesSummary{..} = ShelvesSummary{sShelves=pure sum , ..}
+promote sum@ShelvesSummary{..} = ShelvesSummary{sDetails=pure sum , ..}
 
 
   

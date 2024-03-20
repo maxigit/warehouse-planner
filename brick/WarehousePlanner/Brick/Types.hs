@@ -36,17 +36,17 @@ type SumVec = ShelvesSummary Vector
 data AppState = AppState
      { -- asViewMode  :: ViewMode
      asSummaryView :: SummaryView
-     , asShelvesSummary :: Runs SumVec (SumVec (Box RealWorld)) 
+     , asDetailsSummary :: Runs SumVec (SumVec (Box RealWorld)) 
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int
      }
      
 selectFromSumVec :: Int -> SumVec a -> a
-selectFromSumVec i ShelvesSummary{sShelves} = sShelves V.! (i `min` (length sShelves - 1))
+selectFromSumVec i ShelvesSummary{sDetails} = sDetails V.! (i `min` (length sDetails - 1))
 
 currentRun :: AppState -> Run SumVec (Bay SumVec _)
-currentRun state = selectFromSumVec (asCurrentRun state) (asShelvesSummary state)
+currentRun state = selectFromSumVec (asCurrentRun state) (asDetailsSummary state)
 
 -- currentBay :: AppState -> Bay SumVec _a
 currentBay state = selectFromSumVec (asCurrentBay state) (currentRun state)
@@ -55,6 +55,6 @@ currentShelf :: AppState -> _a
 currentShelf state = selectFromSumVec (asCurrentShelf state) (currentBay state)
 
 sShelfList :: SumVec a -> [a]
-sShelfList ssum = toList (sShelves ssum)
+sShelfList ssum = toList (sDetails ssum)
 
 
