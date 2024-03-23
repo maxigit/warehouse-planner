@@ -45,6 +45,7 @@ data WHEvent = ENextMode
              | ESelectCurrentStyle
              | ENextStyle
              | EPreviousStyle
+             | ESetBoxOrder BoxOrder
 
 initState :: WH (AppState) RealWorld
 initState = do
@@ -63,6 +64,8 @@ initState = do
   return . runUpdated
          $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
                  , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
+                 , asBoxOrder = BOByName
+                 , asLastKeys = []
                  , ..}
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
@@ -137,32 +140,43 @@ reverseIf _ attr = attr
 
 
 whHandleEvent :: B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
-whHandleEvent ev = case ev of 
-  B.AppEvent e -> handleWH e
-  B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
-  B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
-  B.VtyEvent (V.EvKey (V.KChar 'j') [] ) -> handleWH ENextRun
-  B.VtyEvent (V.EvKey (V.KChar 'k') [] ) -> handleWH EPrevRun
-  B.VtyEvent (V.EvKey (V.KChar 'J') [] ) -> handleWH ENextShelf
-  B.VtyEvent (V.EvKey (V.KChar 'K') [] ) -> handleWH EPrevShelf
-  B.VtyEvent (V.EvKey (V.KChar 'l') [] ) -> handleWH ENextBay
-  B.VtyEvent (V.EvKey (V.KChar 'h') [] ) -> handleWH EPrevBay
-  B.VtyEvent (V.EvKey (V.KChar 'g') [] ) -> handleWH EFirstRun
-  B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
-  B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
-  B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
-  B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentStyle
-  B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextStyle
-  B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousStyle
-  B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextStyle
-  B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
-  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-  B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
-  _ -> B.resizeOrQuit ev
+whHandleEvent ev = do
+  lasts <- gets asLastKeys
+  case ev of 
+       B.AppEvent e -> handleWH e
+       B.VtyEvent (V.EvKey (V.KChar 'n') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByName
+       B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByShelve
+       B.VtyEvent (V.EvKey (V.KChar 'c') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByCount
+       B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
+       B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
+       B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
+       B.VtyEvent (V.EvKey (V.KChar 'j') [] ) -> handleWH ENextRun
+       B.VtyEvent (V.EvKey (V.KChar 'k') [] ) -> handleWH EPrevRun
+       B.VtyEvent (V.EvKey (V.KChar 'J') [] ) -> handleWH ENextShelf
+       B.VtyEvent (V.EvKey (V.KChar 'K') [] ) -> handleWH EPrevShelf
+       B.VtyEvent (V.EvKey (V.KChar 'l') [] ) -> handleWH ENextBay
+       B.VtyEvent (V.EvKey (V.KChar 'h') [] ) -> handleWH EPrevBay
+       B.VtyEvent (V.EvKey (V.KChar 'g') [] ) -> handleWH EFirstRun
+       B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
+       B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
+       B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
+       B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentStyle
+       B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextStyle
+       B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousStyle
+       B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextStyle
+       B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
+       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("o" :: String) -> modify \s -> s { asLastKeys = c : lasts }
+       _ -> B.resizeOrQuit ev
  
-handleWH = \case 
+handleWH ev = 
+  do
+    -- reset last keys
+    modify \s -> s { asLastKeys = [] }
+    case ev of 
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          --
@@ -188,6 +202,7 @@ handleWH = \case
          EPreviousStyle -> do
                     modify \s -> s { asCurrentStyle = prevOf' (asCurrentStyle s) (asCurrentRunStyles s) }
                     -- handleWH ESelectCurrentStyle
+         ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
 
          _ -> return ()
 
@@ -212,12 +227,28 @@ lastOf :: SumVec a -> Int
 lastOf ShelvesSummary{sDetails} = lastOf' sDetails
 lastOf' v = V.length v - 1
 
+setBoxOrder :: BoxOrder -> AppState -> AppState
+setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asBoxOrder=boxOrder,..} where
+  sorted = case boxOrder of
+              BOByName -> sortOn fst asCurrentRunStyles
+              BOByVolume -> sortOn (Down . suVolume . snd) asCurrentRunStyles
+              BOByCount -> sortOn (Down . suCount . snd) asCurrentRunStyles
+              BOByShelve -> let -- find boxes in order of appearance
+                  style'shelf :: Map Text (Text, Dimension)
+                  style'shelf = Map.fromList $ reverse
+                                             [ (boxStyle box , (sName shelfSum, boxOffset box))
+                                             | baySum <- sDetailsList (currentRun state)
+                                             , shelfSum <- sortOn sName $ sDetailsList baySum
+                                             , box <- sortOn boxOffset $ sDetailsList shelfSum
+                                             ]
+                  in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
+              _ -> asCurrentRunStyles
 
 -- * Post update
 -- | update the list of current styles
 runUpdated :: AppState -> AppState
-runUpdated state@AppState{..} = AppState{asCurrentRunStyles=styles,..} where
-    styles = fromList $ keys $ sStyles (currentRun state)
+runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunStyles=styles,..} where
+    styles = fromList $ Map.toList $ sStyles (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
 runsSideBar state@AppState{..} = B.renderTable $ runsToTable (selectedStyle state) asSummaryView asCurrentRun asShelvesSummary 
@@ -225,13 +256,14 @@ runsSideBar state@AppState{..} = B.renderTable $ runsToTable (selectedStyle stat
 -- * Styles
 stylesSideBar :: AppState -> B.Widget Text
 stylesSideBar state@AppState{..} = 
-  B.renderTable $ stylesToTable (selectedStyle state) asCurrentStyle asCurrentRunStyles
+  B.renderTable $ stylesToTable (selectedStyle state) asCurrentStyle $ fmap fst asCurrentRunStyles
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
+                           , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , B.padLeft B.Max legend]
              

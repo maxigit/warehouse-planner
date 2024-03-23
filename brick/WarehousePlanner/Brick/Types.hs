@@ -2,6 +2,7 @@ module WarehousePlanner.Brick.Types
 ( AppState(..)
 , ViewMode(..)
 , SummaryView(..)
+, BoxOrder(..)
 , BarDirection(..)
 , SumVec, sDetailsList
 , currentRun, currentBay, currentShelf
@@ -33,6 +34,12 @@ data ViewMode = ViewSummary SummaryView
               -- | ViewSplitShelves (Shelf s -> Bool)
               -- | ViewSplitBoxes (Box s -> Bool)
               -- 
+data BoxOrder = BOByName
+              | BOByShelve
+              | BOByCount
+              | BOByVolume
+     deriving (Show, Eq, Enum, Bounded)
+
 -- | Summary with a "list" with current position
 type SumVec = ShelvesSummary Vector
 data AppState = AppState
@@ -42,9 +49,13 @@ data AppState = AppState
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int
+     ---------
      , asSelectedStyle :: Maybe Text
      , asCurrentStyle :: Int 
-     , asCurrentRunStyles :: Vector Text
+     , asCurrentRunStyles :: Vector (Text, Summary)
+     ------ deal with multikey mapping
+     , asLastKeys :: [Char]
+     , asBoxOrder :: BoxOrder 
      }
      
 selectFromSumVec :: Int -> SumVec a -> a
@@ -66,6 +77,7 @@ selectedStyle :: AppState -> Maybe Text
 selectedStyle state@AppState{..} = asSelectedStyle <|> currentStyle state
 
 currentStyle :: AppState -> Maybe Text
-currentStyle AppState{..} = asCurrentRunStyles V.!? (asCurrentStyle `mod` length asCurrentRunStyles)
+currentStyle = fmap fst . currentStyle'Sum
+currentStyle'Sum AppState{..} = asCurrentRunStyles V.!? (asCurrentStyle `mod` length asCurrentRunStyles)
 
 
