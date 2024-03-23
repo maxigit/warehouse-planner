@@ -46,6 +46,8 @@ data WHEvent = ENextMode
              | ENextStyle
              | EPreviousStyle
              | ESetBoxOrder BoxOrder
+             | ENextHLRun
+             | EPrevHLRun
 
 initState :: WH (AppState) RealWorld
 initState = do
@@ -169,6 +171,8 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
+       B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
        B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("o" :: String) -> modify \s -> s { asLastKeys = c : lasts }
        _ -> B.resizeOrQuit ev
  
@@ -203,6 +207,22 @@ handleWH ev =
                     modify \s -> s { asCurrentStyle = prevOf' (asCurrentStyle s) (asCurrentRunStyles s) }
                     -- handleWH ESelectCurrentStyle
          ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
+         ENextHLRun -> do
+                    asSelected <- gets asSelectedStyle
+                    case asSelected of
+                         Nothing -> handleWH ESelectCurrentStyle 
+                         _ -> return ()
+                    modify \s -> case asSelectedStyle s of
+                                            Nothing -> s
+                                            Just style -> findNextHLRun style s
+         EPrevHLRun -> do
+                    asSelected <- gets asSelectedStyle
+                    case asSelected of
+                         Nothing -> handleWH ESelectCurrentStyle 
+                         _ -> return ()
+                    modify \s -> case asSelectedStyle s of
+                                            Nothing -> s
+                                            Just style -> findPrevHLRun style s
 
          _ -> return ()
 
@@ -243,6 +263,30 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asB
                                              ]
                   in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
               _ -> asCurrentRunStyles
+-- * Find next shelf
+-- | Find next shelf containing the given style
+-- or highlighted run
+findNextHLRun :: Text -> AppState -> AppState
+findNextHLRun style AppState{..} = let
+   nextRuns = drop (asCurrentRun + 1) (sDetails asShelvesSummary)
+   indexM = V.findIndex (isJust . lookup style . sStyles) nextRuns 
+   newRun = case indexM of
+               Nothing -> asCurrentRun
+               Just i -> asCurrentRun + i + 1
+   in AppState{asCurrentRun=newRun,..}
+
+
+findPrevHLRun :: Text -> AppState -> AppState
+findPrevHLRun style AppState{..} = let
+   nextRuns = take (asCurrentRun) (sDetails asShelvesSummary)
+   indexM = V.findIndex (isJust . lookup style . sStyles) $ reverse nextRuns 
+   newRun = case indexM of
+               Nothing -> asCurrentRun
+               Just i -> asCurrentRun - i -1
+   in AppState{asCurrentRun=newRun,..}
+    
+    
+  
 
 -- * Post update
 -- | update the list of current styles
