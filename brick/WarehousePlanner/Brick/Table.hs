@@ -20,6 +20,7 @@ import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
 import Data.Vector qualified as V
+import Text.Printf (printf)
 
 
 -- | Create a table with one cell per "offset"
@@ -100,12 +101,17 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: SummaryView -> Int -> Runs SumVec _ -> Table Text
-runsToTable smode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: Maybe Text -> SummaryView -> Int -> Runs SumVec _ -> Table Text
+runsToTable selected smode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ shelfSummaryToAllBars run 
-                        , selectAttr (current == i) $ padLeftRight 1 $ txt (sName run)
+                        ,  attr run i $ padLeftRight 1 $ txt (sName run)
                         , renderHorizontalSummary smode run
                         ]
+          -- use selected style attribute if the run contains the style
+          attr run i = case selected >>= flip lookup (sStyles run) of
+                        Nothing -> selectAttr (current == i)
+                        Just sum | Just style <- selected -> withStyleAttr style . ( <+> (str . printf "(%d)" $ suCount sum))
+
 
 selectTable :: Int -> (Int -> a -> [Widget n ]) -> Vector a -> Table n
 selectTable current f v = let
@@ -118,5 +124,5 @@ selectTable current f v = let
 
 stylesToTable :: Maybe Text -> Int -> Vector Text -> Table Text
 stylesToTable selected current styles = selectTable current mkRow styles
-    where mkRow i style = [ withStyleAttr style $ txt style ]
+    where mkRow _ style = [ withStyleAttr style $ txt style ]
     

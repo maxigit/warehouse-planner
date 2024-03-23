@@ -220,7 +220,7 @@ runUpdated state@AppState{..} = AppState{asCurrentRunStyles=styles,..} where
     styles = fromList $ keys $ sStyles (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar AppState{..} = B.renderTable $ runsToTable asSummaryView asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (selectedStyle state) asSummaryView asCurrentRun asShelvesSummary 
 
 -- * Styles
 stylesSideBar :: AppState -> B.Widget Text
@@ -231,7 +231,7 @@ renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
-                           , B.center $ maybe (B.str "∅") styleNameWithAttr (selectedStyle state) -- current style
+                           , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
                            , B.center mode
                            , B.padLeft B.Max legend]
              
