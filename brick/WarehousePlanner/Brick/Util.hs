@@ -122,12 +122,11 @@ defaultStyleAttrs = [ with $ fg `on` V.black
                                   | (a, b, c) <- [(0,100,200), (50,150,200), (0, 50,255)]
                                   ]
                     ]
-  where withStyle = flip V.withStyle
 
 selected_ = attrName "selected"
 selectedAttr = (selected_, V.defAttr `V.withStyle` V.reverseVideo)
                                  
-selectAttr n i w = 
-  if i == n 
+selectAttr b w = 
+  if b
   then withAttr selected_ w
   else w

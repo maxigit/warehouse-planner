@@ -42,6 +42,9 @@ data WHEvent = ENextMode
              | ELastRun
              | EFirstBay
              | ELastBay
+             | ESelectCurrentStyle
+             | ENextStyle
+             | EPreviousStyle
 
 initState :: WH (AppState) RealWorld
 initState = do
@@ -57,7 +60,9 @@ initState = do
                        $ mapRuns (\s -> s { sDetails = fromList $ sDetails s }
                                      )  shelvesSummary
   let asSummaryView = SVVolume
-  return AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
+  return . runUpdated
+         $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
+                 , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
                  , ..}
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
@@ -75,6 +80,8 @@ whApp extraAttrs =
                           ()  ->
                                        B.hBox $ B.hLimit 30 (runsSideBar s)
                                               : B.vBorder
+                                              : B.hLimit 30 (stylesSideBar s)
+                                              : B.vBorder
                                               -- : case B.listSelectedElement (sDetails $ asShelvesSummary s) of
                                               -- : case currentBay s of
                                               --        -- Nothing -> []
@@ -90,7 +97,7 @@ whApp extraAttrs =
                                                          , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map renderBoxContent)) (drop asCurrentBay $ sDetailsList $ currentRun s)
                                                          ]
                                               ]
-                  mainRun = renderHorizontalRun asSummaryView (currentRun s)
+                  mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
               in  [ B.vBox [ mainRun
                            , debugShelf s
                            , B.hBorder
@@ -101,7 +108,7 @@ whApp extraAttrs =
                   ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent
-      appAttrMap = const $ B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs
+      appAttrMap state = B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs state
       appStartEvent = return ()
   in app
   
@@ -117,10 +124,16 @@ whMain wh = do
                     , style <- keys (sStyles shelfSum)
                     ]
   let styles = reverse $ map fst style'shelfs
-      attrs = selectedAttr
-            : zip (map makeStyleAttrName styles) (cycle defaultStyleAttrs)
+      attrs state = selectedAttr
+            : zipWith (\style attr -> (makeStyleAttrName style, reverseIf (Just style == selectedStyle state) attr ))
+                      styles
+                      (cycle defaultStyleAttrs)
+      (selected_, selectedAttrs_) = selectedAttr
   void $ B.defaultMain (whApp attrs) state0
 
+reverseIf :: Bool -> V.Attr -> V.Attr
+reverseIf True attr = attr `V.withStyle` V.reverseVideo
+reverseIf _ attr = attr
 
 
 whHandleEvent :: B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
@@ -138,6 +151,13 @@ whHandleEvent ev = case ev of
   B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
   B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
   B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
+  B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentStyle
+  B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextStyle
+  B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousStyle
+  B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextStyle
+  B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
+  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+  B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
   B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
   B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
   _ -> B.resizeOrQuit ev
@@ -146,11 +166,11 @@ handleWH = \case
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          --
-         ENextRun -> modify \s -> s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
+         ENextRun -> modify \s -> runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
          ENextShelf -> modify \s -> s { asCurrentShelf = nextOf (asCurrentShelf s) (currentBay s) }
          -- ENextBox -> modify \s -> s { asCurrentBox = nextOf (asCurrentBox s) (currentShelf s) }
-         EPrevRun -> modify \s -> s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
+         EPrevRun -> modify \s -> runUpdated s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
          EPrevBay -> modify \s -> s { asCurrentBay = prevOf (asCurrentBay s) (currentRun s) }
          EPrevShelf -> modify \s -> s { asCurrentShelf = prevOf (asCurrentShelf s) (currentBay s) }
          -- EPrevBox -> modify \s -> s { asCurrentBox = prevOf (asCurrentBox s) (currentShelf s) }
@@ -158,6 +178,16 @@ handleWH = \case
          ELastRun -> modify \s -> s { asCurrentRun = lastOf (asShelvesSummary s) }
          EFirstBay -> modify \s -> s { asCurrentBay = 0 }
          ELastBay -> modify \s -> s { asCurrentBay = lastOf (currentRun s) }
+         ESelectCurrentStyle -> modify \s -> s { asSelectedStyle = if currentStyle s == asSelectedStyle s
+                                                                   then Nothing
+                                                                   else currentStyle s
+                                               }
+         ENextStyle -> do
+                    modify \s -> s { asCurrentStyle = nextOf' (asCurrentStyle s) (asCurrentRunStyles s) }
+                    -- handleWH ESelectCurrentStyle
+         EPreviousStyle -> do
+                    modify \s -> s { asCurrentStyle = prevOf' (asCurrentStyle s) (asCurrentRunStyles s) }
+                    -- handleWH ESelectCurrentStyle
 
          _ -> return ()
 
@@ -169,30 +199,39 @@ prevMode :: AppState -> AppState
 prevMode state = state { asSummaryView = pred' $ asSummaryView state }
          
 nextOf :: Int -> SumVec a -> Int
-nextOf i ShelvesSummary{sDetails} = min (V.length sDetails - 1) (i+1)
+nextOf i ShelvesSummary{sDetails} = nextOf' i sDetails
+nextOf' i v = min (V.length v - 1) (i+1)
 
 prevOf :: Int -> SumVec a -> Int
-prevOf i ShelvesSummary{sDetails} = max 0 ((min i (V.length sDetails - 1) )  - 1)
+prevOf i ShelvesSummary{sDetails} = prevOf' i sDetails
+prevOf' i v= max 0 ((min i (V.length v- 1) )  - 1)
                     -- ^ 
                     -- +--- in case i was bigger that the sDetailsector length
                     --      this can happen when changing parents
 lastOf :: SumVec a -> Int
-lastOf ShelvesSummary{sDetails} = V.length sDetails - 1
+lastOf ShelvesSummary{sDetails} = lastOf' sDetails
+lastOf' v = V.length v - 1
 
 
--- * 
+-- * Post update
+-- | update the list of current styles
+runUpdated :: AppState -> AppState
+runUpdated state@AppState{..} = AppState{asCurrentRunStyles=styles,..} where
+    styles = fromList $ keys $ sStyles (currentRun state)
+-- *  Run
 runsSideBar :: AppState -> B.Widget Text
 runsSideBar AppState{..} = B.renderTable $ runsToTable asSummaryView asCurrentRun asShelvesSummary 
 
+-- * Styles
+stylesSideBar :: AppState -> B.Widget Text
+stylesSideBar state@AppState{..} = 
+  B.renderTable $ stylesToTable (selectedStyle state) asCurrentStyle asCurrentRunStyles
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
-  current = B.hBox [ B.txt $ " #" <> pack (show i)     | (i) <- [(asCurrentRun) , (asCurrentBay ), (asCurrentShelf)] ]
-  content = renderWithStyleName (currentRun state)
-  in B.vLimit 1 $ B.hBox $ [B.txt (sName $ currentShelf state) 
-                           , current
-                           , content
+  in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
+                           , B.center $ maybe (B.str "∅") styleNameWithAttr (selectedStyle state) -- current style
                            , B.center mode
                            , B.padLeft B.Max legend]
              
@@ -205,7 +244,7 @@ debugShelf state = let
                        , renderS m ssum
                        , B.txt "shelf" 
                        , B.str . show $ suCount $ sShelvesSummary ssum
-                       , B.str . show $ fromSummary m $ shelvesSummary ssum
+                       , B.str . show $ fromSummary m $ sShelvesSummary ssum
                        , B.txt "box" 
                        , B.str . show $ suCount $ sBoxSummary ssum
                        , B.str . show $ fromSummary m $ sBoxSummary ssum

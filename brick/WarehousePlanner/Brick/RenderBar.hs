@@ -1,3 +1,4 @@
+{-# LANGUAGE MonadComprehensions, OverloadedLists #-}
 module WarehousePlanner.Brick.RenderBar
 ( shelfSummaryToBar
 , renderHorizontalRun
@@ -7,6 +8,7 @@ module WarehousePlanner.Brick.RenderBar
 , renderS
 , renderWithStyleName
 , renderHorizontalSummary
+, renderBestBar
 )
 where
 
@@ -19,6 +21,7 @@ import Brick.Widgets.Border as B
 import WarehousePlanner.Type
 import Data.Foldable qualified as F
 import Data.Map qualified as Map
+import Data.List.NonEmpty (NonEmpty(..))
 
 
 -- * Bar
@@ -59,7 +62,11 @@ renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllB
 
 
 shelfSummaryToAllBars :: ShelvesSummary f a -> Widget n
-shelfSummaryToAllBars sum = hBox [ renderS v sum | v <- [minBound .. maxBound] ]
+-- shelfSummaryToAllBars sum = hBox [ renderS v sum | v <- [minBound .. maxBound] ]
+shelfSummaryToAllBars sum = hBox [ renderS SVVolume sum
+                                 , renderBestBar [SVMaxLength, SVMaxWidth, SVMaxHeight ] sum
+                                 , renderBestBar [SVSurfaceWH, SVSurfaceWH, SVSurfaceLW ] sum
+                                 ]
 
 
 charWithPerc2 :: Char -> Double -> Double -> Widget n
@@ -79,8 +86,16 @@ renderS smode s = let
        
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
 -- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
-renderHorizontalSummary _sview ssum = hBox . map (renderS sview) $ sDetailsList ssum  where
-   [sview] = fmap snd $ take 1 $ sortOn fst $ [(ratio (fromSummary v)  ssum, v) | v <- [SVSurfaceLW, SVSurfaceLH, SVSurfaceWH ] ]
+renderHorizontalSummary _sview ssum = hBox . map (renderBestBar sviews) $ sDetailsList ssum  where
+    sviews = SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
+   
+renderBestBar :: NonEmpty SummaryView -> ShelvesSummary f a -> Widget n
+renderBestBar sviews ssum = let
+   (_, sview) :| _ = sortOn fst
+                   $ [ (ratio (fromSummary v)  ssum, v)
+                      | v <- sviews
+                      ]
+  in renderS sview ssum
 
 renderWithStyleName :: ShelvesSummary f a -> Widget n
 renderWithStyleName s | null (sStyles s)  = str "∅"

@@ -4,6 +4,7 @@ module WarehousePlanner.Brick.Table
 , renderBoxOrientation
 , baySummaryToTable
 , runsToTable
+, stylesToTable
 )
 where
 
@@ -100,14 +101,22 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 -- * Runs
 -- | Displays a vertical table with all the runs
 runsToTable :: SummaryView -> Int -> Runs SumVec _ -> Table Text
-runsToTable smode current runs = let
-     rows = V.imap mkRow (sDetails runs)
-     mkRow i run = [ str $ if i == current then "[" else " "
-                   , shelfSummaryToAllBars run 
-                   , selectAttr current i $ padLeftRight 1 $ txt (sName run)
-                   , renderHorizontalSummary smode run
-                   , str if i == current then "]" else " "
-                   ]
+runsToTable smode current runs = selectTable current mkRow  (sDetails runs)
+    where mkRow i run = [ shelfSummaryToAllBars run 
+                        , selectAttr (current == i) $ padLeftRight 1 $ txt (sName run)
+                        , renderHorizontalSummary smode run
+                        ]
+
+selectTable :: Int -> (Int -> a -> [Widget n ]) -> Vector a -> Table n
+selectTable current f v = let
+     rows = V.imap mkRow v
+     mkRow i e = (str $ if i == current then "[" else " ")
+                 : (f i e)
+                 <> [ str if i == current then "]" else " "
+                    ]
      in surroundingBorder False . noBorders . table $ toList  rows
 
-
+stylesToTable :: Maybe Text -> Int -> Vector Text -> Table Text
+stylesToTable selected current styles = selectTable current mkRow styles
+    where mkRow i style = [ withStyleAttr style $ txt style ]
+    

@@ -5,6 +5,7 @@ module WarehousePlanner.Brick.Types
 , BarDirection(..)
 , SumVec, sDetailsList
 , currentRun, currentBay, currentShelf
+, selectedStyle, currentStyle
 )
 where
 
@@ -41,6 +42,9 @@ data AppState = AppState
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int
+     , asSelectedStyle :: Maybe Text
+     , asCurrentStyle :: Int 
+     , asCurrentRunStyles :: Vector Text
      }
      
 selectFromSumVec :: Int -> SumVec a -> a
@@ -57,5 +61,11 @@ currentShelf state = selectFromSumVec (asCurrentShelf state) (currentBay state)
 
 sDetailsList :: Foldable f => ShelvesSummary f a -> [a]
 sDetailsList ssum = F.toList (sDetails ssum)
+
+selectedStyle :: AppState -> Maybe Text
+selectedStyle state@AppState{..} = asSelectedStyle <|> currentStyle state
+
+currentStyle :: AppState -> Maybe Text
+currentStyle AppState{..} = asCurrentRunStyles V.!? (asCurrentStyle `mod` length asCurrentRunStyles)
 
 
