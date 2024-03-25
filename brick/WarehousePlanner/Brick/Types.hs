@@ -78,6 +78,9 @@ selectedStyle state@AppState{..} = asSelectedStyle <|> currentStyle state
 
 currentStyle :: AppState -> Maybe Text
 currentStyle = fmap fst . currentStyle'Sum
-currentStyle'Sum AppState{..} = asCurrentRunStyles V.!? (asCurrentStyle `mod` length asCurrentRunStyles)
+currentStyle'Sum AppState{..} =
+  case length asCurrentRunStyles of 
+       0 -> Nothing
+       l -> asCurrentRunStyles V.!? (asCurrentStyle `mod` l)
 
 
