@@ -13,6 +13,7 @@ import WarehousePlanner.Org.Internal
             , parseScenarioFile
             , readScenario
             , readScenarioFromPath
+            , readScenarioFromPaths
             , readScenariosFromDir
             , savePointScenario
             , scenarioToFullText

@@ -15,9 +15,8 @@ import Brick qualified as B
 import Brick.Widgets.Border qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
-import Control.Monad.State (get, gets, modify)
-import Data.List.NonEmpty(nonEmpty, NonEmpty)
-import Brick.Widgets.List qualified as B
+import Control.Monad.State (gets, modify)
+import Data.List.NonEmpty(NonEmpty)
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
 import Brick.Widgets.Table qualified as B
@@ -36,8 +35,8 @@ data WHEvent = ENextMode
              | EPrevBay
              | ENextShelf
              | EPrevShelf
-             | ENextBox
-             | EPrevBox
+             -- | ENextBox
+             -- | EPrevBox
              | EFirstRun
              | ELastRun
              | EFirstBay
@@ -133,7 +132,6 @@ whMain wh = do
             : zipWith (\style attr -> (makeStyleAttrName style, reverseIf (Just style == selectedStyle state) attr ))
                       styles
                       (cycle defaultStyleAttrs)
-      (selected_, selectedAttrs_) = selectedAttr
   void $ B.defaultMain (whApp attrs) state0
 
 reverseIf :: Bool -> V.Attr -> V.Attr
@@ -224,8 +222,6 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
 
-         _ -> return ()
-
   
 nextMode :: AppState -> AppState
 nextMode state = state { asSummaryView = succ' $ asSummaryView state }
@@ -262,7 +258,6 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asB
                                              , box <- sortOn boxOffset $ sDetailsList shelfSum
                                              ]
                   in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
-              _ -> asCurrentRunStyles
 -- * Find next shelf
 -- | Find next shelf containing the given style
 -- or highlighted run

@@ -10,7 +10,6 @@ module WarehousePlanner.Repl
 import ClassyPrelude hiding(init)
 import WarehousePlanner.Base
 import WarehousePlanner.Org
-import WarehousePlanner.Csv (readWarehouse)
 import System.IO.Unsafe
 import WarehousePlanner.Report qualified as Report
 
@@ -48,7 +47,6 @@ loads paths = do
     Left e -> error $ unpack e
     Right scenarios -> do
           let scenario = mconcat scenarios
-          contentPath <- contentPathM
           wh <- execScenario scenario
           writeIORef stateRef state { warehouse = wh }
           print wh

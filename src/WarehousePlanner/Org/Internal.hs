@@ -9,6 +9,7 @@ module WarehousePlanner.Org.Internal
 , sSortedSteps
 , readScenariosFromDir
 , readScenarioFromPath
+, readScenarioFromPaths
 , readScenario
 , savePointScenario
 , scenarioToTextWithHash
@@ -252,7 +253,27 @@ readScenarioFromPath expandSection path = do
     else
       return $ Left $ "File " <> tshow path <> "doesn't exist."
 
+readScenarioFromPaths :: MonadIO io
+                      => (Section -> io (Either Text [Section]))
+                      -> Maybe FilePath
+                      -> [FilePath] -> io (Either Text Scenario)
+readScenarioFromPaths expandSection currentDir paths = do
+   finalPaths <- mapM finalPath paths
+   scenarios <- forM finalPaths $ readScenarioFromPath expandSection 
+   return $ fmap mconcat $ sequence scenarios
+   where finalPath path = do
+           let bare = case currentDir of
+                       Nothing -> path
+                       Just pwd -> pwd </> path
+           exists <- liftIO $ doesFileExist bare
+           return if exists
+           then bare
+           else bare <.> "org"
+                   
+
   
+                        
+
 fileValid :: FilePath -> Bool
 fileValid = (== ".org") . takeExtension
 

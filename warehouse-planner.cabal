@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        1.1.1
+version:        1.2.0
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -54,7 +54,7 @@ library
       ViewPatterns
       MultiWayIf
       LambdaCase
-  ghc-options: -W -Wmissing-fields -fwarn-tabs -Wno-type-defaults -Wno-partial-type-signatures -Wincomplete-patterns -Werror -Werror=missing-fields
+  ghc-options: -Werror -W -Wmissing-fields -fwarn-tabs -Wno-type-defaults -Wno-partial-type-signatures -Wincomplete-patterns -Werror=missing-fields
   build-depends:
       Glob
     , base
@@ -87,6 +87,7 @@ library
   if flag(brick)
     build-depends:
         brick
+      , optparse-applicative
       , vty
   if flag(brick)
     other-modules:
@@ -97,9 +98,66 @@ library
         WarehousePlanner.Brick.Table
         WarehousePlanner.Brick.Types
         WarehousePlanner.Brick.Util
+        WarehousePlanner.Main
     hs-source-dirs:
         brick
-        vty
+
+executable whp
+  main-is: Main.hs
+  other-modules:
+      Paths_warehouse_planner
+  default-extensions:
+      BlockArguments
+      FlexibleInstances
+      NoImplicitPrelude
+      OverloadedStrings
+      PartialTypeSignatures
+      PatternGuards
+      PatternSynonyms
+      RecordWildCards
+      TypeFamilies
+      ViewPatterns
+      MultiWayIf
+      LambdaCase
+  ghc-options: -rtsopts
+  build-depends:
+      Glob
+    , base
+    , bytestring >=0.9 && <0.11
+    , cassava >=0.4.5 && <0.5
+    , classy-prelude >=0.10.2
+    , colour >=2.3.3 && <2.4
+    , containers
+    , cryptohash
+    , diagrams-cairo ==1.4.*
+    , diagrams-lib >=1.4.1.2 && <1.5
+    , diagrams-svg ==1.4.*
+    , directory >=1.1 && <1.4
+    , filepath >=1.4.1.1 && <1.5
+    , ghc
+    , ghc-prim
+    , mono-traversable
+    , mtl
+    , palette ==0.3.*
+    , parsec ==3.1.*
+    , regex-base
+    , regex-compat-tdfa
+    , regex-tdfa >=1.2.2 && <1.3
+    , split
+    , tabular >=0.2.2.7 && <0.3
+    , text
+    , time
+    , vector
+    , warehouse-planner
+  buildable: False
+  default-language: GHC2021
+  if flag(brick)
+    build-depends:
+        brick
+      , optparse-applicative
+      , vty
+  if flag(brick)
+    buildable: True
 
 test-suite test
   type: exitcode-stdio-1.0
@@ -162,6 +220,7 @@ test-suite test
   if flag(brick)
     build-depends:
         brick
+      , optparse-applicative
       , vty
 
 benchmark bench
@@ -219,4 +278,5 @@ benchmark bench
   if flag(brick)
     build-depends:
         brick
+      , optparse-applicative
       , vty

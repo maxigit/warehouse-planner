@@ -1,3 +1,7 @@
+# 1.2.0
+Add brick visualisation tool
+Add standalone executable
+
 # 1.1.1
 Performance optimisation.
 HowManyWithDiagonal tries less.

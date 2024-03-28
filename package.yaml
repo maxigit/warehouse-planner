@@ -1,5 +1,5 @@
 name: warehouse-planner
-version: '1.1.1'
+version: '1.2.0'
 license: UnspecifiedLicense
 dependencies:
 - containers
@@ -54,15 +54,14 @@ library:
     source-dirs:
       # - src
       - brick
-      - vty
   ghc-options:
+  - -Werror
   - -W
   - -Wmissing-fields
   - -fwarn-tabs
   - -Wno-type-defaults
   - -Wno-partial-type-signatures
   - -Wincomplete-patterns
-  - -Werror
   - -Werror=missing-fields
     
     
@@ -79,6 +78,18 @@ tests:
     - hspec >=2.0.0
     - warehouse-planner
  
+executables:
+  whp:
+    main: Main.hs
+    dependencies:
+    - warehouse-planner
+    ghc-options:
+    - -rtsopts
+    when:
+    - condition: flag(brick)
+      buildable: true
+    buildable: false
+
 benchmarks:
   bench:
     source-dirs:
@@ -95,6 +106,8 @@ when:
   dependencies:
   - brick
   - vty
+  # for executable
+  - optparse-applicative
     
 flags:
  brick:
