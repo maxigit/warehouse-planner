@@ -50,13 +50,7 @@ loads paths = do
           let scenario = mconcat scenarios
           contentPath <- contentPathM
           wh <- execScenario scenario
-          groups <- case sLayout scenario of
-                      Nothing -> return $ shelfGroup wh
-                      Just layout -> do
-                           gw <- readWarehouse (contentPath layout)
-                           execWH wh gw
-          writeIORef stateRef state { warehouse = wh { shelfGroup = groups}
-                                    }
+          writeIORef stateRef state { warehouse = wh }
           print wh
 
 summary :: IO ()

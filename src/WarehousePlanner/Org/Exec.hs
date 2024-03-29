@@ -112,7 +112,15 @@ execScenario sc@Scenario{..} = do
           Just w' -> {-traceShowM ("Scenario Step => use cache", subKey) >>-} (return $ unfreeze w')
         -- carry on with the remaing steps
         go w (allPreviousSteps) steps
-  go warehouse0 [] (sSortedSteps sc) where
+  --  update layout if exist
+  let setLayout wh = case sLayout of
+                 Nothing -> return wh
+                 Just layout -> do
+                    groupW <- fmap ($ layout) contentPathM >>= liftIO . readWarehouse
+                    groups <- execWH wh groupW
+                    return $ wh { shelfGroup = groups }
+                      
+  go warehouse0 [] (sSortedSteps sc) >>= setLayout
   
 
 execWithCache :: (?today :: Day, ?cache :: CacheFn io, MonadIO io) =>  Scenario -> io (Warehouse RealWorld)
