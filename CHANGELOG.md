@@ -1,3 +1,5 @@
+# 1.2.2
+Export defaultMainWith
 # 1.2.1
 Read from stdin
 Add direct section to command line (import, delet and tam)

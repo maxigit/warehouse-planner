@@ -2,6 +2,7 @@
 {-# LANGUAGE ImplicitParams #-}
 module WarehousePlanner.Main 
 ( defaultMain
+, defaultMainWith
 , main
 )
 where
