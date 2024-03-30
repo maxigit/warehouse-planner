@@ -31,7 +31,7 @@ import Control.Monad.Writer (tell, execWriter)
 import Data.Text(strip,splitOn)
 import Data.Text qualified as Text
 import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
-import System.FilePath (takeExtension)
+import System.FilePath (takeExtension, takeBaseName)
 import Data.List qualified as List
 import GHC.Generics
 import Crypto.Hash qualified as Crypto
@@ -245,13 +245,17 @@ readScenarioFromPath :: MonadIO io
                      -- \^ section expander, mainly to import sections for URI
                      -> FilePath -> io (Either Text Scenario)
 readScenarioFromPath expandSection path = do
+  let useStdin = takeBaseName path == "-"
   exists <-  liftIO $ doesFileExist path
-  if exists
-    then do
-      content <- liftIO $ readFile path
-      readScenario expandSection $ decodeUtf8 content
-    else
-      return $ Left $ "File " <> tshow path <> "doesn't exist."
+  contentE <- liftIO $
+           case (exists, useStdin) of
+                (_, True) -> Right . repack <$> getContents -- use stdin
+                (True,_) -> Right . decodeUtf8 <$> readFile path
+                (False, False) -> return $ Left $ "File " <> tshow path <> "doesn't exist."
+  
+  case contentE of 
+    Left e -> return $ Left e
+    Right content -> readScenario expandSection content
 
 readScenarioFromPaths :: MonadIO io
                       => (Section -> io (Either Text [Section]))

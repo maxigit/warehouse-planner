@@ -1,5 +1,5 @@
 name: warehouse-planner
-version: '1.2.0'
+version: '1.2.1'
 license: UnspecifiedLicense
 dependencies:
 - containers
@@ -54,6 +54,14 @@ library:
     source-dirs:
       # - src
       - brick
+    exposed-modules:
+    - WarehousePlanner.Main
+    other-modules:
+    - WarehousePlanner.Brick.App
+    - WarehousePlanner.Brick.RenderBar
+    - WarehousePlanner.Brick.Table
+    - WarehousePlanner.Brick.Types
+    - WarehousePlanner.Brick.Util
   ghc-options:
   - -Werror
   - -W

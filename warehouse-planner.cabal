@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        1.2.0
+version:        1.2.1
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -90,15 +90,14 @@ library
       , optparse-applicative
       , vty
   if flag(brick)
+    exposed-modules:
+        WarehousePlanner.Main
     other-modules:
-        WarehousePlanner.Brick
         WarehousePlanner.Brick.App
         WarehousePlanner.Brick.RenderBar
-        WarehousePlanner.Brick.Repl
         WarehousePlanner.Brick.Table
         WarehousePlanner.Brick.Types
         WarehousePlanner.Brick.Util
-        WarehousePlanner.Main
     hs-source-dirs:
         brick
 

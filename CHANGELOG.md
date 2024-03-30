@@ -1,3 +1,6 @@
+# 1.2.1
+Read from stdin
+Add direct section to command line (import, delet and tam)
 # 1.2.0
 Add brick visualisation tool
 Add standalone executable
