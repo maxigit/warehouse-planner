@@ -11,7 +11,6 @@ where
 import Brick
 import Brick.Widgets.Table
 import ClassyPrelude 
-import Data.Foldable qualified as F
 import Data.List (nub, transpose)
 import Data.Map qualified as Map
 import WarehousePlanner.Brick.RenderBar 
@@ -109,8 +108,8 @@ runsToTable selected smode current runs = selectTable current mkRow  (sDetails r
                         ]
           -- use selected style attribute if the run contains the style
           attr run i = case selected >>= flip lookup (sStyles run) of
-                        Nothing -> selectAttr (current == i)
                         Just sum | Just style <- selected -> withStyleAttr style . ( <+> (str . printf "(%d)" $ suCount sum))
+                        _ -> selectAttr (current == i)
 
 
 selectTable :: Int -> (Int -> a -> [Widget n ]) -> Vector a -> Table n
@@ -123,6 +122,6 @@ selectTable current f v = let
      in surroundingBorder False . noBorders . table $ toList  rows
 
 stylesToTable :: Maybe Text -> Int -> Vector Text -> Table Text
-stylesToTable selected current styles = selectTable current mkRow styles
+stylesToTable _relected current styles = selectTable current mkRow styles
     where mkRow _ style = [ withStyleAttr style $ txt style ]
     

@@ -21,6 +21,8 @@ data Options = Options
             , oCommand :: Command
             , oParam :: Maybe Text 
             , oToday :: Maybe Day
+            , oImport :: Maybe Text
+            , oDelete :: Maybe Text
             , oDir :: Maybe FilePath
             }
      deriving (Show, Generic)
@@ -53,6 +55,13 @@ optionsParser = do
                                    <> short 'D'
                                    <> metavar "DATE"
                                    <> help "Changes today's date"
+  oImport <- optional $ strOption $ long "import" 
+                                  <> short 'i'
+                                  <> metavar "IMPORT"
+                                  <> help "import line as in :IMPORT: section"
+  oDelete <- optional $ strOption $ long "delete"  <> long "del"
+                                  <> metavar "SELECTOR"
+                                  <> help "delete the selected boxes"
   oFiles <- many (argument str $ metavar "FILES"
                                <> help "Org files without suffixes"
                  )
