@@ -23,6 +23,7 @@ data Options = Options
             , oToday :: Maybe Day
             , oImport :: Maybe Text
             , oDelete :: Maybe Text
+            , oTagsAndMoves :: Maybe Text
             , oDir :: Maybe FilePath
             }
      deriving (Show, Generic)
@@ -62,6 +63,9 @@ optionsParser = do
   oDelete <- optional $ strOption $ long "delete"  <> long "del"
                                   <> metavar "SELECTOR"
                                   <> help "delete the selected boxes"
+  oTagsAndMoves <- optional $ strOption $ long "tags-and-moves"  <> long "tam"
+                                  <> metavar "SELECTOR,TagAndMove"
+                                  <> help "tag and move selected boxes"
   oFiles <- many (argument str $ metavar "FILES"
                                <> help "Org files without suffixes"
                  )
@@ -131,14 +135,17 @@ defaultMain ::  IO ()
 defaultMain = defaultMainWith (importDispatchDef)
 defaultMainWith :: (FilePath -> Section -> IO (Either Text [Section])) -> IO ()
 defaultMainWith expandSection = do
-  Options{..} <- execParser optionsPI
+  o@Options{..} <- execParser optionsPI
   today <- case oToday of
                 Nothing -> utctDay <$> getCurrentTime
                 Just date -> return date
-  scenarioE <- readScenarioFromPaths (expandSection $ fromMaybe "." oDir) oDir oFiles
-  case scenarioE of
+  let dir = fromMaybe "." oDir
+  scenarioE <- readScenarioFromPaths (expandSection dir) oDir oFiles
+  extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
+  case sequence (scenarioE: extraScenarios) of
     Left e -> error $ unpack e
-    Right scenario -> do 
+    Right scenarios -> do 
+          let scenario = mconcat scenarios
           let boxSelectorM = fmap parseBoxSelector oParam
           let exec :: forall a . WH a RealWorld -> IO a
               exec action = do
@@ -170,6 +177,12 @@ defaultMainWith expandSection = do
                               groupBoxesReport boxes
 
 
+extraScenariosFrom :: Options -> [Text]
+extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM] where
+    deleteM = flip fmap oDelete \del -> [ ":DELETE:" , del , ":END:" ]
+    importM = flip fmap oImport \imp -> [ ":IMPORT:" , imp , ":END:" ]
+    tamM = flip fmap oTagsAndMoves \tam -> [ ":Tags and Moves:" , "stock_id,tam" , tam , ":END:" ]
+                                 
 
 
   
