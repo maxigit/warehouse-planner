@@ -1,3 +1,6 @@
+# 1.2,3
+Learn Export option (-x).
+Expand moved to -X.
 # 1.2.2
 Export defaultMainWith
 # 1.2.1

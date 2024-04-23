@@ -44,6 +44,7 @@ data Command = Summary
              | BoxGroupReport
              | Report
              | Display 
+             | Export
              deriving (Show, Eq, Generic, Read)
              
 optionsParser :: Parser Options
@@ -83,9 +84,13 @@ commandArg = flag' Stocktake (long "stocktake"
                             <> short 'y'
                             <> help "Displays summary statistics (volumen and % or use)"
                             )
-          <|> flag' Expand (long "expand" <> long "export"
+          <|> flag' Expand (long "expand"
+                           <> short 'X'
+                           <> help "Expands full scenario.\nScenario with IMPORT sections expanded to their results"
+                           )
+          <|> flag' Export (long "export"
                            <> short 'x'
-                           <> help "Expands full scenario."
+                           <> help "Export full scenario.\nReady to use : shelves + layout + stock with positions"
                            )
           <|> flag' Moves (long "moves"
                           <> short 'm'
@@ -176,6 +181,14 @@ defaultMainWith expandSection = do
             BoxGroupReport -> withLines do
                               boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
                               groupBoxesReport boxes
+            Export -> do
+                        let bare = scenario { sInitialState = Nothing
+                                            , sSteps = filter (\(Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]) $ sSteps scenario
+                                            , sLayout = sLayout scenario
+                                            , sColourMap = sColourMap scenario
+                                            }
+                        scenarioToFullText bare >>= outputText
+                        withLines $ generateStockTakes boxSelectorM
 
 
 extraScenariosFrom :: Options -> [Text]
