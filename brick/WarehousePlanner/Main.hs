@@ -15,6 +15,7 @@ import WarehousePlanner.Report
 import Options.Applicative
 import Data.Text.IO qualified as Text
 import Control.Monad.State (get)
+import System.FilePath (takeBaseName)
 
 -- * Type
 data Options = Options
@@ -146,6 +147,7 @@ defaultMainWith expandSection = do
                 Nothing -> utctDay <$> getCurrentTime
                 Just date -> return date
   let dir = fromMaybe "." oDir
+      title = intercalate "-" $ map takeBaseName oFiles
   scenarioE <- readScenarioFromPaths (expandSection dir) oDir oFiles
   extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
   case sequence (scenarioE: extraScenarios) of
@@ -166,7 +168,7 @@ defaultMainWith expandSection = do
 
           case oCommand of
             Summary -> exec summary >>= outputText . pack . show
-            Display -> exec get >>= whMain
+            Display -> exec get >>= whMain title
             Stocktake -> withLines (generateStockTakes boxSelectorM)
             Expand -> scenarioToFullText scenario >>= outputText
             MovesWithTags -> withLines (generateMoves DontSortBoxes boxSelectorM (boxStyleWithTags))

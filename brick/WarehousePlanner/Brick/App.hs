@@ -15,7 +15,7 @@ import Brick qualified as B
 import Brick.Widgets.Border qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
-import Control.Monad.State (gets, modify)
+import Control.Monad.State (gets, get, modify)
 import Data.List.NonEmpty(NonEmpty)
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
@@ -24,6 +24,11 @@ import Data.List (cycle)
 import Data.Map qualified as Map
 import WarehousePlanner.Brick.Table
 import Data.Vector qualified as V
+import WarehousePlanner.Display qualified as D
+import Data.List.NonEmpty ((!!))
+import Diagrams.Backend.Cairo (renderCairo)
+import Diagrams (mkSizeSpec2D)
+import System.Process (rawSystem)
 
 type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
@@ -41,15 +46,20 @@ data WHEvent = ENextMode
              | ELastRun
              | EFirstBay
              | ELastBay
+             -- 
              | ESelectCurrentStyle
              | ENextStyle
              | EPreviousStyle
+             -- 
              | ESetBoxOrder BoxOrder
+             -- 
              | ENextHLRun
              | EPrevHLRun
+             -- 
+             | ERenderRun
 
-initState :: WH (AppState) RealWorld
-initState = do
+initState :: String -> WH (AppState) RealWorld
+initState title = do
   runs <- gets shelfGroup
   shelvesSummary <- traverseRuns findShelf runs
                  >>= makeRunsSummary
@@ -62,11 +72,14 @@ initState = do
                        $ mapRuns (\s -> s { sDetails = fromList $ sDetails s }
                                      )  shelvesSummary
   let asSummaryView = SVVolume
+  warehouse <- get
   return . runUpdated
          $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0
                  , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
                  , asBoxOrder = BOByName
                  , asLastKeys = []
+                 , asWarehouse = warehouse
+                 , asTitle = title
                  , ..}
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
@@ -116,9 +129,9 @@ whApp extraAttrs =
       appStartEvent = return ()
   in app
   
-whMain :: Warehouse RealWorld -> IO ()
-whMain wh = do
-  state0 <- execWH wh initState
+whMain :: String -> Warehouse RealWorld -> IO ()
+whMain title wh = do
+  state0 <- execWH wh $ initState title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let style'shelfs = [ (style, sName shelfSum)
@@ -171,6 +184,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
+       B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
        B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("o" :: String) -> modify \s -> s { asLastKeys = c : lasts }
        _ -> B.resizeOrQuit ev
  
@@ -221,6 +235,7 @@ handleWH ev =
                     modify \s -> case asSelectedStyle s of
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
+         ERenderRun -> get >>= liftIO . drawCurrentRun
 
   
 nextMode :: AppState -> AppState
@@ -281,6 +296,17 @@ findPrevHLRun style AppState{..} = let
    in AppState{asCurrentRun=newRun,..}
     
     
+drawCurrentRun :: AppState -> IO ()
+drawCurrentRun app  = do 
+  let wh = asWarehouse app
+      run = shelfGroup wh !! asCurrentRun app
+  diag <- execWH wh do
+              D.renderRun (shelfStyling wh) (boxStyling wh) run
+  let filePath = "/tmp/whp-" <> asTitle app <> "-" <> show (asCurrentRun app) <> ".png"
+  renderCairo filePath
+              (mkSizeSpec2D Nothing (Just 800))
+              diag
+  void $ rawSystem "xdg-open" [filePath]
   
 
 -- * Post update
@@ -322,4 +348,5 @@ debugShelf state = let
                        ]
           | m <- [minBound .. maxBound ]
           ]
+  
   

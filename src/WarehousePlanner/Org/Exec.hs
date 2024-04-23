@@ -113,14 +113,20 @@ execScenario sc@Scenario{..} = do
         -- carry on with the remaing steps
         go w (allPreviousSteps) steps
   --  update layout if exist
+  contentPath <- contentPathM
   let setLayout wh = case sLayout of
                  Nothing -> return wh
                  Just layout -> do
-                    groupW <- fmap ($ layout) contentPathM >>= liftIO . readWarehouse
+                    groupW <-  liftIO $ readWarehouse (contentPath layout)
                     groups <- execWH wh groupW
                     return $ wh { shelfGroup = groups }
-                      
-  go warehouse0 [] (sSortedSteps sc) >>= setLayout
+  let setStylings wh = do
+        colourMaps <- liftIO $ mapM (readColourMap . contentPath) sColourMap
+        let boxStyling = stylingFromTags colourMap
+            shelfStyling = shelfStylingFromTags colourMap
+            colourMap = concat colourMaps
+        return wh { shelfStyling, boxStyling}
+  go warehouse0 [] (sSortedSteps sc) >>= setLayout >>=  setStylings
   
 
 execWithCache :: (?today :: Day, ?cache :: CacheFn io, MonadIO io) =>  Scenario -> io (Warehouse RealWorld)

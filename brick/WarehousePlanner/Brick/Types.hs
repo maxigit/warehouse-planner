@@ -56,6 +56,8 @@ data AppState = AppState
      ------ deal with multikey mapping
      , asLastKeys :: [Char]
      , asBoxOrder :: BoxOrder 
+     , asWarehouse :: Warehouse RealWorld 
+     , asTitle :: String
      }
      
 selectFromSumVec :: Int -> SumVec a -> a

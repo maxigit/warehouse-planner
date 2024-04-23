@@ -29,6 +29,7 @@ dependencies:
 - ghc
 - mono-traversable
 - ghc-prim
+- process
   
 language: GHC2021
 default-extensions:
