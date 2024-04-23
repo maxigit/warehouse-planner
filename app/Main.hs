@@ -1,6 +1,6 @@
-module main where
-
+module Main (
+main
+)
+where 
 import WarehousePlanner.Main
 
-main :: IO ()
-main = defaultMain 

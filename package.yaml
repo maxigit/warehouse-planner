@@ -89,14 +89,16 @@ tests:
 executables:
   whp:
     main: Main.hs
+    source-dirs: app
     dependencies:
     - warehouse-planner
     ghc-options:
     - -rtsopts
+    - -threaded
+    - -rtsopts
     when:
     - condition: flag(brick)
       buildable: true
-    buildable: false
 
 benchmarks:
   bench:
@@ -120,5 +122,5 @@ when:
 flags:
  brick:
    description: use brick to visualize warehouse
-   manual: false
-   default: false
+   manual: True
+   default: True

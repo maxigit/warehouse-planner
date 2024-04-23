@@ -11,8 +11,8 @@ build-type:     Simple
 
 flag brick
   description: use brick to visualize warehouse
-  manual: False
-  default: False
+  manual: True
+  default: True
 
 library
   exposed-modules:
@@ -105,6 +105,8 @@ executable whp
   main-is: Main.hs
   other-modules:
       Paths_warehouse_planner
+  hs-source-dirs:
+      app
   default-extensions:
       BlockArguments
       FlexibleInstances
@@ -118,7 +120,7 @@ executable whp
       ViewPatterns
       MultiWayIf
       LambdaCase
-  ghc-options: -rtsopts
+  ghc-options: -rtsopts -threaded -rtsopts
   build-depends:
       Glob
     , base
@@ -148,7 +150,6 @@ executable whp
     , time
     , vector
     , warehouse-planner
-  buildable: False
   default-language: GHC2021
   if flag(brick)
     build-depends:
