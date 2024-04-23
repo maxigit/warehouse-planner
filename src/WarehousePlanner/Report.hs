@@ -510,7 +510,7 @@ generateStockTakes selectorm= do
                       , boxPositionSpec box
                       , (boxStyleWithTags box) <> "#box_id=" <> tshow bId 
                       , (pack $ printf "%0.2f,%0.2f,%0.f" l w h)
-                      , (concat $ map showOrientation $ boxBoxOrientations box)
+                      , (concat $ map showOrientation' $ boxBoxOrientations box)
                       ]
 
 
