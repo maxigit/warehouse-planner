@@ -1,4 +1,7 @@
-# 1.2,3
+# 1.2.4
+Highlight current box
+b/B navigate to next/previous box
+# 1.2.3
 Learn Export option (-x).
 Expand moved to -X.
 # 1.2.2
