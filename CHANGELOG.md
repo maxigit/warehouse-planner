@@ -1,3 +1,5 @@
+# 1.2.4.1
+Fix diagram bug.
 # 1.2.4
 Highlight current box
 b/B navigate to next/previous box
