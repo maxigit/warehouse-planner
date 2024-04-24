@@ -5,7 +5,8 @@ module WarehousePlanner.Brick.Types
 , BoxOrder(..)
 , BarDirection(..)
 , SumVec, sDetailsList
-, currentRun, currentBay, currentShelf
+, selectFromSumVec
+, currentRun, currentBay, currentShelf, currentBox
 , selectedStyle, currentStyle
 )
 where
@@ -49,6 +50,7 @@ data AppState = AppState
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int
+     , asCurrentBox :: Int
      ---------
      , asSelectedStyle :: Maybe Text
      , asCurrentStyle :: Int 
@@ -85,4 +87,8 @@ currentStyle'Sum AppState{..} =
        0 -> Nothing
        l -> asCurrentRunStyles V.!? (asCurrentStyle `mod` l)
 
+currentBox :: AppState -> Maybe (Box RealWorld)
+currentBox app = case currentShelf app of
+                    v | null (sDetails v) -> Nothing
+                    shelf -> Just $ selectFromSumVec (asCurrentBox app) shelf
 

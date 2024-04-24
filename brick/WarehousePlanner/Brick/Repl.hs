@@ -13,6 +13,6 @@ import Control.Monad.State (get)
 display :: IO ()
 display  = do
   wh <- exec get
-  whMain wh
+  whMain "repl" wh
 
 

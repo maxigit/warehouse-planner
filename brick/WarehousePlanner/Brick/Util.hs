@@ -99,11 +99,11 @@ succ' s = succ s
 pred' s | s == minBound = maxBound
 pred' s = pred s
   
-makeStyleAttrName :: Text -> AttrName
-makeStyleAttrName style = attrName "style" <> attrName (unpack style)
+makeStyleAttrName :: Bool -> Text -> AttrName
+makeStyleAttrName isCurrent style = attrName "style" <> attrName (unpack style) <> if isCurrent then attrName "current" else mempty
 
-styleNameWithAttr style = withStyleAttr style (txt style)
-withStyleAttr style w = withAttr (makeStyleAttrName style) w
+styleNameWithAttr isCurrent style = withStyleAttr isCurrent style (txt style)
+withStyleAttr isCurrent style w = withAttr (makeStyleAttrName isCurrent style) w
 
 defaultStyleAttrs :: [V.Attr]
 defaultStyleAttrs = [ with $ fg `on` V.black

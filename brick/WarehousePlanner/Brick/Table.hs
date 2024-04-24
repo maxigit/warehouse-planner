@@ -72,8 +72,9 @@ collapseColumns = transpose . collapseRows . transpose
 
 
                     
-renderBoxContent box = withStyleAttr (boxStyle box) $ txt $ boxContent box <> " "
-renderBoxOrientation box = withStyleAttr (boxStyle box) $ txt $ showOrientation' $ orientation box
+renderBoxContent current box = withStyleAttr (current == Just box) (boxStyle box) $ txt $ boxContent box <> " "
+renderBoxOrientation current box = withStyleAttr (current == Just box) (boxStyle box)
+                                 $ txt $ showOrientation' $ orientation box
   
   
 -- | Displays on bay as a table
@@ -108,7 +109,7 @@ runsToTable selected smode current runs = selectTable current mkRow  (sDetails r
                         ]
           -- use selected style attribute if the run contains the style
           attr run i = case selected >>= flip lookup (sStyles run) of
-                        Just sum | Just style <- selected -> withStyleAttr style . ( <+> (str . printf "(%d)" $ suCount sum))
+                        Just sum | Just style <- selected -> withStyleAttr False style . ( <+> (str . printf "(%d)" $ suCount sum))
                         _ -> selectAttr (current == i)
 
 
@@ -123,5 +124,5 @@ selectTable current f v = let
 
 stylesToTable :: Maybe Text -> Int -> Vector Text -> Table Text
 stylesToTable _relected current styles = selectTable current mkRow styles
-    where mkRow _ style = [ withStyleAttr style $ txt style ]
+    where mkRow _ style = [ withStyleAttr False style $ txt style ]
     
