@@ -93,8 +93,8 @@ library
   if flag(brick)
     exposed-modules:
         WarehousePlanner.Main
-    other-modules:
         WarehousePlanner.Brick.App
+    other-modules:
         WarehousePlanner.Brick.RenderBar
         WarehousePlanner.Brick.Table
         WarehousePlanner.Brick.Types
