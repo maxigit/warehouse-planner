@@ -154,9 +154,9 @@ renderScenario sc layoutM = do
             colourMap = concat colourMaps
         diags <- execWH wh0 ( do
                                 group <- groupW
-                                fmap return $ renderRuns shelfStyling boxStyling group
+                                mapM (renderRun shelfStyling boxStyling) group
                            )
-        return (Right diags)
+        return (Right $ toList diags)
 
 renderReport sc report = do
   wh0 <- execWithCache sc
