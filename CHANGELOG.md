@@ -1,3 +1,5 @@
+# 1.2.4.2
+Fix shelf order in diagrams
 # 1.2.4.1
 Fix diagram bug.
 # 1.2.4

@@ -21,7 +21,7 @@ display shelfStyling boxStyling= do
     
 renderRuns shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat renderRun
 renderRun shelfStyling boxStyling = renderGroup shelfStyling boxStyling hcat renderBay
-renderBay shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat renderShelf
+renderBay shelfStyling boxStyling = renderGroup shelfStyling boxStyling (vcat . reverse) renderShelf
 
 -- renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> RunsWithId s -> WH (Diagram B) s
 renderGroup shelfStyling boxStyling cat_ renderChildren gs = do
