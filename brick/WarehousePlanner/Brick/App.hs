@@ -114,10 +114,11 @@ whApp extraAttrs =
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox)
-                                                         [ map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map (renderBoxOrientation (currentBox s))))
-                                                               (F.toList . sDetails $ currentRun s)
-                                                         , map (B.padTop B.Max . B.renderTable . baySummaryToTable (B.vBox . map (renderBoxContent (currentBox s))))
-                                                               (drop asCurrentBay $ sDetailsList $ currentRun s)
+                                                         [ renderRun (renderBoxOrientation (currentBox s)) (currentRun s)
+                                                         , [B.hBorder]
+                                                         , renderRun (renderBoxContent (currentBox s)) (let run = currentRun s
+                                                                                                        in run { sDetails = drop asCurrentBay $ sDetails run }
+                                                                                                        )
                                                          ]
                                               ]
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
@@ -147,7 +148,9 @@ whMain title wh = do
                     , style <- keys (sStyles shelfSum)
                     ]
   let styles = reverse $ map fst style'shelfs
-      attrs state = selectedAttr
+      attrs state =
+            selectedAttr
+            : bayNameAN
             : zipWith (\style attr -> (makeStyleAttrName False style, reverseIf (Just style == selectedStyle state) attr ))
                       styles
                       (cycle defaultStyleAttrs)
@@ -423,4 +426,17 @@ debugShelf state = let
           | m <- [minBound .. maxBound ]
           ]
   
-  
+ -- * Render 
+renderRun :: (Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (Box RealWorld)) -> [ B.Widget n ]
+renderRun renderBox run =  concat 
+          [ map (B.padTop B.Max)
+            [ B.withAttr (fst bayNameAN )
+                             $ B.vBox (map (B.str . pure) 
+                             $ toList (sName bay <> "▄"))
+                             --                     ^^^ aligned with the bottom border of the shelf
+            , B.renderTable
+            . baySummaryToTable (B.vBox . map renderBox)
+            $ bay
+            ]
+          | bay <- F.toList . sDetails $ run
+          ]

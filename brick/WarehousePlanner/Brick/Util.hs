@@ -11,6 +11,7 @@ eigthH, eigthV
 , styleNameWithAttr
 , withStyleAttr
 , selectedAttr, selectAttr
+, bayNameAN
 ) where
 
 import ClassyPrelude hiding (on)
@@ -130,3 +131,5 @@ selectAttr b w =
   if b
   then withAttr selected_ w
   else w
+  
+bayNameAN = (attrName "shelfname", V.black `on` V.color240 255 128 0)
