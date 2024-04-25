@@ -72,7 +72,8 @@ collapseColumns = transpose . collapseRows . transpose
 
 
                     
-renderBoxContent current box = withStyleAttr (current == Just box) (boxStyle box) $ txt $ boxContent box <> " "
+renderBoxContent current box = withStyleAttr isCurrent (boxStyle box) $ txt $ boxContent box <> if isCurrent then "<" else " "
+  where isCurrent = current == Just box
 renderBoxOrientation current box = withStyleAttr (current == Just box) (boxStyle box)
                                  $ txt $ showOrientation' $ orientation box
   

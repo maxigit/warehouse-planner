@@ -10,6 +10,7 @@ import WarehousePlanner.Summary as S
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
+import WarehousePlanner.Brick.BoxDetail
 import WarehousePlanner.Exec (execWH)
 import Brick qualified as B
 import Brick.Widgets.Border qualified as B
@@ -122,11 +123,9 @@ whApp extraAttrs =
                                                          ]
                                               ]
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
-              in  [ B.vBox [ mainRun
-                           , debugShelf s
-                           , B.hBorder
+              in  [ vBoxB [ mainRun
+                           , B.vLimit 11 $ hBoxB (debugShelf s :  maybe [] (pure . boxDetail) (currentBox s))
                            , main
-                           , B.hBorder
                            , renderStatus s
                            ]
                   ]
@@ -150,11 +149,15 @@ whMain title wh = do
   let styles = reverse $ map fst style'shelfs
       attrs state =
             selectedAttr
-            : bayNameAN
+            -- : bayNameAN
+            : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
             : zipWith (\style attr -> (makeStyleAttrName False style, reverseIf (Just style == selectedStyle state) attr ))
                       styles
                       (cycle defaultStyleAttrs)
-            <> zipWith (\style attr -> (makeStyleAttrName True style, reverseIf (Just style == selectedStyle state) $ V.withBackColor (V.withStyle attr V.bold) $ V.color240 50 50 50 ))
+            <> zipWith (\style attr -> (makeStyleAttrName True style, reverseIf (Just style == selectedStyle state) $ V.withBackColor (V.withStyle attr V.bold)
+                                                                                                                    $ if (Just style == selectedStyle state)
+                                                                                                                      then V.white 
+                                                                                                                      else V.color240 50 50 50 ))
                       styles
                       (cycle defaultStyleAttrs)
   void $ B.defaultMain (whApp attrs) state0

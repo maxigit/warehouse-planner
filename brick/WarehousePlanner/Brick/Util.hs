@@ -12,11 +12,17 @@ eigthH, eigthV
 , withStyleAttr
 , selectedAttr, selectAttr
 , bayNameAN
+, hBoxB, vBoxB
+, bold_, boldAttr
+, tagname_, tagNameAttr
+, virtualTagName_, virtualTagAttr
+, specialTagName_, specialTagAttr
 ) where
 
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import Brick
+import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
 
 percUsed :: [Shelf s] -> WH Double s
@@ -132,4 +138,22 @@ selectAttr b w =
   then withAttr selected_ w
   else w
   
-bayNameAN = (attrName "shelfname", V.black `on` V.color240 255 128 0)
+bayNameAN = (attrName "shelfname", V.white `on` V.black) --  V.black `on` V.color240 255 128 0)
+
+bold_ = attrName "bold"
+boldAttr = (bold_, V.defAttr `V.withStyle` V.bold)
+
+
+tagname_ = attrName "tagname"
+tagNameAttr = (tagname_, snd boldAttr)
+virtualTagName_ = attrName "vtagname"
+virtualTagAttr = (virtualTagName_, (V.red `on` V.black))
+specialTagName_ = attrName "stagname"
+specialTagAttr = (specialTagName_, (V.yellow `on` V.black))
+
+hBoxB :: [Widget n] -> Widget n
+hBoxB = hBox . intersperse vBorder 
+
+
+vBoxB :: [Widget n] -> Widget n
+vBoxB = vBox . intersperse hBorder 

@@ -63,6 +63,7 @@ library:
     - WarehousePlanner.Brick.Table
     - WarehousePlanner.Brick.Types
     - WarehousePlanner.Brick.Util
+    - WarehousePlanner.Brick.BoxDetail
   ghc-options:
   - -Werror
   - -W
