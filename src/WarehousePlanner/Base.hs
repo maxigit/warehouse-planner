@@ -449,6 +449,7 @@ emptyWarehouse today = Warehouse mempty mempty (error "No shelves defined")
                                  (const defaultShelfStyling)
                                  defaultBoxOrientations Nothing today
                                  0
+                                 NoHistory []
 
 newShelf :: Text -> Maybe Text -> Dimension -> Dimension -> Double -> BoxOrientator -> FillingStrategy -> WH (Shelf s) s
 newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
@@ -459,7 +460,7 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
             tags = fromMaybe mempty $ fmap parseTagOperations tagm >>= (flip modifyTags mempty)
         uniqueRef@(Arg _i ref) <- newUniqueSTRef (error "should never been called. Base.hs:327")
         let shelf = Shelf (ShelfId_ uniqueRef) mempty name tags minD maxD LeftToRight boxOrientator fillStrat bottom
-        lift $ writeSTRef ref shelf
+        writeCurrentRef ref shelf
 
         modify \warehouse ->  warehouse { shelves = shelves warehouse |> ShelfId_ uniqueRef }
         updateShelfTags [] shelf
@@ -477,7 +478,7 @@ newBox style content dim or_ shelf ors tagTexts = do
     let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags defaultPriorities (extractBoxBreak tags)
     shelf' <- findShelf shelf
     linkBox (BoxId_ uniqueRef) shelf'
-    lift $ writeSTRef ref box
+    writeCurrentRef ref box
     -- modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
     modify \warehouse ->  warehouse { boxMap = snd $ Map.insertLookupWithKey (\_ new old -> old <> new)
                                                                       style (Seq.singleton $ BoxId_ uniqueRef)
@@ -493,14 +494,20 @@ makeContentTags content =
                                    | (c, i) <- zip contents [1..] 
                                    ]
 
-newUniqueSTRef :: a s -> WH (Arg Int (STRef s (a s))) s
+newUniqueSTRef :: a s -> WH (Arg Int (HiSTRef a s)) s
 newUniqueSTRef object = do
-  ref <- lift $ newSTRef object
+  ev <- gets whCurrentEvent
+  ref <- lift $ newHiSTRef ev object
   unique0 <- gets whUnique
   let unique = unique0 + 1
   modify (\w -> w { whUnique = unique })
   return $ Arg unique ref
 
+writeCurrentRef :: HiSTRef a s -> a s -> WH () s
+writeCurrentRef ref a = do
+   current <- gets whCurrentEvent
+   lift $ writeHiSTRef current ref a
+   
 -- | Parses a string  to Tag operation
 -- the general syntax [-]tag[=[-+]value]
 -- tag create the tag if n
@@ -1194,14 +1201,14 @@ updateBox :: (Box' box) =>  (Box s ->  Box s) -> box s-> WH (Box s) s
 updateBox f box0 = do
     box <- findBox box0
     let box' = f box
-    lift $ writeSTRef (getRef box') box'
+    writeCurrentRef (getRef box') box'
     return box'
 
 updateShelf :: (Shelf' shelf) => (Shelf s -> Shelf s ) -> shelf s -> WH (Shelf s) s
 updateShelf f s =  do
     shelf <- findShelf s
     let shelf' = f shelf
-    lift $ writeSTRef (getRef shelf') shelf'
+    writeCurrentRef (getRef shelf') shelf'
     return shelf'
 
 

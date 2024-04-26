@@ -6,11 +6,13 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
-module WarehousePlanner.Type where
+module WarehousePlanner.Type
+( module WarehousePlanner.Type
+, module WarehousePlanner.History
+)where
 import ClassyPrelude
 import Control.Monad.State
 import Diagrams.Prelude(Colour)
-import Data.STRef
 import Control.Monad.ST
 import Data.Set qualified as Set
 import Data.Map qualified as Map 
@@ -19,6 +21,7 @@ import System.FilePath.Glob qualified as Glob
 import Data.Semigroup(Arg(..))
 import Data.Text qualified as Text
 import Data.List.NonEmpty (NonEmpty(..))
+import WarehousePlanner.History
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -128,7 +131,7 @@ data OrientationStrategy  = OrientationStrategy
 
 -- | Every box belongs to a shelf.
 -- Non placed boxes belongs to the special default shelf
-newtype BoxId s = BoxId_ (Arg Int (STRef s (Box s))) deriving (Eq, Ord)
+newtype BoxId s = BoxId_ (Arg Int (HiSTRef Box s)) deriving (Eq, Ord)
 {-# COMPLETE BoxId #-}
 pattern BoxId s <- BoxId_ (Arg _ s)
 
@@ -157,7 +160,7 @@ data Box s = Box { _boxId      :: BoxId s
                
 instance Show (Box s) where
   show box = unpack (boxStyle box <> "-" <> boxContent box) <> show (boxId box)
-data ShelfId s = ShelfId_ (Arg Int (STRef s (Shelf s)))  deriving (Eq, Ord)
+data ShelfId s = ShelfId_ (Arg Int (HiSTRef Shelf s))  deriving (Eq, Ord)
 {-# COMPLETE ShelfId #-}
 pattern ShelfId s <- ShelfId_ (Arg _ s)
 
@@ -214,6 +217,8 @@ data Warehouse s = Warehouse { boxMap :: Map Text  (Seq (BoxId s))
                            -- \^ a cache. We use maybe to that an empty warehouse can be created "purely"
                            -- Should probably be part of of the WH 
                            , whUnique :: Int
+                           , whCurrentEvent :: Event
+                           , whEventHistory ::  [Event] -- not including current
                            
              } -- deriving Show
              
@@ -313,23 +318,23 @@ instance Box' Box where
 
   findBox b = findBox (boxId b) -- "reload" the box in caes it has been modified
 instance Box' BoxId where
-  findBox (BoxId ref) = lift $ readSTRef ref
+  findBox (BoxId ref) = lift $ readHiSTRef NoHistory ref
 
 
 instance Referable (Box s) where
-  type Ref (Box s) = STRef s (Box s)
+  type Ref (Box s) = HiSTRef Box s
   getRef box = getRef (boxId box)
 
 instance Referable (BoxId s) where
-  type Ref (BoxId s) = STRef s (Box s)
+  type Ref (BoxId s) = HiSTRef Box s
   getRef (BoxId ref) = ref
 
 instance Referable (Shelf s) where
-  type Ref (Shelf s) = STRef s (Shelf s)
+  type Ref (Shelf s) = HiSTRef Shelf s
   getRef shelf = getRef (shelfId shelf)
 
 instance Referable (ShelfId s) where
-  type Ref (ShelfId s) = STRef s (Shelf s)
+  type Ref (ShelfId s) = HiSTRef Shelf s
   getRef (ShelfId ref) = ref
 
 instance ShelfIdable ShelfId where
@@ -340,7 +345,7 @@ instance ShelfIdable Shelf where
 instance Shelf' Shelf where
   findShelf s = findShelf (shelfId s) -- reload the shef
 instance Shelf' ShelfId where
-  findShelf (ShelfId ref) = lift $ readSTRef ref
+  findShelf (ShelfId ref) = lift $ readHiSTRef NoHistory ref
 
 instance HasTags (Box s) where getTags = boxTags
 instance HasTags (Shelf s) where getTags = shelfTag
