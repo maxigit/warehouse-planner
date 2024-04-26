@@ -8,7 +8,7 @@
 {-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
 module WarehousePlanner.Type
 ( module WarehousePlanner.Type
-, module WarehousePlanner.History
+, module WarehousePlanner.History.Types
 )where
 import ClassyPrelude
 import Control.Monad.State
@@ -21,7 +21,7 @@ import System.FilePath.Glob qualified as Glob
 import Data.Semigroup(Arg(..))
 import Data.Text qualified as Text
 import Data.List.NonEmpty (NonEmpty(..))
-import WarehousePlanner.History
+import WarehousePlanner.History.Types
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -318,7 +318,9 @@ instance Box' Box where
 
   findBox b = findBox (boxId b) -- "reload" the box in caes it has been modified
 instance Box' BoxId where
-  findBox (BoxId ref) = lift $ readHiSTRef NoHistory ref
+  findBox (BoxId ref) = do
+          ev <- gets whCurrentEvent 
+          lift $ readHiSTRef ev ref
 
 
 instance Referable (Box s) where
@@ -345,7 +347,9 @@ instance ShelfIdable Shelf where
 instance Shelf' Shelf where
   findShelf s = findShelf (shelfId s) -- reload the shef
 instance Shelf' ShelfId where
-  findShelf (ShelfId ref) = lift $ readHiSTRef NoHistory ref
+  findShelf (ShelfId ref) = do
+            ev <- gets whCurrentEvent
+            lift $ readHiSTRef ev ref
 
 instance HasTags (Box s) where getTags = boxTags
 instance HasTags (Shelf s) where getTags = shelfTag

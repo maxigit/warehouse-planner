@@ -19,11 +19,13 @@ module WarehousePlanner.Report
 , reportPairs
 , boxStyleWithTags
 , generateStockTakes
+, generateBoxHistory
 ) where
 
 import WarehousePlanner.Base
 import WarehousePlanner.Optimum
 import WarehousePlanner.Summary
+import WarehousePlanner.History
 import ClassyPrelude hiding(or)
 import Control.Monad.ST.Unsafe(unsafeSTToIO)
 import System.IO.Unsafe(unsafePerformIO)
@@ -37,6 +39,7 @@ import Data.Text(splitOn)
 import Text.Tabular as Tabul
 import Data.Text(replace)
 import Data.Semigroup(Arg(..))
+import Data.List.NonEmpty (NonEmpty(..))
 
 -- pattern (:<) :: Text -> Maybe (Char, Text)
 pattern x :< xs <- (uncons -> Just (x, xs))
@@ -859,4 +862,31 @@ showPair pair = let res = pRes1 pair
                   <> (pack $ printf " wasted:%0.2f  " (pWastedVolume pair))
                   <> printDim (boxDim $ rBox res) <> (pack $ printf "(%d)" $ rBoxPerShelf res)
     _ -> error "Bug"
+
+
+--
+
+generateBoxHistory :: Maybe (BoxSelector s) -> WH [Text] s
+generateBoxHistory selectorm = do
+    events <- gets whEventHistory
+    event  <- gets whCurrentEvent
+    
+    boxes_ <- case selectorm of
+            Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
+            Just sel -> do
+              findBoxByNameAndShelfNames sel
+    boxhistorys <- mapM getBoxHistory boxes_
+    return $ map tshow (event : events)
+           <> concatMap history boxhistorys
+    where history box'es@((lastBox,_) :| _) = replicate 50 '*'
+                      :  tshow lastBox
+                      : boxStyleWithTags lastBox <> " " <> boxPositionSpec lastBox
+                      : do
+                          (box, ev) <- toList box'es
+                          [ tshow ev , "\t" <> tshow (boxStyleWithTags box) <> " " <> tshow (boxPositionSpec box) ]
+     
+
+
+
+  
 

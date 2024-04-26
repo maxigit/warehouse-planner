@@ -39,7 +39,7 @@ loads paths = do
   state <- readIORef stateRef
   let ?cache = noCache
       ?today = whDay (warehouse state)
-  scenarioEs <- forM paths \path -> readScenarioFromPath (importDispatchDef (currentDir state))
+  scenarioEs <- forM paths \path -> readScenarioFromPath False (importDispatchDef (currentDir state))
                                          (currentDir state </> path <.> "org")
   let scenarioE = sequence scenarioEs
   print scenarioE

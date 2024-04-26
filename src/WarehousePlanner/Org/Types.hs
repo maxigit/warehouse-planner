@@ -47,7 +47,7 @@ data HeaderType
   | ClonesH [Text]
   | DeletesH
   | ImportH
-  | TitleH
+  | TitleH Int
   | ColourMapH
   | RearrangeH [Text]
   | FreezeOrderH [Text]
@@ -74,6 +74,7 @@ instance Monoid Scenario where
 -- usefull to reconstruct the orignal file
 data Step = Step HeaderType DocumentHash Text
           | SavingPoint
+          | NewFile FilePath
           deriving (Show, Eq)
 
 

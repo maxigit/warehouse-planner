@@ -27,6 +27,7 @@ data Options = Options
             , oDelete :: Maybe Text
             , oTagsAndMoves :: Maybe Text
             , oDir :: Maybe FilePath
+            , oNoHistory :: Bool
             }
      deriving (Show, Generic)
      
@@ -43,6 +44,7 @@ data Command = Summary
              | BestBoxesFor
              | BestShelvesFor
              | BoxGroupReport
+             | BoxHistory
              | Report
              | Display 
              | Export
@@ -72,6 +74,9 @@ optionsParser = do
   oFiles <- many (argument str $ metavar "FILES"
                                <> help "Org files without suffixes"
                  )
+  oNoHistory <- switch $ long "no-history"
+                             <> help "DeActivate history"
+
   return Options{..}
   
 commandArg = flag' Stocktake (long "stocktake"
@@ -113,6 +118,9 @@ commandArg = flag' Stocktake (long "stocktake"
                           <> short 'A' <> short 'g'
                           <> help "Group boxes"
                           )
+          <|> flag' BoxHistory (long "box-history" <> long "boxes-history-report"
+                          <> help "Box History"
+                          )
           <|> flag' AllBoxes (long "all" <> long "all-boxes"
                              <> short 'a'
                              <> help "Number of boxes in all shelves"
@@ -148,7 +156,9 @@ defaultMainWith expandSection = do
                 Just date -> return date
   let dir = fromMaybe "." oDir
       title = intercalate "-" $ map takeBaseName oFiles
-  scenarioE <- readScenarioFromPaths (expandSection dir) oDir oFiles
+      withHistory = oCommand `elem` [BoxHistory, Display]
+                  && not oNoHistory
+  scenarioE <- readScenarioFromPaths withHistory (expandSection dir) oDir oFiles
   extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
   case sequence (scenarioE: extraScenarios) of
     Left e -> error $ unpack e
@@ -183,6 +193,7 @@ defaultMainWith expandSection = do
             BoxGroupReport -> withLines do
                               boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
                               groupBoxesReport boxes
+            BoxHistory -> withLines (generateBoxHistory boxSelectorM)
             Export -> do
                         let bare = scenario { sInitialState = Nothing
                                             , sSteps = filter (\(Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]) $ sSteps scenario

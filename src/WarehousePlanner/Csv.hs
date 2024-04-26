@@ -716,7 +716,8 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- Tag can be exclude using a glob pattern
 -- This is to allows script to import partial tagging.
 processMovesAndTags :: [Text] -> (BoxSelector s, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
-processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
+processMovesAndTags tagsAndPatterns_ p@(style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
+  newBaseEvent $ tshow p
   let withNoEmpty = partition (== "@noEmpty")
       (noEmpty1, tagsAndPatterns) = withNoEmpty tagsAndPatterns_
       (noEmpty2, tags) = withNoEmpty tags_

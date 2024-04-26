@@ -83,14 +83,14 @@ linesToSections lines_ = reverse $ go lines_ Nothing [] [] where
   -- Close the current section and  merge similar section if possible
   merge :: Maybe (HeaderType, Text)  -> [Text] -> [Either Text Section] -> [Either Text Section]
   merge Nothing _ sections = sections
-  merge (Just (TitleH, title)) [] sections = Right (Section TitleH (Right []) title): sections
+  merge (Just (t@(TitleH _), title)) [] sections = Right (Section t (Right []) title): sections
   merge __header [] sections = sections
   merge (Just (ht,title)) current sections = Right (Section ht (Right (reverse current)) title) : sections
 
 -- | Header is like "*** [HEADER] title"
 extractHeader :: Text -> Maybe HeaderType
 extractHeader line = case words line of
-  (stars:__section:_) | isStars stars -> Just TitleH
+  (stars:__section:_) | isStars stars -> Just $ TitleH (length stars)
   _ -> Nothing
   where isStars = all ((==) '*') 
   
@@ -177,6 +177,11 @@ instance GHeader (K1 i [Text] ) where -- Constructor with tags
   gwriteHeader (K1 xs) = "_" <> intercalate "_" xs
   gaddTags tags (K1 xs) = K1 (xs <> tags)
   gParse _header tags = Right $ K1 tags
+instance GHeader (K1 i Int ) where -- Constructor with tags
+  gwriteHeader (K1 i) = tshow i
+  gaddTags _tags (K1 i) = K1 i
+  gParse header _tags = Right $ K1 l where 
+         l = length $ span (== '*') header
 instance GHeader a => GHeader (D1 c a) where
   gwriteHeader (M1 x) = gwriteHeader x 
   gaddTags tags (M1 x) = M1 (gaddTags tags x)
@@ -241,11 +246,14 @@ readScenariosFromDir expandSection path = do
 
 -- | Read one scenario file
 readScenarioFromPath :: MonadIO io
-                     => (Section -> io (Either Text [Section]))
+                     => Bool -> (Section -> io (Either Text [Section]))
                      -- \^ section expander, mainly to import sections for URI
                      -> FilePath -> io (Either Text Scenario)
-readScenarioFromPath expandSection path = do
+readScenarioFromPath withHistory expandSection path = do
   let useStdin = takeBaseName path == "-"
+      addNewFileEvent = if withHistory 
+                        then \sc -> sc { sSteps = NewFile path : sSteps sc }
+                        else id
   exists <-  liftIO $ doesFileExist path
   contentE <- liftIO $
            case (exists, useStdin) of
@@ -255,15 +263,15 @@ readScenarioFromPath expandSection path = do
   
   case contentE of 
     Left e -> return $ Left e
-    Right content -> readScenario expandSection content
+    Right content -> fmap (fmap (addNewFileEvent)) $ readScenario expandSection content
 
 readScenarioFromPaths :: MonadIO io
-                      => (Section -> io (Either Text [Section]))
+                      => Bool -> (Section -> io (Either Text [Section]))
                       -> Maybe FilePath
                       -> [FilePath] -> io (Either Text Scenario)
-readScenarioFromPaths expandSection currentDir paths = do
+readScenarioFromPaths withHistory expandSection currentDir paths = do
    finalPaths <- mapM finalPath paths
-   scenarios <- forM finalPaths $ readScenarioFromPath expandSection 
+   scenarios <- forM finalPaths $ readScenarioFromPath withHistory expandSection 
    return $ fmap mconcat $ sequence scenarios
    where finalPath path = do
            let bare = case currentDir of
@@ -358,7 +366,7 @@ makeScenario sections0 = do -- Either
 
   let steps = concatMap (\(header , (sha, title)) ->
                            (case header of
-                            TitleH | "!" `isSuffixOf` title -> [SavingPoint]
+                            TitleH _ | "!" `isSuffixOf` title -> [SavingPoint]
                             _ -> []
                             ) ++ [Step header sha title]) sections3
 
@@ -402,6 +410,7 @@ scenarioToSections Scenario{..} = execWriter $ do  -- []
   forM sSteps (\s -> case s of
                   Step header sha title -> tell [Section header (Left sha) title]
                   SavingPoint -> return ()
+                  NewFile _ -> return ()
               )
 
 -- | Key identifying the scenario. Takes all document and has them.
@@ -431,7 +440,8 @@ sSortedSteps Scenario{..} = let
 
 executeStep :: Step -> IO (WH () s)
 executeStep SavingPoint = return (return ())
-executeStep (Step header sha _) = do
+executeStep (NewFile path) = return $ newWHEvent 0 $ "FILE: " <> pack path
+executeStep (Step header sha txt) = do
   contentPath <- contentPathM
   let path = contentPath sha
       defaultOrientations = [tiltedForward, tiltedFR]
@@ -440,7 +450,7 @@ executeStep (Step header sha _) = do
       execute step = do
         s <- step
         return (s >> clearCache)
-  case header of
+  wh <- case header of
           LayoutH -> return $ return ()
           ShelvesH -> execute $ readShelves BoxOrientations path
           InitialH -> return $ return ()
@@ -464,11 +474,16 @@ executeStep (Step header sha _) = do
           TransformTagsH tags -> execute $ readTransformTags path tags
           ClonesH tags -> execute $ readClones (tags) path
           DeletesH -> execute $ readDeletes path
-          TitleH -> return $ return ()
+          TitleH level -> return $ newWHEvent level txt
           ImportH -> return $ return ()
           ColourMapH -> return $ return ()
           RearrangeH tags -> execute $ readRearrangeBoxes tags path
           FreezeOrderH tags -> execute $ readFreezeOrder tags path
+  return do
+     case header of
+       TitleH level -> newWHEvent level txt
+       _ -> newWHEvent 1000 (writeHeader header)
+     wh
 
 -- | Retrieve the number of line in the layout file
 scenarioLayoutSize :: MonadIO m => Scenario -> m Int

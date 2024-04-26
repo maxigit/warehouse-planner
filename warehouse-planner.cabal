@@ -23,6 +23,7 @@ library
       WarehousePlanner.Exec
       WarehousePlanner.Expr
       WarehousePlanner.History
+      WarehousePlanner.History.Types
       WarehousePlanner.Optimum
       WarehousePlanner.Org
       WarehousePlanner.Org.Exec

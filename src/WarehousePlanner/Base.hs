@@ -75,6 +75,8 @@ module WarehousePlanner.Base
 , unconsSlices
 , dropTillSlice, dropTillSlot
 , withBoxOrientations
+, newWHEvent
+, newBaseEvent
 )
 where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
@@ -496,8 +498,7 @@ makeContentTags content =
 
 newUniqueSTRef :: a s -> WH (Arg Int (HiSTRef a s)) s
 newUniqueSTRef object = do
-  ev <- gets whCurrentEvent
-  ref <- lift $ newHiSTRef ev object
+  ref <- lift $ newHiSTRef NoHistory object
   unique0 <- gets whUnique
   let unique = unique0 + 1
   modify (\w -> w { whUnique = unique })
@@ -2136,3 +2137,20 @@ bestEffort boxes = let
   xy (Dimension x _ y ) = (x,y)
   in stairsFromCorners $ cornerHull allCorners
   
+  
+-- | Create a new even only if the previous one is not NoHistory
+-- or level is 0.
+-- Effectively , setting a 0 level will activate history
+newWHEvent :: Int -> Text -> WH () s
+newWHEvent level title = do
+    wh <- get
+    -- | if 
+    let new = newEvent (level) (whCurrentEvent wh) title
+        current = whCurrentEvent wh
+    if current == NoHistory && level > 0 
+    then return ()
+    else 
+      put wh { whCurrentEvent = new, whEventHistory = new : whEventHistory wh } 
+
+newBaseEvent :: Text -> WH () s
+newBaseEvent = newWHEvent baseLevel
