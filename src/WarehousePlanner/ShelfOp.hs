@@ -8,6 +8,7 @@ module WarehousePlanner.ShelfOp
 ) where
 import ClassyPrelude
 import WarehousePlanner.Base
+import WarehousePlanner.Selector
 import Data.List (scanl')
 import Data.Char (chr)
 

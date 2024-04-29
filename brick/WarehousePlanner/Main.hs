@@ -10,6 +10,7 @@ where
 import ClassyPrelude 
 import WarehousePlanner.Base
 import WarehousePlanner.Org
+import WarehousePlanner.Selector
 import WarehousePlanner.Brick.App
 import WarehousePlanner.Report
 import Options.Applicative

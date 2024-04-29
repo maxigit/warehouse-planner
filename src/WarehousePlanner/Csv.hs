@@ -29,6 +29,7 @@ module WarehousePlanner.Csv
 import WarehousePlanner.Base
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
+import WarehousePlanner.Selector
 import Data.Csv qualified as Csv
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString qualified as BS
@@ -716,8 +717,12 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- Tag can be exclude using a glob pattern
 -- This is to allows script to import partial tagging.
 processMovesAndTags :: [Text] -> (BoxSelector s, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
-processMovesAndTags tagsAndPatterns_ p@(style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
-  newBaseEvent $ tshow p
+processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
+  newBaseEvent $ intercalate "," [ printBoxSelector style
+                                 , intercalate "#" tags_
+                                 , fromMaybe "" locationM
+                                 , mconcat $ map tshow orientations
+                                 ]
   let withNoEmpty = partition (== "@noEmpty")
       (noEmpty1, tagsAndPatterns) = withNoEmpty tagsAndPatterns_
       (noEmpty2, tags) = withNoEmpty tags_

@@ -63,7 +63,7 @@ instance Show Event where
 newEvent :: Int -> Event -> Text -> Event 
 newEvent level NoHistory description = Event Nothing NoHistory description 1 level
 newEvent level previous description = let
-    parent = evParent previous >>= parentWithLevel (level - 1)
+    parent = Just previous >>= parentWithLevel (level - 1)
     -- reset id on level 0 (new file)
     -- so that even correspond to line number
     eId = if False -- level == 0
@@ -75,7 +75,7 @@ newEvent level previous description = let
 parentWithLevel :: Int -> Event -> Maybe Event
 parentWithLevel _ NoHistory = Nothing
 parentWithLevel level e@Event{..} = 
-  if evLevel >= level 
+  if evLevel <= level 
   then Just e
   else evParent >>= parentWithLevel level 
    
