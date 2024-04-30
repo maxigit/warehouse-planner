@@ -28,10 +28,10 @@ import Text.Printf (printf)
 -- with row correspending to 8 and 10 
 -- and column to 1 and 3
 -- One table is returned for each depth 
-shelfSummaryToTable :: ([Box RealWorld] ->  Widget n) -> SumVec (Box RealWorld) -> [ Table n ]
+shelfSummaryToTable :: ([History Box RealWorld] ->  Widget n) -> SumVec (History Box RealWorld) -> [ Table n ]
 shelfSummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
    boxes = sDetailsList ssum
-   boxesByOffset = Map.fromListWith (<>) [ (boxOffset box , [box])
+   boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ fromHistory box , [box])
                                          | box <- boxes
                                          ]
    offsets = keys boxesByOffset
@@ -80,7 +80,7 @@ renderBoxOrientation current box = withStyleAttr (current == Just box) (boxStyle
   
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
-baySummaryToTable :: ([Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (Box RealWorld)) -> Table n
+baySummaryToTable :: ([History Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (History Box RealWorld)) -> Table n
 baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
   shelves = sDetailsList ssum
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)

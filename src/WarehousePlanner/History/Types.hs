@@ -6,7 +6,10 @@ module WarehousePlanner.History.Types
 , Event(..)
 , newEvent
 , baseLevel
+, History
+, fromHistory
 )
+
 where
 
 import ClassyPrelude
@@ -15,7 +18,11 @@ import Data.STRef
 import Data.List.NonEmpty as NE
 
 
+type History a s = NonEmpty (a s, Event)
 data HiSTRef a s = HiSTRef (STRef s (NonEmpty (a s, Event)))
+
+fromHistory :: History a s -> a s
+fromHistory = fst . NE.head
 
 newHiSTRef :: Event -> a s ->  ST s (HiSTRef a s)
 newHiSTRef ev a = do
@@ -23,9 +30,14 @@ newHiSTRef ev a = do
   return $ HiSTRef ref
 
 readHiSTRef :: Event -> HiSTRef a s -> ST s (a s)
-readHiSTRef _ (HiSTRef ref) = do
-  (a, _e) :| _ <- readSTRef ref
-  return a
+readHiSTRef ev (HiSTRef ref) = do
+  history <- readSTRef ref
+  -- find first element with event <= given event
+  let 
+  case NE.dropWhile ((> ev) . snd) history of
+     [] -> error "Finding reference in the past"
+     -- ^ should not normally happen as reference in the past should not be given.
+     (a,_) :_ -> return a
   
 writeHiSTRef :: Event -> HiSTRef a s -> a s -> ST s ()
 writeHiSTRef NoHistory (HiSTRef ref) a = writeSTRef ref $ pure (a, NoHistory)
@@ -54,10 +66,16 @@ data Event = NoHistory
 instance Show Event where
   show NoHistory = "NoHistory"
   show Event{..} = unwords
-                   [ show evLevel <> "." <> show evId
+                   [ "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
                    , "^" <> maybe "" (show . WarehousePlanner.History.Types.evId ) evParent 
                    , unpack evDescription
                    ]
+
+instance Ord Event where
+  compare NoHistory NoHistory = EQ
+  compare NoHistory _ = LT
+  compare _ NoHistory = GT
+  compare e1 e2 = compare (evId e1) (evId e2)
                    
 -- | Create a new event at the given level
 newEvent :: Int -> Event -> Text -> Event 

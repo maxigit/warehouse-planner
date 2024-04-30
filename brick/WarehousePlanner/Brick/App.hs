@@ -7,6 +7,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Summary as S
+import WarehousePlanner.History
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
@@ -58,6 +59,19 @@ data WHEvent = ENextMode
              | EPrevHLRun
              -- 
              | ERenderRun
+             --
+             | EHistoryEvent HistoryEvent
+data HistoryEvent = HPrevious
+                  | HNext
+                  | HParent
+                  | HChild
+                  | HSkipBackward -- same box
+                  | HSkipForward
+                  | HPreviousSibling
+                  | HNextSibling
+                  | HSetCurrent
+                  | HResetCurrent
+                  | HFirst
 
 initState :: String -> WH (AppState) RealWorld
 initState title = do
@@ -81,12 +95,14 @@ initState title = do
                  , asLastKeys = []
                  , asWarehouse = warehouse
                  , asTitle = title
+                 , asDiffEvent = whCurrentEvent warehouse
+                 , asDiffEventStack = []
                  , ..}
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
-            sDetails <- mapM findBox boxIds
+            sDetails <- mapM getBoxHistory boxIds
             return ShelvesSummary{..}
-        boxOrder box = let Dimension l w h = boxOffset box
+        boxOrder box = let Dimension l w h = boxOffset $ fromHistory box
                        in (w, l, h)
                           -- ^^^^ we swap l and w so that we can nagivate through box of the same depth using "next"
 
@@ -115,9 +131,9 @@ whApp extraAttrs =
                                               --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
                                               --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox)
-                                                         [ renderRun (renderBoxOrientation (currentBox s)) (currentRun s)
+                                                         [ renderRun (renderBoxOrientation (currentBox s) . fromHistory) (currentRun s)
                                                          , [B.hBorder]
-                                                         , renderRun (renderBoxContent (currentBox s)) (let run = currentRun s
+                                                         , renderRun (renderBoxContent (currentBox s) . fromHistory) (let run = currentRun s
                                                                                                         in run { sDetails = drop asCurrentBay $ sDetails run }
                                                                                                         )
                                                          ]
@@ -203,6 +219,17 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
        B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("o" :: String) -> modify \s -> s { asLastKeys = c : lasts }
+       B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNext
+       B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPrevious
+       B.VtyEvent (V.EvKey (V.KUp) [] ) -> handleWH $ EHistoryEvent HParent
+       B.VtyEvent (V.EvKey (V.KDown) [] ) -> handleWH $ EHistoryEvent HChild
+       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HSkipBackward
+       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HSkipForward
+       B.VtyEvent (V.EvKey (V.KLeft) [V.MCtrl] ) -> handleWH $ EHistoryEvent HPreviousSibling
+       B.VtyEvent (V.EvKey (V.KRight) [V.MCtrl] ) -> handleWH $ EHistoryEvent HNextSibling
+       B.VtyEvent (V.EvKey (V.KEnter) [V.MShift] ) -> handleWH $ EHistoryEvent HSetCurrent
+       B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HResetCurrent
+       B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
        _ -> B.resizeOrQuit ev
  
 handleWH ev = 
@@ -253,7 +280,28 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
+         EHistoryEvent ev -> navigateHistory ev
     where resetBox s = s { asCurrentBox = 0 }
+
+navigateHistory ev = modify \s@AppState{..} -> 
+  if asDiffEvent == NoHistory
+  then s
+  else let
+       pushCurrent = asDiffEvent : asDiffEventStack
+       new = case ev of 
+              HPrevious -> case evPrevious asDiffEvent of
+                             NoHistory -> Nothing
+                             prev -> Just (prev, pushCurrent)
+              HNext -> case asDiffEventStack of
+                        [] -> Nothing
+                        (e:stack) -> Just (e, stack)
+              HParent -> case evParent asDiffEvent of
+                           Nothing -> Nothing
+                           Just p -> Just (p, pushCurrent)
+              _ -> Nothing
+       in case new of
+          Nothing -> s
+          Just (new, stack) -> s { asDiffEvent = new, asDiffEventStack = stack }
 
   
 nextMode :: AppState -> AppState
@@ -350,7 +398,7 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asB
                                              [ (boxStyle box , (sName shelfSum, boxOffset box))
                                              | baySum <- sDetailsList (currentRun state)
                                              , shelfSum <- sortOn sName $ sDetailsList baySum
-                                             , box <- sortOn boxOffset $ sDetailsList shelfSum
+                                             , box <- sortOn boxOffset $ map fromHistory $ sDetailsList shelfSum
                                              ]
                   in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
 -- * Find next shelf
@@ -410,7 +458,10 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") (styleNameWithAttr False) (asSelectedStyle ) -- current style
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
-                           , B.padLeft B.Max legend]
+                           , B.str $ show asDiffEvent
+                           , B.str $ show $ length $ whEventHistory asWarehouse
+                           , B.padLeft B.Max legend
+                           ]
              
 debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
@@ -430,7 +481,7 @@ debugShelf state = let
           ]
   
  -- * Render 
-renderRun :: (Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (Box RealWorld)) -> [ B.Widget n ]
+renderRun :: (History Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (History Box RealWorld)) -> [ B.Widget n ]
 renderRun renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )

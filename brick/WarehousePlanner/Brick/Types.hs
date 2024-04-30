@@ -46,7 +46,7 @@ type SumVec = ShelvesSummary Vector
 data AppState = AppState
      { -- asViewMode  :: ViewMode
      asSummaryView :: SummaryView
-     , asShelvesSummary :: Runs SumVec (SumVec (Box RealWorld)) 
+     , asShelvesSummary :: Runs SumVec (SumVec  (History Box RealWorld))
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int
@@ -60,6 +60,8 @@ data AppState = AppState
      , asBoxOrder :: BoxOrder 
      , asWarehouse :: Warehouse RealWorld 
      , asTitle :: String
+     , asDiffEvent :: Event -- ^ Event to show diff with
+     , asDiffEventStack :: [Event] -- ^ history of selected events (second part of a zipper)
      }
      
 selectFromSumVec :: Int -> SumVec a -> a
@@ -87,8 +89,10 @@ currentStyle'Sum AppState{..} =
        0 -> Nothing
        l -> asCurrentRunStyles V.!? (asCurrentStyle `mod` l)
 
-currentBox :: AppState -> Maybe (Box RealWorld)
-currentBox app = case currentShelf app of
-                    v | null (sDetails v) -> Nothing
-                    shelf -> Just $ selectFromSumVec (asCurrentBox app) shelf
+currentBoxHistory :: AppState -> Maybe (History Box RealWorld)
+currentBoxHistory app = case currentShelf app of
+                    v | null (sDetails $ v) -> Nothing
+                    detail -> Just $ selectFromSumVec (asCurrentBox app) $ detail
 
+currentBox :: AppState -> Maybe (Box RealWorld)
+currentBox = fmap fromHistory . currentBoxHistory
