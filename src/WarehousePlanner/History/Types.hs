@@ -29,13 +29,13 @@ newHiSTRef ev a = do
   ref <- newSTRef $ pure (a, ev)
   return $ HiSTRef ref
 
-readHiSTRef :: Event -> HiSTRef a s -> ST s (a s)
+readHiSTRef :: Show (a s) => Event -> HiSTRef a s -> ST s (a s)
 readHiSTRef ev (HiSTRef ref) = do
   history <- readSTRef ref
   -- find first element with event <= given event
   let 
   case NE.dropWhile ((> ev) . snd) history of
-     [] -> error "Finding reference in the past"
+     [] -> error $ "Finding reference in the past for " ++ show ev ++ " in " <> show history
      -- ^ should not normally happen as reference in the past should not be given.
      (a,_) :_ -> return a
   
@@ -59,10 +59,9 @@ data Event = NoHistory
            | Event { evParent :: Maybe Event
                    , evPrevious :: Event
                    , evDescription :: Text
-                   , evId :: Int
+                   , evId :: Int -- ^ Must be unique
                    , evLevel :: Int
                    }
-     deriving (Eq)
 instance Show Event where
   show NoHistory = "NoHistory"
   show Event{..} = unwords
@@ -70,6 +69,12 @@ instance Show Event where
                    , "^" <> maybe "" (show . WarehousePlanner.History.Types.evId ) evParent 
                    , unpack evDescription
                    ]
+
+instance Eq Event where
+   NoHistory == NoHistory = True
+   NoHistory == _  = False
+   _ == NoHistory  = False
+   e1 == e2 = evId e1 == evId e2
 
 instance Ord Event where
   compare NoHistory NoHistory = EQ

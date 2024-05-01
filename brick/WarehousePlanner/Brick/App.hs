@@ -77,9 +77,9 @@ initState :: String -> WH (AppState) RealWorld
 initState title = do
   runs <- gets shelfGroup
   shelvesSummary <- traverseRuns findShelf runs
-                 >>= makeRunsSummary
+                 >>= makeRunsSummary (makeExtra)
                  >>= traverseRuns findBoxes
-  let toL :: forall a . ShelvesSummary NonEmpty a -> SumVec a
+  let toL :: forall a . ShelvesSummary SummaryExtra NonEmpty a -> SumVec a
       toL ssum@ShelvesSummary{..} = let
           sumZip = fromList $ sDetailsList ssum
           in ShelvesSummary{sDetails=sumZip,..}
@@ -105,6 +105,17 @@ initState title = do
         boxOrder box = let Dimension l w h = boxOffset $ fromHistory box
                        in (w, l, h)
                           -- ^^^^ we swap l and w so that we can nagivate through box of the same depth using "next"
+        makeExtra shelf =  do
+                        boxes <- mapM findBox (_shelfBoxes shelf)
+                        let styleMap = Map.fromListWith (<>) [ (boxStyle box, makeBoxesSummary [box])
+                                                             | box <- toList boxes
+                                                             ]
+                        boxHistorys <- mapM getBoxHistory boxes
+                        let events = setFromList [ event
+                                                 |  history <- toList boxHistorys
+                                                 , (_box, event) <- toList history
+                                                 ]
+                        return $ SummaryExtra styleMap events
 
 
 whApp :: _ -> WHApp

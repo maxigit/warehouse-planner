@@ -224,7 +224,7 @@ mPlus x Nothing =  x
 summarizeShelves :: Seq (Shelf s) -> WH (SummaryInfo) s
 summarizeShelves shelves | null shelves = return $ SummaryInfo Nothing Nothing 0
 summarizeShelves shelves = do
-    summaries <- traverse summaryFromShelf shelves
+    summaries <- traverse (summaryFromShelf $ const $ return ()) shelves
     let ShelvesSummary{..} = sconcat $ toNonEmpty $ impureNonNull summaries
     let totalVolume = suVolume sShelvesSummary / 1e6
         totalFloor = suSurfaceLW sShelvesSummary / 1e4

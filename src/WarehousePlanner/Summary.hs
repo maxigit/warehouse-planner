@@ -5,6 +5,7 @@ module WarehousePlanner.Summary
 , ShelvesSummary(..)
 , ratio
 , makeRunsSummary
+, makeBoxesSummary
 )
 where 
 
@@ -13,7 +14,6 @@ import WarehousePlanner.Type
 import GHC.Generics
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Text (commonPrefixes)
-import Data.Map qualified as Map
 import WarehousePlanner.Affine
 
 data Summary = Summary
@@ -50,47 +50,45 @@ instance Monoid Summary where
   
 -- * Shelves
 
-data ShelvesSummary f a = ShelvesSummary
+data ShelvesSummary e f a = ShelvesSummary
                { sName :: !Text
                , sDetails :: f a
-               , sStyles :: Map Text Summary -- box summary by styles
                -- lazy , sort of caches
                , sBoxSummary :: Summary
                , sShelvesSummary :: Summary
+               , sExtra :: e
                }
      deriving (Functor, Foldable, Traversable)
      
-instance Semigroup (f a)  => Semigroup (ShelvesSummary f a) where
+instance (Semigroup e, Semigroup (f a))  => Semigroup (ShelvesSummary e f a) where
   s1 <> s2 = ShelvesSummary (commonPrefix (sName s1) (sName s2))
                             (sDetails s1        <> sDetails s2)
-                            (unionWith (<>) (sStyles s1) (sStyles s2))
                             (sBoxSummary s1     <> sBoxSummary s2)
                             (sShelvesSummary s1 <> sShelvesSummary s2)
+                            (sExtra s1 <> sExtra s2)
            where commonPrefix t1 t2 = 
                   case commonPrefixes t1 t2 of
                     Just (common, _, _) -> common
                     Nothing             -> t1 <> "|" <> t2
 
-ratio :: (Summary -> Double) -> ShelvesSummary f s -> Double
+ratio :: (Summary -> Double) -> ShelvesSummary e f s -> Double
 ratio f ShelvesSummary{sShelvesSummary,sBoxSummary} = case f sShelvesSummary of
   0 -> 1
   x -> f sBoxSummary / x
   
 
-summaryFromShelf :: Shelf s -> WH (ShelvesSummary NonEmpty (Shelf s)) s
-summaryFromShelf shelf = do
+summaryFromShelf :: (Shelf s -> WH e s) -> Shelf s -> WH (ShelvesSummary e NonEmpty (Shelf s)) s
+summaryFromShelf makeExtra shelf = do
    boxes <- mapM findBox (_shelfBoxes shelf)
-   let styleMap = Map.fromListWith (<>) [ (boxStyle box, makeBoxesSummary [box])
-                                        | box <- toList boxes
-                                        ]
+   e <- makeExtra shelf
    return $ ShelvesSummary (shelfName shelf)
                            (shelf :| [])                          
-                           styleMap
                            (makeBoxesSummary $ toList boxes)
                            (makeShelfSummary shelf)
+                           e
                            
-summaryFromShelves :: NonEmpty (Shelf s) -> WH (ShelvesSummary NonEmpty (Shelf s)) s
-summaryFromShelves shelves = sconcat <$> mapM summaryFromShelf shelves
+summaryFromShelves :: Semigroup e => (Shelf s -> WH e s) -> NonEmpty (Shelf s) -> WH (ShelvesSummary e NonEmpty (Shelf s)) s
+summaryFromShelves makeExtra shelves = sconcat <$> mapM (summaryFromShelf makeExtra) shelves
 
 makeShelfSummary :: Shelf s -> Summary
 makeShelfSummary shelf = Summary{..} where
@@ -114,13 +112,13 @@ makeBoxesSummary boxes = Summary{..} where
 data R' f a = R' (Runs f a)
      deriving (Functor, Foldable, Traversable)
 
-makeRunsSummary :: Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary NonEmpty) (ShelvesSummary NonEmpty (Shelf s))) s
-makeRunsSummary runs = do
-  runs' <- traverseRuns summaryFromShelf runs
+makeRunsSummary :: Semigroup e => (Shelf s -> WH e s) -> Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary e NonEmpty) (ShelvesSummary e NonEmpty (Shelf s))) s
+makeRunsSummary makeExtra runs = do
+  runs' <- traverseRuns (summaryFromShelf makeExtra) runs
   return $ fromRuns (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'
 
 
-promote :: ShelvesSummary NonEmpty a -> ShelvesSummary  NonEmpty (ShelvesSummary NonEmpty a)
+promote :: ShelvesSummary e NonEmpty a -> ShelvesSummary e NonEmpty (ShelvesSummary e NonEmpty a)
 promote sum@ShelvesSummary{..} = ShelvesSummary{sDetails=pure sum , ..}
 
 

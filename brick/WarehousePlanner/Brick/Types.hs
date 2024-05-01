@@ -8,6 +8,8 @@ module WarehousePlanner.Brick.Types
 , selectFromSumVec
 , currentRun, currentBay, currentShelf, currentBox
 , selectedStyle, currentStyle
+, sStyles
+, SummaryExtra(..)
 )
 where
 
@@ -42,7 +44,22 @@ data BoxOrder = BOByName
      deriving (Show, Eq, Enum, Bounded)
 
 -- | Summary with a "list" with current position
-type SumVec = ShelvesSummary Vector
+type SumVec = ShelvesSummary SummaryExtra Vector
+
+data SummaryExtra = SummaryExtra 
+     { seStyles :: Map Text Summary
+     , seEvents :: Set Event -- ^ event which happen to items 
+     }
+      deriving (Show)
+      
+instance Semigroup SummaryExtra where
+  e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
+                          (seEvents e1 <> seEvents e2)
+  
+
+sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
+sStyles = seStyles . sExtra
+
 data AppState = AppState
      { -- asViewMode  :: ViewMode
      asSummaryView :: SummaryView
@@ -76,7 +93,7 @@ currentBay state = selectFromSumVec (asCurrentBay state) (currentRun state)
 currentShelf :: AppState -> _a
 currentShelf state = selectFromSumVec (asCurrentShelf state) (currentBay state)
 
-sDetailsList :: Foldable f => ShelvesSummary f a -> [a]
+sDetailsList :: Foldable f => ShelvesSummary e f a -> [a]
 sDetailsList ssum = F.toList (sDetails ssum)
 
 selectedStyle :: AppState -> Maybe Text

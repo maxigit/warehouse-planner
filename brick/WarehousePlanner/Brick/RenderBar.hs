@@ -25,7 +25,7 @@ import Data.List.NonEmpty (NonEmpty(..))
 
 
 -- * Bar
-shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary f a -> Widget n
+shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary e f a -> Widget n
 shelfSummaryToBar dir view ssum =  let
   r = ratio (fromSummary view) ssum
   perc8 = floor $ 8 * r
@@ -61,7 +61,7 @@ renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
 
 
-shelfSummaryToAllBars :: ShelvesSummary f a -> Widget n
+shelfSummaryToAllBars :: ShelvesSummary e f a -> Widget n
 -- shelfSummaryToAllBars sum = hBox [ renderS v sum | v <- [minBound .. maxBound] ]
 shelfSummaryToAllBars sum = hBox [ renderS SVVolume sum
                                  , renderBestBar [SVMaxLength, SVMaxWidth, SVMaxHeight ] sum
@@ -72,7 +72,7 @@ shelfSummaryToAllBars sum = hBox [ renderS SVVolume sum
 charWithPerc2 :: Char -> Double -> Double -> Widget n
 charWithPerc2 c r1 r2 = withAttr (percToAttrName r1 r2) (str [c])
 
-renderS :: SummaryView -> ShelvesSummary f a -> Widget n
+renderS :: SummaryView -> ShelvesSummary e f a -> Widget n
 renderS smode s = let 
        c = case smode of
               SVMaxLength -> '>'
@@ -89,7 +89,7 @@ renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
 renderHorizontalSummary _sview ssum = hBox . map (renderBestBar sviews) $ sDetailsList ssum  where
     sviews = SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
-renderBestBar :: NonEmpty SummaryView -> ShelvesSummary f a -> Widget n
+renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n
 renderBestBar sviews ssum = let
    (_, sview) :| _ = sortOn fst
                    $ [ (ratio (fromSummary v)  ssum, v)
@@ -97,7 +97,7 @@ renderBestBar sviews ssum = let
                       ]
   in renderS sview ssum
 
-renderWithStyleName :: ShelvesSummary f a -> Widget n
+renderWithStyleName :: ShelvesSummary SummaryExtra f a -> Widget n
 renderWithStyleName s | null (sStyles s)  = str "∅"
 renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sStyles s where
   forStyle (style, bsum) = hBox [ styleNameWithAttr False style 
