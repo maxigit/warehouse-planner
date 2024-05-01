@@ -17,7 +17,7 @@ import Brick qualified as B
 import Brick.Widgets.Border qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
-import Control.Monad.State (gets, get, modify)
+import Control.Monad.State (gets, get, modify, put)
 import Data.List.NonEmpty(NonEmpty)
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
@@ -73,8 +73,8 @@ data HistoryEvent = HPrevious
                   | HResetCurrent
                   | HFirst
 
-initState :: String -> WH (AppState) RealWorld
-initState title = do
+makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (History Box RealWorld))) RealWorld
+makeAppShelvesSummary = do
   runs <- gets shelfGroup
   shelvesSummary <- traverseRuns findShelf runs
                  >>= makeRunsSummary (makeExtra)
@@ -83,21 +83,9 @@ initState title = do
       toL ssum@ShelvesSummary{..} = let
           sumZip = fromList $ sDetailsList ssum
           in ShelvesSummary{sDetails=sumZip,..}
-  let asShelvesSummary = fromRuns toL toL toL
+  return $ fromRuns toL toL toL
                        $ mapRuns (\s -> s { sDetails = fromList $ sortOn boxOrder  $ sDetails s }
                                      )  shelvesSummary
-  let asSummaryView = SVVolume
-  warehouse <- get
-  return . runUpdated
-         $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
-                 , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
-                 , asBoxOrder = BOByName
-                 , asLastKeys = []
-                 , asWarehouse = warehouse
-                 , asTitle = title
-                 , asDiffEvent = whCurrentEvent warehouse
-                 , asDiffEventStack = []
-                 , ..}
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
             sDetails <- mapM getBoxHistory boxIds
@@ -116,6 +104,22 @@ initState title = do
                                                  , (_box, event) <- toList history
                                                  ]
                         return $ SummaryExtra styleMap events
+
+initState :: String -> WH (AppState) RealWorld
+initState title = do
+  asShelvesSummary <- makeAppShelvesSummary
+  let asSummaryView = SVVolume
+  warehouse <- get
+  return . runUpdated
+         $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
+                 , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
+                 , asBoxOrder = BOByName
+                 , asLastKeys = []
+                 , asWarehouse = warehouse
+                 , asTitle = title
+                 , asDiffEvent = whCurrentEvent warehouse
+                 , asDiffEventStack = []
+                 , ..}
 
 
 whApp :: _ -> WHApp
@@ -239,7 +243,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HSkipForward
        B.VtyEvent (V.EvKey (V.KLeft) [V.MCtrl] ) -> handleWH $ EHistoryEvent HPreviousSibling
        B.VtyEvent (V.EvKey (V.KRight) [V.MCtrl] ) -> handleWH $ EHistoryEvent HNextSibling
-       B.VtyEvent (V.EvKey (V.KEnter) [V.MShift] ) -> handleWH $ EHistoryEvent HSetCurrent
+       B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
        B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HResetCurrent
        B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
        _ -> B.resizeOrQuit ev
@@ -294,6 +298,15 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev
     where resetBox s = s { asCurrentBox = 0 }
+
+navigateHistory HSetCurrent = do
+   s@AppState{..} <- get
+   new <- liftIO $ execWH asWarehouse do
+       let newWH = asWarehouse { whCurrentEvent = asDiffEvent }
+       put newWH
+       asShelvesSummary <- makeAppShelvesSummary
+       return s {asWarehouse = newWH,asShelvesSummary}
+   put new
 
 navigateHistory ev = modify \s@AppState{..} -> 
   if asDiffEvent == NoHistory
@@ -471,7 +484,7 @@ renderStatus state@AppState{..} = let
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , B.txt $ displayEvent asDiffEvent
-                           , B.str $ show $ length $ whEventHistory asWarehouse
+                           , B.txt $ displayEvent (whCurrentEvent asWarehouse)
                            , B.padLeft B.Max legend
                            ]
              

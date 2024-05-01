@@ -44,9 +44,9 @@ writeHiSTRef :: Event -> HiSTRef a s -> a s -> ST s ()
 writeHiSTRef NoHistory (HiSTRef ref) a = writeSTRef ref $ pure (a, NoHistory)
 writeHiSTRef ev (HiSTRef ref) a = do
   history <- readSTRef ref
-  -- remove inital no history
+  -- override if same event
   let value = case history of
-                 (_, NoHistory) :| prev -> (a, ev) :| prev
+                 (_,e) :| prev | e == ev -> (a, ev) :| prev
                  _ -> NE.cons (a, ev) history
 
   writeSTRef ref value
