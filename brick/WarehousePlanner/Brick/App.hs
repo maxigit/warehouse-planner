@@ -177,6 +177,7 @@ whMain title wh = do
       attrs state =
             selectedAttr
             -- : bayNameAN
+            : eventWarningAttr
             : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
             : zipWith (\style attr -> (makeStyleAttrName False style, reverseIf (Just style == selectedStyle state) attr ))
                       styles
@@ -455,7 +456,7 @@ runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunSt
     styles = fromList $ Map.toList $ sStyles (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (selectedStyle state) asSummaryView asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (selectedStyle state) asSummaryView asCurrentRun asShelvesSummary 
 
 -- * Styles
 stylesSideBar :: AppState -> B.Widget Text
@@ -469,7 +470,7 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") (styleNameWithAttr False) (asSelectedStyle ) -- current style
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
-                           , B.str $ show asDiffEvent
+                           , B.txt $ displayEvent asDiffEvent
                            , B.str $ show $ length $ whEventHistory asWarehouse
                            , B.padLeft B.Max legend
                            ]
@@ -477,7 +478,8 @@ renderStatus state@AppState{..} = let
 debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
   ssum = currentShelf state
-  in B.vBox [ B.hBox $ intersperse (B.str " ") 
+  in B.vBox $ B.str (show $ seEvents $ sExtra ssum) :
+            [ B.hBox $ intersperse (B.str " ") 
                      $ [  B.str (show m)
                        , B.txt $ sName ssum
                        , renderS m ssum

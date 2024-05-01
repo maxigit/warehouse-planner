@@ -8,6 +8,7 @@ module WarehousePlanner.History.Types
 , baseLevel
 , History
 , fromHistory
+, displayEvent
 )
 
 where
@@ -63,12 +64,16 @@ data Event = NoHistory
                    , evLevel :: Int
                    }
 instance Show Event where
-  show NoHistory = "NoHistory"
-  show Event{..} = unwords
-                   [ "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
-                   , "^" <> maybe "" (show . WarehousePlanner.History.Types.evId ) evParent 
-                   , unpack evDescription
-                   ]
+  show NoHistory = "#^"
+  show Event{..} = "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
+
+displayEvent :: Event -> Text
+displayEvent NoHistory = "NoHistory"
+displayEvent ev@Event{..} = unwords
+                [ pack (show ev)
+                , "^" <> maybe "" tshow  evParent 
+                , evDescription
+                ]
 
 instance Eq Event where
    NoHistory == NoHistory = True

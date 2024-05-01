@@ -102,11 +102,12 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: Maybe Text -> SummaryView -> Int -> Runs SumVec _ -> Table Text
-runsToTable selected smode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: HistoryRange -> Maybe Text -> SummaryView -> Int -> Runs SumVec _ -> Table Text
+runsToTable hrange selected smode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ shelfSummaryToAllBars run 
                         ,  attr run i $ padLeftRight 1 $ txt (sName run)
                         , renderHorizontalSummary smode run
+                        , historyIndicator hrange (seEvents $ sExtra run)
                         ]
           -- use selected style attribute if the run contains the style
           attr run i = case selected >>= flip lookup (sStyles run) of

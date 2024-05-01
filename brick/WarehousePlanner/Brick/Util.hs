@@ -17,6 +17,8 @@ eigthH, eigthV
 , tagname_, tagNameAttr
 , virtualTagName_, virtualTagAttr
 , specialTagName_, specialTagAttr
+, eventWarningAttr
+, historyIndicator
 ) where
 
 import ClassyPrelude hiding (on)
@@ -24,6 +26,8 @@ import WarehousePlanner.Base
 import Brick
 import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
+import WarehousePlanner.Brick.Types
+import Data.Set(splitMember, lookupMax)
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
@@ -157,3 +161,21 @@ hBoxB = hBox . intersperse vBorder
 
 vBoxB :: [Widget n] -> Widget n
 vBoxB = vBox . intersperse hBorder 
+
+
+
+-- * History
+historyIndicator :: HistoryRange -> Set Event -> Widget n
+historyIndicator (start, end) events = let
+  (_beforeStart, in1, afterStart) = splitMember start events
+  (inRange, in2, _afterEnd) = splitMember end afterStart
+  startL = if in1 then [start] else []
+  endL = if in2 then [end] else []
+  in case endL ++ toList (lookupMax inRange) ++ startL of
+     [] -> emptyWidget
+     (last:_) -> withAttr eventWarningName $ str $ '!' : show last
+    
+eventWarningName = attrName "event" <> attrName "warning"
+eventWarningAttr = (eventWarningName, (V.red `on` V.black))
+
+

@@ -10,6 +10,8 @@ module WarehousePlanner.Brick.Types
 , selectedStyle, currentStyle
 , sStyles
 , SummaryExtra(..)
+, HistoryRange
+, asHistoryRange
 )
 where
 
@@ -81,6 +83,9 @@ data AppState = AppState
      , asDiffEventStack :: [Event] -- ^ history of selected events (second part of a zipper)
      }
      
+asHistoryRange :: AppState -> HistoryRange
+asHistoryRange app = (asDiffEvent app, whCurrentEvent (asWarehouse app))
+     
 selectFromSumVec :: Int -> SumVec a -> a
 selectFromSumVec i ShelvesSummary{sDetails} = sDetails V.! (i `min` (length sDetails - 1))
 
@@ -113,3 +118,8 @@ currentBoxHistory app = case currentShelf app of
 
 currentBox :: AppState -> Maybe (Box RealWorld)
 currentBox = fmap fromHistory . currentBoxHistory
+
+
+
+-- * History
+type HistoryRange = (Event, Event)
