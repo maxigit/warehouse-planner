@@ -205,11 +205,16 @@ eventOut = attrName "event" <> attrName "out"
 eventIOut = attrName "event" <> attrName "iout"
 
 eventAttrs = [(ev, V.black `on` fg)
-             | (ev, fg) <- [ (eventUpdated, V.blue)
-                           , (eventIn, V.green )
-                           , (eventOut, V.red)
-                           , (eventIOut, V.yellow)
+             | (ev, fg) <- [ -- (eventUpdated, V.cyan)
+                           -- (eventIn, V.green )
+                           -- , (eventOut, V.red)
+                            (eventIOut, V.yellow)
                            ]
+             ]
+             <>
+             [ (eventUpdated, V.blue `on` V.cyan)
+             , (eventIn, V.brightGreen `on` V.green )
+             , (eventOut, V.brightRed `on` V.red )
              ]
 
 
