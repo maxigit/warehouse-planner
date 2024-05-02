@@ -6,11 +6,10 @@ module WarehousePlanner.Brick.Types
 , BarDirection(..)
 , SumVec, sDetailsList
 , selectFromSumVec
-, currentRun, currentBay, currentShelf, currentBox
+, currentRun, currentBay, currentShelf, currentBox, currentBoxHistory
 , selectedStyle, currentStyle
 , sStyles
 , SummaryExtra(..)
-, HistoryRange
 , asHistoryRange
 , asViewMode
 )
@@ -59,7 +58,7 @@ data SummaryExtra = SummaryExtra
       
 instance Semigroup SummaryExtra where
   e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
-                          (seEvents e1 <> seEvents e2)
+                          (unionWith (<>) (seEvents e1) (seEvents e2))
   
 
 sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
@@ -88,7 +87,9 @@ data AppState = AppState
      }
      
 asHistoryRange :: AppState -> HistoryRange
-asHistoryRange app = (asDiffEvent app, whCurrentEvent (asWarehouse app))
+asHistoryRange app = HistoryRange{..} where
+               hrCurrent = whCurrentEvent (asWarehouse app)
+               hrToDiff = asDiffEvent app
      
 asViewMode :: AppState -> ViewMode
 asViewMode app = if asDisplayHistory  app
@@ -111,6 +112,7 @@ sDetailsList :: Foldable f => ShelvesSummary e f a -> [a]
 sDetailsList ssum = F.toList (sDetails ssum)
 
 selectedStyle :: AppState -> Maybe Text
+selectedStyle state | asViewMode state == ViewHistory = Nothing
 selectedStyle state@AppState{..} = asSelectedStyle <|> currentStyle state
 
 currentStyle :: AppState -> Maybe Text
@@ -129,6 +131,3 @@ currentBox :: AppState -> Maybe (Box RealWorld)
 currentBox = fmap fromHistory . currentBoxHistory
 
 
-
--- * History
-type HistoryRange = (Event, Event)

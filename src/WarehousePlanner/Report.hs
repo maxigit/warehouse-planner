@@ -870,14 +870,13 @@ showPair pair = let res = pRes1 pair
 generateBoxHistory :: Maybe (BoxSelector s) -> WH [Text] s
 generateBoxHistory selectorm = do
     events <- gets whEventHistory
-    event  <- gets whCurrentEvent
     
     boxes_ <- case selectorm of
             Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
             Just sel -> do
               findBoxByNameAndShelfNames sel
     boxhistorys <- mapM getBoxHistory boxes_
-    return $ map tshow (event : events)
+    return $ map displayEvent events
            <> concatMap history boxhistorys
     where history box'es@((lastBox,_) :| _) = replicate 50 '*'
                       :  tshow lastBox

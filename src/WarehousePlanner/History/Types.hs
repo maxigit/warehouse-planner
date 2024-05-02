@@ -7,6 +7,7 @@ module WarehousePlanner.History.Types
 , newEvent
 , baseLevel
 , History
+, HistoryRange(..)
 , fromHistory
 , displayEvent
 , DiffStatus(..)
@@ -73,7 +74,7 @@ displayEvent :: Event -> Text
 displayEvent NoHistory = "NoHistory"
 displayEvent ev@Event{..} = unwords
                 [ pack (show ev)
-                , "^" <> maybe "" tshow  evParent 
+                -- , "^" <> maybe "" tshow  evParent 
                 , evDescription
                 ]
 
@@ -121,19 +122,26 @@ baseLevel = 1000
 data DiffStatus s = DiffStatus 
      { dsBoxUpdated :: Int
      , dsBoxDeleted :: Int
+     , dsBoxCreated :: Int
      , dsBoxOut :: s
      , dsBoxIn :: s
      }
-     deriving (Show)
+     deriving (Show, Eq)
 
 instance Semigroup s => Semigroup (DiffStatus s) where
    d1 <> d2 = DiffStatus (dsBoxUpdated d1 + dsBoxUpdated d2)
                          (dsBoxDeleted d1 + dsBoxDeleted d2)
+                         (dsBoxCreated d1 + dsBoxCreated d2)
                          (dsBoxOut d1 <> dsBoxOut d2)
                          (dsBoxIn d1 <> dsBoxIn d2)
 
 instance Monoid s => Monoid (DiffStatus s) where
-  mempty = DiffStatus 0 0 mempty mempty
+  mempty = DiffStatus 0 0 0 mempty mempty
      
      
 
+data HistoryRange = HistoryRange
+                  { hrCurrent :: Event -- ^ the event being currently displayed
+                  , hrToDiff :: Event -- ^ the event to show diff with
+                  }
+     deriving (Show, Eq)

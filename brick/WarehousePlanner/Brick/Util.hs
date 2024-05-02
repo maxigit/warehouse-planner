@@ -26,9 +26,8 @@ import WarehousePlanner.Base
 import Brick
 import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
-import WarehousePlanner.Brick.Types
-import Data.Map(splitLookup, lookupMax, lookupMin)
 import Data.Set qualified as Set
+import WarehousePlanner.History (diffFor)
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
@@ -166,35 +165,24 @@ vBoxB = vBox . intersperse hBorder
 
 
 -- * History
-historyIndicator :: Text -> HistoryRange -> Map Event (DiffStatus (Set Text)) -> Widget n
-historyIndicator summary (start0, end0) eventMap = let
-  (start, end, rev) = if start0 > end0
-                      then (end0, start0, True)
-                      else (start0, end0, False)
-  -- find the youngest even in the range
-  -- unless the range is reversed
-  (_beforeStart, startM, afterStart) = splitLookup start eventMap
-  (inRange, endM, _afterEnd) = splitLookup end afterStart
-  startL = toList startM
-  endL = toList endM
-  toCheck = if rev
-            then startL ++ toList (fmap snd $ lookupMin inRange) ++ endL
-            else endL ++ toList (fmap snd $ lookupMax inRange) ++ startL
-  in case toCheck of
-     [] | rev  -> str $ show (toCheck, start, end)
-     [] -> str "_"
-     (status:_) -> renderDiffStatus summary status
+historyIndicator :: Widget n -> Text -> HistoryRange -> Map Event (DiffStatus (Set Text)) -> Widget n
+historyIndicator def summary hrange eventMap =
+  case diffFor hrange eventMap of
+     -- (_,status) | status == mempty -> def
+     (_,status) ->  renderDiffStatus def summary status
      
-renderDiffStatus :: Text -> DiffStatus (Set Text) -> Widget n
-renderDiffStatus summaryName (DiffStatus{..}) = let
+renderDiffStatus :: Widget n -> Text -> DiffStatus (Set Text) -> Widget n
+renderDiffStatus def summaryName (DiffStatus{..}) = let
   isIn = not . null $ Set.filter inSummary dsBoxIn
   isOut = not . null $ Set.filter inSummary dsBoxOut
   in if
      | isOut && isIn   -> withAttr eventIOut $ str "@"
-     | isOut             -> withAttr eventOut $ str "-"
-     | isIn              -> withAttr eventIn $ str "+"
+     | dsBoxDeleted > 0 -> withAttr eventIn $ str "-"
+     | isOut             -> withAttr eventOut $ str "<"
+     | dsBoxCreated > 0 -> withAttr eventIn $ str "+"
+     | isIn              -> withAttr eventIn $ str ">"
      | dsBoxUpdated > 0  -> withAttr eventUpdated $ str "#"
-     | otherwise         -> emptyWidget
+     | otherwise         -> def
   where inSummary name = not (null summaryName) 
                        && summaryName `isPrefixOf` name
   
@@ -205,16 +193,16 @@ eventOut = attrName "event" <> attrName "out"
 eventIOut = attrName "event" <> attrName "iout"
 
 eventAttrs = [(ev, V.black `on` fg)
-             | (ev, fg) <- [ -- (eventUpdated, V.cyan)
-                           -- (eventIn, V.green )
-                           -- , (eventOut, V.red)
-                            (eventIOut, V.yellow)
+             | (ev, fg) <- [ (eventUpdated, V.cyan)
+                           , (eventIn, V.green  )
+                           , (eventOut, V.red)
+                           ,(eventIOut, V.yellow)
                            ]
              ]
-             <>
-             [ (eventUpdated, V.blue `on` V.cyan)
-             , (eventIn, V.brightGreen `on` V.green )
-             , (eventOut, V.brightRed `on` V.red )
-             ]
+             -- <>
+             -- [ (eventUpdated, V.blue `on` V.cyan)
+             -- , (eventIn, V.brightGreen `on` V.green )
+             -- , (eventOut, V.brightRed `on` V.red )
+             -- ]
 
 

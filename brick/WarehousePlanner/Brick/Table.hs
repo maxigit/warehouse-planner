@@ -105,12 +105,12 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 runsToTable :: HistoryRange -> Maybe Text -> ViewMode -> Int -> Runs SumVec _ -> Table Text
 runsToTable hrange selected mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
-                          then historyIndicator (sName run) hrange (seEvents $ sExtra run)
+                          then historyIndicator (str "_") (sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
                         ,  attr run i $ padLeftRight 1 $ txt (sName run)
                         , case mode of
                             ViewSummary smode -> renderHorizontalSummary smode run
-                            ViewHistory -> hBox [ historyIndicator (sName run) hrange (seEvents $ sExtra bay)
+                            ViewHistory -> hBox [ historyIndicator (str "_") (sName run) hrange (seEvents $ sExtra bay)
                                                 | bay <- sDetailsList run
                                                 ]
                         ]
