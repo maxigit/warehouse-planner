@@ -410,7 +410,7 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
             --   Just [""] -> mempty
             --   Just tags' -> fromMaybe mempty $ modifyTags (map parseTagOperation tags') mempty
             tags = fromMaybe mempty $ fmap parseTagOperations tagm >>= (flip modifyTags mempty)
-        uniqueRef@(Arg _i ref) <- newUniqueSTRef (error "should never been called. Base.hs:327")
+        uniqueRef@(Arg _i ref) <- newUniqueSTRef (error "should never been called. Base.hs:413")
         let shelf = Shelf (ShelfId_ uniqueRef) mempty name tags minD maxD LeftToRight boxOrientator fillStrat bottom
         writeCurrentRef ref shelf
 
@@ -426,7 +426,7 @@ newBox style content dim or_ shelf ors tagTexts = do
         tags = fromMaybe mempty $ modifyTags (contentTag : makeContentTags content <> tags' <> dtags) mempty
                                   --   ^ apply dimension tags after tags so dimension override tags
 
-    uniqueRef@(Arg _ ref) <- newUniqueSTRef (error "should never been called. undefined. Base.hs:338")
+    uniqueRef@(Arg _ ref) <- newUniqueSTRef (error $ "should never been called. undefined. Base.hs:429")
     let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags defaultPriorities (extractBoxBreak tags)
     shelf' <- findShelf shelf
     linkBox (BoxId_ uniqueRef) shelf'

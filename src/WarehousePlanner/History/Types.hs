@@ -47,6 +47,7 @@ writeHiSTRef ev (HiSTRef ref) a = do
   history <- readSTRef ref
   -- override if same event
   let value = case history of
+                 (_, NoHistory) :| _ -> (a, ev) :| []
                  (_,e) :| prev | e == ev -> (a, ev) :| prev
                  _ -> NE.cons (a, ev) history
 
