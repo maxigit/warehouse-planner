@@ -12,6 +12,7 @@ module WarehousePlanner.Brick.Types
 , SummaryExtra(..)
 , HistoryRange
 , asHistoryRange
+, asViewMode
 )
 where
 
@@ -36,9 +37,11 @@ data SummaryView = SVVolume
      deriving (Show, Eq, Enum, Bounded)
      
 data ViewMode = ViewSummary SummaryView
+              | ViewHistory
               -- | ViewSplitShelves (Shelf s -> Bool)
               -- | ViewSplitBoxes (Box s -> Bool)
               -- 
+              deriving (Show, Eq)
 data BoxOrder = BOByName
               | BOByShelve
               | BOByCount
@@ -50,7 +53,7 @@ type SumVec = ShelvesSummary SummaryExtra Vector
 
 data SummaryExtra = SummaryExtra 
      { seStyles :: Map Text Summary
-     , seEvents :: Set Event -- ^ event which happen to items 
+     , seEvents :: Map Event (DiffStatus (Set Text)) -- ^ event which happen to items 
      }
       deriving (Show)
       
@@ -65,6 +68,7 @@ sStyles = seStyles . sExtra
 data AppState = AppState
      { -- asViewMode  :: ViewMode
      asSummaryView :: SummaryView
+     , asDisplayHistory :: Bool
      , asShelvesSummary :: Runs SumVec (SumVec  (History Box RealWorld))
      , asCurrentRun :: Int
      , asCurrentBay :: Int
@@ -86,6 +90,11 @@ data AppState = AppState
 asHistoryRange :: AppState -> HistoryRange
 asHistoryRange app = (asDiffEvent app, whCurrentEvent (asWarehouse app))
      
+asViewMode :: AppState -> ViewMode
+asViewMode app = if asDisplayHistory  app
+                 then ViewHistory
+                 else ViewSummary $ asSummaryView app
+
 selectFromSumVec :: Int -> SumVec a -> a
 selectFromSumVec i ShelvesSummary{sDetails} = sDetails V.! (i `min` (length sDetails - 1))
 

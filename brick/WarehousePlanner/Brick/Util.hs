@@ -17,7 +17,7 @@ eigthH, eigthV
 , tagname_, tagNameAttr
 , virtualTagName_, virtualTagAttr
 , specialTagName_, specialTagAttr
-, eventWarningAttr
+, eventAttrs
 , historyIndicator
 ) where
 
@@ -27,7 +27,8 @@ import Brick
 import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
 import WarehousePlanner.Brick.Types
-import Data.Set(splitMember, lookupMax)
+import Data.Map(splitLookup, lookupMax, lookupMin)
+import Data.Set qualified as Set
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
@@ -165,17 +166,50 @@ vBoxB = vBox . intersperse hBorder
 
 
 -- * History
-historyIndicator :: HistoryRange -> Set Event -> Widget n
-historyIndicator (start, end) events = let
-  (_beforeStart, in1, afterStart) = splitMember start events
-  (inRange, in2, _afterEnd) = splitMember end afterStart
-  startL = if in1 then [start] else []
-  endL = if in2 then [end] else []
-  in case endL ++ toList (lookupMax inRange) ++ startL of
-     [] -> emptyWidget
-     (last:_) -> withAttr eventWarningName $ str $ '!' : show last
+historyIndicator :: Text -> HistoryRange -> Map Event (DiffStatus (Set Text)) -> Widget n
+historyIndicator summary (start0, end0) eventMap = let
+  (start, end, rev) = if start0 > end0
+                      then (end0, start0, True)
+                      else (start0, end0, False)
+  -- find the youngest even in the range
+  -- unless the range is reversed
+  (_beforeStart, startM, afterStart) = splitLookup start eventMap
+  (inRange, endM, _afterEnd) = splitLookup end afterStart
+  startL = toList startM
+  endL = toList endM
+  toCheck = if rev
+            then startL ++ toList (fmap snd $ lookupMin inRange) ++ endL
+            else endL ++ toList (fmap snd $ lookupMax inRange) ++ startL
+  in case toCheck of
+     [] | rev  -> str $ show (toCheck, start, end)
+     [] -> str "_"
+     (status:_) -> renderDiffStatus summary status
+     
+renderDiffStatus :: Text -> DiffStatus (Set Text) -> Widget n
+renderDiffStatus summaryName (DiffStatus{..}) = let
+  isIn = not . null $ Set.filter inSummary dsBoxIn
+  isOut = not . null $ Set.filter inSummary dsBoxOut
+  in if
+     | isOut && isIn   -> withAttr eventIOut $ str "@"
+     | isOut             -> withAttr eventOut $ str "-"
+     | isIn              -> withAttr eventIn $ str "+"
+     | dsBoxUpdated > 0  -> withAttr eventUpdated $ str "#"
+     | otherwise         -> emptyWidget
+  where inSummary name = not (null summaryName) 
+                       && summaryName `isPrefixOf` name
+  
     
-eventWarningName = attrName "event" <> attrName "warning"
-eventWarningAttr = (eventWarningName, (V.red `on` V.black))
+eventUpdated = attrName "event" <> attrName "updated"
+eventIn = attrName "event" <> attrName "in"
+eventOut = attrName "event" <> attrName "out"
+eventIOut = attrName "event" <> attrName "iout"
+
+eventAttrs = [(ev, V.black `on` fg)
+             | (ev, fg) <- [ (eventUpdated, V.blue)
+                           , (eventIn, V.green )
+                           , (eventOut, V.red)
+                           , (eventIOut, V.yellow)
+                           ]
+             ]
 
 

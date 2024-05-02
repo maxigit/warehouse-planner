@@ -9,6 +9,7 @@ module WarehousePlanner.History.Types
 , History
 , fromHistory
 , displayEvent
+, DiffStatus(..)
 )
 
 where
@@ -64,7 +65,7 @@ data Event = NoHistory
                    , evLevel :: Int
                    }
 instance Show Event where
-  show NoHistory = "#^"
+  show NoHistory = "#@"
   show Event{..} = "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
 
 displayEvent :: Event -> Text
@@ -113,3 +114,25 @@ eventId Event{evId} = evId
 
 baseLevel :: Int
 baseLevel = 1000
+
+
+-- * Diff
+data DiffStatus s = DiffStatus 
+     { dsBoxUpdated :: Int
+     , dsBoxDeleted :: Int
+     , dsBoxOut :: s
+     , dsBoxIn :: s
+     }
+     deriving (Show)
+
+instance Semigroup s => Semigroup (DiffStatus s) where
+   d1 <> d2 = DiffStatus (dsBoxUpdated d1 + dsBoxUpdated d2)
+                         (dsBoxDeleted d1 + dsBoxDeleted d2)
+                         (dsBoxOut d1 <> dsBoxOut d2)
+                         (dsBoxIn d1 <> dsBoxIn d2)
+
+instance Monoid s => Monoid (DiffStatus s) where
+  mempty = DiffStatus 0 0 mempty mempty
+     
+     
+

@@ -36,6 +36,8 @@ type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode
              | EPrevMode
+             | EToggleViewHistory
+             -- 
              | ENextRun
              | EPrevRun
              | ENextBay
@@ -99,16 +101,23 @@ makeAppShelvesSummary = do
                                                              | box <- toList boxes
                                                              ]
                         boxHistorys <- mapM getBoxHistory boxes
-                        let events = setFromList [ event
-                                                 |  history <- toList boxHistorys
-                                                 , (_box, event) <- toList history
-                                                 ]
-                        return $ SummaryExtra styleMap events
+                        let events = [ e'diff
+                                     |  history <- toList boxHistorys
+                                     , e'diff <- computeDiffHistory history
+                                     ]
+                        eventsWithName <- forM events \(e, DiffStatus{..}) -> do
+                                               namesIn <-  mapM findShelf $ toList dsBoxIn
+                                               namesOut <-  mapM findShelf $ toList dsBoxOut
+                                               return (e, DiffStatus { dsBoxIn=setFromList $ map shelfName namesIn
+                                                                     , dsBoxOut=setFromList $ map shelfName namesOut
+                                                                     , ..})
+                        return $ SummaryExtra styleMap (mapFromList eventsWithName)
 
 initState :: String -> WH (AppState) RealWorld
 initState title = do
   asShelvesSummary <- makeAppShelvesSummary
   let asSummaryView = SVVolume
+      asDisplayHistory = False
   warehouse <- get
   return . runUpdated
          $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
@@ -134,17 +143,6 @@ whApp extraAttrs =
                                               : B.vBorder
                                               : B.hLimit 30 (stylesSideBar s)
                                               : B.vBorder
-                                              -- : case B.listSelectedElement (sDetails $ asShelvesSummary s) of
-                                              -- : case currentBay s of
-                                              --        -- Nothing -> []
-                                              --        -- current -> [ (B.hBox 
-                                              --        --                . map B.renderTable
-                                              --        --                . shelfSummaryToTable  (const B.emptyWidget) -- (B.vBox . map renderBoxOrientation)
-                                              --        --                )
-                                              --        --                $ current]
-                                              --        -- current -> [ B.hBox . map B.renderTable $ shelfSummaryToTable (B.vBox. map renderBoxOrientation) current ]
-                                              --        current -> [ B.renderTable $ baySummaryToTable (B.vBox. map renderBoxOrientation) current ]
-                                              --             -- [ renderSummaryAsList "Run" smode ( run) ]
                                               : [ B.vBox $ (map B.hBox)
                                                          [ renderRun (renderBoxOrientation (currentBox s) . fromHistory) (currentRun s)
                                                          , [B.hBorder]
@@ -181,11 +179,11 @@ whMain title wh = do
       attrs state =
             selectedAttr
             -- : bayNameAN
-            : eventWarningAttr
             : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
             : zipWith (\style attr -> (makeStyleAttrName False style, reverseIf (Just style == selectedStyle state) attr ))
                       styles
                       (cycle defaultStyleAttrs)
+            <> eventAttrs
             <> zipWith (\style attr -> (makeStyleAttrName True style, reverseIf (Just style == selectedStyle state) $ V.withBackColor (V.withStyle attr V.bold)
                                                                                                                     $ if (Just style == selectedStyle state)
                                                                                                                       then V.white 
@@ -210,6 +208,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
+       B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
        B.VtyEvent (V.EvKey (V.KChar 'j') [] ) -> handleWH ENextRun
        B.VtyEvent (V.EvKey (V.KChar 'k') [] ) -> handleWH EPrevRun
        B.VtyEvent (V.EvKey (V.KChar 'J') [] ) -> handleWH ENextShelf
@@ -255,6 +254,7 @@ handleWH ev =
     case ev of 
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
+         EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
@@ -305,7 +305,7 @@ navigateHistory HSetCurrent = do
        let newWH = asWarehouse { whCurrentEvent = asDiffEvent }
        put newWH
        asShelvesSummary <- makeAppShelvesSummary
-       return s {asWarehouse = newWH,asShelvesSummary}
+       return s {asWarehouse = newWH,asShelvesSummary, asDisplayHistory = True }
    put new
 
 navigateHistory ev = modify \s@AppState{..} -> 
@@ -326,7 +326,7 @@ navigateHistory ev = modify \s@AppState{..} ->
               _ -> Nothing
        in case new of
           Nothing -> s
-          Just (new, stack) -> s { asDiffEvent = new, asDiffEventStack = stack }
+          Just (new, stack) -> s { asDiffEvent = new, asDiffEventStack = stack, asDisplayHistory = True }
 
   
 nextMode :: AppState -> AppState
@@ -469,7 +469,7 @@ runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunSt
     styles = fromList $ Map.toList $ sStyles (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (selectedStyle state) asSummaryView asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (selectedStyle state) (asViewMode state) asCurrentRun asShelvesSummary 
 
 -- * Styles
 stylesSideBar :: AppState -> B.Widget Text
