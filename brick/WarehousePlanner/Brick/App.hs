@@ -74,6 +74,7 @@ data HistoryEvent = HPrevious
                   | HSetCurrent
                   | HResetCurrent
                   | HFirst
+                  | HSwapCurrent
 
 makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (History Box RealWorld))) RealWorld
 makeAppShelvesSummary = do
@@ -262,6 +263,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KLeft) [V.MCtrl] ) -> handleWH $ EHistoryEvent HPreviousSibling
        B.VtyEvent (V.EvKey (V.KRight) [V.MCtrl] ) -> handleWH $ EHistoryEvent HNextSibling
        B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
+       B.VtyEvent (V.EvKey (V.KChar '\\') [] ) -> handleWH $ EHistoryEvent HSwapCurrent
        B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HResetCurrent
        B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
        _ -> B.resizeOrQuit ev
@@ -326,6 +328,12 @@ navigateHistory HSetCurrent = do
        asShelvesSummary <- makeAppShelvesSummary
        return s {asWarehouse = newWH,asShelvesSummary, asDisplayHistory = True }
    put new
+navigateHistory HSwapCurrent = do
+  AppState{..} <- get
+  let current = whCurrentEvent (asWarehouse)
+  modify \s -> s {asWarehouse = asWarehouse { whCurrentEvent = asDiffEvent } }
+  navigateHistory HSetCurrent
+  modify \s -> s {asDiffEvent  = current }
 
 navigateHistory ev = modify \s@AppState{..} -> 
   if asDiffEvent == NoHistory
