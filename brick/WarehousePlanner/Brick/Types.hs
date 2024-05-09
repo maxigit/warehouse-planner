@@ -68,7 +68,7 @@ data AppState = AppState
      { -- asViewMode  :: ViewMode
      asSummaryView :: SummaryView
      , asDisplayHistory :: Bool
-     , asShelvesSummary :: Runs SumVec (SumVec  (History Box RealWorld))
+     , asShelvesSummary :: Runs SumVec (SumVec  (ZHistory (Box RealWorld)))
      , asCurrentRun :: Int
      , asCurrentBay :: Int
      , asCurrentShelf :: Int

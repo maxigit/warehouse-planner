@@ -11,6 +11,8 @@ module WarehousePlanner.History.Types
 , fromHistory
 , displayEvent
 , DiffStatus(..)
+, ZHistory(..), ZHistory1
+, zCurrentWithEvent, zCurrent
 )
 
 where
@@ -19,17 +21,18 @@ import ClassyPrelude
 import Control.Monad.ST
 import Data.STRef
 import Data.List.NonEmpty as NE
+import Data.Map qualified as Map
 
 
-type History a s = NonEmpty (a s, Event)
-data HiSTRef a s = HiSTRef (STRef s (NonEmpty (a s, Event)))
+type History a s = NonEmpty (Event, a s)
+data HiSTRef a s = HiSTRef (STRef s (NonEmpty (Event, a s)))
 
 fromHistory :: History a s -> a s
-fromHistory = fst . NE.head
+fromHistory = snd . NE.head
 
 newHiSTRef :: Event -> a s ->  ST s (HiSTRef a s)
 newHiSTRef ev a = do
-  ref <- newSTRef $ pure (a, ev)
+  ref <- newSTRef $ pure (ev, a)
   return $ HiSTRef ref
 
 readHiSTRef :: Show (a s) => Event -> HiSTRef a s -> ST s (a s)
@@ -37,20 +40,20 @@ readHiSTRef ev (HiSTRef ref) = do
   history <- readSTRef ref
   -- find first element with event <= given event
   let 
-  case NE.dropWhile ((> ev) . snd) history of
+  case NE.dropWhile ((> ev) . fst) history of
      [] -> error $ "Finding reference in the past for " ++ show ev ++ " in " <> show history
      -- ^ should not normally happen as reference in the past should not be given.
-     (a,_) :_ -> return a
+     (_, a) :_ -> return a
   
 writeHiSTRef :: Event -> HiSTRef a s -> a s -> ST s ()
-writeHiSTRef NoHistory (HiSTRef ref) a = writeSTRef ref $ pure (a, NoHistory)
+writeHiSTRef NoHistory (HiSTRef ref) a = writeSTRef ref $ pure (NoHistory, a)
 writeHiSTRef ev (HiSTRef ref) a = do
   history <- readSTRef ref
   -- override if same event
   let value = case history of
-                 (_, NoHistory) :| _ -> (a, ev) :| []
-                 (_,e) :| prev | e == ev -> (a, ev) :| prev
-                 _ -> NE.cons (a, ev) history
+                 (NoHistory, _) :| _ -> (ev, a) :| []
+                 (e, _) :| prev | e == ev -> (ev, a) :| prev
+                 _ -> NE.cons (ev, a) history
 
   writeSTRef ref value
 
@@ -145,3 +148,17 @@ data HistoryRange = HistoryRange
                   , hrToDiff :: Event -- ^ the event to show diff with
                   }
      deriving (Show, Eq)
+     
+-- *  Zipper
+
+data ZHistory a = ZHistory { zBefore :: Map Event a
+                         , zAfter :: Map Event a
+                         }
+     deriving (Show)
+zCurrentWithEvent :: ZHistory a -> Maybe (Event, a)
+zCurrentWithEvent =  Map.lookupMax . zBefore
+
+zCurrent :: ZHistory a -> Maybe a
+zCurrent = fmap snd . zCurrentWithEvent
+
+type ZHistory1 a f = ZHistory (a f)

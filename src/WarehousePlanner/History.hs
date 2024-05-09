@@ -33,8 +33,12 @@ computeBoxDiff box1 box2 = DiffStatus{..} where
    dsBoxUpdated = if box1 { _boxId = _boxId box2, boxShelf = boxShelf box2} == box2
                   then 0
                   else 1
-   dsBoxDeleted = 0
-   dsBoxCreated = 0
+   (dsBoxCreated, dsBoxDeleted) = case (boxShelf box1, boxShelf box2) of
+                                      (Nothing, Nothing) -> (0,0)
+                                      (Nothing, _) -> (1,0)
+                                      (_, Nothing) -> (0,1)
+                                      _ -> (0,0)
+    
    (dsBoxOut, dsBoxIn) = if boxShelf box1 == boxShelf box2
                          then (mempty, mempty)
                          else (toSet $ boxShelf box2, toSet $ boxShelf box1)
@@ -73,17 +77,17 @@ computeShelfDiffM _ _ = mempty
 -- If the pivot is before everythyg, use them all but in reverse
 computeDiffHistoryFor :: forall a s b . (Maybe (a s) -> Maybe (a s) -> DiffStatus b) -> Event -> History a s -> Map Event (DiffStatus b)
 computeDiffHistoryFor compute pivot history = 
-  let (future, past0) = span (\(_,e) -> e > pivot) $ NE.toList history 
+  let (future, past0) = span (\(e,_) -> e > pivot) $ NE.toList history 
       (current, past) = case past0 of
                              [] -> (Nothing , past0)
                              -- ((c,e):p) | e == pivot -> (Just c, p)
-                             ((c,_):_) -> (Just c, past0)
+                             ((_,c):_) -> (Just c, past0)
                              -- ^^^ 
       mkPast past = [ (e, compute current p)
-                    | (p, e) <- map (\(p,e) -> (Just p, e)) past
-                                <> [(Nothing :: Maybe (a s), NoHistory)]
+                    | (e, p) <- map (\(e, p) -> (e, Just p)) past
+                                <> [(NoHistory, Nothing :: Maybe (a s))]
                     ]
-      mkFuture future = [(e, compute (Just f) current) | (f, e) <- future  ]
+      mkFuture future = [(e, compute (Just f) current) | (e, f) <- future  ]
   in mapFromList $ mkFuture future ++ mkPast past
 
 
@@ -109,3 +113,11 @@ diffFor HistoryRange{..} eventMap = fromMaybe (NoHistory, mempty) $
                                   _ -> Nothing
        | otherwise -> error "pattern should be exhaustive"
   
+  
+-- * Zippers
+toZHistory :: Event -> History a s -> ZHistory (a s)
+toZHistory ev history = let
+  m = mapFromList (toList history)
+  (before, current, zAfter) = Map.splitLookup ev m
+  zBefore = maybe mempty (\c -> singleton ev c) <> before
+  in ZHistory{zBefore=maybe current <> before, ..}

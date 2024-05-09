@@ -150,7 +150,7 @@ whApp extraAttrs =
                                               : [ B.vBox $ (map B.hBox)
                                                          [ renderRun (\bhistory' ->
                                                                          let box = fromHistory bhistory
-                                                                             bhistory = case NE.dropWhile (\(_,e) -> e > whCurrentEvent asWarehouse ) bhistory' of
+                                                                             bhistory = case NE.dropWhile (\(e,_) -> e > whCurrentEvent asWarehouse ) bhistory' of
                                                                                          [] -> bhistory' -- TODO HACK
                                                                                          (x:xs) -> x :| xs
                                                                              -- ^ bHistory' has ALL the box event, including after current event

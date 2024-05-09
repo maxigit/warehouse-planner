@@ -878,11 +878,11 @@ generateBoxHistory selectorm = do
     boxhistorys <- mapM getBoxHistory boxes_
     return $ map displayEvent events
            <> concatMap history boxhistorys
-    where history box'es@((lastBox,_) :| _) = replicate 50 '*'
+    where history e'boxs@((_,lastBox) :| _) = replicate 50 '*'
                       :  tshow lastBox
                       : boxStyleWithTags lastBox <> " " <> boxPositionSpec lastBox
                       : do
-                          (box, ev) <- toList box'es
+                          (ev, box) <- toList e'boxs
                           [ tshow ev , "\t" <> tshow (boxStyleWithTags box) <> " " <> tshow (boxPositionSpec box) ]
      
 

@@ -577,6 +577,7 @@ deleteBoxes boxes_ = do
   deleted <- forM boxes_ $ \box -> do
                 oldShelfM <- traverse findShelf (boxShelf box)
                 mapM_ (unlinkBox $ boxId box) oldShelfM
+                updateBox (\b -> b { boxShelf = Nothing}) box
                 return box
   wh <- get
   put wh { boxMap = Map.filter (not . null)
