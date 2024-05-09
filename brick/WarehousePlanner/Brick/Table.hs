@@ -28,10 +28,10 @@ import Text.Printf (printf)
 -- with row correspending to 8 and 10 
 -- and column to 1 and 3
 -- One table is returned for each depth 
-shelfSummaryToTable :: ([History Box RealWorld] ->  Widget n) -> SumVec (History Box RealWorld) -> [ Table n ]
+shelfSummaryToTable :: ([ZHistory1 Box RealWorld] ->  Widget n) -> SumVec (ZHistory1 Box RealWorld) -> [ Table n ]
 shelfSummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
    boxes = sDetailsList ssum
-   boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ fromHistory box , [box])
+   boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ zCurrentEx box , [box])
                                          | box <- boxes
                                          ]
    offsets = keys boxesByOffset
@@ -80,7 +80,7 @@ renderBoxOrientation current box = withStyleAttr (current == Just box) (boxStyle
   
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
-baySummaryToTable :: ([History Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (History Box RealWorld)) -> Table n
+baySummaryToTable :: ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
 baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
   shelves = sDetailsList ssum
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)
@@ -105,12 +105,12 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 runsToTable :: HistoryRange -> Maybe Text -> ViewMode -> Int -> Runs SumVec _ -> Table Text
 runsToTable hrange selected mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
-                          then historyIndicator (str "_") (sName run) hrange (seEvents $ sExtra run)
+                          then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
                         ,  attr run i $ padLeftRight 1 $ txt (sName run)
                         , case mode of
                             ViewSummary smode -> renderHorizontalSummary smode run
-                            ViewHistory -> hBox [ historyIndicator (str "_") (sName run) hrange (seEvents $ sExtra bay)
+                            ViewHistory -> hBox [ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
                                                 | bay <- sDetailsList run
                                                 ]
                         ]

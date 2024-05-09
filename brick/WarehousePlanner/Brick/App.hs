@@ -19,7 +19,6 @@ import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
 import Control.Monad.State (gets, get, modify, put)
 import Data.List.NonEmpty(NonEmpty(..), (!!))
-import Data.List.NonEmpty qualified as NE
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
 import Brick.Widgets.Table qualified as B
@@ -76,7 +75,7 @@ data HistoryEvent = HPrevious
                   | HFirst
                   | HSwapCurrent
 
-makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (History Box RealWorld))) RealWorld
+makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
 makeAppShelvesSummary = do
   runs <- gets shelfGroup
   shelvesSummary <- traverseRuns findShelf runs
@@ -86,8 +85,11 @@ makeAppShelvesSummary = do
       toL ssum@ShelvesSummary{..} = let
           sumZip = fromList $ sDetailsList ssum
           in ShelvesSummary{sDetails=sumZip,..}
-  return $ fromRuns toL toL toL
-                       $ mapRuns (\s -> s { sDetails = fromList $ sortOn boxOrder  $ sDetails s }
+  currentEvent <- gets whCurrentEvent
+  return $ do
+         fromRuns toL toL toL
+                       $ mapRuns (\s -> do
+                                        s { sDetails = fromList $ map (toZHistory currentEvent) $ sortOn boxOrder  $ sDetails s }
                                      )  shelvesSummary
   where findBoxes ShelvesSummary{sDetails=shelves,..} = do
             let boxIds = concatMap (toList . _shelfBoxes) $ toList shelves
@@ -104,10 +106,10 @@ makeAppShelvesSummary = do
                                                              ]
                         boxHistorys <- mapM getBoxHistory boxes
                         shelfHistory <- getShelfHistory shelf
-                        let boxEventMaps = [ computeBoxDiffHistoryFrom currentEvent history
+                        let boxEventMaps = [ computeBoxDiffHistoryFrom $ toZHistory currentEvent history
                                           |  history <- toList boxHistorys
                                           ]
-                            shelfEventMap = computeShelfDiffHistoryFrom currentEvent shelfHistory
+                            shelfEventMap = computeShelfDiffHistoryFrom $ toZHistory currentEvent shelfHistory
                             eventMap = unionsWith (<>) $ shelfEventMap : boxEventMaps
                         eventsWithName <- flip traverse eventMap \(DiffStatus{..}) -> do
                                                namesIn <-  mapM findShelf $ toList dsBoxIn
@@ -148,27 +150,22 @@ whApp extraAttrs =
                                               : B.hLimit 30 (stylesSideBar s)
                                               : B.vBorder
                                               : [ B.vBox $ (map B.hBox)
-                                                         [ renderRun (\bhistory' ->
-                                                                         let box = fromHistory bhistory
-                                                                             bhistory = case NE.dropWhile (\(e,_) -> e > whCurrentEvent asWarehouse ) bhistory' of
-                                                                                         [] -> bhistory' -- TODO HACK
-                                                                                         (x:xs) -> x :| xs
-                                                                             -- ^ bHistory' has ALL the box event, including after current event
+                                                         [ renderRun (\bhistory ->
+                                                                         let box = zCurrentEx bhistory
                                                                              rendered =  renderBoxOrientation (currentBox s) box
-                                                                             currentShelf = "<currentShelf>"
-                                                                             mkCurrent set = if null set then mempty else singletonSet currentShelf
                                                                          in if asDisplayHistory
-                                                                            then historyIndicator rendered currentShelf (asHistoryRange s) (mapFromList [ (e, d { dsBoxIn = mkCurrent (dsBoxIn d), dsBoxOut = mempty })
-                                                                                                                                                                  | (e, d) <- mapToList $ computeBoxDiffHistoryFrom (whCurrentEvent $ asWarehouse) bhistory
-                                                                                                                                                                  ]
-                                                                                                                                                     )
+                                                                            then historyIndicator rendered
+                                                                                                  (\s -> boxShelf box == Just s)
+                                                                                                  (asHistoryRange s)
+                                                                                                  (computeBoxDiffHistoryFrom bhistory)
                                                                             else rendered
                                                                      )
                                                                      (currentRun s)
                                                          , [B.hBorder]
-                                                         , renderRun (renderBoxContent (currentBox s) . fromHistory) (let run = currentRun s
-                                                                                                        in run { sDetails = drop asCurrentBay $ sDetails run }
-                                                                                                        )
+                                                         , renderRun (renderBoxContent (currentBox s) .  zCurrentEx)
+                                                                     (let run = currentRun s
+                                                                      in run { sDetails = drop asCurrentBay $ sDetails run }
+                                                                     )
                                                          ]
                                               ]
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
@@ -450,7 +447,7 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asB
                                              [ (boxStyle box , (sName shelfSum, boxOffset box))
                                              | baySum <- sDetailsList (currentRun state)
                                              , shelfSum <- sortOn sName $ sDetailsList baySum
-                                             , box <- sortOn boxOffset $ map fromHistory $ sDetailsList shelfSum
+                                             , box <- sortOn boxOffset $ map zCurrentEx $ sDetailsList shelfSum
                                              ]
                   in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
 -- * Find next shelf
@@ -534,17 +531,23 @@ debugShelf state = let
           | m <- [minBound .. maxBound ]
           ]
         | otherwise 
-        -> let boxMap = computeBoxDiffHistoryFrom (whCurrentEvent $ asWarehouse state) <$> currentBoxHistory state
+        -> let boxMap = computeBoxDiffHistoryFrom  $ currentBoxHistory state
            in [ B.str "Shelf: " B.<+> B.vBox (map (B.str  . show) $ reverse $ mapToList $ seEvents $ sExtra ssum)
            , B.str "For: " B.<+> B.strWrap (show $ diffFor (asHistoryRange state) $ seEvents $ sExtra ssum)
-           , B.str "BoxH: " B.<+> B.strWrap (maybe "" (show ) $ currentBoxHistory state)
-           , B.str "BoxDiffs: " B.<+> B.vBox (map (B.str . show) $ maybe [] (reverse . mapToList) boxMap)
-           , B.str "For:" B.<+> B.strWrap (maybe "" (show . diffFor (asHistoryRange state)) boxMap)
+           , B.str "BoxH: " B.<+> B.strWrap (show $ currentBoxHistory state)
+           , B.str "BoxDiffs: " B.<+> B.vBox (map (B.str . show) $ (reverse . mapToList $  boxMap))
+           , B.str "For:" B.<+> B.strWrap (show . diffFor (asHistoryRange state) $ boxMap)
+           , B.str "Manual:" B.<+> B.strWrap (let at = zAtWithEvent (asDiffEvent state) (currentBoxHistory state)
+                                              in show  (fmap fst at) <> " " <> " " <> show ( computeBoxDiffM (currentBox state) (fmap snd at)) <> show at
+                                             )
+           , B.hBorder
+           , B.str "WH" B.<+> B.txtWrap (displayEvent (whCurrentEvent $ asWarehouse state))
+           , B.str "Diff" B.<+> B.txtWrap (displayEvent (asDiffEvent state))
            ]
 
   
  -- * Render 
-renderRun :: (History Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (History Box RealWorld)) -> [ B.Widget n ]
+renderRun :: (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
 renderRun renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )

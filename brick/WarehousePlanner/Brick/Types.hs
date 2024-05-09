@@ -122,12 +122,12 @@ currentStyle'Sum AppState{..} =
        0 -> Nothing
        l -> asCurrentRunStyles V.!? (asCurrentStyle `mod` l)
 
-currentBoxHistory :: AppState -> Maybe (History Box RealWorld)
+currentBoxHistory :: AppState -> (ZHistory1 Box RealWorld)
 currentBoxHistory app = case currentShelf app of
-                    v | null (sDetails $ v) -> Nothing
-                    detail -> Just $ selectFromSumVec (asCurrentBox app) $ detail
+                    v | null (sDetails $ v) -> ZHistory mempty mempty
+                    detail -> selectFromSumVec (asCurrentBox app) $ detail
 
 currentBox :: AppState -> Maybe (Box RealWorld)
-currentBox = fmap fromHistory . currentBoxHistory
+currentBox = zCurrent . currentBoxHistory
 
 

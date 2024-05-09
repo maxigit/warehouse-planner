@@ -1,17 +1,17 @@
 module WarehousePlanner.History 
 ( getBoxHistory
-, computeBoxDiff
+, computeBoxDiff, computeBoxDiffM
 , computeBoxDiffHistoryFrom
 , getShelfHistory
 , computeShelfDiffHistoryFrom
 , diffFor
+, toZHistory
 ) 
 where 
 
 import ClassyPrelude
 import WarehousePlanner.Type
 import Data.STRef
-import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as Map
 
 _reverseDiff :: DiffStatus a -> DiffStatus a
@@ -75,27 +75,22 @@ computeShelfDiffM _ _ = mempty
   
 -- | Drop all the event after pivot and compute the diff with the pivot for each event.
 -- If the pivot is before everythyg, use them all but in reverse
-computeDiffHistoryFor :: forall a s b . (Maybe (a s) -> Maybe (a s) -> DiffStatus b) -> Event -> History a s -> Map Event (DiffStatus b)
-computeDiffHistoryFor compute pivot history = 
-  let (future, past0) = span (\(e,_) -> e > pivot) $ NE.toList history 
-      (current, past) = case past0 of
-                             [] -> (Nothing , past0)
-                             -- ((c,e):p) | e == pivot -> (Just c, p)
-                             ((_,c):_) -> (Just c, past0)
-                             -- ^^^ 
+computeDiffHistoryFor :: forall a s b . (Maybe (a s) -> Maybe (a s) -> DiffStatus b) -> ZHistory1 a s -> Map Event (DiffStatus b)
+computeDiffHistoryFor compute ZHistory{..} = 
+  let current = fmap snd $ Map.lookupMax zBefore
       mkPast past = [ (e, compute current p)
-                    | (e, p) <- map (\(e, p) -> (e, Just p)) past
+                    | (e, p) <- map (\(e, p) -> (e, Just p)) (Map.toList past)
                                 <> [(NoHistory, Nothing :: Maybe (a s))]
                     ]
-      mkFuture future = [(e, compute (Just f) current) | (e, f) <- future  ]
-  in mapFromList $ mkFuture future ++ mkPast past
+      mkFuture future = [(e, compute (Just f) current) | (e, f) <- (Map.toList future)  ]
+  in mapFromList $ mkFuture zAfter ++ mkPast zBefore
 
 
 
-computeShelfDiffHistoryFrom :: Event -> History Shelf s -> Map Event (DiffStatus (Set (ShelfId s)))
+computeShelfDiffHistoryFrom :: ZHistory1 Shelf s -> Map Event (DiffStatus (Set (ShelfId s)))
 computeShelfDiffHistoryFrom = computeDiffHistoryFor computeShelfDiffM
 
-computeBoxDiffHistoryFrom :: Event -> History Box s -> Map Event (DiffStatus (Set (ShelfId s)))
+computeBoxDiffHistoryFrom :: ZHistory1 Box s -> Map Event (DiffStatus (Set (ShelfId s)))
 computeBoxDiffHistoryFrom = computeDiffHistoryFor computeBoxDiffM
 
 
@@ -118,6 +113,7 @@ diffFor HistoryRange{..} eventMap = fromMaybe (NoHistory, mempty) $
 toZHistory :: Event -> History a s -> ZHistory (a s)
 toZHistory ev history = let
   m = mapFromList (toList history)
-  (before, current, zAfter) = Map.splitLookup ev m
-  zBefore = maybe mempty (\c -> singleton ev c) <> before
-  in ZHistory{zBefore=maybe current <> before, ..}
+  (before, currentm, zAfter) = Map.splitLookup ev m
+  zBefore = maybe mempty (Map.singleton ev) currentm <> before
+  in ZHistory{..}
+

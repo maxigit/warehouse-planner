@@ -19,6 +19,7 @@ eigthH, eigthV
 , specialTagName_, specialTagAttr
 , eventAttrs
 , historyIndicator
+, isInSummary
 ) where
 
 import ClassyPrelude hiding (on)
@@ -165,14 +166,14 @@ vBoxB = vBox . intersperse hBorder
 
 
 -- * History
-historyIndicator :: Widget n -> Text -> HistoryRange -> Map Event (DiffStatus (Set Text)) -> Widget n
+historyIndicator :: Ord a => Widget n -> (a -> Bool) -> HistoryRange -> Map Event (DiffStatus (Set a)) -> Widget n
 historyIndicator def summary hrange eventMap =
   case diffFor hrange eventMap of
      -- (_,status) | status == mempty -> def
      (_,status) ->  renderDiffStatus def summary status
      
-renderDiffStatus :: Widget n -> Text -> DiffStatus (Set Text) -> Widget n
-renderDiffStatus def summaryName (DiffStatus{..}) = let
+renderDiffStatus :: Ord a => Widget n -> (a -> Bool) -> DiffStatus (Set a) -> Widget n
+renderDiffStatus def inSummary (DiffStatus{..}) = let
   isIn = not . null $ Set.filter inSummary dsBoxIn
   isOut = not . null $ Set.filter inSummary dsBoxOut
   in if
@@ -183,9 +184,10 @@ renderDiffStatus def summaryName (DiffStatus{..}) = let
      | isIn              -> withAttr eventIn $ str ">"
      | dsBoxUpdated > 0  -> withAttr eventUpdated $ str "#"
      | otherwise         -> def
-  where inSummary name = not (null summaryName) 
-                       && summaryName `isPrefixOf` name
   
+isInSummary :: Text -> Text -> Bool
+isInSummary summaryName name = not (null summaryName) 
+                             && summaryName `isPrefixOf` name
     
 eventUpdated = attrName "event" <> attrName "updated"
 eventIn = attrName "event" <> attrName "in"

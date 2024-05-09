@@ -13,6 +13,8 @@ module WarehousePlanner.History.Types
 , DiffStatus(..)
 , ZHistory(..), ZHistory1
 , zCurrentWithEvent, zCurrent
+, zCurrentEx
+, zAt, zAtWithEvent
 )
 
 where
@@ -160,5 +162,16 @@ zCurrentWithEvent =  Map.lookupMax . zBefore
 
 zCurrent :: ZHistory a -> Maybe a
 zCurrent = fmap snd . zCurrentWithEvent
+
+zCurrentEx :: ZHistory a -> a
+zCurrentEx z@ZHistory{..} = case zCurrent z of
+               Just x -> x
+               Nothing -> case Map.lookupMin  zAfter of
+                             Just x -> snd x
+                             Nothing -> error "The unexpected happen."
+zAtWithEvent :: Event -> ZHistory a -> Maybe (Event, a)
+zAtWithEvent ev ZHistory{..} = Map.lookupLE ev zBefore <|> Map.lookupGE ev zAfter
+zAt :: Event -> ZHistory a -> Maybe a
+zAt ev zh = fmap snd $ zAtWithEvent ev zh
 
 type ZHistory1 a f = ZHistory (a f)
