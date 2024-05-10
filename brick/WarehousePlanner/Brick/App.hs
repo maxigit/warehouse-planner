@@ -173,7 +173,7 @@ whApp extraAttrs =
                                               ]
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
               in  [ vBoxB [ mainRun
-                           , B.vLimit (if asDisplayHistory then 21 else 11) $ hBoxB (debugShelf s :  maybe [] (pure . boxDetail) (currentBox s))
+                           , B.vLimit (if asDisplayHistory then 21 else 11) $ hBoxB (debugShelf s :  (pure . boxDetail (asHistoryRange s)) (currentBoxHistory s))
                            , main
                            , renderStatus s
                            ]
@@ -319,7 +319,7 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
-         EHistoryEvent ev -> navigateHistory ev >> modify \s -> s { asDisplayHistory = True }
+         EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
     where resetBox s = s { asCurrentBox = 0 }
 

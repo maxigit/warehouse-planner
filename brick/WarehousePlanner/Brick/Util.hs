@@ -21,6 +21,7 @@ eigthH, eigthV
 , historyIndicator
 , isInSummary
 , eventTree
+, renderDiffText
 ) where
 
 import ClassyPrelude hiding (on)
@@ -217,4 +218,13 @@ eventTree = fst . go "" where
                                            Just p -> let (p', tab') = go tab p
                                                      in (p' <=> (str tab' <+> txt (displayEvent ev)), tab' ++ "  ")
 
+
+renderDiffText :: Maybe Text ->  Maybe Text -> Widget n
+renderDiffText valuem oldm = 
+  case (valuem, oldm) of
+       (Nothing, Nothing) -> emptyWidget
+       (Nothing, Just _) -> withAttr eventOut $ str "∅" -- deleted
+       (Just value, Nothing) -> withAttr eventIn $ txt value
+       (Just value, Just old) | value /= old -> withAttr eventUpdated $ txt value
+       (Just value, Just _) {- | value == old -} -> txt value
 
