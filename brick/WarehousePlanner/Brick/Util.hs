@@ -20,6 +20,7 @@ eigthH, eigthV
 , eventAttrs
 , historyIndicator
 , isInSummary
+, eventTree
 ) where
 
 import ClassyPrelude hiding (on)
@@ -206,5 +207,14 @@ eventAttrs = [(ev, V.black `on` fg)
              -- , (eventIn, V.brightGreen `on` V.green )
              -- , (eventOut, V.brightRed `on` V.red )
              -- ]
+
+
+
+eventTree :: Event -> Widget n
+eventTree = fst . go "" where
+   go tab ev = case evParent ev of 
+                                           Nothing ->  (str tab <+> txt (displayEvent ev), tab ++ "  ")
+                                           Just p -> let (p', tab') = go tab p
+                                                     in (p' <=> (str tab' <+> txt (displayEvent ev)), tab' ++ "  ")
 
 

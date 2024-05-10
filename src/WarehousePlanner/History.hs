@@ -6,6 +6,7 @@ module WarehousePlanner.History
 , computeShelfDiffHistoryFrom
 , diffFor
 , toZHistory
+, findNextEvent, findNextSibling, findPreviousSibling, findFirstChild
 ) 
 where 
 
@@ -117,3 +118,22 @@ toZHistory ev history = let
   zBefore = maybe mempty (Map.singleton ev) currentm <> before
   in ZHistory{..}
 
+-- * Find events
+findNextEvent :: Event -> [Event] -> Maybe Event
+findNextEvent ev = find \e -> evPreviousM e == Just ev
+
+findFirstChild :: Event -> [Event] -> Maybe Event
+findFirstChild ev = find \e -> evParent e == Just ev 
+
+findNextSibling :: Event -> [Event] -> Maybe Event
+findNextSibling ev = lastMay . fst . findSiblings ev
+
+findPreviousSibling :: Event -> [Event] -> Maybe Event
+findPreviousSibling ev = headMay . snd . findSiblings ev
+
+
+findSiblings :: Event -> [Event] -> ([Event], [Event])
+findSiblings ev events = let 
+   siblings = filter (\e -> evParent e == evParent ev) events
+   (after, before) = break (==ev) siblings
+   in (after, drop 1 before)

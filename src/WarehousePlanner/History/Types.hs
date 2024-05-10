@@ -3,7 +3,7 @@ module WarehousePlanner.History.Types
 , newHiSTRef
 , readHiSTRef
 , writeHiSTRef
-, Event(..)
+, Event(..), evPreviousM, evParent
 , newEvent
 , baseLevel
 , History
@@ -65,7 +65,7 @@ writeHiSTRef ev (HiSTRef ref) a = do
              
   
 data Event = NoHistory
-           | Event { evParent :: Maybe Event
+           | Event { evParent_ :: Maybe Event
                    , evPrevious :: Event
                    , evDescription :: Text
                    , evId :: Int -- ^ Must be unique
@@ -75,6 +75,15 @@ instance Show Event where
   show NoHistory = "#@"
   show Event{..} = "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
 
+evPreviousM :: Event -> Maybe Event
+evPreviousM NoHistory = Nothing
+evPreviousM Event{evPrevious} = Just evPrevious
+
+evParent :: Event -> Maybe Event
+evParent NoHistory = Nothing
+evParent Event{evParent_} = evParent_
+
+ 
 displayEvent :: Event -> Text
 displayEvent NoHistory = "NoHistory"
 displayEvent ev@Event{..} = unwords
@@ -113,7 +122,7 @@ parentWithLevel _ NoHistory = Nothing
 parentWithLevel level e@Event{..} = 
   if evLevel <= level 
   then Just e
-  else evParent >>= parentWithLevel level 
+  else evParent_ >>= parentWithLevel level 
    
 eventId :: Event -> Int
 eventId NoHistory = 0

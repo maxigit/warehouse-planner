@@ -12,6 +12,7 @@ module WarehousePlanner.Brick.Types
 , SummaryExtra(..)
 , asHistoryRange
 , asViewMode
+, asCurrentEvent
 )
 where
 
@@ -83,9 +84,12 @@ data AppState = AppState
      , asWarehouse :: Warehouse RealWorld 
      , asTitle :: String
      , asDiffEvent :: Event -- ^ Event to show diff with
-     , asDiffEventStack :: [Event] -- ^ history of selected events (second part of a zipper)
+     , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
      }
      
+asCurrentEvent :: AppState -> Event
+asCurrentEvent = whCurrentEvent . asWarehouse
+
 asHistoryRange :: AppState -> HistoryRange
 asHistoryRange app = HistoryRange{..} where
                hrCurrent = whCurrentEvent (asWarehouse app)

@@ -62,6 +62,7 @@ data WHEvent = ENextMode
              | ERenderRun
              --
              | EHistoryEvent HistoryEvent
+             | EToggleHistoryNavigation
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -73,7 +74,9 @@ data HistoryEvent = HPrevious
                   | HSetCurrent
                   | HResetCurrent
                   | HFirst
+                  | HLast
                   | HSwapCurrent
+     deriving(Show,Eq)
 
 makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
 makeAppShelvesSummary = do
@@ -133,7 +136,7 @@ initState title = do
                  , asWarehouse = warehouse
                  , asTitle = title
                  , asDiffEvent = whCurrentEvent warehouse
-                 , asDiffEventStack = []
+                 , asNavigateCurrent = False
                  , ..}
 
 
@@ -223,6 +226,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByShelve
        B.VtyEvent (V.EvKey (V.KChar 'c') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByCount
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
+       B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
@@ -250,18 +254,19 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
-       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("o" :: String) -> modify \s -> s { asLastKeys = c : lasts }
+       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("oz" :: String) -> modify \s -> s { asLastKeys = c : lasts }
        B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNext
        B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPrevious
        B.VtyEvent (V.EvKey (V.KUp) [] ) -> handleWH $ EHistoryEvent HParent
        B.VtyEvent (V.EvKey (V.KDown) [] ) -> handleWH $ EHistoryEvent HChild
-       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HSkipBackward
-       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HSkipForward
-       B.VtyEvent (V.EvKey (V.KLeft) [V.MCtrl] ) -> handleWH $ EHistoryEvent HPreviousSibling
-       B.VtyEvent (V.EvKey (V.KRight) [V.MCtrl] ) -> handleWH $ EHistoryEvent HNextSibling
+       B.VtyEvent (V.EvKey (V.KPageUp) [] ) -> handleWH $ EHistoryEvent HSkipBackward
+       B.VtyEvent (V.EvKey (V.KPageDown) [] ) -> handleWH $ EHistoryEvent HSkipForward
+       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPreviousSibling
+       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNextSibling
        B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
        B.VtyEvent (V.EvKey (V.KChar '\\') [] ) -> handleWH $ EHistoryEvent HSwapCurrent
-       B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HResetCurrent
+       B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HLast
+       B.VtyEvent (V.EvKey (V.KChar '|') [] ) -> handleWH $ EHistoryEvent HResetCurrent
        B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
        _ -> B.resizeOrQuit ev
  
@@ -314,44 +319,54 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
-         EHistoryEvent ev -> navigateHistory ev
+         EHistoryEvent ev -> navigateHistory ev >> modify \s -> s { asDisplayHistory = True }
+         EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
     where resetBox s = s { asCurrentBox = 0 }
 
-navigateHistory HSetCurrent = do
+setNewWHEvent ev = do
    s@AppState{..} <- get
    new <- liftIO $ execWH asWarehouse do
-       let newWH = asWarehouse { whCurrentEvent = asDiffEvent }
+       let newWH = asWarehouse { whCurrentEvent = ev }
        put newWH
        asShelvesSummary <- makeAppShelvesSummary
-       return s {asWarehouse = newWH,asShelvesSummary, asDisplayHistory = True }
+       return s {asWarehouse = newWH, asShelvesSummary }
    put new
+   
+navigateHistory HSetCurrent = do
+   diff <- gets asDiffEvent 
+   setNewWHEvent diff
+   modify \s -> s { asDisplayHistory = True }
 navigateHistory HSwapCurrent = do
-  AppState{..} <- get
-  let current = whCurrentEvent (asWarehouse)
-  modify \s -> s {asWarehouse = asWarehouse { whCurrentEvent = asDiffEvent } }
-  navigateHistory HSetCurrent
-  modify \s -> s {asDiffEvent  = current }
-
-navigateHistory ev = modify \s@AppState{..} -> 
-  if asDiffEvent == NoHistory
-  then s
-  else let
-       pushCurrent = asDiffEvent : asDiffEventStack
-       new = case ev of 
-              HPrevious -> case evPrevious asDiffEvent of
-                             NoHistory -> Nothing
-                             prev -> Just (prev, pushCurrent)
-              HNext -> case asDiffEventStack of
-                        [] -> Nothing
-                        (e:stack) -> Just (e, stack)
-              HParent -> case evParent asDiffEvent of
-                           Nothing -> Nothing
-                           Just p -> Just (p, pushCurrent)
-              _ -> Nothing
-       in case new of
-          Nothing -> s
-          Just (new, stack) -> s { asDiffEvent = new, asDiffEventStack = stack, asDisplayHistory = True }
-
+  diff <- gets asDiffEvent
+  current <- gets asCurrentEvent
+  setNewWHEvent diff
+  modify \s -> s { asDiffEvent = current }
+navigateHistory ev = do
+   s@AppState{..} <- get
+   let current = if asNavigateCurrent 
+                 then asCurrentEvent s
+                 else asDiffEvent
+       events = whEventHistory asWarehouse 
+       newEventM = case ev of
+                     HFirst -> lastMay events
+                     HLast -> headMay events
+                     HResetCurrent -> Just current
+                     HNext -> findNextEvent current events
+                     HPrevious -> evPreviousM current
+                     HParent -> evParent current
+                     HChild -> findFirstChild current events
+                     HSkipBackward -> case currentBoxHistory s of
+                                        zhistory -> fmap fst $ Map.lookupLT current $ zBefore zhistory
+                     HSkipForward -> case currentBoxHistory s of
+                                        zhistory -> fmap fst $ Map.lookupGT current $ zAfter zhistory
+                     HNextSibling -> findNextSibling current events
+                     HPreviousSibling -> findPreviousSibling current events
+   forM_ newEventM \new ->
+        if asNavigateCurrent && ev /= HResetCurrent
+        then 
+          setNewWHEvent new
+        else 
+          put s {asDiffEvent =  new}
   
 nextMode :: AppState -> AppState
 nextMode state = state { asSummaryView = succ' $ asSummaryView state }
@@ -507,10 +522,12 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") (styleNameWithAttr False) (asSelectedStyle ) -- current style
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
-                           , B.txt $ displayEvent asDiffEvent
-                           , B.str $ show (whCurrentEvent asWarehouse)
+                           , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
+                           , surroundIf asNavigateCurrent $ B.str $ show (whCurrentEvent asWarehouse)
                            , B.padLeft B.Max legend
                            ]
+  where surroundIf False w = w
+        surroundIf True  w = B.hBox [B.str "[", w, B.str "]"]
              
 debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
@@ -541,8 +558,8 @@ debugShelf state = let
                                               in show  (fmap fst at) <> " " <> " " <> show ( computeBoxDiffM (currentBox state) (fmap snd at)) <> show at
                                              )
            , B.hBorder
-           , B.str "WH" B.<+> B.txtWrap (displayEvent (whCurrentEvent $ asWarehouse state))
-           , B.str "Diff" B.<+> B.txtWrap (displayEvent (asDiffEvent state))
+           , B.str "WH" B.<=> eventTree (asCurrentEvent state)
+           , B.str "Diff" B.<=> eventTree (asDiffEvent state)
            ]
 
   
