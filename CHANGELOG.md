@@ -1,5 +1,8 @@
+# 1.2.5.0
+Add history.
+Can be navigated through using brick
 # 1.2.4.2
-Fix shelf order in diagrams
+Fix shelf order in diagrams.
 # 1.2.4.1
 Fix diagram bug.
 # 1.2.4

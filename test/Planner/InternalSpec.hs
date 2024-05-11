@@ -35,9 +35,9 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , ":END:"
                        ]
 
-    parseScenarioFile text `shouldBe` Right [ Section TitleH (Right []) "* Layout"
+    parseScenarioFile text `shouldBe` Right [ Section (TitleH 1) (Right []) "* Layout"
                                             , Section LayoutH (Right ["A|B|C"]) ""
-                                            , Section TitleH (Right []) "* Initial Moves"
+                                            , Section (TitleH 1) (Right []) "* Initial Moves"
                                             , Section (MovesH []) (Right ["move 1", "move 2"]) ""
                                             ]
   it "parses complex scenario"  $ do
