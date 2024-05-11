@@ -25,14 +25,14 @@ boxDetail warehouse HistoryRange{..} ZHistory{..} = let
            then reverse $ Map.toList zBefore
            else reverse $ take 1 (Map.toList zBefore) ++ Map.toList zAfter
   (events, boxes) = unzip $ if hrCurrent == hrToDiff then take 2 history else history
-  mk name f = withAttr bold_ (txt name) : mkDiffs f
-  mkDiffs :: forall n . (Box RealWorld -> Text) -> [Widget n]
+  mk name f = withAttr bold_ (txt name) : mkDiffs (Just . f)
+  mkDiffs :: forall n . (Box RealWorld -> Maybe Text) -> [Widget n]
   mkDiffs f = [ case toDiffM of 
                  Nothing -> -- last diff
-                            txt $ f current
-                 Just toDiff -> renderDiffText (Just $ f current) (fmap f toDiff)
+                            maybe emptyWidget txt $ f current
+                 Just toDiff -> renderDiffText (f current) (f toDiff)
                | (current, toDiffM) <- zip boxes
-                                          (drop 1 (map (Just . Just) boxes) ++ [Nothing])
+                                          (drop 1 (map Just boxes) ++ [Nothing])
                ]
   eventHeader = emptyWidget : map (withAttr bold_ . str . show) events
   pairs = [ take (length eventHeader) $ [ withAttr bold_ (txt "Style"),  styleNameWithAttr False $ boxStyle box] ++  repeat emptyWidget
@@ -60,7 +60,10 @@ boxDetail warehouse HistoryRange{..} ZHistory{..} = let
                                True | special tag -> specialTagName_
                                True -> virtualTagName_
                                _ -> tagname_
-                in withAttr att (txt tag) : mkDiffs (\box -> fromMaybe "∅" $ getTagValuem box tag)
+                in withAttr att (txt tag) : mkDiffs (\box -> case getTagValuem box tag of
+                                                                 Just "" -> Just "✓"
+                                                                 v -> v
+                                                    )
   tagss = chunksOf (length pairs) tags
   box = headEx $ zBefore ++ zAfter
   in hCenter (txt (boxStyleAndContent box ) )
