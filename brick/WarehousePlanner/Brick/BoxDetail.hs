@@ -22,7 +22,7 @@ boxDetail HistoryRange{..} ZHistory{..} = let
   history = if  hrCurrent >= hrToDiff
            then reverse $ Map.toList zBefore
            else reverse $ take 1 (Map.toList zBefore) ++ Map.toList zAfter
-  (events, boxes) = unzip history
+  (events, boxes) = unzip $ if hrCurrent == hrToDiff then take 2 history else history
   mk name f = withAttr bold_ (txt name) : mkDiffs f
   mkDiffs :: forall n . (Box RealWorld -> Text) -> [Widget n]
   mkDiffs f = [ renderDiffText (Just $ f current) (fmap f toDiff)
