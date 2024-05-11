@@ -13,12 +13,14 @@ import Data.Char (isAlphaNum)
 import Data.List.Split (chunksOf)
 import WarehousePlanner.Brick.Util
 import Data.Map qualified as Map
+import WarehousePlanner.Exec (execWH)
+import System.IO.Unsafe (unsafePerformIO)
 
 
 
-boxDetail :: HistoryRange -> ZHistory1 Box RealWorld -> Widget n
-boxDetail _ ZHistory{..} | null zBefore && null zAfter = emptyWidget
-boxDetail HistoryRange{..} ZHistory{..} = let
+boxDetail :: Warehouse RealWorld -> HistoryRange -> ZHistory1 Box RealWorld -> Widget n
+boxDetail _ _ ZHistory{..} | null zBefore && null zAfter = emptyWidget
+boxDetail warehouse HistoryRange{..} ZHistory{..} = let
   history = if  hrCurrent >= hrToDiff
            then reverse $ Map.toList zBefore
            else reverse $ take 1 (Map.toList zBefore) ++ Map.toList zAfter
@@ -31,7 +33,7 @@ boxDetail HistoryRange{..} ZHistory{..} = let
                ]
   eventHeader = emptyWidget : map (withAttr bold_ . str . show) events
   pairs = [ take (length eventHeader) $ [ withAttr bold_ (txt "Style"),  styleNameWithAttr False $ boxStyle box] ++  repeat emptyWidget
-          , mk "Location" (tshow . boxShelf)
+          , mk "Location" (maybe "∅" (getShelfname warehouse) . boxShelf)
           , mk "Content" boxContent
           , mk "Position" (boxPositionSpec)
           , mk "Dimension" (printDim . _boxDim)
@@ -64,3 +66,7 @@ boxDetail HistoryRange{..} ZHistory{..} = let
               )
 
 
+getShelfname :: Warehouse RealWorld -> ShelfId RealWorld -> Text
+getShelfname warehouse shelfId = unsafePerformIO $ execWH warehouse do
+    shelf <- findShelf shelfId
+    return $ shelfName shelf

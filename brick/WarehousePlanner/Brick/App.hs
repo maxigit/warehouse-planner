@@ -175,7 +175,7 @@ whApp extraAttrs =
                                               ]
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
               in  [ vBoxB [ mainRun
-                           , B.vLimit (if asDisplayHistory then 21 else 11) $ hBoxB (debugShelf s :  (pure . boxDetail (asHistoryRange s)) (currentBoxHistory s))
+                           , B.vLimit (if asDisplayHistory then 21 else 11) $ hBoxB (debugShelf s :  (pure . boxDetail asWarehouse (asHistoryRange s)) (currentBoxHistory s))
                            , main
                            , renderStatus s
                            ]
