@@ -358,7 +358,7 @@ navigateHistory ev = do
                      HSkipBackward -> case currentBoxHistory s of
                                         zhistory -> fmap fst $ Map.lookupLT current $ zBefore zhistory
                      HSkipForward -> case currentBoxHistory s of
-                                        zhistory -> fmap fst $ Map.lookupGT current $ zAfter zhistory
+                                        zhistory -> fmap fst $ Map.lookupGT current $ zBefore zhistory <> zAfter zhistory
                      HNextSibling -> findNextSibling current events
                      HPreviousSibling -> findPreviousSibling current events
    forM_ newEventM \new ->
