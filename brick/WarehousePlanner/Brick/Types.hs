@@ -85,6 +85,7 @@ data AppState = AppState
      , asTitle :: String
      , asDiffEvent :: Event -- ^ Event to show diff with
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
+     , asDebugShowDiffs :: Bool
      }
      
 asCurrentEvent :: AppState -> Event

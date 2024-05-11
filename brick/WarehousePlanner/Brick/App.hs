@@ -36,6 +36,7 @@ type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
+             | EToggleDebugShowDiff
              -- 
              | ENextRun
              | EPrevRun
@@ -137,6 +138,7 @@ initState title = do
                  , asTitle = title
                  , asDiffEvent = whCurrentEvent warehouse
                  , asNavigateCurrent = False
+                 , asDebugShowDiffs = False
                  , ..}
 
 
@@ -227,6 +229,7 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar 'c') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByCount
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
        B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
+       B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
@@ -278,6 +281,7 @@ handleWH ev =
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
+         EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
@@ -549,18 +553,21 @@ debugShelf state = let
           ]
         | otherwise 
         -> let boxMap = computeBoxDiffHistoryFrom  $ currentBoxHistory state
-           in [ B.str "Shelf: " B.<+> B.vBox (map (B.str  . show) $ reverse $ mapToList $ seEvents $ sExtra ssum)
-           , B.str "For: " B.<+> B.strWrap (show $ diffFor (asHistoryRange state) $ seEvents $ sExtra ssum)
-           , B.str "BoxH: " B.<+> B.strWrap (show $ currentBoxHistory state)
-           , B.str "BoxDiffs: " B.<+> B.vBox (map (B.str . show) $ (reverse . mapToList $  boxMap))
-           , B.str "For:" B.<+> B.strWrap (show . diffFor (asHistoryRange state) $ boxMap)
-           , B.str "Manual:" B.<+> B.strWrap (let at = zAtWithEvent (asDiffEvent state) (currentBoxHistory state)
-                                              in show  (fmap fst at) <> " " <> " " <> show ( computeBoxDiffM (currentBox state) (fmap snd at)) <> show at
-                                             )
-           , B.hBorder
-           , B.str "WH" B.<=> eventTree (asCurrentEvent state)
-           , B.str "Diff" B.<=> eventTree (asDiffEvent state)
-           ]
+           in if asDebugShowDiffs  state
+              then [ B.str "Shelf: " B.<+> B.vBox (map (B.str  . show) $ reverse $ mapToList $ seEvents $ sExtra ssum)
+                   , B.str "For: " B.<+> B.strWrap (show $ diffFor (asHistoryRange state) $ seEvents $ sExtra ssum)
+                   , B.str "BoxH: " B.<+> B.strWrap (show $ currentBoxHistory state)
+                   , B.str "BoxDiffs: " B.<+> B.vBox (map (B.str . show) $ (reverse . mapToList $  boxMap))
+                   , B.str "For:" B.<+> B.strWrap (show . diffFor (asHistoryRange state) $ boxMap)
+                   , B.str "Manual:" B.<+> B.strWrap (let at = zAtWithEvent (asDiffEvent state) (currentBoxHistory state)
+                                                      in show  (fmap fst at) <> " " <> " " <> show ( computeBoxDiffM (currentBox state) (fmap snd at)) <> show at
+                                                     )
+                   , B.hBorder
+                   ]
+              else []
+              ++ [ B.str "WH" B.<=> eventTree (asCurrentEvent state)
+                 , B.str "Diff" B.<=> eventTree (asDiffEvent state)
+                 ]
 
   
  -- * Render 
