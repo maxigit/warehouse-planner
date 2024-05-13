@@ -64,6 +64,8 @@ data WHEvent = ENextMode
              --
              | EHistoryEvent HistoryEvent
              | EToggleHistoryNavigation
+             --
+             | EReload
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -142,8 +144,8 @@ initState title = do
                  , ..}
 
 
-whApp :: _ -> WHApp
-whApp extraAttrs =
+whApp :: _ -> (IO (Either Text (Warehouse RealWorld))) -> WHApp
+whApp extraAttrs reload =
   let
       app = B.App {..}
       appDraw = \s@AppState{..} -> 
@@ -181,13 +183,14 @@ whApp extraAttrs =
                            ]
                   ]
       appChooseCursor = B.neverShowCursor
-      appHandleEvent = whHandleEvent
+      appHandleEvent = whHandleEvent reload
       appAttrMap state = B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs state
       appStartEvent = return ()
   in app
   
-whMain :: String -> Warehouse RealWorld -> IO ()
-whMain title wh = do
+whMain :: String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
+whMain title reload = do
+  Right wh  <- reload
   state0 <- execWH wh $ initState title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
@@ -212,15 +215,15 @@ whMain title wh = do
                                                                                                                       else V.color240 50 50 50 ))
                       styles
                       (cycle defaultStyleAttrs)
-  void $ B.defaultMain (whApp attrs) state0
+  void $ B.defaultMain (whApp attrs reload) state0
 
 reverseIf :: Bool -> V.Attr -> V.Attr
 reverseIf True attr = attr `V.withStyle` V.reverseVideo
 reverseIf _ attr = attr
 
 
-whHandleEvent :: B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
-whHandleEvent ev = do
+whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
+whHandleEvent reload ev = do
   lasts <- gets asLastKeys
   case ev of 
        B.AppEvent e -> handleWH e
@@ -252,7 +255,13 @@ whHandleEvent ev = do
        B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar 'r') [V.MCtrl] ) -> do
+                  newWHE <- liftIO reload
+                  case newWHE of
+                       Left e -> error $ unpack e
+                       Right newWH -> do
+                             modify \s -> s { asWarehouse = newWH }
+                             setNewWHEvent $ whCurrentEvent newWH
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
@@ -325,6 +334,7 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
+         EReload -> error "Should have been caught earlier"
     where resetBox s = s { asCurrentBox = 0 }
 
 setNewWHEvent ev = do

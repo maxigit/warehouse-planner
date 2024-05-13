@@ -159,50 +159,65 @@ defaultMainWith expandSection = do
       title = intercalate "-" $ map takeBaseName oFiles
       withHistory = oCommand `elem` [BoxHistory, Display]
                   && not oNoHistory
-  scenarioE <- readScenarioFromPaths withHistory (expandSection dir) oDir oFiles
-  extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
-  case sequence (scenarioE: extraScenarios) of
-    Left e -> error $ unpack e
-    Right scenarios -> do 
-          let scenario = mconcat scenarios
-          let boxSelectorM = fmap parseBoxSelector oParam
-          let exec :: forall a . WH a RealWorld -> IO a
-              exec action = do
-                   let ?cache = noCache
-                       ?today = today
-                   warehouse <- execScenario scenario
-                   execWH warehouse action
-          let withLines linesWH = do
-                 ls <- exec linesWH
-                 void $ mapM outputText ls
-              outputText = Text.putStrLn
-
-          case oCommand of
-            Summary -> exec summary >>= outputText . pack . show
-            Display -> exec get >>= whMain title
-            Stocktake -> withLines (generateStockTakes boxSelectorM)
-            Expand -> scenarioToFullText scenario >>= outputText
-            MovesWithTags -> withLines (generateMoves DontSortBoxes boxSelectorM (boxStyleWithTags))
-            Moves -> withLines (generateMoves DontSortBoxes boxSelectorM boxStyle)
-            ShelvesReport -> withLines shelvesReport
-            ShelvesGroupReport -> withLines groupShelvesReport
-            AllBoxes -> withLines reportAll
-            MopLocation -> withLines (generateMOPLocations boxSelectorM)
-            BestBoxesFor -> withLines (bestBoxesFor (fromMaybe "" oParam))
-            BestShelvesFor -> withLines (bestShelvesFor (fromMaybe "" oParam))
-            Report -> withLines (generateGenericReport today (fromMaybe "report" oParam))
-            BoxGroupReport -> withLines do
-                              boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
-                              groupBoxesReport boxes
-            BoxHistory -> withLines (generateBoxHistory boxSelectorM)
-            Export -> do
-                        let bare = scenario { sInitialState = Nothing
-                                            , sSteps = filter (\(Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]) $ sSteps scenario
-                                            , sLayout = sLayout scenario
-                                            , sColourMap = sColourMap scenario
-                                            }
-                        scenarioToFullText bare >>= outputText
-                        withLines $ generateStockTakes boxSelectorM
+      getExec :: forall a . IO (Either Text (WH a RealWorld -> IO a, Scenario))
+      getExec = do
+                    scenarioE <- readScenarioFromPaths withHistory (expandSection dir) oDir oFiles
+                    extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
+                    case sequence (scenarioE: extraScenarios) of
+                         Left e -> return $ Left e
+                         Right scenarios -> do 
+                          let scenario = mconcat scenarios
+                          let exec :: forall a . WH a RealWorld -> IO a
+                              exec action = do
+                                   let ?cache = noCache
+                                       ?today = today
+                                   warehouse <- execScenario scenario
+                                   execWH warehouse action
+                          return $ Right (exec, scenario)
+      outputText = Text.putStrLn
+  case oCommand of
+       Summary -> do 
+               -- workaround exec having a monomorphic type
+               Right (exec,_) <- getExec 
+               exec summary >>= outputText . pack . show
+       Display -> whMain title do
+               execE <- getExec
+               case execE of
+                 Right (exec,_) -> fmap Right $  exec get
+                 Left e -> return $ Left e
+       _ -> do
+        execE <- getExec
+        case execE of
+          Left e -> error $ unpack e
+          Right (exec, scenario) -> do 
+                let withLines linesWH = do
+                       ls <- exec linesWH
+                       void $ mapM outputText ls
+                let boxSelectorM = fmap parseBoxSelector oParam
+                case oCommand of
+                  Stocktake -> withLines (generateStockTakes boxSelectorM)
+                  Expand -> scenarioToFullText scenario >>= outputText
+                  MovesWithTags -> withLines (generateMoves DontSortBoxes boxSelectorM (boxStyleWithTags))
+                  Moves -> withLines (generateMoves DontSortBoxes boxSelectorM boxStyle)
+                  ShelvesReport -> withLines shelvesReport
+                  ShelvesGroupReport -> withLines groupShelvesReport
+                  AllBoxes -> withLines reportAll
+                  MopLocation -> withLines (generateMOPLocations boxSelectorM)
+                  BestBoxesFor -> withLines (bestBoxesFor (fromMaybe "" oParam))
+                  BestShelvesFor -> withLines (bestShelvesFor (fromMaybe "" oParam))
+                  Report -> withLines (generateGenericReport today (fromMaybe "report" oParam))
+                  BoxGroupReport -> withLines do
+                                    boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
+                                    groupBoxesReport boxes
+                  BoxHistory -> withLines (generateBoxHistory boxSelectorM)
+                  Export -> do
+                              let bare = scenario { sInitialState = Nothing
+                                                  , sSteps = filter (\(Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]) $ sSteps scenario
+                                                  , sLayout = sLayout scenario
+                                                  , sColourMap = sColourMap scenario
+                                                  }
+                              scenarioToFullText bare >>= outputText
+                              withLines $ generateStockTakes boxSelectorM
 
 
 extraScenariosFrom :: Options -> [Text]
