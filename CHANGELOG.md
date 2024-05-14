@@ -1,3 +1,5 @@
+# 1.2.5.1
+Add reload and cacheRef
 # 1.2.5.0
 Add history.
 Can be navigated through using brick
