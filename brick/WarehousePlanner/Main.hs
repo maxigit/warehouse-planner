@@ -1,5 +1,6 @@
 {-# LANGUAGE ApplicativeDo #-}
 {-# LANGUAGE ImplicitParams #-}
+
 module WarehousePlanner.Main 
 ( defaultMain
 , defaultMainWith
@@ -169,7 +170,7 @@ defaultMainWith expandSection = do
                           let scenario = mconcat scenarios
                           let exec :: forall a . WH a RealWorld -> IO a
                               exec action = do
-                                   let ?cache = noCache
+                                   let ?cache = if withHistory then refCache else noCache
                                        ?today = today
                                    warehouse <- execScenario scenario
                                    execWH warehouse action

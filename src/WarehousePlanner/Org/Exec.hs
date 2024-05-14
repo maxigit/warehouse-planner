@@ -4,7 +4,7 @@ module WarehousePlanner.Org.Exec
 , renderReport
 , execWithCache
 , execScenario
-, noCache
+, noCache, refCache
 , CacheFn(..)
 , cacheScenarioIn
 , cacheScenarioOut
@@ -21,6 +21,8 @@ import WarehousePlanner.Display
 import Unsafe.Coerce (unsafeCoerce)
 import Control.Monad.State (put)
 import WarehousePlanner.Exec
+import System.IO.Unsafe (unsafePerformIO)
+import Data.Map qualified as Map
 
 -- * Type 
 -- | Typeable version of Warehouse. Needed to be cached.
@@ -42,6 +44,24 @@ noCache = CacheFn {..} where
   cache _ = id
   cacheOut _ = id
   purgeKey _= return ()
+
+
+{-# NOINLINE cacheRef #-}
+cacheRef :: IORef (Map String a)
+cacheRef = unsafePerformIO $ newIORef mempty
+refCache :: (MonadIO m, Monad m) => CacheFn m
+refCache = CacheFn {..} where
+  cache k vm = do 
+        v <- vm 
+        liftIO $ modifyIORef cacheRef $ Map.insert (makeKey k) v
+        return v
+  cacheOut k vm = do
+           cachedm <- liftIO $ fmap (lookup (makeKey k)) (readIORef cacheRef)
+           case cachedm of
+                Nothing -> vm
+                Just c -> return c
+  purgeKey k = liftIO $ modifyIORef cacheRef $ Map.delete (makeKey k)
+  makeKey k = show k
 
 cacheWarehouseIn :: (?cache :: CacheFn io, MonadIO io) => DocumentHash -> Warehouse s -> io (Maybe WarehouseCache)
 cacheWarehouseIn (DocumentHash key) warehouse = do
@@ -83,35 +103,36 @@ cacheScenarioOut key = do
 -- at the beginning which haven't changed don't need to be recalculated.
 -- To do so, we create and execute a chain of scenario with one step
 -- and the initial step corresponding to the previous one.
-execScenario :: (?today :: Day, ?cache :: CacheFn io, MonadIO io) =>  Scenario -> io (Warehouse RealWorld)
+execScenario :: forall io . (?today :: Day, ?cache :: CacheFn io, MonadIO io) =>  Scenario -> io (Warehouse RealWorld)
 execScenario sc@Scenario{..} = do
   initialM <- join <$> cacheWarehouseOut `mapM` sInitialState
   let warehouse0 = maybe (emptyWarehouse ?today) unfreeze initialM
-      -- go :: MonadIO io =>  Warehouse RealWorld -> [Step] -> [Step] -> io (Warehouse RealWorld)
-      go w _ [] = return w
-      go warehouse (previous) (steps0) = do
+      go :: MonadIO io =>  io (Warehouse RealWorld) -> [Step] -> [Step] -> io (Warehouse RealWorld)
+      go w _ [] = w
+      go warehouseM (previous) (steps0) = do
         -- in order to only save at saving points
         -- we need to execute all steps between saving points
         -- as a group
         let (toExecutes, steps') = break (== SavingPoint) steps0
             steps = drop 1 steps' -- drop SavingPoint if step non empty
             allPreviousSteps = previous <> toExecutes
-        (wCopyM,_) <- runWH warehouse copyWarehouse
         let subKey = warehouseScenarioKey $ Scenario Nothing allPreviousSteps  Nothing mempty
         wM <- cacheWarehouseOut subKey
-        w <- case wM of
-          Nothing -> do
-            execM <- liftIO $ mapM executeStep toExecutes
-            (_, w') <- runWH (emptyWarehouse ?today)  $ do
-              wCopy <- wCopyM
-              -- probably useless now 
-              put wCopy -- { boxStyling = stylingFromTags colourMap, shelfStyling = shelfStylingFromTags colourMap }
-              sequence_ execM
-            cacheWarehouseIn subKey w'
-            return w'
-          Just w' -> {-traceShowM ("Scenario Step => use cache", subKey) >>-} (return $ unfreeze w')
+        let w  = case wM of
+                      Nothing -> do
+                        warehouse <- warehouseM
+                        (wCopyM,_) <- runWH warehouse copyWarehouse
+                        execM <- liftIO $ mapM executeStep toExecutes
+                        (_, w') <- runWH (emptyWarehouse ?today)  $ do
+                          wCopy <- wCopyM
+                          -- probably useless now 
+                          put wCopy -- { boxStyling = stylingFromTags colourMap, shelfStyling = shelfStylingFromTags colourMap }
+                          sequence_ execM
+                        cacheWarehouseIn subKey w'
+                        return w'
+                      Just w' -> {-traceShowM ("Scenario Step => use cache", subKey) >>-} (return $ unfreeze w')
         -- carry on with the remaing steps
-        go w (allPreviousSteps) steps
+        go (w) (allPreviousSteps) steps
   --  update layout if exist
   contentPath <- contentPathM
   let setLayout wh = case sLayout of
@@ -126,7 +147,7 @@ execScenario sc@Scenario{..} = do
             shelfStyling = shelfStylingFromTags colourMap
             colourMap = concat colourMaps
         return wh { shelfStyling, boxStyling}
-  go warehouse0 [] (sSortedSteps sc) >>= setLayout >>=  setStylings
+  go (return warehouse0) [] (sSortedSteps sc) >>= setLayout >>=  setStylings
   
 
 execWithCache :: (?today :: Day, ?cache :: CacheFn io, MonadIO io) =>  Scenario -> io (Warehouse RealWorld)

@@ -29,6 +29,8 @@ copyWarehouse = do
     put (emptyWarehouse $ whDay wh0) { boxStyling = unsafeCoerce $ boxStyling wh0
                                     , shelfStyling = unsafeCoerce $ shelfStyling wh0
                                     , boxOrientations = unsafeCoerce $ boxOrientations wh0
+                                    , whCurrentEvent = whCurrentEvent wh0
+                                    , whEventHistory = whEventHistory wh0
                                     }
     n'shelfIds <- sequence shelfBuilders
     shelf0 <- defaultShelf
