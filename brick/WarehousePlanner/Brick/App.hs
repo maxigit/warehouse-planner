@@ -190,7 +190,10 @@ whApp extraAttrs reload =
   
 whMain :: String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
 whMain title reload = do
-  Right wh  <- reload
+  whE <- reload
+  let wh = case whE of
+            Left e -> error (unpack e)
+            Right w -> w
   state0 <- execWH wh $ initState title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves

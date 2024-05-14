@@ -177,8 +177,8 @@ instance GHeader (K1 i [Text] ) where -- Constructor with tags
   gwriteHeader (K1 xs) = "_" <> intercalate "_" xs
   gaddTags tags (K1 xs) = K1 (xs <> tags)
   gParse _header tags = Right $ K1 tags
-instance GHeader (K1 i Int ) where -- Constructor with tags
-  gwriteHeader (K1 i) = tshow i
+instance GHeader (K1 i Int ) where -- Title
+  gwriteHeader (K1 _i) = ""
   gaddTags _tags (K1 i) = K1 i
   gParse header _tags = Right $ K1 l where 
          l = length $ span (== '*') header
