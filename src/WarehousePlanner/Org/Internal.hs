@@ -201,7 +201,8 @@ instance GHeader a => GHeader (S1 c a) where
 
     
 writeHeader :: HeaderType -> Text
-writeHeader = gwriteHeader . from
+writeHeader (TitleH _) = ""
+writeHeader header = gwriteHeader $ from header
 
 addTagsToHeader :: [Text] -> HeaderType -> HeaderType
 addTagsToHeader tags g = to . gaddTags tags $ from g
