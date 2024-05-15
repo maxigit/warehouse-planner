@@ -73,7 +73,10 @@ data Event = NoHistory
                    }
 instance Show Event where
   show NoHistory = "#@"
-  show Event{..} = "#" <> show evId <> if evLevel < 10 then ("/" <> show evLevel) else ""
+  show Event{..} = "#" <> show evId <> level where
+       level = if | evLevel < 10        -> "/" <> show evLevel
+                  | evLevel < baseLevel -> "/*"
+                  | otherwise           -> ""
 
 evPreviousM :: Event -> Maybe Event
 evPreviousM NoHistory = Nothing

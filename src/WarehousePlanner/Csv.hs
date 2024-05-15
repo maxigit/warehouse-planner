@@ -537,7 +537,7 @@ readClones tagOrPatterns filename = do
     case Csv.decode  Csv.HasHeader csvData of
         Left err ->  error $ "File:" <> filename <> " " <>  err -- putStrLn err >> return (return [])
         Right rows -> return $ do  -- IO
-          cloness <- forM (Vec.toList rows) $ \(selector, qty, content'tags) -> do -- WH
+          cloness <- forM (Vec.toList rows) $ \p@(selector, qty, content'tags) -> do -- WH
                 let (content0, tags) = extractTags content'tags
                     (copyTag, content1) = case stripPrefix "!" content0 of
                                            Nothing -> (False, content0)
@@ -545,6 +545,7 @@ readClones tagOrPatterns filename = do
                     content2 = if null content1 then Nothing else Just content1
                 s0 <- incomingShelf
                 
+                newBaseEvent "CLO" (tshow p)
                 boxIds <- findBoxByNameAndShelfNames selector
                 boxes <- mapM findBox boxIds
                 let box'qtys =  [(box, q) | box <- boxes , q <- [1..qty :: Int]] -- cross product
@@ -572,6 +573,7 @@ readDeletes filename = do
   content <- readFile filename
   return $ do -- IO
       boxess <- forM (lines content) $ \selector -> do -- WH
+        newBaseEvent "DEL" selector
         boxes <- findBoxByNameAndShelfNames (parseBoxSelector selector)
         deleteBoxes boxes
       return (concat boxess)
@@ -718,7 +720,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- This is to allows script to import partial tagging.
 processMovesAndTags :: [Text] -> (BoxSelector s, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
 processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
-  newBaseEvent $ intercalate "," [ printBoxSelector style
+  newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
                                  , intercalate "#" tags_
                                  , fromMaybe "" locationM
                                  , mconcat $ map tshow orientations
@@ -814,7 +816,9 @@ splitTagsAndLocation tag'locations
 -- * Read Rearrange Boxes
 readRearrangeBoxes :: [Text] -> FilePath -> IO (WH [Box s] s)
 readRearrangeBoxes tags'Sticky = readFromRecordWithPreviousStyle go
-  where go style (Csv.Only (parseActions -> (deleteUnused, grouping, actions))) = do
+  where go style (Csv.Only action) = do
+           let (deleteUnused, grouping, actions) = parseActions action
+           newBaseEvent "RAR"  action
            rearrangeBoxesByContent deleteUnused grouping tagOps isUsed isSticky style actions
         tagOps = parseTagAndPatterns tags0 []
         (tags0, drop 1 -> sticky) = break (== "@sticky") tags'Sticky

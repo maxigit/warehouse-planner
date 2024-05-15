@@ -270,14 +270,14 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
        B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("oz" :: String) -> modify \s -> s { asLastKeys = c : lasts }
-       B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNext
-       B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPrevious
+       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNext
+       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPrevious
        B.VtyEvent (V.EvKey (V.KUp) [] ) -> handleWH $ EHistoryEvent HParent
        B.VtyEvent (V.EvKey (V.KDown) [] ) -> handleWH $ EHistoryEvent HChild
        B.VtyEvent (V.EvKey (V.KPageUp) [] ) -> handleWH $ EHistoryEvent HSkipBackward
        B.VtyEvent (V.EvKey (V.KPageDown) [] ) -> handleWH $ EHistoryEvent HSkipForward
-       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPreviousSibling
-       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNextSibling
+       B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPreviousSibling
+       B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNextSibling
        B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
        B.VtyEvent (V.EvKey (V.KChar '\\') [] ) -> handleWH $ EHistoryEvent HSwapCurrent
        B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HLast

@@ -1981,5 +1981,7 @@ newWHEvent level title = do
     else 
       put wh { whCurrentEvent = new, whEventHistory = new : whEventHistory wh } 
 
-newBaseEvent :: Text -> WH () s
-newBaseEvent = newWHEvent baseLevel
+newBaseEvent :: Text -> Text -> WH () s
+newBaseEvent header = newWHEvent baseLevel . addHeader header where
+   addHeader "" t = t
+   addHeader h t = h <> ": " <> t

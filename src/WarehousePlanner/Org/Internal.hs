@@ -482,7 +482,7 @@ executeStep (Step header sha txt) = do
   return do
      case header of
        TitleH level -> newWHEvent level txt
-       _ -> newWHEvent 1000 (writeHeader header)
+       _ -> newWHEvent 99 (writeHeader header)
      wh
 
 -- | Retrieve the number of line in the layout file
