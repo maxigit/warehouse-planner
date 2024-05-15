@@ -33,6 +33,7 @@ module WarehousePlanner.Base
 , findShelfBySelectors
 , findBoxByNameAndShelfNames
 , findBoxByShelf
+, getOrCreateBoxTagMap
 , findShelvesByBoxNameAndNames
 , howMany, howManyWithDiagonal
 , incomingShelf
@@ -42,7 +43,7 @@ module WarehousePlanner.Base
 , module WarehousePlanner.Type
 , moveBoxes, SortBoxes(..)
 , negateTagOperations
-, newBox
+, newBox, newBox'
 , newShelf
 , orTrue
 , parseTagOperation
@@ -418,7 +419,9 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
         updateShelfTags [] shelf
 
 newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
-newBox style content dim or_ shelf ors tagTexts = do
+newBox = newBox' Nothing
+newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
+newBox' boxM style content dim or_ shelf ors tagTexts = do
     let tags' = map (parseTagOperation . omap replaceSlash) tagTexts
         dtags = dimensionTagOps dim
         -- create "'content" tag
@@ -426,17 +429,33 @@ newBox style content dim or_ shelf ors tagTexts = do
         tags = fromMaybe mempty $ modifyTags (contentTag : makeContentTags content <> tags' <> dtags) mempty
                                   --   ^ apply dimension tags after tags so dimension override tags
 
-    uniqueRef@(Arg _ ref) <- newUniqueSTRef (error $ "should never been called. undefined. Base.hs:429")
-    let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags defaultPriorities (extractBoxBreak tags)
-    shelf' <- findShelf shelf
-    linkBox (BoxId_ uniqueRef) shelf'
-    writeCurrentRef ref box
-    -- modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
-    modify \warehouse ->  warehouse { boxMap = snd $ Map.insertLookupWithKey (\_ new old -> old <> new)
-                                                                      style (Seq.singleton $ BoxId_ uniqueRef)
-                                                                      (boxMap warehouse)
-                                    }
+    uniqueRef <- case boxM of 
+                  Nothing -> newUniqueSTRef (error $ "should never been called. undefined. Base.hs:429")
+                  Just box | (BoxId_ ref) <- _boxId box -> return ref
+    let (Arg _ ref) = uniqueRef
+    let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags (extractPriorities tags defaultPriorities) (extractBoxBreak tags)
+    -- don't update box if not needed, to not polute history and make diff possible
+    case boxM of
+        -- Just oldBox | oldBox == box -> return ()
+        _ -> do
+             moveShelf <- case boxM of
+                   Just box | boxShelf box == Just (shelfId shelf) -> return False
+                   Just box | Just bshelfId <- boxShelf box -> do 
+                       bshelf <- findShelf bshelfId
+                       unlinkBox (boxId box) bshelf
+                       return True
+                   _ -> return True
+             when moveShelf do
+                  shelf' <- findShelf shelf
+                  linkBox (BoxId_ uniqueRef) shelf'
+             writeCurrentRef ref box
+             -- modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
+             modify \warehouse ->  warehouse { boxMap = snd $ Map.insertLookupWithKey (\_ new old -> old <> new)
+                                                                               style (Seq.singleton $ BoxId_ uniqueRef)
+                                                                               (boxMap warehouse)
+                                             }
     return box
+    
 -- |  create #content1=A, #content2=B from A&B
 makeContentTags :: Text -> [Tag'Operation]
 makeContentTags content = 
@@ -1181,7 +1200,9 @@ updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
                                   Nothing -> id
               in updateDimFromTags box { boxTags = cleanTag new
                                     , boxPriorities = extractPriorities new (boxPriorities box)
-                                    , boxBreak = extractBoxBreak new
+                                    , boxBreak = case extractBoxBreak new of
+                                                      Nothing | Just b <- boxBreak box -> error $ show (box, b, tag'ops, new)
+                                                      b -> b
                                     , boxContent = fromMaybe (boxContent box) newContent
                                     }
 

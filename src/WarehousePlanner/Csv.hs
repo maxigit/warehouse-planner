@@ -907,12 +907,30 @@ transformTagsFor tags tagPat' tagSub box index = do
 
 -- | Read box dimension on their location
 readStockTake :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH ([Box s], [Text]) s)
-readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
+readStockTake tagOrPatterns0 newBoxOrientations splitStyle filename= do
+    let (unique, tagOrPatterns) = partition ("@unique=" `isPrefixOf`) tagOrPatterns0
+        lookupWH :: forall z . WH ([Text] -> Maybe (Box z)) z
+        lookupWH = case unique of 
+                  (x:_) | Just by <- stripPrefix "@unique=" x -> do
+                      boxMap <- getOrCreateBoxTagMap by
+                      let byEqual = by <> "="
+                      return \tags -> case mapMaybe (stripPrefix $ byEqual ) tags  of
+                                       (value:_) -> lookup value boxMap >>= headMay
+                                       _ -> Nothing
+                  _ -> return $ const Nothing
+    readStockTakeWithLookup lookupWH tagOrPatterns newBoxOrientations splitStyle filename
+
+-- | Create new boxes unless a lookup function is given. In that case, lookup if the box already exists
+-- and modify it. Usefull to merge to diff two warehouses.
+readStockTakeWithLookup :: (WH ([Text] -> Maybe (Box s)) s)  ->  [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH ([Box s], [Text]) s)
+readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle filename = do
     csvData <- BL.readFile filename
     case Csv.decode  Csv.HasHeader csvData of
         Left _ ->  case Csv.decode Csv.HasHeader csvData of
                         Left err -> error $ "File:" <> filename <> " " <>  err -- putStrLn err >> return (return [])
-                        Right rows -> return $ processStockTakeWithPosition tagOrPatterns newBoxOrientations splitStyle $ Vec.toList rows
+                        Right rows -> return $ do
+                              uniqueMap <- lookupM 
+                              processStockTakeWithPosition uniqueMap tagOrPatterns newBoxOrientations splitStyle $ Vec.toList rows
         Right (rowsV) -> return $ do
             -- we get bigger box first : -l*w*h
             let rows0 = [ ((qty, content, tags),  (-(l*w*h), shelf, style', l,w,h, if null os then "%" else os)) | (shelf, style, qty, l, w, h, os)
@@ -926,11 +944,13 @@ readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
 
             (_,v) <- mapAccumLM  ( \previousMatch rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
                         s0 <- defaultShelf
+                        lookup_ <- lookupM
                         let dim = Dimension l w h
                             boxOrs = readOrientations newBoxOrientations os
                         boxesS <- forM rows $ \((qty, content, tags),_) ->
                           forM [1..qty] $   \_ -> do
-                            newBox style
+                            newBox' (lookup_ tags)
+                                    style
                                     content
                                     dim
                                     (headEx boxOrs)
@@ -972,8 +992,8 @@ readStockTake tagOrPatterns newBoxOrientations splitStyle filename = do
 
 -- | Like stocktake but put boxes at the given position (without checking overlapps)
 -- or execute a list of FillCommands to place the box depending on the previous one
-processStockTakeWithPosition :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> [(Text, Text, Text, Double, Double, Double, Text)] -> WH ([Box s], [Text]) s
-processStockTakeWithPosition tagOrPatterns newBoxOrientations splitter rows  =  do
+processStockTakeWithPosition :: ([Text] -> Maybe (Box s)) -> [Text] -> [Orientation] -> (Text -> (Text, Text)) -> [(Text, Text, Text, Double, Double, Double, Text)] -> WH ([Box s], [Text]) s
+processStockTakeWithPosition lookupM tagOrPatterns newBoxOrientations splitter rows  =  do
   s0 <- defaultShelf
   let -- go :: Map Text FillState -> _ -> WH (FillState, _) s
       go (previousShelf, fillStateMap) (shelfname, posSpec, style', l, w, h, os) =  do
@@ -995,13 +1015,14 @@ processStockTakeWithPosition tagOrPatterns newBoxOrientations splitter rows  =  
                                                             ]
                                                             [(minDim shelf, maxDim shelf, ())]
                                                             dim
-              box <- newBox style
-                            content
-                            dim
-                            bestOrientation
-                            (shelfId s0)
-                            boxOrientations
-                           (readTagAndPatterns tagOrPatterns tags)
+              box <- newBox' (lookupM tags)
+                             style
+                             content
+                             dim
+                             bestOrientation
+                             (shelfId s0)
+                             boxOrientations
+                             (readTagAndPatterns tagOrPatterns tags)
               let commandsE = case parsePositionSpec posSpec of
                                   Just (or, toPos) -> let pos = Position (toPos (_boxDim box)) or
                                                       in Right [FCBoxWithPosition box pos]
