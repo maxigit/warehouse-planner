@@ -7,6 +7,7 @@ module WarehousePlanner.History
 , diffFor
 , toZHistory
 , findNextEvent, findNextSibling, findPreviousSibling, findFirstChild
+, mergeEventMaps
 ) 
 where 
 
@@ -59,11 +60,11 @@ computeShelfDiff shelf1 shelf2 = DiffStatus{..} where
   dsBoxOut  = case boxesFor shelf2 \\ boxesFor shelf1  of
                            --                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                            --                   box present initially - box left now
-                                                set | null set -> mempty
-                                                _ -> singletonSet $ shelfId shelf2
+                   set | null set -> mempty
+                   _ -> singletonSet $ shelfId shelf2
   dsBoxIn = case boxesFor shelf1 \\ boxesFor shelf2  of
-                       set | null set -> mempty
-                       _ -> singletonSet $ shelfId shelf1
+                 set | null set -> mempty
+                 _ -> singletonSet $ shelfId shelf1
   dsBoxUpdated = 0
   dsBoxDeleted = 0
   dsBoxCreated = 0
@@ -104,7 +105,7 @@ diffFor HistoryRange{..} eventMap = fromMaybe (NoHistory, mempty) $
                                    Just es@(ev, _status) | ev < hrCurrent ->  Just es
                                    _ -> Nothing
        | hrCurrent < hrToDiff -> -- look in the future
-                              case Map.lookupGE hrToDiff  eventMap of
+                              case Map.lookupLE hrToDiff  eventMap of
                                   Just es@(ev, _status) | ev > hrCurrent -> Just es
                                   _ -> Nothing
        | otherwise -> error "pattern should be exhaustive"
@@ -137,3 +138,19 @@ findSiblings ev events = let
    siblings = filter (\e -> evParent e == evParent ev) events
    (after, before) = break (==ev) siblings
    in (after, drop 1 before)
+   
+   
+-- * Event Map
+-- | merge maps. The trick here is that missing events in map need
+-- to be added  so that
+-- {1 : a , 3 : b} + {2: c } = {1: a, 2 : a+c, 3: b}
+--                                       ^^^^^
+mergeEventMaps :: Ord k => Semigroup a =>  k -> [Map k a ] -> Map k a
+mergeEventMaps pivot maps = let
+    events = foldMap Map.keysSet maps
+    in Map.fromListWith (<>) [ (ev, a)
+                            | ev <- toList events
+                            , evMap <- maps
+                            , (found,a) <- toList $ Map.lookupLE ev evMap
+                            , (ev > pivot && found > pivot) || (ev <= pivot && found <= pivot)
+                            ]

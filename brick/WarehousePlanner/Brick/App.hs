@@ -116,7 +116,7 @@ makeAppShelvesSummary = do
                                           |  history <- toList boxHistorys
                                           ]
                             shelfEventMap = computeShelfDiffHistoryFrom $ toZHistory currentEvent shelfHistory
-                            eventMap = unionsWith (<>) $ shelfEventMap : boxEventMaps
+                            eventMap = mergeEventMaps currentEvent $ shelfEventMap : boxEventMaps
                         eventsWithName <- flip traverse eventMap \(DiffStatus{..}) -> do
                                                namesIn <-  mapM findShelf $ toList dsBoxIn
                                                namesOut <-  mapM findShelf $ toList dsBoxOut
