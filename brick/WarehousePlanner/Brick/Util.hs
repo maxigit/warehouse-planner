@@ -212,11 +212,9 @@ eventAttrs = [(ev, V.black `on` fg)
 
 
 eventTree :: Event -> Widget n
-eventTree = fst . go "" where
-   go tab ev = case evParent ev of 
-                                           Nothing ->  (str tab <+> txt (displayEvent ev), tab ++ "  ")
-                                           Just p -> let (p', tab') = go tab p
-                                                     in (p' <=> (str tab' <+> txt (displayEvent ev)), tab' ++ "  ")
+eventTree = go "" . Just where
+   go tab (Just ev)  = (str tab <+> txt (displayEvent ev)) <=> go (tab ++ "  ") (evParent ev)
+   go _ Nothing = emptyWidget
 
 
 renderDiffText :: Maybe Text ->  Maybe Text -> Widget n
