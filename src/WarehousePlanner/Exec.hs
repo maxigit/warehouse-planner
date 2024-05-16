@@ -63,5 +63,5 @@ copyBox Box{..} = return $ \defaultShelf shelfMapId -> do
   let BoxId_ (Arg bId _) = _boxId
   put  w { whUnique = bId - 1 }
   newBox <- newBox boxStyle boxContent _boxDim orientation shelf boxBoxOrientations []
-  updateBox (\b -> b { boxOffset = boxOffset, boxTags = boxTags}) newBox
+  updateBox (\b -> b { boxOffset = boxOffset, boxTags = boxTags, boxBreak = boxBreak, boxPriorities = boxPriorities}) newBox
 
