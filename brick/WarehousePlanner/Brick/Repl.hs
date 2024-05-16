@@ -12,7 +12,7 @@ import Control.Monad.State (get)
 
 display :: IO ()
 display  = do
-  wh <- exec get
+  let wh = fmap Right $ exec get
   whMain "repl" wh
 
 

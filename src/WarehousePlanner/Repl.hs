@@ -37,7 +37,7 @@ load path = loads [path]
 loads :: [FilePath] -> IO ()
 loads paths = do
   state <- readIORef stateRef
-  let ?cache = noCache
+  let ?cache = refCache
       ?today = whDay (warehouse state)
   scenarioEs <- forM paths \path -> readScenarioFromPath False (importDispatchDef (currentDir state))
                                          (currentDir state </> path <.> "org")
