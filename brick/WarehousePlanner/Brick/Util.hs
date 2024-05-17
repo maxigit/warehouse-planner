@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module WarehousePlanner.Brick.Util
 (
 eigthH, eigthV
@@ -22,6 +23,9 @@ eigthH, eigthV
 , isInSummary
 , eventTree
 , renderDiffText
+, hlToAttr
+, withHLStatus
+, highlightAttrs
 ) where
 
 import ClassyPrelude hiding (on)
@@ -31,6 +35,8 @@ import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
 import Data.Set qualified as Set
 import WarehousePlanner.History (diffFor)
+import WarehousePlanner.Brick.Types
+import Data.Bits ((.|.))
 
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
@@ -113,11 +119,11 @@ succ' s = succ s
 pred' s | s == minBound = maxBound
 pred' s = pred s
   
-makeStyleAttrName :: Bool -> Text -> AttrName
-makeStyleAttrName isCurrent style = attrName "style" <> attrName (unpack style) <> if isCurrent then attrName "current" else mempty
+makeStyleAttrName :: Text -> AttrName
+makeStyleAttrName style = attrName "style" <> attrName (unpack style)
 
-styleNameWithAttr isCurrent style = withStyleAttr isCurrent style (txt style)
-withStyleAttr isCurrent style w = withAttr (makeStyleAttrName isCurrent style) w
+styleNameWithAttr style = withStyleAttr style (txt style)
+withStyleAttr style w = withDefAttr (makeStyleAttrName style) w
 
 defaultStyleAttrs :: [V.Attr]
 defaultStyleAttrs = [ with $ fg `on` V.black
@@ -210,6 +216,14 @@ eventAttrs = [(ev, V.black `on` fg)
              -- ]
 
 
+highlightAttrs :: [(AttrName, V.Attr)]
+highlightAttrs = [ (attrName "hl" , V.defAttr `V.withStyle` V.reverseVideo)
+                 , (attrName "current", V.defAttr `V.withStyle` (V.blink .|. V.bold))
+                 , (attrName "hl" <> attrName "current", V.defAttr `V.withStyle` (V.reverseVideo .|. V.underline .|. V.bold))
+                 -- , (attrName "selected", V.defAttr `V.withStyle` V.underline)
+                 , (attrName "selected", V.defAttr `V.withStyle` V.reverseVideo)
+                 , (attrName "current" <> attrName "selected", V.defAttr `V.withStyle` (V.reverseVideo .|. V.underline))
+                 ]
 
 eventTree :: Event -> Widget n
 eventTree = go "" . Just where
@@ -226,3 +240,14 @@ renderDiffText valuem oldm =
        (Just value, Just old) | value /= old -> withAttr eventUpdated $ txt value
        (Just value, Just _) {- | value == old -} -> txt value
 
+
+
+hlToAttr :: HighlightStatus -> AttrName
+hlToAttr HighlightStatus{..}  = mconcat
+   [ if hsHighlighted > 0 then attrName "hl" else mempty
+   , if hsCurrent then attrName "current" else mempty
+   , if hsSelected > 0 then attrName "selected" else mempty
+   ]
+   
+withHLStatus :: HighlightStatus -> Widget n -> Widget n
+withHLStatus hs = withAttr (hlToAttr hs)

@@ -35,7 +35,7 @@ boxDetail warehouse HistoryRange{..} ZHistory{..} = let
                                           (drop 1 (map Just boxes) ++ [Nothing])
                ]
   eventHeader = emptyWidget : map (withAttr bold_ . str . show) events
-  pairs = [ take (length eventHeader) $ [ withAttr bold_ (txt "Style"),  styleNameWithAttr False $ boxStyle box] ++  repeat emptyWidget
+  pairs = [ take (length eventHeader) $ [ withAttr bold_ (txt "Style"),  styleNameWithAttr $ boxStyle box] ++  repeat emptyWidget
           , mk "Location" (maybe "∅" (getShelfname warehouse) . boxShelf)
           , mk "Content" boxContent
           , mk "Position" (boxPositionSpec)

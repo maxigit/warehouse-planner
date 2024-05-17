@@ -159,7 +159,7 @@ whApp extraAttrs reload =
                                               : [ B.vBox $ (map B.hBox)
                                                          [ renderRun (\bhistory ->
                                                                          let box = zCurrentEx bhistory
-                                                                             rendered =  renderBoxOrientation (currentBox s) box
+                                                                             rendered =  withHLBoxAttr s renderBoxOrientation box
                                                                          in if asDisplayHistory
                                                                             then historyIndicator rendered
                                                                                                   (\s -> boxShelf box == Just s)
@@ -169,7 +169,7 @@ whApp extraAttrs reload =
                                                                      )
                                                                      (currentRun s)
                                                          , [B.hBorder]
-                                                         , renderRun (renderBoxContent (currentBox s) .  zCurrentEx)
+                                                         , renderRun (withHLBoxAttr s renderBoxContent .  zCurrentEx)
                                                                      (let run = currentRun s
                                                                       in run { sDetails = drop asCurrentBay $ sDetails run }
                                                                      )
@@ -204,25 +204,20 @@ whMain title reload = do
                     , style <- keys (sStyles shelfSum)
                     ]
   let styles = reverse $ map fst style'shelfs
-      attrs state =
+      attrs _state =
             selectedAttr
             -- : bayNameAN
             : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
-            : zipWith (\style attr -> (makeStyleAttrName False style, reverseIf (Just style == selectedStyle state) attr ))
+            : zipWith (\style attr -> (makeStyleAttrName style, attr)) --  reverseIf (Just style == selectedStyle state) attr ))
                       styles
                       (cycle defaultStyleAttrs)
             <> eventAttrs
-            <> zipWith (\style attr -> (makeStyleAttrName True style, reverseIf (Just style == selectedStyle state) $ V.withBackColor (V.withStyle attr V.bold)
-                                                                                                                    $ if (Just style == selectedStyle state)
-                                                                                                                      then V.white 
-                                                                                                                      else V.color240 50 50 50 ))
-                      styles
-                      (cycle defaultStyleAttrs)
+            <> highlightAttrs
   void $ B.defaultMain (whApp attrs reload) state0
 
-reverseIf :: Bool -> V.Attr -> V.Attr
-reverseIf True attr = attr `V.withStyle` V.reverseVideo
-reverseIf _ attr = attr
+__reverseIf :: Bool -> V.Attr -> V.Attr
+__reverseIf True attr = attr `V.withStyle` V.reverseVideo
+__reverseIf _ attr = attr
 
 
 whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
@@ -525,7 +520,7 @@ runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunSt
     styles = fromList $ Map.toList $ sStyles (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (selectedStyle state) (asViewMode state) asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (summaryHLStatus state) (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
 
 -- * Styles
 stylesSideBar :: AppState -> B.Widget Text
@@ -536,7 +531,7 @@ renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
-                           , B.center $ maybe (B.str "∅") (styleNameWithAttr False) (asSelectedStyle ) -- current style
+                           , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
@@ -597,3 +592,21 @@ renderRun renderBox run =  concat
             ]
           | bay <- F.toList . sDetails $ run
           ]
+          
+-- * 
+withHLBoxAttr :: AppState -> (Box RealWorld -> B.Widget n) ->  Box RealWorld -> B.Widget n
+withHLBoxAttr state f box = withHLStatus (boxHLStatus state box) (f box)
+
+
+boxHLStatus :: AppState -> Box RealWorld -> HighlightStatus
+boxHLStatus state box = HighlightStatus{..} where
+    hsCurrent = Just box == currentBox state
+    hsSelected = if Just (boxStyle box) == selectedStyle state then 1 else 0
+    hsHighlighted = 0
+    
+summaryHLStatus :: AppState -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> HighlightStatus
+summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
+                                                                     | bay <- sDetailsList run
+                                                                     , shelf <- sDetailsList bay
+                                                                     , box <- sDetailsList shelf
+                                                                     ]

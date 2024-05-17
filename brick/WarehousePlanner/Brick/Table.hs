@@ -72,9 +72,8 @@ collapseColumns = transpose . collapseRows . transpose
 
 
                     
-renderBoxContent current box = withStyleAttr isCurrent (boxStyle box) $ txt $ boxContent box <> if isCurrent then "<" else " "
-  where isCurrent = current == Just box
-renderBoxOrientation current box = withStyleAttr (current == Just box) (boxStyle box)
+renderBoxContent box = withStyleAttr (boxStyle box) $ txt $ boxContent box <> " "
+renderBoxOrientation box = withStyleAttr (boxStyle box)
                                  $ txt $ showOrientation' $ orientation box
   
   
@@ -102,12 +101,12 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: HistoryRange -> Maybe Text -> ViewMode -> Int -> Runs SumVec _ -> Table Text
-runsToTable hrange selected mode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: (SumVec _ -> HighlightStatus) -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
+runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
                           then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
-                        ,  attr run i $ padLeftRight 1 $ txt (sName run)
+                        , attr run i $ padLeftRight 1 $ txt (sName run)
                         , case mode of
                             ViewSummary smode -> renderHorizontalSummary smode run
                             ViewHistory -> hBox [ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
@@ -115,9 +114,10 @@ runsToTable hrange selected mode current runs = selectTable current mkRow  (sDet
                                                 ]
                         ]
           -- use selected style attribute if the run contains the style
-          attr run i = case selected >>= flip lookup (sStyles run) of
-                        Just sum | Just style <- selected -> withStyleAttr False style . ( <+> (str . printf "(%d)" $ suCount sum))
-                        _ -> selectAttr (current == i)
+          attr run i = let status = mkStatus run
+                       in case hsSelected status of
+                            count |  count > 0 -> withHLStatus status  . ( <+> (str . printf "(%d)" $  count))
+                            _ -> selectAttr (current == i)
 
 
 selectTable :: Int -> (Int -> a -> [Widget n ]) -> Vector a -> Table n
@@ -131,5 +131,5 @@ selectTable current f v = let
 
 stylesToTable :: Maybe Text -> Int -> Vector Text -> Table Text
 stylesToTable _relected current styles = selectTable current mkRow styles
-    where mkRow _ style = [ withStyleAttr False style $ txt style ]
+    where mkRow _ style = [ withStyleAttr style $ txt style ]
     

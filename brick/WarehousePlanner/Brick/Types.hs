@@ -13,6 +13,7 @@ module WarehousePlanner.Brick.Types
 , asHistoryRange
 , asViewMode
 , asCurrentEvent
+, HighlightStatus(..)
 )
 where
 
@@ -60,7 +61,6 @@ data SummaryExtra = SummaryExtra
 instance Semigroup SummaryExtra where
   e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
                           (unionWith (<>) (seEvents e1) (seEvents e2))
-  
 
 sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
 sStyles = seStyles . sExtra
@@ -136,3 +136,24 @@ currentBox :: AppState -> Maybe (Box RealWorld)
 currentBox = zCurrent . currentBoxHistory
 
 
+
+-- * Highlight Status
+data HighlightStatus = HighlightStatus
+         { hsHighlighted :: Int
+         , hsSelected :: Int
+         , hsCurrent :: Bool
+         }
+     deriving (Show, Eq)
+     
+instance Semigroup HighlightStatus where
+   a <> b = HighlightStatus 
+              { hsHighlighted = hsHighlighted a + hsHighlighted b
+              , hsSelected = hsSelected a + hsSelected b
+              , hsCurrent = hsCurrent a || hsCurrent b
+              }
+ 
+instance Monoid HighlightStatus where
+  mempty = HighlightStatus { hsHighlighted = 0
+                           , hsSelected = 0
+                           , hsCurrent = False
+                           }
