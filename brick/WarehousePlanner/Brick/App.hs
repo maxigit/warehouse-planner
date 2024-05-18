@@ -123,7 +123,23 @@ makeAppShelvesSummary = do
                                                return (DiffStatus { dsBoxIn=setFromList $ map shelfName namesIn
                                                                   , dsBoxOut=setFromList $ map shelfName namesOut
                                                                   , ..})
-                        return $ SummaryExtra styleMap (eventsWithName)
+                        return $ SummaryExtra styleMap (eventsWithName) mempty
+
+updateHLStatus :: (ZHistory1 Box RealWorld -> HighlightStatus) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld)) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld))
+updateHLStatus f theRuns = let
+    normBay bay = let 
+       shelves = fmap normShelf $ sDetails bay
+       in bay { sExtra = ( sExtra bay ) { seHLStatus = foldMap (seHLStatus . sExtra) shelves } }
+    normShelf shelf = shelf { sExtra = (sExtra shelf) { seHLStatus = foldMap f (sDetails shelf) } }
+    normRun run = let
+        bays = fmap normBay $ sDetails run
+        in run { sExtra = (sExtra run) { seHLStatus = foldMap (seHLStatus . sExtra) bays }
+               , sDetails = bays
+               }
+    runs = fmap normRun $ sDetails theRuns
+    in theRuns { sExtra = (sExtra theRuns) { seHLStatus = foldMap (seHLStatus . sExtra) runs }
+           , sDetails = runs
+           }
 
 initState :: String -> WH (AppState) RealWorld
 initState title = do
@@ -340,7 +356,8 @@ setNewWHEvent ev = do
    new <- liftIO $ execWH asWarehouse do
        let newWH = asWarehouse { whCurrentEvent = ev }
        put newWH
-       asShelvesSummary <- makeAppShelvesSummary
+       asShelvesSummary0 <- makeAppShelvesSummary
+       let asShelvesSummary = updateHLStatus (boxHLStatus s . zCurrentEx) asShelvesSummary0
        return s {asWarehouse = newWH, asShelvesSummary }
    put new
    

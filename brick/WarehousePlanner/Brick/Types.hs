@@ -55,12 +55,14 @@ type SumVec = ShelvesSummary SummaryExtra Vector
 data SummaryExtra = SummaryExtra 
      { seStyles :: Map Text Summary
      , seEvents :: Map Event (DiffStatus (Set Text)) -- ^ event which happen to items 
+     , seHLStatus :: HighlightStatus
      }
       deriving (Show)
       
 instance Semigroup SummaryExtra where
   e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
                           (unionWith (<>) (seEvents e1) (seEvents e2))
+                          (seHLStatus e1 <> seHLStatus e2)
 
 sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
 sStyles = seStyles . sExtra
