@@ -8,10 +8,13 @@ import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Summary as S
 import WarehousePlanner.History
+import WarehousePlanner.Selector (parseBoxSelector)
+import WarehousePlanner.Base
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Brick.RenderBar
 import WarehousePlanner.Brick.BoxDetail
+import WarehousePlanner.Brick.Input
 import WarehousePlanner.Exec (execWH)
 import Brick qualified as B
 import Brick.Widgets.Border qualified as B
@@ -30,8 +33,8 @@ import WarehousePlanner.Display qualified as D
 import Diagrams.Backend.Cairo (renderCairo)
 import Diagrams (mkSizeSpec2D)
 import System.Process (rawSystem)
+import Data.Set qualified as Set
 
-type Resource = Text
 type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode
              | EPrevMode
@@ -66,6 +69,8 @@ data WHEvent = ENextMode
              | EToggleHistoryNavigation
              --
              | EReload
+             -- Input
+             | EStartInputSelect
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -141,6 +146,9 @@ updateHLStatus f theRuns = let
            , sDetails = runs
            }
 
+updateHLState :: AppState -> AppState
+updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (asShelvesSummary state) }
+
 initState :: String -> WH (AppState) RealWorld
 initState title = do
   asShelvesSummary <- makeAppShelvesSummary
@@ -157,6 +165,8 @@ initState title = do
                  , asDiffEvent = whCurrentEvent warehouse
                  , asNavigateCurrent = False
                  , asDebugShowDiffs = False
+                 , asInput = Nothing
+                 , asSelection = Nothing
                  , ..}
 
 
@@ -195,7 +205,7 @@ whApp extraAttrs reload =
               in  [ vBoxB [ mainRun
                            , B.vLimit (if asDisplayHistory then 21 else 11) $ hBoxB (debugShelf s :  (pure . boxDetail asWarehouse (asHistoryRange s)) (currentBoxHistory s))
                            , main
-                           , renderStatus s
+                           , maybe (renderStatus s) renderInput asInput
                            ]
                   ]
       appChooseCursor = B.neverShowCursor
@@ -239,7 +249,18 @@ __reverseIf _ attr = attr
 whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
 whHandleEvent reload ev = do
   lasts <- gets asLastKeys
+  inputM <- gets asInput
   case ev of 
+       _ | Just input <- inputM -> do
+             result <- B.nestEventM input $ handleInputEvent ev
+             case snd result of
+                Left (Just result) -> do
+                               case iMode input of
+                                    ISelect -> setSelection result
+                               modify \s -> s  { asInput = Nothing }
+                Left Nothing -> -- ignore
+                         modify \s -> s { asInput = Nothing }
+                Right input -> modify \s -> s { asInput = Just input }
        B.AppEvent e -> handleWH e
        B.VtyEvent (V.EvKey (V.KChar 'n') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByName
        B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByShelve
@@ -276,6 +297,7 @@ whHandleEvent reload ev = do
                        Right newWH -> do
                              modify \s -> s { asWarehouse = newWH }
                              setNewWHEvent $ whCurrentEvent newWH
+       B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH EStartInputSelect
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
@@ -283,10 +305,10 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("oz" :: String) -> modify \s -> s { asLastKeys = c : lasts }
        B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNext
        B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPrevious
-       B.VtyEvent (V.EvKey (V.KUp) [] ) -> handleWH $ EHistoryEvent HParent
-       B.VtyEvent (V.EvKey (V.KDown) [] ) -> handleWH $ EHistoryEvent HChild
-       B.VtyEvent (V.EvKey (V.KPageUp) [] ) -> handleWH $ EHistoryEvent HSkipBackward
-       B.VtyEvent (V.EvKey (V.KPageDown) [] ) -> handleWH $ EHistoryEvent HSkipForward
+       B.VtyEvent (V.EvKey (V.KUp) _ ) -> handleWH $ EHistoryEvent HParent
+       B.VtyEvent (V.EvKey (V.KDown) _ ) -> handleWH $ EHistoryEvent HChild
+       B.VtyEvent (V.EvKey (V.KPageUp) _ ) -> handleWH $ EHistoryEvent HSkipBackward
+       B.VtyEvent (V.EvKey (V.KPageDown) _ ) -> handleWH $ EHistoryEvent HSkipForward
        B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPreviousSibling
        B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNextSibling
        B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
@@ -348,6 +370,7 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
+         EStartInputSelect -> modify \s -> s { asInput = Just (selectInput $ makeInputData s) }
          EReload -> error "Should have been caught earlier"
     where resetBox s = s { asCurrentBox = 0 }
 
@@ -356,9 +379,8 @@ setNewWHEvent ev = do
    new <- liftIO $ execWH asWarehouse do
        let newWH = asWarehouse { whCurrentEvent = ev }
        put newWH
-       asShelvesSummary0 <- makeAppShelvesSummary
-       let asShelvesSummary = updateHLStatus (boxHLStatus s . zCurrentEx) asShelvesSummary0
-       return s {asWarehouse = newWH, asShelvesSummary }
+       asShelvesSummary <- makeAppShelvesSummary
+       return $ updateHLState s {asWarehouse = newWH, asShelvesSummary  }
    put new
    
 navigateHistory HSetCurrent = do
@@ -549,6 +571,7 @@ renderStatus state@AppState{..} = let
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
+                           , B.center $ maybe (B.str "∅") (B.txt . sText) (asSelection ) -- current selection
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
@@ -618,8 +641,10 @@ withHLBoxAttr state f box = withHLStatus (boxHLStatus state box) (f box)
 boxHLStatus :: AppState -> Box RealWorld -> HighlightStatus
 boxHLStatus state box = HighlightStatus{..} where
     hsCurrent = Just box == currentBox state
-    hsSelected = if Just (boxStyle box) == selectedStyle state then 1 else 0
-    hsHighlighted = 0
+    hsHighlighted = if Just (boxStyle box) == selectedStyle state then 1 else 0
+    hsSelected = case asSelection state of
+                   Just selection | boxId box `elem` sSelected selection -> 1
+                   _  -> 0
     
 summaryHLStatus :: AppState -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> HighlightStatus
 summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
@@ -627,3 +652,37 @@ summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
                                                                      , shelf <- sDetailsList bay
                                                                      , box <- sDetailsList shelf
                                                                      ]
+
+-- * Inputs
+setSelection :: Text -> B.EventM n AppState ()
+setSelection sel = do
+  state  <- get
+  asSelection <- liftIO $ execWH (asWarehouse state) $ makeSelection sel
+  put $ updateHLState state { asSelection }
+
+
+makeSelection :: Text -> WH (Maybe (Selection s)) s
+makeSelection "" = return Nothing
+makeSelection sText = do 
+   let sSelector = parseBoxSelector sText
+   boxeIds <- findBoxByNameAndShelfNames sSelector
+   let sSelected = Set.fromList $ map boxId boxeIds 
+   return $ Just Selection{..}
+
+             
+makeInputData :: AppState -> InputData
+makeInputData state = let
+    idInitial = ""
+    idShelf =  sName $ currentShelf state
+    idPropertyValue = fromMaybe "" $ selectedStyle state
+    idStyle = maybe "" boxStyle $ currentBox state
+    idContent = case fmap boxContent $ currentBox state of
+                     Just content | not (null content) -> "#'" <> content
+                     _ -> ""
+    idBoxSelector = maybe "" sText $ asSelection state
+    idShelfSelector = "<not implemented>"
+    in InputData{..}
+
+                                                                     
+
+                                                                     

@@ -64,6 +64,7 @@ library:
     - WarehousePlanner.Brick.Types
     - WarehousePlanner.Brick.Util
     - WarehousePlanner.Brick.BoxDetail
+    - WarehousePlanner.Brick.Input
   ghc-options:
   - -Werror
   - -W
@@ -118,6 +119,7 @@ when:
   dependencies:
   - brick
   - vty
+  - text-zipper
   # for executable
   - optparse-applicative
     

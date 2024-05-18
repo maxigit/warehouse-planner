@@ -14,6 +14,9 @@ module WarehousePlanner.Brick.Types
 , asViewMode
 , asCurrentEvent
 , HighlightStatus(..)
+, Input(..), InputMode(..), InputData(..)
+, Resource
+, Selection(..)
 )
 where
 
@@ -22,6 +25,7 @@ import WarehousePlanner.Summary
 import WarehousePlanner.Type
 import Data.Vector qualified as V
 import Data.Foldable qualified as F
+import Brick.Widgets.Edit(Editor)
 
 data BarDirection = HorizontalBar
              | VerticalBar
@@ -49,6 +53,25 @@ data BoxOrder = BOByName
               | BOByVolume
      deriving (Show, Eq, Enum, Bounded)
 
+type Resource = Text
+data InputMode = ISelect
+
+data Input = Input { iEditor :: Editor Text Resource
+                   , iMode :: InputMode
+                   , iData  :: InputData
+                   }
+                   
+-- | Values like current boxstyle, shelf etc
+-- to insert with special keys when editing input.
+data InputData = InputData { idInitial :: Text
+                           , idShelf :: Text
+                           , idPropertyValue :: Text
+                           , idStyle :: Text
+                           , idContent :: Text
+                           , idBoxSelector :: Text
+                           , idShelfSelector :: Text
+                           }
+   deriving (Show, Eq)
 -- | Summary with a "list" with current position
 type SumVec = ShelvesSummary SummaryExtra Vector
 
@@ -88,8 +111,15 @@ data AppState = AppState
      , asDiffEvent :: Event -- ^ Event to show diff with
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
      , asDebugShowDiffs :: Bool
+     , asInput :: Maybe Input
+     , asSelection :: Maybe (Selection RealWorld)
      }
      
+data Selection s = 
+         Selection { sText :: Text
+                   , sSelector :: BoxSelector s
+                   , sSelected :: Set (BoxId s)
+                   }
 asCurrentEvent :: AppState -> Event
 asCurrentEvent = whCurrentEvent . asWarehouse
 

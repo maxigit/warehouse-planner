@@ -92,6 +92,7 @@ library
     build-depends:
         brick
       , optparse-applicative
+      , text-zipper
       , vty
   if flag(brick)
     exposed-modules:
@@ -103,6 +104,7 @@ library
         WarehousePlanner.Brick.Types
         WarehousePlanner.Brick.Util
         WarehousePlanner.Brick.BoxDetail
+        WarehousePlanner.Brick.Input
     hs-source-dirs:
         brick
 
@@ -161,6 +163,7 @@ executable whp
     build-depends:
         brick
       , optparse-applicative
+      , text-zipper
       , vty
   if flag(brick)
     buildable: True
@@ -228,6 +231,7 @@ test-suite test
     build-depends:
         brick
       , optparse-applicative
+      , text-zipper
       , vty
 
 benchmark bench
@@ -287,4 +291,5 @@ benchmark bench
     build-depends:
         brick
       , optparse-applicative
+      , text-zipper
       , vty
