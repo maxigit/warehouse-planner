@@ -218,10 +218,11 @@ eventAttrs = [(ev, V.black `on` fg)
 
 highlightAttrs :: [(AttrName, V.Attr)]
 highlightAttrs = [ (attrName "hl" , V.defAttr `V.withStyle` V.reverseVideo)
-                 , (attrName "current", V.defAttr `V.withStyle` (V.blink .|. V.bold))
+                 , (attrName "current", V.defAttr `V.withStyle` (V.underline .|. V.bold))
                  , (attrName "hl" <> attrName "current", V.defAttr `V.withStyle` (V.reverseVideo .|. V.underline .|. V.bold))
                  -- , (attrName "selected", V.defAttr `V.withStyle` V.underline)
                  , (attrName "selected", V.defAttr `V.withStyle` V.reverseVideo)
+                 , (attrName "hl" <> attrName "selected", V.defAttr `V.withStyle` (V.bold .|. V.reverseVideo))
                  , (attrName "current" <> attrName "selected", V.defAttr `V.withStyle` (V.reverseVideo .|. V.underline))
                  ]
 
