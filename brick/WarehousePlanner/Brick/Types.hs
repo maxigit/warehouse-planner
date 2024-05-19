@@ -54,7 +54,7 @@ data BoxOrder = BOByName
      deriving (Show, Eq, Enum, Bounded)
 
 type Resource = Text
-data InputMode = ISelect
+data InputMode = ISelectBoxes | ISelectShelves
 
 data Input = Input { iEditor :: Editor Text Resource
                    , iMode :: InputMode
@@ -78,14 +78,16 @@ type SumVec = ShelvesSummary SummaryExtra Vector
 data SummaryExtra = SummaryExtra 
      { seStyles :: Map Text Summary
      , seEvents :: Map Event (DiffStatus (Set Text)) -- ^ event which happen to items 
-     , seHLStatus :: HighlightStatus
+     , seBoxHLStatus :: HighlightStatus
+     , seShelfHLStatus :: HighlightStatus
      }
       deriving (Show)
       
 instance Semigroup SummaryExtra where
   e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
                           (unionWith (<>) (seEvents e1) (seEvents e2))
-                          (seHLStatus e1 <> seHLStatus e2)
+                          (seBoxHLStatus e1 <> seBoxHLStatus e2)
+                          (seShelfHLStatus e1 <> seShelfHLStatus e2)
 
 sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
 sStyles = seStyles . sExtra
@@ -112,14 +114,16 @@ data AppState = AppState
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
      , asDebugShowDiffs :: Bool
      , asInput :: Maybe Input
-     , asSelection :: Maybe (Selection RealWorld)
+     , asBoxSelection :: Maybe (Selection (BoxSelector RealWorld) (BoxId RealWorld))
+     , asShelfSelection :: Maybe (Selection (ShelfSelector RealWorld) Text)
      }
      
-data Selection s = 
+data Selection sel a = 
          Selection { sText :: Text
-                   , sSelector :: BoxSelector s
-                   , sSelected :: Set (BoxId s)
+                   , sSelector :: sel
+                   , sSelected :: Set a
                    }
+
 asCurrentEvent :: AppState -> Event
 asCurrentEvent = whCurrentEvent . asWarehouse
 

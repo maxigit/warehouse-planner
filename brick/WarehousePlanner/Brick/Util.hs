@@ -26,10 +26,12 @@ eigthH, eigthV
 , hlToAttr
 , withHLStatus
 , highlightAttrs
+, withBoxHLStatus, withShelfHLStatus
 ) where
 
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
+import WarehousePlanner.Summary
 import Brick
 import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
@@ -252,3 +254,9 @@ hlToAttr HighlightStatus{..}  = mconcat
    
 withHLStatus :: HighlightStatus -> Widget n -> Widget n
 withHLStatus hs = withAttr (hlToAttr hs)
+
+withShelfHLStatus :: ShelvesSummary SummaryExtra f a  -> Widget n -> Widget n
+withShelfHLStatus ssum = withAttr (hlToAttr . seShelfHLStatus $ sExtra ssum)
+
+withBoxHLStatus :: ShelvesSummary SummaryExtra f a  -> Widget n -> Widget n
+withBoxHLStatus ssum = withAttr (hlToAttr . seBoxHLStatus $ sExtra ssum)

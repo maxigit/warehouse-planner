@@ -55,7 +55,7 @@ renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (pa
 renderBay :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
 renderBay sview bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sDetails bay)
-  in joinBorders $ vBox $ ws <> [withHLStatus (seHLStatus $ sExtra bay) (txt ( sName bay)) <+> renderHorizontalSummary sview bay ]
+  in joinBorders $ vBox $ ws <> [withShelfHLStatus bay (txt ( sName bay)) <+> renderHorizontalSummary sview bay ]
 
 renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
@@ -86,7 +86,7 @@ renderS smode s = let
        
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
 -- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
-renderHorizontalSummary _sview ssum = hBox . map (\s -> withHLStatus (seHLStatus $ sExtra s) $ renderBestBar sviews s) $ sDetailsList ssum  where
+renderHorizontalSummary _sview ssum = hBox . map (\s -> withShelfHLStatus s $ renderBestBar sviews s) $ sDetailsList ssum  where
     sviews = SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n

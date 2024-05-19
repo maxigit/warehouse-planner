@@ -8,7 +8,7 @@ import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Summary as S
 import WarehousePlanner.History
-import WarehousePlanner.Selector (parseBoxSelector)
+import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector)
 import WarehousePlanner.Base
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
@@ -70,7 +70,7 @@ data WHEvent = ENextMode
              --
              | EReload
              -- Input
-             | EStartInputSelect
+             | EStartInputSelect InputMode
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -128,26 +128,35 @@ makeAppShelvesSummary = do
                                                return (DiffStatus { dsBoxIn=setFromList $ map shelfName namesIn
                                                                   , dsBoxOut=setFromList $ map shelfName namesOut
                                                                   , ..})
-                        return $ SummaryExtra styleMap (eventsWithName) mempty
+                        return $ SummaryExtra styleMap (eventsWithName) mempty mempty
 
-updateHLStatus :: (ZHistory1 Box RealWorld -> HighlightStatus) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld)) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld))
-updateHLStatus f theRuns = let
+updateHLStatus :: (ZHistory1 Box RealWorld -> HighlightStatus) -> (Text -> HighlightStatus) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld)) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld))
+updateHLStatus fbox fshelf theRuns = let
     normBay bay = let 
        shelves = fmap normShelf $ sDetails bay
-       in bay { sExtra = ( sExtra bay ) { seHLStatus = foldMap (seHLStatus . sExtra) shelves } }
-    normShelf shelf = shelf { sExtra = (sExtra shelf) { seHLStatus = foldMap f (sDetails shelf) } }
+       in bay { sExtra = ( sExtra bay ) { seBoxHLStatus = foldMap (seBoxHLStatus . sExtra) shelves
+                                        , seShelfHLStatus = foldMap (seShelfHLStatus . sExtra) shelves
+                                        }
+              , sDetails = shelves
+              }
+    normShelf shelf = shelf { sExtra = (sExtra shelf) { seBoxHLStatus = foldMap fbox (sDetails shelf)
+                                                      , seShelfHLStatus = fshelf (sName shelf)} }
     normRun run = let
         bays = fmap normBay $ sDetails run
-        in run { sExtra = (sExtra run) { seHLStatus = foldMap (seHLStatus . sExtra) bays }
+        in run { sExtra = (sExtra run) { seBoxHLStatus = foldMap (seBoxHLStatus . sExtra) bays
+                                       , seShelfHLStatus = foldMap (seShelfHLStatus . sExtra) bays
+                                       }
                , sDetails = bays
                }
     runs = fmap normRun $ sDetails theRuns
-    in theRuns { sExtra = (sExtra theRuns) { seHLStatus = foldMap (seHLStatus . sExtra) runs }
+    in theRuns { sExtra = (sExtra theRuns) { seBoxHLStatus = foldMap (seBoxHLStatus . sExtra) runs
+                                           , seShelfHLStatus = foldMap (seShelfHLStatus . sExtra) runs
+                                           }
            , sDetails = runs
            }
 
 updateHLState :: AppState -> AppState
-updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (asShelvesSummary state) }
+updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (shelfHLStatus state) (asShelvesSummary state) }
 
 initState :: String -> WH (AppState) RealWorld
 initState title = do
@@ -166,7 +175,8 @@ initState title = do
                  , asNavigateCurrent = False
                  , asDebugShowDiffs = False
                  , asInput = Nothing
-                 , asSelection = Nothing
+                 , asBoxSelection = Nothing
+                 , asShelfSelection = Nothing
                  , ..}
 
 
@@ -256,7 +266,8 @@ whHandleEvent reload ev = do
              case snd result of
                 Left (Just result) -> do
                                case iMode input of
-                                    ISelect -> setSelection result
+                                    ISelectBoxes -> setBoxSelection result
+                                    ISelectShelves -> setShelfSelection result
                                modify \s -> s  { asInput = Nothing }
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
@@ -297,7 +308,8 @@ whHandleEvent reload ev = do
                        Right newWH -> do
                              modify \s -> s { asWarehouse = newWH }
                              setNewWHEvent $ whCurrentEvent newWH
-       B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH EStartInputSelect
+       B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH (EStartInputSelect ISelectBoxes)
+       B.VtyEvent (V.EvKey (V.KChar '?') _ ) -> handleWH (EStartInputSelect ISelectShelves)
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
@@ -370,7 +382,7 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
-         EStartInputSelect -> modify \s -> s { asInput = Just (selectInput $ makeInputData s) }
+         EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData s) }
          EReload -> error "Should have been caught earlier"
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
@@ -572,7 +584,8 @@ renderStatus state@AppState{..} = let
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
-                           , B.center $ maybe (B.str "∅") (B.txt . sText) (asSelection ) -- current selection
+                           , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
+                           , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
@@ -624,7 +637,7 @@ renderRun :: (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHis
 renderRun renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )
-                             $ B.vBox (map (withHLStatus (seHLStatus $ sExtra bay) . B.str . pure) 
+                             $ B.vBox (map (withHLStatus (seBoxHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable
@@ -643,10 +656,17 @@ boxHLStatus :: AppState -> Box RealWorld -> HighlightStatus
 boxHLStatus state box = HighlightStatus{..} where
     hsCurrent = Just box == currentBox state
     hsHighlighted = if Just (boxStyle box) == selectedStyle state then 1 else 0
-    hsSelected = case asSelection state of
+    hsSelected = case asBoxSelection state of
                    Just selection | boxId box `elem` sSelected selection -> 1
                    _  -> 0
     
+shelfHLStatus :: AppState -> Text -> HighlightStatus
+shelfHLStatus state shelf = HighlightStatus{..} where
+    hsCurrent = shelf == sName (currentShelf state)
+    hsHighlighted = 0
+    hsSelected = case asShelfSelection state of
+                   Just selection | shelf `elem` sSelected selection -> 1
+                   _  -> 0
 summaryHLStatus :: AppState -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> HighlightStatus
 summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
                                                                      | bay <- sDetailsList run
@@ -655,21 +675,35 @@ summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
                                                                      ]
 
 -- * Inputs
-setSelection :: Text -> B.EventM n AppState ()
-setSelection sel = do
+setBoxSelection :: Text -> B.EventM n AppState ()
+setBoxSelection sel = do
   state  <- get
-  asSelection <- liftIO $ execWH (asWarehouse state) $ makeSelection sel
-  put $ updateHLState state { asSelection }
+  asBoxSelection <- liftIO $ execWH (asWarehouse state) $ makeBoxSelection sel
+  put $ updateHLState state { asBoxSelection }
+  
+setShelfSelection :: Text -> B.EventM n AppState ()
+setShelfSelection sel = do
+  state  <- get
+  asShelfSelection <- liftIO $ execWH (asWarehouse state) $ makeShelfSelection sel
+  put $ updateHLState state { asShelfSelection }
 
 
-makeSelection :: Text -> WH (Maybe (Selection s)) s
-makeSelection "" = return Nothing
-makeSelection sText = do 
+makeBoxSelection :: Text -> WH (Maybe (Selection (BoxSelector s) (BoxId s))) s
+makeBoxSelection "" = return Nothing
+makeBoxSelection sText = do 
    let sSelector = parseBoxSelector sText
    boxeIds <- findBoxByNameAndShelfNames sSelector
    let sSelected = Set.fromList $ map boxId boxeIds 
    return $ Just Selection{..}
 
+makeShelfSelection :: Text -> WH (Maybe (Selection (ShelfSelector s) Text)) s
+makeShelfSelection "" = return Nothing
+makeShelfSelection sText = do 
+   let sSelector = parseShelfSelector sText
+   shelfIds <- findShelvesByBoxNameAndNames sSelector
+   shelves <- mapM findShelf shelfIds
+   let sSelected = Set.fromList $ map shelfName shelves
+   return $ Just Selection{..}
              
 makeInputData :: AppState -> InputData
 makeInputData state = let
@@ -680,8 +714,8 @@ makeInputData state = let
     idContent = case fmap boxContent $ currentBox state of
                      Just content | not (null content) -> "#'" <> content
                      _ -> ""
-    idBoxSelector = maybe "" sText $ asSelection state
-    idShelfSelector = "<not implemented>"
+    idBoxSelector = maybe "" sText $ asBoxSelection state
+    idShelfSelector = maybe "" sText $ asShelfSelection state
     in InputData{..}
 
                                                                      

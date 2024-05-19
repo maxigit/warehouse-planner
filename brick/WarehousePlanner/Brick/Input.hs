@@ -15,14 +15,15 @@ import Data.Text.Zipper (gotoEOL, insertMany)
 
                    
                    
-selectInput :: InputData -> Input
-selectInput initial = Input ed ISelect initial where
+selectInput :: InputMode -> InputData -> Input
+selectInput imode initial = Input ed imode initial where
   ed = applyEdit gotoEOL $ editorText "input" (Just 1) (idInitial initial)
 
 renderInput :: Input -> Widget Resource
 renderInput Input{..} = mode <+> ed where
   mode = case iMode of
-          ISelect -> str "/"
+          ISelectBoxes -> str "/"
+          ISelectShelves -> str "?"
   ed = renderEditor renderLines True iEditor
   renderLines  = hBox . map txt 
 

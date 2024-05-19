@@ -109,7 +109,7 @@ runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDet
                         , attr run i $ padLeftRight 1 $ txt (sName run)
                         , case mode of
                             ViewSummary smode -> renderHorizontalSummary smode run
-                            ViewHistory -> hBox [ withHLStatus (seHLStatus $ sExtra bay) $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
+                            ViewHistory -> hBox [ withShelfHLStatus bay $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
                                                 | bay <- sDetailsList run
                                                 ]
                         ]
