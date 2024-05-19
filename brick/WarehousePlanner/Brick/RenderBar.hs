@@ -32,7 +32,7 @@ shelfSummaryToBar dir view ssum =  let
   bar = case dir of
          HorizontalBar -> eigthH
          VerticalBar -> eigthV
-  in withAttr (percToAttrName r 0) (str (bar perc8 : []))
+  in withDefAttr (percToAttrName r 0) (str (bar perc8 : []))
   
   
   
@@ -55,7 +55,7 @@ renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (pa
 renderBay :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
 renderBay sview bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sDetails bay)
-  in joinBorders $ vBox $ ws <> [txt ( sName bay) <+> renderHorizontalSummary sview bay ]
+  in joinBorders $ vBox $ ws <> [withHLStatus (seHLStatus $ sExtra bay) (txt ( sName bay)) <+> renderHorizontalSummary sview bay ]
 
 renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
@@ -70,7 +70,7 @@ shelfSummaryToAllBars sum = hBox [ renderS SVVolume sum
 
 
 charWithPerc2 :: Char -> Double -> Double -> Widget n
-charWithPerc2 c r1 r2 = withAttr (percToAttrName r1 r2) (str [c])
+charWithPerc2 c r1 r2 = withDefAttr (percToAttrName r1 r2) (str [c])
 
 renderS :: SummaryView -> ShelvesSummary e f a -> Widget n
 renderS smode s = let 
@@ -86,7 +86,7 @@ renderS smode s = let
        
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
 -- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
-renderHorizontalSummary _sview ssum = hBox . map (renderBestBar sviews) $ sDetailsList ssum  where
+renderHorizontalSummary _sview ssum = hBox . map (\s -> withHLStatus (seHLStatus $ sExtra s) $ renderBestBar sviews s) $ sDetailsList ssum  where
     sviews = SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n

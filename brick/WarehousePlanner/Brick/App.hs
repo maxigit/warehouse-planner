@@ -372,6 +372,7 @@ handleWH ev =
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EStartInputSelect -> modify \s -> s { asInput = Just (selectInput $ makeInputData s) }
          EReload -> error "Should have been caught earlier"
+    modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
 
 setNewWHEvent ev = do
@@ -623,7 +624,7 @@ renderRun :: (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHis
 renderRun renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )
-                             $ B.vBox (map (B.str . pure) 
+                             $ B.vBox (map (withHLStatus (seHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable

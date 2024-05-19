@@ -101,7 +101,7 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: (SumVec _ -> HighlightStatus) -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
+runsToTable :: (SumVec _a -> HighlightStatus) -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
 runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
                           then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
@@ -109,7 +109,7 @@ runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDet
                         , attr run i $ padLeftRight 1 $ txt (sName run)
                         , case mode of
                             ViewSummary smode -> renderHorizontalSummary smode run
-                            ViewHistory -> hBox [ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
+                            ViewHistory -> hBox [ withHLStatus (seHLStatus $ sExtra bay) $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
                                                 | bay <- sDetailsList run
                                                 ]
                         ]
