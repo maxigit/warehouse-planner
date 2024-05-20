@@ -20,7 +20,7 @@ import Brick qualified as B
 import Brick.Widgets.Border qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
-import Control.Monad.State (gets, get, modify, put)
+import Control.Monad.State (gets, get, modify, put, zipWithM)
 import Data.List.NonEmpty(NonEmpty(..), (!!))
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
@@ -71,6 +71,7 @@ data WHEvent = ENextMode
              | EReload
              -- Input
              | EStartInputSelect InputMode
+             -- WH Action
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -300,7 +301,25 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextStyle
        B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
+       B.VtyEvent (V.EvKey (V.KChar '%') [] ) -> do
+                  state <- get
+                  let currentEvent = whCurrentEvent (asWarehouse state)
+                  resultm <- liftIO $ execWH (asWarehouse state) do
+                      case (asBoxSelection state , asShelfSelection state) of
+                          (Just bs, Just ss) ->  do
+                             shelves <- findShelvesByBoxNameAndNames (sSelector ss)
+                             newBaseEvent "MOVE %" $ sText bs <> " TO " <> sText ss 
+                             leftOver <- moveBoxes ExitLeft PBestEffort SortBoxes (toList $ sSelected bs) shelves
+                             zipWithM (updateBoxTags [("error", SetTag )]) leftOver [1..]
+                             newWH <- get
+                             return $ Just (newWH, bs { sSelected = setFromList $ map boxId leftOver } )
+                          _ -> return Nothing
+                  case resultm of 
+                     Just (newWH, newBoxSelection) -> do 
+                          modify \s -> s { asWarehouse = newWH, asBoxSelection = Just newBoxSelection  }
+                          setNewWHEvent $ whCurrentEvent newWH
+                          modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
+                     Nothing -> return ()
        B.VtyEvent (V.EvKey (V.KChar 'r') [V.MCtrl] ) -> do
                   newWHE <- liftIO reload
                   case newWHE of
