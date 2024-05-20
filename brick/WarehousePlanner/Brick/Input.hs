@@ -25,6 +25,7 @@ renderInput Input{..} = mode <+> ed where
           ISelectBoxes -> str "/"
           ISelectShelves -> str "?"
           ISelectProperty -> str "[Prop]"
+          ISelectTag -> str "#"
   ed = renderEditor renderLines True iEditor
   renderLines  = hBox . map txt 
 

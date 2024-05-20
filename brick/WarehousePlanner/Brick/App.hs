@@ -59,6 +59,8 @@ data WHEvent = ENextMode
              | EPreviousPropValue
              -- 
              | ESetBoxOrder BoxOrder
+             | ESetProperty Text
+             | ESetBoxTitle Text
              -- 
              | ENextHLRun
              | EPrevHLRun
@@ -275,6 +277,7 @@ whHandleEvent reload ev = do
                                     ISelectBoxes -> setBoxSelection result
                                     ISelectShelves -> setShelfSelection result
                                     ISelectProperty -> setProperty result
+                                    ISelectTag -> setTagAll result
                                modify \s -> s  { asInput = Nothing }
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
@@ -286,6 +289,15 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
        B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
+       B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
+       B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${content}"
+       B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
+       B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
+       B.VtyEvent (V.EvKey (V.KChar 'o') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${orientation}"
+       B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  't':_ <- lasts  -> handleWH (EStartInputSelect ISelectTag)
+       B.VtyEvent (V.EvKey (V.KChar 'S') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style}"
+       B.VtyEvent (V.EvKey (V.KChar 's') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style:-}"
+       B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${content}"
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
@@ -335,13 +347,11 @@ whHandleEvent reload ev = do
                              setNewWHEvent $ whCurrentEvent newWH
        B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH (EStartInputSelect ISelectBoxes)
        B.VtyEvent (V.EvKey (V.KChar '?') _ ) -> handleWH (EStartInputSelect ISelectShelves)
-       B.VtyEvent (V.EvKey (V.KChar '#') _ ) -> handleWH (EStartInputSelect ISelectProperty)
-       B.VtyEvent (V.EvKey (V.KChar '\'') _ ) -> setProperty "${content}"
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
-       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("oz" :: String) -> modify \s -> s { asLastKeys = c : lasts }
+       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("ozpt" :: String) -> modify \s -> s { asLastKeys = c : lasts }
        B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNext
        B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPrevious
        B.VtyEvent (V.EvKey (V.KUp) _ ) -> handleWH $ EHistoryEvent HParent
@@ -390,6 +400,8 @@ handleWH ev =
                     modify \s -> s { asCurrentPropValue = prevOf' (asCurrentPropValue s) (asCurrentRunPropValues s) }
                     -- handleWH ESelectCurrentPropValue
          ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
+         ESetProperty prop -> setProperty prop
+         ESetBoxTitle title -> setBoxTitle title
          ENextHLRun -> do
                     asSelected <- gets asSelectedPropValue
                     case asSelected of
@@ -409,7 +421,7 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
-         EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData s) }
+         EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
          EReload -> error "Should have been caught earlier"
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
@@ -423,6 +435,17 @@ setNewWHEvent ev = do
        return $ updateHLState s {asWarehouse = newWH, asShelvesSummary  }
    put new
    
+execute :: WH a RealWorld -> B.EventM  n AppState a
+execute action = do 
+   s@AppState{..} <- get
+   (newState, r) <- liftIO $ execWH asWarehouse do
+      result <- action 
+      asShelvesSummary <- makeAppShelvesSummary asProperty
+      newWH <- get
+      return $ (updateHLState s {asWarehouse = newWH, asShelvesSummary  }, result)
+   put $ runUpdated newState
+   return  r
+
 navigateHistory HSetCurrent = do
    diff <- gets asDiffEvent 
    setNewWHEvent diff
@@ -707,13 +730,22 @@ setShelfSelection sel = do
   asShelfSelection <- liftIO $ execWH (asWarehouse state) $ makeShelfSelection sel
   put $ updateHLState state { asShelfSelection }
 
-setProperty :: Text -> B.EventM n AppState ()
+setProperty :: Text -> B.EventM Resource AppState ()
 setProperty value = do
-   state <- get
    let valuem = if null value then Nothing else Just value
-   newSummary  <- liftIO $ execWH (asWarehouse state) $ makeAppShelvesSummary valuem 
-   put state { asShelvesSummary =  newSummary, asProperty = valuem }
+   modify \s -> s { asProperty = valuem }
+   execute (return ())
 
+-- | Set a tag to all boxes (not only selected ones)
+setTagAll :: Text -> B.EventM n AppState ()
+setTagAll tag = execute do
+       boxIds <- gets boxes
+       boxes_ <- mapM findBox boxIds 
+       let tagOps = parseTagOperations tag
+       void $ zipWithM (updateBoxTags tagOps) (toList boxes_) [1..]
+
+setBoxTitle title = setTagAll ("ctitle=" <> title)
+   
 
 makeBoxSelection :: Text -> WH (Maybe (Selection (BoxSelector s) (BoxId s))) s
 makeBoxSelection "" = return Nothing
@@ -732,9 +764,12 @@ makeShelfSelection sText = do
    let sSelected = Set.fromList $ map shelfName shelves
    return $ Just Selection{..}
              
-makeInputData :: AppState -> InputData
-makeInputData state = let
-    idInitial = ""
+makeInputData :: InputMode -> AppState -> InputData
+makeInputData imode state = let
+    idInitial = case imode of 
+                  ISelectProperty -> "$"
+                  ISelectTag -> "ctitle=$"
+                  _ -> ""
     idShelf =  sName $ currentShelf state
     idPropertyValue = fromMaybe "" $ selectedPropValue state
     idStyle = maybe "" boxStyle $ currentBox state

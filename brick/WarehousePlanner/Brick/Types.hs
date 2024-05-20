@@ -54,7 +54,10 @@ data BoxOrder = BOByName
      deriving (Show, Eq, Enum, Bounded)
 
 type Resource = Text
-data InputMode = ISelectBoxes | ISelectShelves | ISelectProperty
+data InputMode = ISelectBoxes
+               | ISelectShelves
+               | ISelectProperty 
+               | ISelectTag
 
 data Input = Input { iEditor :: Editor Text Resource
                    , iMode :: InputMode

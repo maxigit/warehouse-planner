@@ -72,7 +72,10 @@ collapseColumns = transpose . collapseRows . transpose
 
 
                     
-renderBoxContent box = withStyleAttr (boxPropValue box) $ txt $ boxContent box <> " "
+renderBoxContent box = withStyleAttr (boxPropValue box) $ txt $ content <> " " where
+     content = case getTagValuem box "ctitle" of
+                   Nothing -> boxContent box
+                   Just v -> v
 renderBoxOrientation box = withStyleAttr (boxPropValue box)
                                  $ txt $ showOrientation' $ orientation box
   
