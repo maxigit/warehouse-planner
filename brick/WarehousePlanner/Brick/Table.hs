@@ -72,8 +72,8 @@ collapseColumns = transpose . collapseRows . transpose
 
 
                     
-renderBoxContent box = withStyleAttr (boxStyle box) $ txt $ boxContent box <> " "
-renderBoxOrientation box = withStyleAttr (boxStyle box)
+renderBoxContent box = withStyleAttr (boxPropValue box) $ txt $ boxContent box <> " "
+renderBoxOrientation box = withStyleAttr (boxPropValue box)
                                  $ txt $ showOrientation' $ orientation box
   
   
@@ -101,8 +101,8 @@ baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: (SumVec _a -> HighlightStatus) -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
-runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
+runsToTable hrange mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
                           then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
@@ -114,9 +114,10 @@ runsToTable mkStatus hrange mode current runs = selectTable current mkRow  (sDet
                                                 ]
                         ]
           -- use selected style attribute if the run contains the style
-          attr run i = let status = mkStatus run
-                       in case hsSelected status of
-                            count |  count > 0 -> withHLStatus status  . ( <+> (str . printf "(%d)" $  count))
+          attr run i = let status = seBoxHLStatus $ sExtra run
+                       in case status of
+                            HighlightStatus{..} |  hsSelected + hsHighlighted > 0
+                                                -> withHLStatus status  . ( <+> (str $ printf "(%d/%d)" hsSelected hsHighlighted   ))
                             _ -> selectAttr (current == i)
 
 

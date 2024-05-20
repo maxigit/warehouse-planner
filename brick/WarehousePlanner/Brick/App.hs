@@ -54,9 +54,9 @@ data WHEvent = ENextMode
              | EFirstBay
              | ELastBay
              -- 
-             | ESelectCurrentStyle
-             | ENextStyle
-             | EPreviousStyle
+             | ESelectCurrentPropValue
+             | ENextPropValue
+             | EPreviousPropValue
              -- 
              | ESetBoxOrder BoxOrder
              -- 
@@ -87,8 +87,8 @@ data HistoryEvent = HPrevious
                   | HSwapCurrent
      deriving(Show,Eq)
 
-makeAppShelvesSummary :: WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
-makeAppShelvesSummary = do
+makeAppShelvesSummary :: Maybe Text -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
+makeAppShelvesSummary propm = do
   runs <- gets shelfGroup
   shelvesSummary <- traverseRuns findShelf runs
                  >>= makeRunsSummary (makeExtra)
@@ -113,10 +113,26 @@ makeAppShelvesSummary = do
         makeExtra shelf =  do
                         currentEvent <- gets whCurrentEvent
                         boxes <- mapM findBox (_shelfBoxes shelf)
-                        let styleMap = Map.fromListWith (<>) [ (boxStyle box, makeBoxesSummary [box])
-                                                             | box <- toList boxes
-                                                             ]
-                        boxHistorys <- mapM getBoxHistory boxes
+                        let getProp = case propm of
+                                           Just prop -> case expandAttributeMaybe prop of
+                                                             Nothing -> \_ _ -> return ""
+                                                             Just expand -> expand
+                                           Nothing -> \b _ -> return $ boxStyle b
+                        propValues <- zipWithM (\b i -> do
+                                                        p' <- getProp b i
+                                                        let p = if p' == ""
+                                                                then "∅"
+                                                                else p'
+                                                        -- Hack to store the property value for display
+                                                        updateBoxTags [("@prop", SetValues [p])] b 0
+                                                        return (p , makeBoxesSummary [b])
+                                               )
+                                               (toList boxes)
+                                               [1..]
+
+                        let propValueMap = Map.fromListWith (<>) propValues
+                        boxesWithProp <- mapM findBox (_shelfBoxes shelf)
+                        boxHistorys <- mapM getBoxHistory boxesWithProp
                         shelfHistory <- getShelfHistory shelf
                         let boxEventMaps = [ computeBoxDiffHistoryFrom $ toZHistory currentEvent history
                                           |  history <- toList boxHistorys
@@ -129,7 +145,7 @@ makeAppShelvesSummary = do
                                                return (DiffStatus { dsBoxIn=setFromList $ map shelfName namesIn
                                                                   , dsBoxOut=setFromList $ map shelfName namesOut
                                                                   , ..})
-                        return $ SummaryExtra styleMap (eventsWithName) mempty mempty
+                        return $ SummaryExtra propValueMap (eventsWithName) mempty mempty
 
 updateHLStatus :: (ZHistory1 Box RealWorld -> HighlightStatus) -> (Text -> HighlightStatus) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld)) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld))
 updateHLStatus fbox fshelf theRuns = let
@@ -161,13 +177,13 @@ updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus sta
 
 initState :: String -> WH (AppState) RealWorld
 initState title = do
-  asShelvesSummary <- makeAppShelvesSummary
+  asShelvesSummary <- makeAppShelvesSummary Nothing
   let asSummaryView = SVVolume
       asDisplayHistory = False
   warehouse <- get
   return . runUpdated
          $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
-                 , asSelectedStyle = Nothing, asCurrentStyle = 0, asCurrentRunStyles = mempty
+                 ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
                  , asBoxOrder = BOByName
                  , asLastKeys = []
                  , asWarehouse = warehouse
@@ -234,27 +250,16 @@ whMain title reload = do
   state0 <- execWH wh $ initState title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
-  let style'shelfs = [ (style, sName shelfSum)
-                    | run <- sDetailsList (asShelvesSummary state0)
-                    , bay <- sDetailsList run
-                    , shelfSum <- sDetailsList bay
-                    , style <- keys (sStyles shelfSum)
-                    ]
-  let styles = reverse $ map fst style'shelfs
-      attrs _state =
+  let attrs state =
             selectedAttr
             -- : bayNameAN
             : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
             : zipWith (\style attr -> (makeStyleAttrName style, attr)) --  reverseIf (Just style == selectedStyle state) attr ))
-                      styles
+                      (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
                       (cycle defaultStyleAttrs)
             <> eventAttrs
             <> highlightAttrs
   void $ B.defaultMain (whApp attrs reload) state0
-
-__reverseIf :: Bool -> V.Attr -> V.Attr
-__reverseIf True attr = attr `V.withStyle` V.reverseVideo
-__reverseIf _ attr = attr
 
 
 whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
@@ -269,6 +274,7 @@ whHandleEvent reload ev = do
                                case iMode input of
                                     ISelectBoxes -> setBoxSelection result
                                     ISelectShelves -> setShelfSelection result
+                                    ISelectProperty -> setProperty result
                                modify \s -> s  { asInput = Nothing }
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
@@ -295,11 +301,11 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
        B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
        B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
-       B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentStyle
-       B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextStyle
-       B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousStyle
-       B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextStyle
-       B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousStyle
+       B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentPropValue
+       B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextPropValue
+       B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousPropValue
+       B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextPropValue
+       B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousPropValue
        B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar '%') [] ) -> do
                   state <- get
@@ -329,6 +335,8 @@ whHandleEvent reload ev = do
                              setNewWHEvent $ whCurrentEvent newWH
        B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH (EStartInputSelect ISelectBoxes)
        B.VtyEvent (V.EvKey (V.KChar '?') _ ) -> handleWH (EStartInputSelect ISelectShelves)
+       B.VtyEvent (V.EvKey (V.KChar '#') _ ) -> handleWH (EStartInputSelect ISelectProperty)
+       B.VtyEvent (V.EvKey (V.KChar '\'') _ ) -> setProperty "${content}"
        B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
        B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
        B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
@@ -371,31 +379,31 @@ handleWH ev =
          ELastRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = lastOf (asShelvesSummary s) }
          EFirstBay -> modify \s -> resetBox $ s { asCurrentBay = 0 }
          ELastBay -> modify \s -> resetBox $ s { asCurrentBay = lastOf (currentRun s) }
-         ESelectCurrentStyle -> modify \s -> s { asSelectedStyle = if currentStyle s == asSelectedStyle s
+         ESelectCurrentPropValue -> modify \s -> s { asSelectedPropValue = if currentPropValue s == asSelectedPropValue s
                                                                    then Nothing
-                                                                   else currentStyle s
+                                                                   else currentPropValue s
                                                }
-         ENextStyle -> do
-                    modify \s -> s { asCurrentStyle = nextOf' (asCurrentStyle s) (asCurrentRunStyles s) }
-                    -- handleWH ESelectCurrentStyle
-         EPreviousStyle -> do
-                    modify \s -> s { asCurrentStyle = prevOf' (asCurrentStyle s) (asCurrentRunStyles s) }
-                    -- handleWH ESelectCurrentStyle
+         ENextPropValue -> do
+                    modify \s -> s { asCurrentPropValue = nextOf' (asCurrentPropValue s) (asCurrentRunPropValues s) }
+                    -- handleWH ESelectCurrentPropValue
+         EPreviousPropValue -> do
+                    modify \s -> s { asCurrentPropValue = prevOf' (asCurrentPropValue s) (asCurrentRunPropValues s) }
+                    -- handleWH ESelectCurrentPropValue
          ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
          ENextHLRun -> do
-                    asSelected <- gets asSelectedStyle
+                    asSelected <- gets asSelectedPropValue
                     case asSelected of
-                         Nothing -> handleWH ESelectCurrentStyle 
+                         Nothing -> handleWH ESelectCurrentPropValue 
                          _ -> return ()
-                    modify \s -> case asSelectedStyle s of
+                    modify \s -> case asSelectedPropValue s of
                                             Nothing -> s
                                             Just style -> findNextHLRun style s
          EPrevHLRun -> do
-                    asSelected <- gets asSelectedStyle
+                    asSelected <- gets asSelectedPropValue
                     case asSelected of
-                         Nothing -> handleWH ESelectCurrentStyle 
+                         Nothing -> handleWH ESelectCurrentPropValue 
                          _ -> return ()
-                    modify \s -> case asSelectedStyle s of
+                    modify \s -> case asSelectedPropValue s of
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
@@ -411,7 +419,7 @@ setNewWHEvent ev = do
    new <- liftIO $ execWH asWarehouse do
        let newWH = asWarehouse { whCurrentEvent = ev }
        put newWH
-       asShelvesSummary <- makeAppShelvesSummary
+       asShelvesSummary <- makeAppShelvesSummary asProperty
        return $ updateHLState s {asWarehouse = newWH, asShelvesSummary  }
    put new
    
@@ -534,11 +542,11 @@ prevRunThrough s@AppState{..} = let
      else s { asCurrentRun = prev }
 
 setBoxOrder :: BoxOrder -> AppState -> AppState
-setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asBoxOrder=boxOrder,..} where
+setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunPropValues=sorted,asBoxOrder=boxOrder,..} where
   sorted = case boxOrder of
-              BOByName -> sortOn fst asCurrentRunStyles
-              BOByVolume -> sortOn (Down . suVolume . snd) asCurrentRunStyles
-              BOByCount -> sortOn (Down . suCount . snd) asCurrentRunStyles
+              BOByName -> sortOn fst asCurrentRunPropValues
+              BOByVolume -> sortOn (Down . suVolume . snd) asCurrentRunPropValues
+              BOByCount -> sortOn (Down . suCount . snd) asCurrentRunPropValues
               BOByShelve -> let -- find boxes in order of appearance
                   style'shelf :: Map Text (Text, Dimension)
                   style'shelf = Map.fromList $ reverse
@@ -547,14 +555,14 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunStyles=sorted,asB
                                              , shelfSum <- sortOn sName $ sDetailsList baySum
                                              , box <- sortOn boxOffset $ map zCurrentEx $ sDetailsList shelfSum
                                              ]
-                  in sortOn (flip lookup style'shelf . fst) asCurrentRunStyles
+                  in sortOn (flip lookup style'shelf . fst) asCurrentRunPropValues
 -- * Find next shelf
 -- | Find next shelf containing the given style
 -- or highlighted run
 findNextHLRun :: Text -> AppState -> AppState
 findNextHLRun style AppState{..} = let
    nextRuns = drop (asCurrentRun + 1) (sDetails asShelvesSummary)
-   indexM = V.findIndex (isJust . lookup style . sStyles) nextRuns 
+   indexM = V.findIndex (isJust . lookup style . sPropValues) nextRuns 
    newRun = case indexM of
                Nothing -> asCurrentRun
                Just i -> asCurrentRun + i + 1
@@ -564,7 +572,7 @@ findNextHLRun style AppState{..} = let
 findPrevHLRun :: Text -> AppState -> AppState
 findPrevHLRun style AppState{..} = let
    nextRuns = take (asCurrentRun) (sDetails asShelvesSummary)
-   indexM = V.findIndex (isJust . lookup style . sStyles) $ reverse nextRuns 
+   indexM = V.findIndex (isJust . lookup style . sPropValues) $ reverse nextRuns 
    newRun = case indexM of
                Nothing -> asCurrentRun
                Just i -> asCurrentRun - i -1
@@ -587,22 +595,22 @@ drawCurrentRun app  = do
 -- * Post update
 -- | update the list of current styles
 runUpdated :: AppState -> AppState
-runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunStyles=styles,..} where
-    styles = fromList $ Map.toList $ sStyles (currentRun state)
+runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunPropValues=styles,..} where
+    styles = fromList $ Map.toList $ sPropValues (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (summaryHLStatus state) (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
 
--- * Styles
+-- * PropValues
 stylesSideBar :: AppState -> B.Widget Text
 stylesSideBar state@AppState{..} = 
-  B.renderTable $ stylesToTable (selectedStyle state) asCurrentStyle $ fmap fst asCurrentRunStyles
+  B.renderTable $ stylesToTable (selectedPropValue state) asCurrentPropValue $ fmap fst asCurrentRunPropValues
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..8] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
-                           , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedStyle ) -- current style
+                           , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                            , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
                            , B.center $ B.str (show asBoxOrder)
@@ -674,7 +682,7 @@ withHLBoxAttr state f box = withHLStatus (boxHLStatus state box) (f box)
 boxHLStatus :: AppState -> Box RealWorld -> HighlightStatus
 boxHLStatus state box = HighlightStatus{..} where
     hsCurrent = Just box == currentBox state
-    hsHighlighted = if Just (boxStyle box) == selectedStyle state then 1 else 0
+    hsHighlighted = if Just (boxPropValue box) == selectedPropValue state then 1 else 0
     hsSelected = case asBoxSelection state of
                    Just selection | boxId box `elem` sSelected selection -> 1
                    _  -> 0
@@ -686,13 +694,6 @@ shelfHLStatus state shelf = HighlightStatus{..} where
     hsSelected = case asShelfSelection state of
                    Just selection | shelf `elem` sSelected selection -> 1
                    _  -> 0
-summaryHLStatus :: AppState -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> HighlightStatus
-summaryHLStatus state run = foldMap (boxHLStatus state . zCurrentEx) [ box
-                                                                     | bay <- sDetailsList run
-                                                                     , shelf <- sDetailsList bay
-                                                                     , box <- sDetailsList shelf
-                                                                     ]
-
 -- * Inputs
 setBoxSelection :: Text -> B.EventM n AppState ()
 setBoxSelection sel = do
@@ -705,6 +706,13 @@ setShelfSelection sel = do
   state  <- get
   asShelfSelection <- liftIO $ execWH (asWarehouse state) $ makeShelfSelection sel
   put $ updateHLState state { asShelfSelection }
+
+setProperty :: Text -> B.EventM n AppState ()
+setProperty value = do
+   state <- get
+   let valuem = if null value then Nothing else Just value
+   newSummary  <- liftIO $ execWH (asWarehouse state) $ makeAppShelvesSummary valuem 
+   put state { asShelvesSummary =  newSummary, asProperty = valuem }
 
 
 makeBoxSelection :: Text -> WH (Maybe (Selection (BoxSelector s) (BoxId s))) s
@@ -728,7 +736,7 @@ makeInputData :: AppState -> InputData
 makeInputData state = let
     idInitial = ""
     idShelf =  sName $ currentShelf state
-    idPropertyValue = fromMaybe "" $ selectedStyle state
+    idPropertyValue = fromMaybe "" $ selectedPropValue state
     idStyle = maybe "" boxStyle $ currentBox state
     idContent = case fmap boxContent $ currentBox state of
                      Just content | not (null content) -> "#'" <> content

@@ -27,6 +27,7 @@ eigthH, eigthV
 , withHLStatus
 , highlightAttrs
 , withBoxHLStatus, withShelfHLStatus
+, boxPropValue
 ) where
 
 import ClassyPrelude hiding (on)
@@ -260,3 +261,8 @@ withShelfHLStatus ssum = withAttr (hlToAttr . seShelfHLStatus $ sExtra ssum)
 
 withBoxHLStatus :: ShelvesSummary SummaryExtra f a  -> Widget n -> Widget n
 withBoxHLStatus ssum = withAttr (hlToAttr . seBoxHLStatus $ sExtra ssum)
+
+
+boxPropValue :: Box s -> Text
+boxPropValue box = fromMaybe (boxStyle box) $ getTagValuem box "@prop"
+

@@ -7,8 +7,8 @@ module WarehousePlanner.Brick.Types
 , SumVec, sDetailsList
 , selectFromSumVec
 , currentRun, currentBay, currentShelf, currentBox, currentBoxHistory
-, selectedStyle, currentStyle
-, sStyles
+, selectedPropValue, currentPropValue
+, sPropValues
 , SummaryExtra(..)
 , asHistoryRange
 , asViewMode
@@ -54,7 +54,7 @@ data BoxOrder = BOByName
      deriving (Show, Eq, Enum, Bounded)
 
 type Resource = Text
-data InputMode = ISelectBoxes | ISelectShelves
+data InputMode = ISelectBoxes | ISelectShelves | ISelectProperty
 
 data Input = Input { iEditor :: Editor Text Resource
                    , iMode :: InputMode
@@ -76,7 +76,7 @@ data InputData = InputData { idInitial :: Text
 type SumVec = ShelvesSummary SummaryExtra Vector
 
 data SummaryExtra = SummaryExtra 
-     { seStyles :: Map Text Summary
+     { sePropValues :: Map Text Summary
      , seEvents :: Map Event (DiffStatus (Set Text)) -- ^ event which happen to items 
      , seBoxHLStatus :: HighlightStatus
      , seShelfHLStatus :: HighlightStatus
@@ -84,13 +84,13 @@ data SummaryExtra = SummaryExtra
       deriving (Show)
       
 instance Semigroup SummaryExtra where
-  e1 <> e2 = SummaryExtra (unionWith (<>) (seStyles e1) (seStyles e2))
+  e1 <> e2 = SummaryExtra (unionWith (<>) (sePropValues e1) (sePropValues e2))
                           (unionWith (<>) (seEvents e1) (seEvents e2))
                           (seBoxHLStatus e1 <> seBoxHLStatus e2)
                           (seShelfHLStatus e1 <> seShelfHLStatus e2)
 
-sStyles :: ShelvesSummary SummaryExtra a b -> Map Text Summary
-sStyles = seStyles . sExtra
+sPropValues :: ShelvesSummary SummaryExtra a b -> Map Text Summary
+sPropValues = sePropValues . sExtra
 
 data AppState = AppState
      { -- asViewMode  :: ViewMode
@@ -102,9 +102,10 @@ data AppState = AppState
      , asCurrentShelf :: Int
      , asCurrentBox :: Int
      ---------
-     , asSelectedStyle :: Maybe Text
-     , asCurrentStyle :: Int 
-     , asCurrentRunStyles :: Vector (Text, Summary)
+     , asProperty :: Maybe Text
+     , asSelectedPropValue :: Maybe Text
+     , asCurrentPropValue :: Int 
+     , asCurrentRunPropValues :: Vector (Text, Summary)
      ------ deal with multikey mapping
      , asLastKeys :: [Char]
      , asBoxOrder :: BoxOrder 
@@ -152,16 +153,16 @@ currentShelf state = selectFromSumVec (asCurrentShelf state) (currentBay state)
 sDetailsList :: Foldable f => ShelvesSummary e f a -> [a]
 sDetailsList ssum = F.toList (sDetails ssum)
 
-selectedStyle :: AppState -> Maybe Text
-selectedStyle state | asViewMode state == ViewHistory = Nothing
-selectedStyle state@AppState{..} = asSelectedStyle <|> currentStyle state
+selectedPropValue :: AppState -> Maybe Text
+selectedPropValue state | asViewMode state == ViewHistory = Nothing
+selectedPropValue state@AppState{..} = asSelectedPropValue <|> currentPropValue state
 
-currentStyle :: AppState -> Maybe Text
-currentStyle = fmap fst . currentStyle'Sum
-currentStyle'Sum AppState{..} =
-  case length asCurrentRunStyles of 
+currentPropValue :: AppState -> Maybe Text
+currentPropValue = fmap fst . currentPropValue'Sum
+currentPropValue'Sum AppState{..} =
+  case length asCurrentRunPropValues of 
        0 -> Nothing
-       l -> asCurrentRunStyles V.!? (asCurrentStyle `mod` l)
+       l -> asCurrentRunPropValues V.!? (asCurrentPropValue `mod` l)
 
 currentBoxHistory :: AppState -> (ZHistory1 Box RealWorld)
 currentBoxHistory app = case currentShelf app of
