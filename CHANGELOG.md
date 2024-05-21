@@ -1,3 +1,8 @@
+# 1.2.6
+Add box and shelf selection
+Add custom box title using #ctitle
+Replace style in stylebar with custom property
+Add moves command '%'
 # 1.2.5.1
 Add reload and cacheRef
 # 1.2.5.0
