@@ -1200,9 +1200,7 @@ updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
                                   Nothing -> id
               in updateDimFromTags box { boxTags = cleanTag new
                                     , boxPriorities = extractPriorities new (boxPriorities box)
-                                    , boxBreak = case extractBoxBreak new of
-                                                      Nothing | Just b <- boxBreak box -> error $ show (box, b, tag'ops, new)
-                                                      b -> b
+                                    , boxBreak = extractBoxBreak new
                                     , boxContent = fromMaybe (boxContent box) newContent
                                     }
 
