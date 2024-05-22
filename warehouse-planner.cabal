@@ -74,10 +74,11 @@ library
     , filepath >=1.4.1.1 && <1.5
     , ghc
     , ghc-prim
+    , megaparsec >=9.2.2 && <9.3
     , mono-traversable
     , mtl
     , palette ==0.3.*
-    , parsec ==3.1.*
+    , parser-combinators ==1.3.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -144,10 +145,11 @@ executable whp
     , filepath >=1.4.1.1 && <1.5
     , ghc
     , ghc-prim
+    , megaparsec >=9.2.2 && <9.3
     , mono-traversable
     , mtl
     , palette ==0.3.*
-    , parsec ==3.1.*
+    , parser-combinators ==1.3.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -212,10 +214,11 @@ test-suite test
     , ghc
     , ghc-prim
     , hspec >=2.0.0
+    , megaparsec >=9.2.2 && <9.3
     , mono-traversable
     , mtl
     , palette ==0.3.*
-    , parsec ==3.1.*
+    , parser-combinators ==1.3.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -272,10 +275,11 @@ benchmark bench
     , filepath >=1.4.1.1 && <1.5
     , ghc
     , ghc-prim
+    , megaparsec >=9.2.2 && <9.3
     , mono-traversable
     , mtl
     , palette ==0.3.*
-    , parsec ==3.1.*
+    , parser-combinators ==1.3.*
     , process
     , regex-base
     , regex-compat-tdfa

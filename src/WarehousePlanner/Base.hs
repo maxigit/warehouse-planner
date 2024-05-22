@@ -96,8 +96,9 @@ import Data.Char (isLetter, isDigit)
 import Data.Time (diffDays)
 import Data.Semigroup (Arg(..))
 
-import Text.Parsec qualified as P
-import Text.Parsec.Text qualified as P
+import Text.Megaparsec qualified as P
+import Text.Megaparsec.Char qualified as P
+import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
 import WarehousePlanner.Affine
@@ -1530,15 +1531,15 @@ stripStatFunction :: Text --  ^ text  to parse
 stripStatFunction xs = either (const Nothing) Just $  P.parse parser  (unpack xs) xs where
   parser = do
         stat <- asum $ map P.string  ["rank", "index", "ago", "n", "select", "cycle"]
-        opM <- P.optionMaybe  do
-                op <- P.oneOf "-+*/%^"
-                Just n <- readMay <$> P.many1 P.digit
+        opM <- P.optional  do
+                op <- P.satisfy (`elem` ("-+*/%^" :: String))
+                Just n <- P.optional P.decimal
                 return (op, n)
         att <- parseTag <|> parseAttribute
-        leftOver <- P.many P.anyChar
-        return $ (pack stat, opM, att, pack leftOver)
-  parseTag = OrdTag . pack <$> do P.char '[' >> P.many (P.noneOf "]") <* P.char ']'
-  parseAttribute = OrdAttribute . pack <$> do P.char '{' >> P.many1 (P.noneOf "}") --  <* P.char '}'
+        leftOver <- P.takeRest
+        return $ (stat, opM, att, leftOver)
+  parseTag = OrdTag <$> between '[' ']'
+  parseAttribute = OrdAttribute <$> (P.char '{' >> P.takeWhileP Nothing (/= '}')) --  <* P.char '}'
   -- The trailing } has been stripped already
                   
     
@@ -1562,13 +1563,14 @@ parseEvaluator tag0 | Right (tag, thenValue, elseValue) <- P.parse parser (unpac
       [] -> elseValue
       _ -> thenValue <|> Just tag
   )
-  where parser = do
-          tag <- P.many1 $ P.noneOf "?"
+  where parser :: MParser (Text, Maybe Text, Maybe Text)
+        parser = do
+          tag <- P.takeWhileP Nothing (/= '?')
           P.char '?'
-          thenValue <- P.optionMaybe (P.many1 $ P.noneOf ":")
-          elseValue <- P.optionMaybe do
-                     P.char ':' >> (P.many1 $ P.anyChar)
-          return (pack tag,  pack <$> thenValue, pack <$> elseValue)
+          thenValue <- P.optional (P.takeWhile1P Nothing (/= ':'))
+          elseValue <- P.optional ( P.char ':' >> P.takeRest )
+          return (tag,  thenValue, elseValue)
+
 -- parse value:start:end
 parseEvaluator tag0 | Right (tag, startm, endm) <- P.parse parser (unpack tag0) tag0 =
   let sub = removePrefix . removeSuffix
@@ -1590,27 +1592,27 @@ parseEvaluator tag0 | Right (tag, startm, endm) <- P.parse parser (unpack tag0) 
         [] -> Nothing
         values -> Just $ intercalate ";" $ map sub values
      )
-  where parser :: P.Parser (Text, Maybe Text, Maybe Text)
+  where parser :: MParser (Text, Maybe Text, Maybe Text)
         parser = do
-          tag <- P.many1 $ P.noneOf ":"
+          tag <- P.takeWhileP Nothing (/= ':')
           P.char ':'
-          startm <- P.optionMaybe (P.many1 $ P.noneOf ":")
-          endm <- P.optionMaybe do
-            P.char ':' >> (P.many1 $ P.anyChar)
-          return (pack tag, pack <$> startm, pack <$> endm)
+          startm <- P.optional (P.takeWhileP Nothing (/= ':'))
+          endm <- P.optional do
+            P.char ':' >> P.takeRest
+          return (tag, startm, endm)
 parseEvaluator tag0 | Right (tag, format) <- P.parse parser (unpack tag0) tag0 =
   let f ::  Int -> Text
       f =  pack . printf format
-  in ( pack tag
+  in ( tag
      , \case
         [] -> Nothing
         values -> Just . f $ sum $ mapMaybe readMay values
      )
-  where parser :: P.Parser (String, String)
+  where parser :: MParser (Text, String)
         parser = do
-           tag <-  P.many1 $ P.noneOf "%"
-           format <- P.char '%' >> do P.many P.anyChar
-           return (tag, '%':format)
+           tag <-  P.takeWhileP Nothing (/= '%')
+           format <- P.char '%' >> P.takeRest
+           return (tag, '%': unpack format)
 parseEvaluator tag =
   ( tag
   , \case 
@@ -1826,9 +1828,9 @@ extractModes :: Text -> (Text, (ExitMode, PartitionMode, AddOldBoxes, Maybe Sort
 extractModes modeLoc = case P.parse ((,) <$> modesParser <*> P.getInput) (unpack modeLoc) modeLoc of
   Left _ -> error "The unexpected happend. Contact your administrator" -- parser should succeed
   Right (r,e) -> (e,r)
-modesParser :: P.Parser (ExitMode, PartitionMode, AddOldBoxes, Maybe SortBoxes)
+modesParser :: MParser (ExitMode, PartitionMode, AddOldBoxes, Maybe SortBoxes)
 modesParser = do
-  exitMaybe <- P.optionMaybe (const ExitOnTop <$> P.char '^')
+  exitMaybe <- P.optional (const ExitOnTop <$> P.char '^')
   es <- P.many (fmap Left partitionP <|> fmap Right boxesP)
   let (parts, boxes) = partitionEithers es
       (oldBoxes, sortBoxes) = fromMaybe boxesDefault (headMay boxes)

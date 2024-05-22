@@ -9,17 +9,23 @@ module WarehousePlanner.Selector
 , parseMatchPattern
 , parseTagSelector
 , printSelector, printBoxSelector, printShelfSelector
+, MParser
+, between
 ) where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import WarehousePlanner.Type
 import System.FilePath.Glob qualified as Glob
-import Text.Parsec qualified as P
-import Text.Parsec.Text qualified as P
+import Text.Megaparsec qualified as P
+import Text.Megaparsec.Char qualified as P
+import Text.Megaparsec.Char.Lexer qualified as P
 import Data.List qualified as List
 import Data.Set qualified as Set
 import Data.Map.Lazy qualified as Map
 import Data.Text (splitOn, uncons, stripPrefix)
 import Control.Monad.Fail 
+import Data.Void(Void)
+
+type MParser = P.Parsec Void Text
 
 -- * Selectors 
 -- ** Applying 
@@ -143,20 +149,21 @@ parseBoxNumberSelector s = case P.parse parser (unpack s) s of
   Left err -> error (show err)
   Right expr -> expr
   where parser = do
-          limits <- P.optionMaybe parseLimit `P.sepBy` P.char '^'
+          limits <- P.optional parseLimit `P.sepBy` P.char '^'
           case limits of 
                (_:_:_:_:_) -> fail "Too many limits in"
                _ -> let (content: shelves: total:_) =  limits ++ List.cycle [Nothing]
                     in return $ BoxNumberSelector content shelves total
                 
+
 -- | Parsel [[tag]|{attribue}][min:][max]
-parseLimit :: P.Parser Limit      
+parseLimit :: MParser Limit      
 parseLimit = do
   reverse <- P.option False (P.char '-' >> return True)
   keys <- P.many (parseTag <|> parseAttribute)
-  minM <- P.optionMaybe $ P.many1 P.digit
-  maxMM <- P.optionMaybe $ P.char ':' >> P.optionMaybe (P.many1 P.digit)
-  let (start, end) = case (minM >>= readMay,  fmap (>>= readMay) maxMM ) of
+  minM <- P.optional $ P.decimal
+  maxMM <- P.optional $ P.char ':' >> P.optional P.decimal
+  let (start, end) = case (minM , maxMM ) of
         -- :max or :
         -- (Nothing, Just maxm) -> (Nothing, maxm)
         -- max
@@ -166,8 +173,11 @@ parseLimit = do
         (minm, Just maxm) -> (minm, maxm)
         (Nothing, Nothing) -> (Nothing, Nothing)
   return $  Limit start end keys reverse
-  where parseTag = OrdTag . pack <$> do P.char '[' >> P.many1 (P.noneOf "]") <* P.char ']'
-        parseAttribute = OrdAttribute . pack <$> do P.char '{' >> P.many1 (P.noneOf "}") <* P.char '}'
+  where parseTag = OrdTag  <$> between '[' ']'
+        parseAttribute = OrdAttribute  <$> between '{' '}'
+
+between :: Char -> Char -> MParser Text
+between open close = P.char open >> (P.takeWhileP Nothing (/= close)) <* P.char close
 
   
 applyPattern :: MatchPattern -> Text -> Bool

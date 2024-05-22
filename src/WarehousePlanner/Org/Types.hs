@@ -77,5 +77,3 @@ data Step = Step HeaderType DocumentHash Text
           | NewFile FilePath
           deriving (Show, Eq)
 
-
-

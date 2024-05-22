@@ -30,6 +30,7 @@ import WarehousePlanner.Base
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
 import WarehousePlanner.Selector
+import WarehousePlanner.Expr qualified as E
 import Data.Csv qualified as Csv
 import Data.ByteString.Lazy qualified as BL
 import Data.ByteString qualified as BS
@@ -40,9 +41,8 @@ import Control.Monad hiding(mapM_,foldM)
 import Data.List qualified as List
 import Data.Char(ord,chr)
 import ClassyPrelude hiding(readFile)
-import Text.Read(readMaybe)
-import Text.Parsec qualified as P
-import Text.Parsec.Text qualified as P
+import Text.Megaparsec qualified as P
+import Text.Megaparsec.Char qualified as P
 import Control.Monad.State hiding(fix,mapM_,foldM)
 import Text.Regex qualified as Rg
 import Text.Regex.Base.RegexLike qualified as Rg
@@ -221,98 +221,23 @@ expand name = let
     _ -> error "Should not happen" -- We've been breaking on [
 
 
-
-data Expr = AddE Expr Expr
-          | SubE Expr Expr
-          | MulE Expr Expr
-          | DivE Expr Expr
-          | MinE Expr Expr
-          | MaxE Expr Expr
-          | ValE Double
-          | RefE Text (ShelfDimension -> Double)
-
+data RefE = RefE Text (ShelfDimension -> Double)
+type Expr = E.Expr RefE
 
 parseExpr :: (ShelfDimension -> Double) -> Text -> Expr
-parseExpr defaultAccessor "" =  RefE "%" defaultAccessor
-parseExpr defaultAccessor s =  case P.parse (parseExpr' defaultAccessor <* P.eof) (unpack s) s of
-  Left err -> error (show err)
-  Right  expr -> expr
+parseExpr defaultAccessor "" =  E.ExtraE $ RefE "%" defaultAccessor
+parseExpr defaultAccessor s =  fmap parse $ E.parseExpr s
+   where parse t = case P.parse (parseRef defaultAccessor) (unpack t) t of
+                     Left err -> error (show err) 
+                     Right v -> v
 
-parseExpr' :: (ShelfDimension -> Double) -> P.Parser Expr
-parseExpr' accessor = (P.try (parseMMOp accessor))
-                    <|> parseTerminalExpr accessor
-
-parseTerminalExpr :: (ShelfDimension -> Double) -> P.Parser Expr
-parseTerminalExpr accessor = parseVal <|> parseRef accessor <|> parseGroup accessor
-parseVal :: P.Parser Expr
-parseVal = do
-      n <- P.many1 P.digit
-      f <- P.option "" ((:) <$> P.char '.' <*> P.many1 P.digit)
-      let s =  n ++ f
-      return $ case readMaybe s of
-                  Nothing -> error $ "Can't parse [" ++ s ++ "]"
-                  Just v -> ValE v
-
-parseGroup :: (ShelfDimension -> Double) -> P.Parser Expr
-parseGroup accessor = do
-  _ <- P.char '('
-  P.spaces
-  e <- parseExpr' accessor
-  P.spaces
-  _ <- P.char ')'
-  return e
-
-parseMulOp :: (ShelfDimension -> Double) -> P.ParsecT Text () Identity Expr
-parseMulOp accessor = P.try p <|> parseTerminalExpr accessor where
-  p = do
-    e1 <- parseTerminalExpr accessor
-    P.spaces
-    op <- P.oneOf "*/"
-    P.spaces
-    e2 <- parseTerminalExpr accessor
-    let c = case op of
-            '*' -> MulE
-            '/' -> DivE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
-parseMMOp :: (ShelfDimension -> Double) -> P.ParsecT Text () Identity Expr
-parseMMOp accessor = P.try p <|> parseAddOp accessor where
-  p = do
-    e1 <- parseAddOp accessor
-    P.spaces
-    op <- P.oneOf "|&"
-    P.spaces
-    e2 <- parseAddOp accessor
-    let c = case op of
-            '&' -> MinE
-            '|' -> MaxE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
-parseAddOp :: (ShelfDimension -> Double) -> P.ParsecT Text () Identity Expr
-parseAddOp accessor = P.try p <|> parseMulOp accessor  where
-  p = do
-    e1 <- parseMulOp accessor
-    P.spaces
-    op <- P.oneOf "+-"
-    P.spaces
-    e2 <- parseMulOp accessor
-    let c = case op of
-            '+' -> AddE
-            '-' -> SubE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
-parseRef :: (ShelfDimension -> Double) -> P.Parser Expr
+parseRef :: (ShelfDimension -> Double) -> MParser RefE
 parseRef accessor = do
-  _ <- P.char '{'
-  ref <- P.many (P.noneOf ":}") --  (P.alphaNum <|> P.oneOf ".+-%_\\")
+  ref <- P.takeWhileP Nothing (/=':') -- P.many (P.noneOf ":}") --  (P.alphaNum <|> P.oneOf ".+-%_\\")
   acc <- P.option accessor $ P.char ':' *> parseAccessor
-  _ <- P.char '}'
-  return $ RefE (pack ref) acc
+  return $ RefE ref acc
 
-parseAccessor :: P.Stream s m Char => P.ParsecT s u m (ShelfDimension -> Double)
+parseAccessor ::  MParser (ShelfDimension -> Double)
 parseAccessor = P.choice $ map  (\(s ,a) -> P.try (P.string s) >> return a)
                 $ concatMap pre
                 [ (["length", "l"], dLength . sMinD)
@@ -337,24 +262,14 @@ parseAccessor = P.choice $ map  (\(s ,a) -> P.try (P.string s) >> return a)
 
 
 type RefToSDim s = Text -> WH ShelfDimension s
-evalOperator :: RefToSDim s -> (Double -> Double -> Double) -> Expr -> Expr -> WH Double s
-evalOperator refToDim op e1 e2 = do
-    v1 <- evalExpr refToDim e1
-    v2 <- evalExpr refToDim e2
-    return (v1 `op` v2)
 
 evalExpr :: RefToSDim s -> Expr -> WH Double s
-evalExpr refToDim (AddE e1 e2) = evalOperator refToDim (+) e1 e2
-evalExpr refToDim (SubE e1 e2) = evalOperator refToDim (-) e1 e2
-evalExpr refToDim (MulE e1 e2) = evalOperator refToDim (*) e1 e2
-evalExpr refToDim (DivE e1 e2) = evalOperator refToDim (/) e1 e2
-evalExpr refToDim (MinE e1 e2) = evalOperator refToDim min e1 e2
-evalExpr refToDim (MaxE e1 e2) = evalOperator refToDim max e1 e2
+evalExpr refToSDim expr = do
+   exprDouble <- traverse (evalRef refToSDim) expr
+   return $ E.evalExpr exprDouble
 
-
-evalExpr _ (ValE v) = return v
-
-evalExpr refToSDim (RefE ref accessor) = do
+evalRef :: RefToSDim s -> RefE -> WH Double s
+evalRef refToSDim (RefE ref accessor) = do
   fmap accessor (refToSDim ref)
 
 dimFromRef :: Text -> Text -> WH ShelfDimension s
