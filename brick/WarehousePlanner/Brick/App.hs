@@ -747,7 +747,7 @@ setTagAll tag = execute do
 setBoxTitle title = setTagAll ("ctitle=" <> title)
    
 
-makeBoxSelection :: Text -> WH (Maybe (Selection (BoxSelector s) (BoxId s))) s
+makeBoxSelection :: Text -> WH (Maybe (Selection BoxSelector (BoxId s))) s
 makeBoxSelection "" = return Nothing
 makeBoxSelection sText = do 
    let sSelector = parseBoxSelector sText
@@ -755,7 +755,7 @@ makeBoxSelection sText = do
    let sSelected = Set.fromList $ map boxId boxeIds 
    return $ Just Selection{..}
 
-makeShelfSelection :: Text -> WH (Maybe (Selection (ShelfSelector s) Text)) s
+makeShelfSelection :: Text -> WH (Maybe (Selection ShelfSelector Text)) s
 makeShelfSelection "" = return Nothing
 makeShelfSelection sText = do 
    let sSelector = parseShelfSelector sText

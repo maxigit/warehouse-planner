@@ -571,18 +571,18 @@ matchAnyNames (NameDoesNotMatch []) = True
 matchAnyNames _ = False
 
 
-data BoxSelector s = BoxSelector
-  { boxSelectors :: !(Selector (Box s))
-  , shelfSelectors :: !(Selector (Shelf s))
+data BoxSelector = BoxSelector
+  { boxSelectors :: !(Selector Box)
+  , shelfSelectors :: !(Selector Shelf)
   , numberSelector :: !(BoxNumberSelector)
   } deriving (Show)
 
-data ShelfSelector s = ShelfSelector
-  { sBoxSelectors :: !(Selector (Box s))
-  , sShelfSelectors :: !(Selector (Shelf s))
+data ShelfSelector = ShelfSelector
+  { sBoxSelectors :: !(Selector Box)
+  , sShelfSelectors :: !(Selector Shelf)
   } deriving (Show)
 
-selectAllBoxes :: BoxSelector s
+selectAllBoxes :: BoxSelector
 selectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
                              (BoxNumberSelector Nothing Nothing Nothing)

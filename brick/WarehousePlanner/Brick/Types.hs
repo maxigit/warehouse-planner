@@ -118,8 +118,8 @@ data AppState = AppState
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
      , asDebugShowDiffs :: Bool
      , asInput :: Maybe Input
-     , asBoxSelection :: Maybe (Selection (BoxSelector RealWorld) (BoxId RealWorld))
-     , asShelfSelection :: Maybe (Selection (ShelfSelector RealWorld) Text)
+     , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
+     , asShelfSelection :: Maybe (Selection ShelfSelector Text)
      }
      
 data Selection sel a = 

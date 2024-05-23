@@ -24,7 +24,7 @@ import Control.Monad.Fail
 -- * Selectors 
 -- ** Applying 
 -- | The phantom type guarantie that we are selecting the correct item
-applyNameSelector :: NameSelector a -> (a -> Text) -> a -> Bool
+applyNameSelector :: NameSelector a -> (a s -> Text) -> a s -> Bool
 applyNameSelector (NameMatches []) _ _ = True
 applyNameSelector (NameMatches pats) name o = any (flip applyPattern (name o)) pats
 applyNameSelector (NameDoesNotMatch pats) name o = not $ any (flip applyPattern (name o)) pats
@@ -62,7 +62,7 @@ applyTagSelector (TagHasValues valuePat) tags = let
 applyTagSelector (TagHasNotValues valuePat) tags = not $ applyTagSelector (TagHasValues valuePat) tags
 applyTagSelector (TagHasKeyAndNotValues key valuePat) tags = not (applyTagSelector (TagHasKeyAndValues key valuePat) tags)
 
-applyTagSelectors :: Show s => [TagSelector s] -> (s -> Tags) -> s -> Bool
+applyTagSelectors :: Show (a s) => [TagSelector a] -> (a s -> Tags) -> a s -> Bool
 applyTagSelectors [] _ _ = True
 applyTagSelectors selectors tags o =  all (flip applyTagSelector (tags o)) selectors
 
@@ -124,7 +124,7 @@ parseMatchPattern pat | isGlob pat= MatchGlob (Glob.compile $ unpack pat)
 parseMatchPattern pat = MatchFull pat
   
 
-parseBoxSelector :: Text -> BoxSelector s
+parseBoxSelector :: Text -> BoxSelector
 parseBoxSelector selector = let
   (box'location, drop 1 ->numbers) = break (=='^') selector
   (box, drop 1 -> location) = break (=='/') box'location
@@ -132,7 +132,7 @@ parseBoxSelector selector = let
               (parseSelector location)
               (parseBoxNumberSelector numbers)
 
-parseShelfSelector :: Text -> ShelfSelector s
+parseShelfSelector :: Text -> ShelfSelector
 parseShelfSelector selector = let
   BoxSelector boxSel shelfSel _ = parseBoxSelector selector
   in ShelfSelector boxSel shelfSel
@@ -234,14 +234,14 @@ printLimit Limit{..} = rev <> key <> lim where
          (Nothing, Just e) -> ":" <> tshow e
          (Nothing, Nothing) -> ""
 
-printBoxSelector :: BoxSelector s -> Text
+printBoxSelector :: BoxSelector -> Text
 printBoxSelector BoxSelector{..} = let
      shelf = case shelfSelectors of
                 SelectAnything -> ""
                 s -> "/" <> printSelector s
      in printSelector boxSelectors <> shelf <> printNumberSelector numberSelector
 
-printShelfSelector :: ShelfSelector s -> Text
+printShelfSelector :: ShelfSelector -> Text
 printShelfSelector ShelfSelector{..} = 
    case sBoxSelectors  of
        SelectAnything -> printSelector sShelfSelectors

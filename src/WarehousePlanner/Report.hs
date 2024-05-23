@@ -366,7 +366,7 @@ boxStyleWithTags b = let
 shelvesToNames :: [Shelf s ] -> [Text]
 shelvesToNames = List.nub . sort . map shelfName
 
-generateMoves :: SortBoxes -> Maybe (BoxSelector s) -> (Box s -> Text) -> WH [Text] s
+generateMoves :: SortBoxes -> Maybe BoxSelector -> (Box s -> Text) -> WH [Text] s
 generateMoves sortMode selectorm boxName0 = generateMoves' sortMode (Just "stock_id,location") (Just . boxName0) printGroup selectorm where
      printGroup  boxName' _ shelves = boxName' <> "," <> intercalate "|" (groupNames $ shelvesToNames shelves)
 -- generateMoves' :: (Box s -> Text) -> (Box s -> [Text]) -> WH [Text] s
@@ -375,7 +375,7 @@ generateMoves' :: (Ord k, Eq k)
                -> Maybe t --  ^ Header
                -> (Box s -> Maybe k) --  ^ box key
                ->  (k -> [Box s] -> [Shelf s]  -> t) --  ^ string from key, boxes and unique shelfnames
-               -> Maybe (BoxSelector s)
+               -> Maybe BoxSelector
                -> WH [t] s
 generateMoves' sortMode header boxKey0 printGroup selectorm = do
  s'bS <- case selectorm of
@@ -407,7 +407,7 @@ generateMovesFor sortMode header boxKey0 printGroup box'shelfs = do
 -- but use the location as if they were part of the group.
 -- This this achieve by first running the report ignoring the comment (to computes the grouped locations)
 -- and doing a lookup to find the final location.
-generateMOPLocations :: Maybe (BoxSelector s) -> WH [Text] s
+generateMOPLocations :: Maybe BoxSelector -> WH [Text] s
 generateMOPLocations selectorm = do
   locationMap <- Map'.fromList . concat <$> generateMoves' SortBoxes (Nothing) (boxName False)
                                                   (\_ boxes shelves -> [ (boxStyleAndContent box, shelves)
@@ -492,7 +492,7 @@ generateGenericReport' today prefix s'bs = generateMovesFor SortBoxes Nothing bo
     value = maybe boxKey_ (expandReportValue today boxes $ shelvesToNames shelfNames ) value0
     in value
 
-generateStockTakes :: Maybe (BoxSelector s) ->  WH [Text] s
+generateStockTakes :: Maybe BoxSelector ->  WH [Text] s
 generateStockTakes selectorm= do
     boxes_ <- case selectorm of
             Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
@@ -867,7 +867,7 @@ showPair pair = let res = pRes1 pair
 
 --
 
-generateBoxHistory :: Maybe (BoxSelector s) -> WH [Text] s
+generateBoxHistory :: Maybe BoxSelector -> WH [Text] s
 generateBoxHistory selectorm = do
     events <- gets whEventHistory
     

@@ -29,7 +29,7 @@ data ForGrouping = Don'tGroup | GroupByContent
      deriving (Show, Eq)
 
 -- * Export {{1
-rearrangeBoxesByContent ::  ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector s -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+rearrangeBoxesByContent ::  ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
 rearrangeBoxesByContent deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
   boxes <- findBoxByNameAndShelfNames boxsel >>= mapM findBox
   -- group boxes by style and content
@@ -118,7 +118,7 @@ parseActions s0 = let
   in (forUnused, forGrouping, reverse (map mkFn ss))
   
 -- | 
-parseSelectors :: Bool -> Text -> [BoxSelector s]
+parseSelectors :: Bool -> Text -> [BoxSelector]
 parseSelectors isLocation s = let
   -- split by | and |
   ss = split (`elem` t " |") s

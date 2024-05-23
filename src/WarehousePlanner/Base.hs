@@ -176,13 +176,19 @@ findBoxByShelf shelf = do
   mapM findBox $ toList boxIds
 
 
-findBoxByNameSelector :: (NameSelector (Box s)) -> WH [Box s] s
+findBoxByNameSelector :: (NameSelector Box) -> WH [Box s] s
 findBoxByNameSelector selector = do
   boxIdMap <- gets boxMap
-  let matcher = applyNameSelector (coerce selector) id
+  let matcher = applyNameSelector (coerce selector) runIdentity
+                --                                  ^^^^^^^^^^^
+                --                                      |
+                --  +-----------------------------------+
+                --  |
+                --  Trick so that in applyNameSelector type signature
+                --  a = Identity , a s = Identity Text
   boxess <- forM (Map.toList boxIdMap)
                 \(style, ids) ->
-                  if matcher style
+                  if matcher $ Identity style
                   then
                     mapM findBox ids
                   else return mempty
@@ -194,9 +200,9 @@ findShelfByBox box' = do
   return $ boxShelf box
 
 -- | find shelf by name and tag
-findShelfBySelector :: Selector (Shelf s) -> WH [ShelfId s] s
+findShelfBySelector :: Selector Shelf -> WH [ShelfId s] s
 findShelfBySelector selector = map shelfId <$> findShelfBySelector' selector
-findShelfBySelector' :: Selector (Shelf s) -> WH [Shelf s] s 
+findShelfBySelector' :: Selector Shelf -> WH [Shelf s] s 
 findShelfBySelector' (Selector nameSel tagSels ) = do
   shelfIds <- toList <$> gets shelves
   shelves0 <-  filterByNameSelector (mapM findShelf shelfIds) shelfName  nameSel
@@ -206,7 +212,7 @@ findShelfBySelector' (Selector nameSel tagSels ) = do
 -- but respect alternative order
 -- ie B|A will return B before A
 -- B*|A* will return Bs (sorted alphabetically) the A* (alphabetically)
-findShelfBySelectors :: [Selector (Shelf s)] -> WH [ShelfId s] s
+findShelfBySelectors :: [Selector Shelf] -> WH [ShelfId s] s
 findShelfBySelectors selectors = do
   shelvess <- mapM findShelfBySelector' selectors
   return [ shelfId shelf
@@ -216,15 +222,15 @@ findShelfBySelectors selectors = do
 
 
 
-filterShelfByTag :: [TagSelector (Shelf s)] -> Shelf s -> Bool
+filterShelfByTag :: [TagSelector Shelf] -> Shelf s -> Bool
 filterShelfByTag selectors shelf = applyTagSelectors selectors shelfTag shelf
 
-filterBoxByTag :: [TagSelector (Box s)]-> Box s -> Bool
+filterBoxByTag :: [TagSelector Box]-> Box s -> Bool
 filterBoxByTag selectors box =  applyTagSelectors selectors boxTags box
 
 -- | Compiles a match against a glob pattern if Necessary
 
-filterByNameSelector :: WH [a s] s -> (a s -> Text) -> (NameSelector (a s)) -> WH [a s] s
+filterByNameSelector :: WH [a s] s -> (a s -> Text) -> (NameSelector a) -> WH [a s] s
 filterByNameSelector objects objectName selector = do
    let matcher= applyNameSelector selector objectName
    filter matcher <$> objects
@@ -243,7 +249,7 @@ orTrue bs = or bs
 -- it needs to be before the shelf condition
 --
 -- syntax is  Box#tag^3/shelf#tag : 3 box from shelf shelf
-findBoxByNameAndShelfNames :: BoxSelector s -> WH [Box s] s
+findBoxByNameAndShelfNames :: BoxSelector -> WH [Box s] s
 findBoxByNameAndShelfNames ( BoxSelector ( Selector (NameMatches [])
                                                     [ TagIsKeyAndValues (MatchFull prop)
                                                                         [MatchFull value]
@@ -345,7 +351,7 @@ boxFinalPriority BoxNumberSelector{..} (box, shelf) = let -- reader
 
   
 -- | Use similar syntax to boxes but returns shelves instead
-findShelvesByBoxNameAndNames :: ShelfSelector s -> WH [Shelf s] s
+findShelvesByBoxNameAndNames :: ShelfSelector -> WH [Shelf s] s
 findShelvesByBoxNameAndNames (ShelfSelector SelectAnything shelfSel) = findShelfBySelector shelfSel >>= mapM findShelf
 findShelvesByBoxNameAndNames (ShelfSelector (Selector boxNameSel boxTagSel) shelfSel) = do
   shelves0 <- findShelfBySelector shelfSel >>= mapM findShelf

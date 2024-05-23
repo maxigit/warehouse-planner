@@ -631,11 +631,11 @@ readFromRecordWith  rowProcessor filename = do
           v <- Vec.forM rows rowProcessor
           return $ concat (Vec.toList v)
           
-data BoxSelectorPlus s r = SetPrevious (BoxSelector s) (BoxSelector s) r
-                       | UsePrevious (BoxSelector s) r
+data BoxSelectorPlus r = SetPrevious BoxSelector BoxSelector r
+                       | UsePrevious BoxSelector r
      deriving (Show)
 
-instance Csv.FromRecord r => Csv.FromRecord (BoxSelectorPlus s r) where
+instance Csv.FromRecord r => Csv.FromRecord (BoxSelectorPlus r) where
         parseRecord v = do
             let open = "&["
                 close = "]&"
@@ -662,7 +662,7 @@ instance Csv.FromRecord r => Csv.FromRecord (BoxSelectorPlus s r) where
                     
 -- | Like readFromRecocddWith  but allow the BoxSelector to
 -- be saved and reused in the next lines
-readFromRecordWithPreviousStyle :: Csv.FromRecord r => (BoxSelector s -> r -> WH [a s] s) -> FilePath -> IO (WH [a s] s)
+readFromRecordWithPreviousStyle :: Csv.FromRecord r => (BoxSelector -> r -> WH [a s] s) -> FilePath -> IO (WH [a s] s)
 readFromRecordWithPreviousStyle rowProcessor filename = do
     csvData <- BL.readFile filename
     case Csv.decode Csv.HasHeader csvData of
@@ -718,7 +718,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- \^A|B C|D will exit B to A  until A and B are full
 -- Tag can be exclude using a glob pattern
 -- This is to allows script to import partial tagging.
-processMovesAndTags :: [Text] -> (BoxSelector s, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
+processMovesAndTags :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
 processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
   newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
                                  , intercalate "#" tags_
@@ -854,12 +854,12 @@ instance Csv.FromField (Either Rg.Regex (Box s -> Int -> WH Rg.Regex s)) where
       Just _ -> return . Right $ \box i -> do
               expandAttribute box i r >>= Rg.makeRegexM . unpack
 
-instance Csv.FromField (BoxSelector a) where
+instance Csv.FromField BoxSelector where
   parseField s = do
     x <- Csv.parseField s
     return $ parseBoxSelector x
     
-instance Csv.FromField (ShelfSelector a) where
+instance Csv.FromField ShelfSelector where
   parseField s = do
     x <- Csv.parseField s
     return $ parseShelfSelector x
@@ -877,7 +877,7 @@ readTransformTags path tags = readFromRecordWith (\(style, tagPat, tagSub) -> tr
  -- if tags are given only the given tags will be process.
  -- If only one tag is given, the substition will only apply
  -- to the tag value instead of the chain #tag=value
-transformTags :: [Text] -> BoxSelector s -> RegexOrFn s -> Text -> WH [Box s] s
+transformTags :: [Text] -> BoxSelector -> RegexOrFn s -> Text -> WH [Box s] s
 transformTags tags style tagPattern tagSub = do
   boxes0 <- findBoxByNameAndShelfNames style
   boxes <- mapM findBox boxes0
