@@ -39,6 +39,9 @@ library
       WarehousePlanner.Styling
       WarehousePlanner.Summary
       WarehousePlanner.Type
+      WarehousePlanner.WPL.Exec
+      WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.Types
   other-modules:
       Paths_warehouse_planner
   hs-source-dirs:
@@ -180,6 +183,7 @@ test-suite test
       Planner.OptimumSpec
       Planner.RearrangeSpec
       Planner.WarehouseSpec
+      Planner.WPL.ParserSpec
       Paths_warehouse_planner
   hs-source-dirs:
       test

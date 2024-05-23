@@ -46,7 +46,7 @@ data BoxNumberSelector = BoxNumberSelector
    { nsPerContent :: !(Maybe Limit)
    , nsPerShelf :: !(Maybe Limit)
    , nsTotal :: !(Maybe Limit)
-   } deriving (Show)
+   } deriving (Show, Eq)
 
 -- | How to take slice of a selection
 data Limit = Limit 
@@ -54,10 +54,10 @@ data Limit = Limit
   , liEnd :: !(Maybe Int) -- ^ last box to take
   , liOrderingKey :: ![OrderingKey] -- ^ which tag to use to sort boxes
   , liReverse :: !Bool -- ^ if true reverse the sorting order
-  } deriving (Show)
+  } deriving (Show, Eq)
   
 data OrderingKey = OrdTag Text | OrdAttribute Text
-     deriving Show
+     deriving (Show, Eq)
 
 -- | How something is oriented. It indicates  the direction of
 -- the normal of the given face.
@@ -184,6 +184,10 @@ data Shelf s = Shelf { _shelfId  :: !(ShelfId s)
                    , shelfFillingStrategy :: !FillingStrategy
                    , bottomOffset :: !Double -- ^ "altitute" of where the usable part of the shelf starts
                    } deriving (Show, Eq)
+
+instance Ord (Shelf s) where
+  compare a b = compare (_shelfId a) (_shelfId b)
+
 -- | Gives orientation to a box
 data BoxOrientator = DefaultOrientation
     | ForceOrientations ![Orientation]
@@ -538,7 +542,7 @@ data TagSelector  a
           | TagHasValues ![MatchPattern]
           | TagHasNotValues ![MatchPattern]
           | TagHasKeyAndNotValues !MatchPattern ![MatchPattern] --  ^ check key and at least all values are present
-          deriving Show
+          deriving (Show, Eq)
           -- deriving (Eq,Show,Ord)
 
 data MatchPattern
@@ -556,7 +560,7 @@ data Selector a  = Selector
   { nameSelector :: !(NameSelector a)   -- disjunctions OR betweens names
   , tagSelectors :: ![TagSelector a] -- conjunctions AND
   }
-  deriving (Show)
+  deriving (Show, Eq)
 
 
 pattern SelectAnything :: Selector a
@@ -575,12 +579,12 @@ data BoxSelector = BoxSelector
   { boxSelectors :: !(Selector Box)
   , shelfSelectors :: !(Selector Shelf)
   , numberSelector :: !(BoxNumberSelector)
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 data ShelfSelector = ShelfSelector
   { sBoxSelectors :: !(Selector Box)
   , sShelfSelectors :: !(Selector Shelf)
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 selectAllBoxes :: BoxSelector
 selectAllBoxes = BoxSelector SelectAnything

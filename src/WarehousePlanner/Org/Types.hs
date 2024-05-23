@@ -51,6 +51,7 @@ data HeaderType
   | ColourMapH
   | RearrangeH [Text]
   | FreezeOrderH [Text]
+  | WPLH [Text]
   deriving (Show, Eq, Ord, Generic)
 
 -- * Scenario 
