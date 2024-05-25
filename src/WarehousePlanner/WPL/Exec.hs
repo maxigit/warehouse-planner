@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.WPL.Exec
 ( runWPL
 , readWPL
@@ -19,6 +20,11 @@ data ExContext s = ExContext
                -- , ecOtherShelves :: Seq (Shelf s)
                } 
      deriving Show
+pretty :: ExContext s -> String
+pretty ec = "Boxes = " <> prettySeq (ecBoxes ec) <> " Shelves = " <> prettySeq (ecShelves ec) where
+      prettySeq sq = case toList sq of 
+                       [] -> "0"
+                       x:_ -> show (length sq) <> ":" <> show x
 
 emptyEC = ExContext mempty mempty
 runWPL :: Statement -> WH () s
@@ -26,6 +32,7 @@ runWPL statement = void $ executeStatement emptyEC statement
 
 executeStatement :: ExContext s -> Statement -> WH (ExContext s, ExContext s) s
 executeStatement ec statement =  do
+    traceShowM ("EXEC", statement, pretty ec)
     case statement of 
         Action command -> do
            executeCommand ec command
@@ -38,6 +45,10 @@ executeStatement ec statement =  do
         Union s1 s2 -> do
            executeStatement ec s1
            executeStatement ec s2
+        Skip s1 s2 -> do 
+           result@(narrowed, _) <- executeStatement ec s1
+           executeStatement narrowed s2
+           return  result 
 
 
 narrowExBoxes :: ExContext s -> BoxSelector -> WH (ExContext s, ExContext s) s

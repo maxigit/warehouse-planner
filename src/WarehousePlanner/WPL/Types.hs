@@ -26,6 +26,7 @@ data Statement = Action Command
                | Then Statement Statement -- Chain
                | Else Statement Statement -- Invert context
                | Union Statement Statement
+               | Skip Statement Statement -- equivalent to <*
      deriving (Show, Eq)
      
 
