@@ -564,8 +564,7 @@ data Selector a  = Selector
 
 
 pattern SelectAnything :: Selector a
-pattern SelectAnything <- Selector (matchAnyNames -> True) [] where
-        SelectAnything = Selector (NameMatches []) []
+pattern SelectAnything = Selector AnyNames []
 
 
 matchAnyNames :: NameSelector a -> Bool
@@ -573,6 +572,10 @@ matchAnyNames (NameMatches []) = True
 matchAnyNames (NameMatches [MatchAnything]) = True
 matchAnyNames (NameDoesNotMatch []) = True
 matchAnyNames _ = False
+
+pattern AnyNames :: NameSelector a
+pattern AnyNames <-  (matchAnyNames  -> True) where
+        AnyNames = NameMatches [MatchAnything]
 
 
 data BoxSelector = BoxSelector

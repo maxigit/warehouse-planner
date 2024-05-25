@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wno-deprecations #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-unused-top-binds #-}
 module WarehousePlanner.WPL.Exec
 ( runWPL
 , readWPL
@@ -31,24 +32,7 @@ runWPL :: Statement -> WH () s
 runWPL statement = void $ executeStatement emptyEC statement
 
 executeStatement :: ExContext s -> Statement -> WH (ExContext s, ExContext s) s
-executeStatement ec statement =  do
-    traceShowM ("EXEC", statement, pretty ec)
-    case statement of 
-        Action command -> do
-           executeCommand ec command
-        Then s1 s2 -> do
-           (narrowed, _) <- executeStatement ec s1
-           executeStatement narrowed s2
-        Else s1 s2 -> do
-           (_,leftOver) <- executeStatement ec s1
-           executeStatement leftOver s2
-        Union s1 s2 -> do
-           executeStatement ec s1
-           executeStatement ec s2
-        Skip s1 s2 -> do 
-           result@(narrowed, _) <- executeStatement ec s1
-           executeStatement narrowed s2
-           return  result 
+executeStatement ec _statement =  return (ec, ec)
 
 
 narrowExBoxes :: ExContext s -> BoxSelector -> WH (ExContext s, ExContext s) s
@@ -117,11 +101,11 @@ partitionIn xs ys = let
                
   
 
-readWPL :: MonadIO m => FilePath ->  m Statement
+readWPL :: MonadIO m => FilePath ->  m [Statement]
 readWPL filename = do 
     content <- readFileUtf8 filename
     let e = P.runParser wplParser filename content
     case e of
        Left bundle -> error $ P.errorBundlePretty bundle
-       Right statement -> return statement
+       Right statements -> return statements
 

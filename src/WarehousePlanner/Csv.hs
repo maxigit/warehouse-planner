@@ -599,8 +599,8 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
           mergen p (BoxNumberSelector Nothing Nothing Nothing) = p
           mergen _ bn = bn
           -- merge easy ones
-          mergeNames (matchAnyNames -> True) ns = ns
-          mergeNames ns (matchAnyNames -> True) = ns
+          mergeNames AnyNames ns = ns
+          mergeNames ns AnyNames = ns
           mergeNames (NameMatches [MatchFull full]) (NameMatches matches) = let
             fullGlob = Glob.compile $ unpack full
             addFull (MatchFull f) = MatchFull (full <> f)

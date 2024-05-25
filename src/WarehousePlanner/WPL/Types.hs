@@ -4,6 +4,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Selector(printBoxSelector, printShelfSelector)
+import Data.List.NonEmpty as NE
 
 
 data Command = Move { aSource :: Maybe BoxSelector
@@ -12,22 +13,24 @@ data Command = Move { aSource :: Maybe BoxSelector
              | SelectBoxes BoxSelector
              | SelectShelves ShelfSelector 
             -- | Tag { source :: Text, tags }
-     deriving (Eq)
-instance Show Command where
-   show = \case
+     -- deriving (Show, Eq)
+     deriving Eq
+instance Show Command where show = showCommand
+showCommand = \case
       Move{..} -> "Move " <> maybe "∅" showBoxSelector aSource <> " " <>  maybe "∅" showShelfSelector aDest
       SelectBoxes s -> showBoxSelector s
       SelectShelves s -> showShelfSelector s
       
 showBoxSelector = unpack . printBoxSelector
-showShelfSelector = unpack . printShelfSelector
+showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"
             
 data Statement = Action Command
-               | Then Statement Statement -- Chain
-               | Else Statement Statement -- Invert context
-               | Union Statement Statement
-               | Skip Statement Statement -- equivalent to <*
+               | Cases (NonEmpty Case)
+               | Ors (NonEmpty Statement)
+               | Then Statement Statement
      deriving (Show, Eq)
      
+data Case = Case Statement (Maybe Statement)
+    deriving (Show, Eq)
 
 

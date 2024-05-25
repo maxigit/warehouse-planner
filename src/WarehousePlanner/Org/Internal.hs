@@ -481,7 +481,7 @@ executeStep (Step header sha txt) = do
           ColourMapH -> return $ return ()
           RearrangeH tags -> execute $ readRearrangeBoxes tags path
           FreezeOrderH tags -> execute $ readFreezeOrder tags path
-          WPLH _tags -> execute $ fmap runWPL $ readWPL path
+          WPLH _tags -> execute $ fmap (mapM_ runWPL) $ readWPL path
   return do
      case header of
        TitleH level -> newWHEvent level txt
