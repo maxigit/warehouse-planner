@@ -42,20 +42,20 @@ import WarehousePlanner.WPL.Exec
 -- | Read and cut a scenario file into different component
 parseScenarioFile :: Text -> Either Text [Section]
 parseScenarioFile text = do -- Either
-  lineTypes <- traverse parseLine (map strip $ lines text) 
+  lineTypes <- traverse parseLine (lines text) 
   sequence $ linesToSections lineTypes
   
 
 -- | Transform a line of text to a typed line
 parseLine :: Text -> Either Text TypedLine
-parseLine line | "-- END " `isPrefixOf` line          = Right EndL
+parseLine l@(strip -> line) | "-- END " `isPrefixOf` line          = Right EndL
                | ":END:" `isPrefixOf` line            = Right EndSectionL
                | "-- " `isPrefixOf` line              = Right $ CommentL
                | Just drawer <- extractDrawer line      = drawer
                | Just sha <- stripPrefix "@" line     = Right $ HashL (DocumentHash $ strip sha)
                | Just headerType <- extractHeader line=  Right $ HeaderL headerType line
-               | strip line                 == ""     = Right $ CommentL
-               | otherwise                            = Right $ TextL line
+               | line                 == ""     = Right $ CommentL
+               | otherwise                            = Right $ TextL l
 
 
 -- | Regroup lines into section
