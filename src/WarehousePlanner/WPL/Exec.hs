@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
-{-# OPTIONS_GHC -Wno-unused-imports -Wno-unused-top-binds #-}
 module WarehousePlanner.WPL.Exec
 ( runWPL
 , readWPL
