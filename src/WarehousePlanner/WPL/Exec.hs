@@ -9,94 +9,51 @@ import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
+import WarehousePlanner.WPL.ExContext
 
 
--- Keeps selection 
-data ExContext s = ExContext 
-               { ecBoxes :: Seq (Box s)
-               -- , ecOtherBoxes :: Seq (Box s)
-               , ecShelves :: Seq (Shelf s)
-               -- , ecOtherShelves :: Seq (Shelf s)
-               } 
-     deriving Show
-pretty :: ExContext s -> String
-pretty ec = "Boxes = " <> prettySeq (ecBoxes ec) <> " Shelves = " <> prettySeq (ecShelves ec) where
-      prettySeq sq = case toList sq of 
-                       [] -> "0"
-                       x:_ -> show (length sq) <> ":" <> show x
+runWPL :: [Statement] -> WH () s
+runWPL statements = do
+   i <- getInitial
+   mapM_ (void . executeStatement i) statements
 
-emptyEC = ExContext mempty mempty
-runWPL :: Statement -> WH () s
-runWPL statement = void $ executeStatement emptyEC statement
+executeStatement :: ExContext s -> Statement -> WH (ExContext s) s
+executeStatement ec command = 
+    case command of 
+        Action command -> do
+           executeCommand ec command 
+        Then a b -> do
+          executeStatement ec a >>= flip executeStatement b
+        Ors coms -> do
+            mapM (void . executeStatement ec) coms
+            return ec
+        Cases cs -> do
+           foldM execCase ec cs
+    where execCase ec (Case com comm) = do
+             newEc <- executeStatement ec com
+             forM comm (executeStatement newEc)
+             return $ inverseBoxes newEc
 
-executeStatement :: ExContext s -> Statement -> WH (ExContext s, ExContext s) s
-executeStatement ec _statement =  return (ec, ec)
+         
 
 
-narrowExBoxes :: ExContext s -> BoxSelector -> WH (ExContext s, ExContext s) s
-narrowExBoxes ec selector =
-    case ecBoxes ec of 
-        boxes | null boxes -> do 
-              selected <- findBoxByNameAndShelfNames selector
-              return ( ec { ecBoxes = fromList selected }
-                     , ec  { ecBoxes = mempty }
-                     )
-        boxes -> do
-              selected <- findBoxByNameAndShelfNames selector
-              let (kept, left) = partitionIn boxes (fromList selected)
-              return ( ec { ecBoxes = kept }
-                     , ec  { ecBoxes = left }
-                     )
-narrowExShelves :: ExContext s -> ShelfSelector -> WH (ExContext s, ExContext s) s
-narrowExShelves ec selector =
-    case ecShelves ec of
-            shelves | null shelves -> do
-                selected <- findShelvesByBoxNameAndNames selector
-                return ( ec { ecShelves = fromList selected }
-                       , ec { ecShelves = mempty }
-                       )
-            shelves -> do
-                selected <- findShelvesByBoxNameAndNames selector
-                let (kept, left) = partitionIn shelves (fromList selected)
-                return ( ec { ecShelves = kept }
-                       , ec { ecShelves = left }
-                       )
 
-executeCommand :: ExContext s -> Command -> WH (ExContext s, ExContext s) s
+
+executeCommand :: ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     Move boxm shelfm -> do
-      boxes <- getBoxes ec boxm
-      shelves <- getShelves ec shelfm
+      boxes <- getBoxes <$> case boxm of 
+                 Nothing -> return ec
+                 Just sel -> narrowBoxes sel ec
+      shelves <- getShelves <$> case shelfm of
+                    Nothing -> return ec
+                    Just sel -> narrowShelves sel ec
       leftOver <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
-      let leftq = fromList leftOver
-          (_,used) = partitionIn (ecBoxes ec) leftq
-      return ( ec { ecBoxes = used }
-             , ec { ecBoxes = leftq }
-             )
+      return $ applyExOperation (ExcludeBoxes leftOver) ec
     SelectBoxes selector -> do
-      narrowExBoxes ec selector
+      narrowBoxes selector ec
     SelectShelves selector -> do
-      narrowExShelves ec selector
-       
-getBoxes :: ExContext s -> Maybe BoxSelector -> WH [Box s] s
-getBoxes ec selm = 
-    fmap toList case selm of 
-         Nothing -> return $ ecBoxes ec
-         Just sel -> (ecBoxes . fst) <$> narrowExBoxes ec sel
- 
-getShelves :: ExContext s -> Maybe ShelfSelector -> WH [Shelf s] s
-getShelves ec selm = 
-    fmap toList case selm of 
-         Nothing -> return $ ecShelves ec
-         Just sel -> (ecShelves . fst) <$> narrowExShelves ec sel
--- | Return what is in common an what is only in the first sequence
--- ex 1234 `partitionIn` 29 -> (2, 134)
-partitionIn :: forall a . Ord a => Seq a -> Seq a -> (Seq a, Seq a)
-partitionIn xs ys = let
-   ySet :: Set a
-   ySet = setFromList $ toList ys
-   in partition (`member` ySet) xs
-               
+      narrowShelves selector ec
   
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]

@@ -31,6 +31,7 @@ dependencies:
 - mono-traversable
 - ghc-prim
 - process
+- ordered-containers >= 0.2.3 && < 0.3
   
 language: GHC2021
 default-extensions:
