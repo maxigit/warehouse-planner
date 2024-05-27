@@ -41,6 +41,7 @@ main = defaultMain
 
                     ]
   , bgroup "full" [ bench "with moves" $ nfIO $ benchLoad ["full-with-moves"] ]
+  , bgroup "wpl" [ bench "one move" $ nfIO $ benchLoad ["full", "wpl-move"] ]
   , bgroup "diagonal" ( (bench "66" $ nfIO do
                                            return . show $ howManyWithDiagonal (Dimension 66 1 36)
                                                                         (Dimension 66 1 36)
