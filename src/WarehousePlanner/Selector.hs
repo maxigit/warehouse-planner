@@ -11,6 +11,7 @@ module WarehousePlanner.Selector
 , printSelector, printBoxSelector, printShelfSelector
 , MParser
 , between
+, Selectable(..)
 ) where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import WarehousePlanner.Type
@@ -92,6 +93,20 @@ unmatched pats0 valSet = go [] pats0 (Set.toList valSet) where
     -- \^ doesn't match anything, add to unused
     (_, vals') -> go unused pats vals'
 
+-- ** Class
+class Selectable a where
+   applySelector :: Selector a -> a s -> Bool
+   
+instance Selectable Box where
+   applySelector Selector{..} box = applyNameSelector nameSelector boxStyle box
+                                  && applyTagSelectors tagSelectors boxTags box
+   
+   
+instance Selectable Shelf where
+   applySelector Selector{..} shelf = applyNameSelector nameSelector shelfName shelf
+                                    && applyTagSelectors tagSelectors shelfTag shelf
+                                    
+  
 -- ** Parsing 
 -- | split on |
 parseSelector :: Text -> Selector a

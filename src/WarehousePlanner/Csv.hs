@@ -984,10 +984,8 @@ readOrientationRules defOrs filename = do
                         let
                             ors = parseOrientationRule defOrs orientations
                             (BoxSelector boxSel shelfSel _) = parseBoxSelector boxSelectors
-                            validate shelf box = if applyNameSelector (nameSelector boxSel) boxStyle box
-                                                    && applyTagSelectors (tagSelectors boxSel) boxTags box
-                                                    && applyNameSelector (nameSelector shelfSel) shelfName shelf
-                                                    && applyTagSelectors (tagSelectors shelfSel) shelfTag shelf
+                            validate shelf box = if applySelector boxSel box
+                                                    && applySelector shelfSel shelf
                                                  then Just ors
                                                  else Nothing
                         in validate

@@ -50,6 +50,8 @@ module WarehousePlanner.Base
 , parseTagOperations
 , parsePositionSpec
 , parseOrientationRule
+, partitionBoxes
+, partitionShelves
 , printDim
 , readOrientations
 , replaceSlashes
@@ -81,6 +83,7 @@ import Data.Map.Merge.Lazy(merge, preserveMissing, mapMaybeMissing, zipWithMaybe
 -- import Data.List(sort, sortBy, groupBy, nub, (\\), union, maximumBy, delete, stripPrefix, partition)
 import Data.List.NonEmpty(unzip)
 import Data.List qualified as List
+import Data.Foldable qualified as Foldable
 import Data.STRef
 import Data.Sequence ((|>))
 import Data.Sequence qualified as Seq
@@ -266,8 +269,7 @@ findBoxByNameAndShelfNames ( BoxSelector ( Selector (NameMatches [])
       shelfIdM <- findShelfByBox (boxId box)
       shelfM <- traverse findShelf shelfIdM
       let shelf = case shelfM of
-                    Just shelf'  -> if applyNameSelector (nameSelector shelfSel) shelfName shelf'
-                                      && applyTagSelectors (tagSelectors shelfSel) shelfTag shelf'
+                    Just shelf'  -> if applySelector shelfSel shelf'
                                     then shelfM
                                     else Nothing
                     _ -> Nothing
@@ -290,8 +292,7 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
       shelfIdM <- findShelfByBox (boxId box)
       shelfM <- traverse findShelf shelfIdM
       let shelf = case shelfM of
-                    Just shelf'  -> if applyNameSelector (nameSelector shelfSel) shelfName shelf'
-                                      && applyTagSelectors (tagSelectors shelfSel) shelfTag shelf'
+                    Just shelf'  -> if applySelector shelfSel shelf'
                                     then shelfM
                                     else Nothing
                     _ -> Nothing
@@ -368,8 +369,41 @@ findShelvesByBoxNameAndNames (ShelfSelector (Selector boxNameSel boxTagSel) shel
 
 
 
+partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s) -> WH ([Box s], [Box s]) s
+partitionBoxes BoxSelector{..} bids = do
+  box'shelves <- findBoxesWithShelf bids
+  let (goods, bads) = partition isSelected $ Foldable.toList box'shelves
+      sorted = limitByNumber numberSelector goods
+  return (map fst sorted, map fst bads)
+  where isSelected (box, shelf) = applySelector boxSelectors  box && applySelector shelfSelectors shelf
+   
   
 
+-- | Only returns boxes which have a shelf, which should be all, in theory
+findBoxesWithShelf :: (Traversable f, Box' boxId) => f (boxId s) -> WH (f (Box s, Shelf s)) s
+findBoxesWithShelf = mapM go where
+   go bId = do 
+       box <- findBox bId
+       Just shelf <- forM (boxShelf box) findShelf
+       return (box, shelf)
+
+partitionShelves :: (Traversable f, Shelf' shelfId) => ShelfSelector -> f (shelfId s) -> WH ([Shelf s], [Shelf s]) s
+partitionShelves ShelfSelector{..} sIds = do
+  shelf'boxess <- mapM findShelfWithBoxes sIds
+  let (goods, bads) = partition isSelected $ Foldable.toList shelf'boxess
+  return $ (map fst goods, map fst bads)
+  where isSelected (shelf, boxes) = applySelector sShelfSelectors shelf
+                                  && case sBoxSelectors of
+                                       SelectAnything -> True
+                                       bsel -> any (applySelector bsel) boxes
+                                     
+findShelfWithBoxes :: Shelf' shelfId => shelfId s -> WH (Shelf s, [Box s]) s
+findShelfWithBoxes shelfId = do
+   shelf <- findShelf shelfId
+   boxes <- findBoxByShelf shelf
+   return (shelf, boxes)
+    
+  
 
 defaultBoxOrientations box shelf =
     let orientations = case (shelfBoxOrientator shelf)  of

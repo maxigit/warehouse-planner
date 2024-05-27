@@ -562,7 +562,6 @@ data Selector a  = Selector
   }
   deriving (Show, Eq)
 
-
 pattern SelectAnything :: Selector a
 pattern SelectAnything = Selector AnyNames []
 

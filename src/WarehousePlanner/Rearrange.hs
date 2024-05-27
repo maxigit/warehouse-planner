@@ -103,13 +103,11 @@ parseActions s0 = let
             then StayInPlace
             else ShiftAll
     selectors = parseSelectors asLocation ss
-    in (\box shelfm -> orTrue [ applyNameSelector  (nameSelector boxSel) boxStyle box
-                            && applyTagSelectors (tagSelectors boxSel) boxTags box
+    in (\box shelfm -> orTrue [ applySelector  boxSel box
                             && case shelfm of
                                  Nothing | SelectAnything <- shelfSel  -> True
                                  Nothing -> False
-                                 Just shelf -> applyNameSelector (nameSelector shelfSel) shelfName shelf
-                                               && applyTagSelectors (tagSelectors shelfSel) shelfTag shelf
+                                 Just shelf -> applySelector shelfSel shelf
                           | BoxSelector boxSel shelfSel _ <- selectors
 
                           ]
