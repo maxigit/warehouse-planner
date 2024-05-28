@@ -32,10 +32,10 @@ main = defaultMain
                                         , ("move", do
                                               boxes_ <- gets boxes
                                               shelves_ <- gets shelves
-                                              errors <-  moveBoxes ExitLeft  PRightOnly DontSortBoxes 
+                                              result <-  moveBoxes ExitLeft  PRightOnly DontSortBoxes 
                                                         (toList boxes_)
                                                         (toList shelves_)
-                                              return (length errors)
+                                              return (maybe 0 length $ excluded result)
                                           )
                                         ]
 

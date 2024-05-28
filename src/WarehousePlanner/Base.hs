@@ -374,7 +374,10 @@ partitionBoxes BoxSelector{..} bids = do
   box'shelves <- findBoxesWithShelf bids
   let (goods, bads) = partition isSelected $ Foldable.toList box'shelves
       sorted = limitByNumber numberSelector goods
-  return (map fst sorted, map fst bads)
+      -- TODO make faster, make limitByNumber return an InExcluded
+      -- the current implementation keep the truncated in the original order
+      truncated = filter (flip notMember (Set.fromList sorted)) goods
+  return (map fst sorted, map fst $ truncated <> bads)
   where isSelected (box, shelf) = applySelector boxSelectors  box && applySelector shelfSelectors shelf
    
   
@@ -1054,7 +1057,7 @@ data SortBoxes = SortBoxes | DontSortBoxes
 -- Boxes are move in sequence and and try to fill shelve
 -- in sequence. If they are not enough space the left boxes
 -- are returned.
-moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [box s] -> [shelf s] -> WH [Box s] s
+moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [box s] -> [shelf s] -> WH (InExcluded (Box s)) s
 
 moveBoxes exitMode partitionMode sortMode bs ss = do
   boxes <- mapM findBox bs
@@ -1067,20 +1070,21 @@ moveBoxes exitMode partitionMode sortMode bs ss = do
       -- However we take into the account priority within the style before the dimension
       -- so that we can set the priority
         
-  lefts_ <- forM layers $ \layer -> do
+  (unzip -> (ins, exs))  <- forM layers $ \layer -> do
     let groups = groupSimilar _boxDim layer
     -- forM groups $ \(SimilarBy dim _ boxes) -> traceShowM ("  GROUP", dim, 1 + length boxes)
     -- traceShowM ("GRoups", length groups, map (\(SimilarBy dim g1 g ) -> (show $ length g + 1, show . _roundDim $ dim )) groups)
-    lefts' <- mapM (\g -> moveSimilarBoxes exitMode partitionMode g ss) groups
-    return $ concatMap unSimilar $ catMaybes lefts'
-  return $ concat lefts_
+    moved'lefts <- mapM (\g -> moveSimilarBoxes exitMode partitionMode g ss) groups
+    let (moveds, lefts) = unzip moved'lefts
+    return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
+  return $ InExcluded (Just $ concat ins) (Just $ concat exs)
 
 _roundDim :: Dimension -> [Int]
 _roundDim (Dimension l w h) = map (round . (*100)) [l,w,h]
 
  
 -- | Move boxes of similar size to the given shelf if possible
-moveSimilarBoxes :: (Shelf' shelf) => ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s)) s
+moveSimilarBoxes :: (Shelf' shelf) => ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
 moveSimilarBoxes exitMode partitionMode boxes shelves' = do
   shelves <- mapM findShelf shelves'
   positionss <- mapM (\s -> bestPositions partitionMode s boxes) shelves
@@ -1143,7 +1147,7 @@ combineSlices exitMode shelf'slicess = let
   in foldMap concat withGroupN
 -- | Assign boxes to positions in order (like a zip) but with respect to box breaks.
 -- (skip to the next column if column break for example)
-assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (Maybe (SimilarBoxes s)) s
+assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
 assignBoxesToPositions slices simBoxes = do
   let boxes = unSimilar simBoxes
   let go _ _ [] = return []
@@ -1157,7 +1161,7 @@ assignBoxesToPositions slices simBoxes = do
                                           , boxOffset = offset}) box
             assignShelf (Just shelf) box
   leftOver <- go Nothing (numSlices slices) boxes 
-  return $ dropSimilar (length boxes - length leftOver) simBoxes
+  return $ splitSimilar (length boxes - length leftOver) simBoxes
   
 boxRank :: Box s -> (Text, Int, Text, Int)
 boxRank box = ( boxStyle box , boxStylePriority box, boxContent box, boxContentPriority box)
@@ -1181,8 +1185,8 @@ boxGlobalPriority  box = p where (p, _, _) = boxPriorities box
 -- aroundArrangement  :: WH a -> WH a
 aroundArrangement :: (Shelf' shelf, Box' box, Box' box2)
                   => AddOldBoxes 
-                  -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH [box2 s] s)
-                -> [box s] -> [shelf s] -> WH [box2 s] s
+                  -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s)
+                -> [box s] -> [shelf s] -> WH (InExcluded (box2 s)) s
 aroundArrangement useOld arrangement newBoxishs shelves = do
     newBoxes <- mapM findBox newBoxishs
     boxes <- case useOld of
@@ -1196,10 +1200,10 @@ aroundArrangement useOld arrangement newBoxishs shelves = do
     -- rearrange what's left in each individual space
     -- so that there is as much space left as possible
 
-    left <- arrangement boxes shelves
+    inEx <- arrangement boxes shelves
     s0 <- defaultShelf
-    void $ mapM (assignShelf (Just s0)) left
-    return left
+    void $ mapM (assignShelf (Just s0)) $ excludedList inEx
+    return $ inEx
 
 
 

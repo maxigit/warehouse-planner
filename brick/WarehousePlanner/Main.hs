@@ -163,7 +163,11 @@ defaultMainWith expandSection = do
       getExec :: forall a . IO (Either Text (WH a RealWorld -> IO a, Scenario))
       getExec = do
                     scenarioE <- readScenarioFromPaths withHistory (expandSection dir) oDir oFiles
-                    extraScenarios <- mapM (readScenario $ expandSection dir) $ extraScenariosFrom o
+                    extraScenarios <- case extraScenariosFrom o of
+                                        [] -> return []
+                                        extras -> do 
+                                             ss <- mapM (readScenario $ expandSection dir) extras
+                                             return $ Right (mempty { sSteps = [ NewFile  "<ARGUMENTS>" ] }) : ss
                     case sequence (scenarioE: extraScenarios) of
                          Left e -> return $ Left e
                          Right scenarios -> do 

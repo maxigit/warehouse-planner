@@ -178,8 +178,8 @@ bestAvailableShelvesFor pmode (extractRanking -> (ranking, style'shelf)) = do
     -- n and then best order
     let bests = bestShelves ranking box (or box) shelves
     let   getInfo shelf = do
-            boxesLeft <- moveBoxes ExitLeft pmode SortBoxes boxes [shelf]
-            return (shelf, length boxes - length boxesLeft)
+            inEx <- moveBoxes ExitLeft pmode SortBoxes boxes [shelf]
+            return (shelf, length (includedList inEx))
     shelfInfos <- mapM getInfo bests
     let go (shelf, n) = do
             r <- report ranking shelf  (headEx boxes)
@@ -736,12 +736,12 @@ newPair wh res (Just res') =
           shelf <- addShelf (rShelf res)
           boxes <- addBoxes res def
           boxes' <- addBoxes res' def
-          left <- moveBoxes ExitOnTop PRightOnly SortBoxes boxes [shelf]
-          left' <- moveBoxes ExitOnTop PRightOnly SortBoxes boxes' [shelf]
+          inEx <- moveBoxes ExitOnTop PRightOnly SortBoxes boxes [shelf]
+          inEx' <- moveBoxes ExitOnTop PRightOnly SortBoxes boxes' [shelf]
           -- shelfR <- findShelf shelf
 
           -- traceShowM ("RES", length boxes, length left, length boxes', length left')
-          return (length boxes, length left, length boxes', length left')
+          return (length boxes, length $ excludedList inEx, length boxes', length $ excludedList inEx')
 
 
         ors = boxOrientations wh

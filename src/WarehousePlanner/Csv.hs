@@ -655,20 +655,23 @@ processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = w
        ([], True) -> error $ show style ++ " returns an empty set"
        _         -> return ()
   boxes <- mapM findBox boxes0
-  leftoverss <- forM locationM $ \location' -> do
-    -- reuse leftover of previous locations between " " same syntax as Layout
-    foldM (\boxes locations -> do
-               let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
-               let locationss = splitOn "|" location
-               shelves <- findShelfBySelectors (map parseSelector locationss)
-               aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) boxes shelves
-          ) boxes (splitOn " " location')
+  inEx <- case locationM of
+              Just location' -> do
+                   -- reuse leftover of previous locations between " " same syntax as Layout
+                   foldM (\boxInEx locations -> do
+                              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
+                              let locationss = splitOn "|" location
+                              shelves <- findShelfBySelectors (map parseSelector locationss)
+                              ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+                              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
+                         ) (mempty { excluded = Just boxes}) (splitOn " " location')
+              Nothing -> return $ mempty { included = Just boxes } 
   case tags of
     [] -> return boxes
     _  -> do
       let untagOps = negateTagOperations tagOps
-      new <- zipWithM (updateBoxTags tagOps) boxes [1..]
-      _ <- zipWithM (updateBoxTags untagOps) (concat leftoverss) [1..]
+      new <- zipWithM (updateBoxTags tagOps) (includedList inEx) [1..]
+      _ <- zipWithM (updateBoxTags untagOps) (excludedList inEx) [1..]
       return new
 
 -- | Parse tags operations from a list a text.
@@ -877,7 +880,7 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                         shelves <- if shelf == fst previousMatch  -- check previous match
                                    then return $ snd previousMatch
                                    else (mapM findShelf) =<< findShelfBySelector (Selector (NameMatches [MatchFull shelf]) [])
-                        leftOvers <- moveBoxes ExitLeft pmode SortBoxes boxes shelves
+                        leftOvers <- excludedList <$> moveBoxes ExitLeft pmode SortBoxes boxes shelves
 
                         let errs = if not (null leftOvers)
                                       then map (\b -> unlines [ "ERROR: box " <> tshow b <> " doesn't fit in " <> shelf

@@ -208,8 +208,7 @@ type RunsWithId s = Runs NonEmpty (ShelfId s)
 -- | State containing bays of boxes
 -- boxOrientations : function returning a list
 -- of possible box orientiations within a shelf for a given box.
--- as well as the number of boxes which can be used for the depth (min and max)
--- setting min to 1, allow forcing boxes stick out
+-- 
 data Warehouse s = Warehouse { boxMap :: Map Text  (Seq (BoxId s))
                            , shelves :: Seq (ShelfId s)
                            , shelfGroup :: RunsWithId s
@@ -593,6 +592,53 @@ selectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
                              (BoxNumberSelector Nothing Nothing Nothing)
 
+-- ** For Context
+-- | Pair of included and excluded things.
+-- Used to keep track of which boxes have been processed or not
+data InExcluded a = InExcluded 
+                  { included :: Maybe [a]
+                  , excluded :: Maybe [a]
+                  }
+     deriving (Eq, Show, Functor)
+pattern AllOf, NoneOf :: Maybe [a ]
+pattern AllOf = Nothing
+pattern NoneOf = Just []
+
+instance Ord a => Semigroup (InExcluded a) where
+   -- included a | included b
+   -- exclude a & included b
+   -- Keep the original order
+   a <> b = let ins = case (included a, included b) of
+                          (AllOf, _) -> AllOf
+                          (_, AllOf) -> AllOf
+                          (NoneOf, is) -> is
+                          (is, NoneOf) -> is
+                          (Just as, Just bs) -> Just $ as <> filter (flip Set.notMember (Set.fromList as)) bs
+                          _ -> error "should be exhaustive"
+                exs = case (excluded a, excluded b) of
+                          (AllOf, es) -> es
+                          (es, AllOf) -> es
+                          (NoneOf, _) -> NoneOf
+                          (_, NoneOf) -> NoneOf
+                          (Just as, Just bs) -> Just $ filter (flip Set.notMember (Set.fromList bs)) as
+                          _ -> error "should be exhaustive"
+            in InExcluded ins exs
+                          
+instance Ord a => Monoid (InExcluded a) where
+    mempty = InExcluded NoneOf AllOf
+allIncluded :: InExcluded a
+allIncluded = InExcluded AllOf NoneOf
+
+inverseInEx :: InExcluded a -> InExcluded a
+inverseInEx ie = InExcluded (excluded ie) (included ie)
+
+includedList :: InExcluded a -> [a]
+includedList = fromMaybe [] . included
+excludedList :: InExcluded a -> [a]
+excludedList = fromMaybe [] . excluded
+-- as well as the number of boxes which can be used for the depth (min and max)
+-- setting min to 1, allow forcing boxes stick out
+--
 -- ** Warehouse 
 
 type Run f a = f (Bay f a)

@@ -8,6 +8,7 @@ module WarehousePlanner.SimilarBy
 , groupSimilars
 , sortSimilarOn
 , dropSimilar
+, splitSimilar
 )
 where
 import Prelude
@@ -43,10 +44,14 @@ sortSimilarOn fn  (SimilarByPrivate k x0 xs0) = case sortOn fn (x0:xs0) of
   (x:xs) -> SimilarByPrivate k x xs
 
 dropSimilar :: Int -> SimilarBy k a -> Maybe (SimilarBy k a)
-dropSimilar n (SimilarByPrivate k x xs) = case drop n (x:xs) of
-  [] -> Nothing
-  (y:ys) -> Just $ SimilarByPrivate k y ys
+dropSimilar n = snd . splitSimilar n
 
+splitSimilar :: Int -> SimilarBy k a -> (Maybe (SimilarBy k a), Maybe (SimilarBy k a))
+splitSimilar n (SimilarByPrivate k x xs) = let 
+  (taken, dropped) = splitAt n (x:xs)
+  in (mkSimilar taken, mkSimilar dropped)
+  where mkSimilar [] = Nothing
+        mkSimilar (x:xs) = Just $ SimilarByPrivate k x xs
 -- | Group by k but separate groups with the same key
 -- >>> groupTo [(1, a), (1, b), (2,  c), (1, d)] = {1 : [[a b ], [d], 2: [[c]] }
 groupSimilars :: Ord k => (a -> k) -> [a] -> Map k (SimilarBy k [a])

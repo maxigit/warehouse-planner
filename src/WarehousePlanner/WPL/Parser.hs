@@ -71,7 +71,7 @@ statement = do
    case nextm of
       Nothing -> return a
       Just (Left c) -> do
-           cs <- some $ iguard >> caseLine
+           cs <- many $ iguard >> caseLine
            return $ Then a $ Cases (c :| cs)
       Just (Right s) -> do
            ss <- many $ iguard >> statement

@@ -141,6 +141,7 @@ parseTagSelector tag = Just $ case break ('='  ==) tag of
   
 parseMatchPattern :: Text -> MatchPattern
 parseMatchPattern "" = MatchAnything
+parseMatchPattern "*" = MatchAnything
 parseMatchPattern pat | isGlob pat= MatchGlob (Glob.compile $ unpack pat)
 parseMatchPattern pat = MatchFull pat
   
