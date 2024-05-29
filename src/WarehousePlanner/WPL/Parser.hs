@@ -93,10 +93,16 @@ caseLine = do
        _ -> Case c Nothing
           
 atom :: MParser Statement
-atom = notFollowedBy "|" >> Action <$> command
-  
+atom = (PassThrought <$> (lexeme "~" *> statement))
+       <|> (lexeme "("  *> statement <* lexeme ")")
+       <|> (notFollowedBy "|" >> Action <$> command)
 
-command = asum $ map lexeme [ toggleTag, tag, move, shelfSelector, boxSelector] where
+command = asum $ map lexeme [ toggleTag
+                            , tag
+                            , move
+                            , shelfSelector
+                            , boxSelector
+                            ] where
    move = do 
             lexeme "to" 
             shelf <- lexeme $ takeWhile1P (Just "shelf selector") isSelector

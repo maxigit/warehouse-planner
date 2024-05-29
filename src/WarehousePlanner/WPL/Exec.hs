@@ -30,6 +30,9 @@ executeStatement ec command =
             return ec
         Cases cs -> do
            foldM execCase ec cs
+        PassThrought statement -> do
+           executeStatement ec statement
+           return ec
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)

@@ -32,6 +32,7 @@ data Statement = Action Command
                | Cases (NonEmpty Case)
                | Ors (NonEmpty Statement)
                | Then Statement Statement
+               | PassThrought Statement
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)
