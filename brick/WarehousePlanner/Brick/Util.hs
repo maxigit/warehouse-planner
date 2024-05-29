@@ -106,11 +106,13 @@ generateLevelAttrs =
     
     
 levelToColor v = \case
-  Empty -> V.color240 0 v v -- cyan
+  Empty -> V.color240 0 v4 v4 -- cyan
   Low -> V.color240 0 v 0 -- green
   Medium -> V.color240 v v 0  -- yellow
-  Used -> V.color240 v (v `div` 2) 0 -- orange
+  Used -> V.color240 v v2 0 -- orange
   Full -> V.color240 v 0 0 -- red
+  where v2 = v `div` 2
+        v4 = v `div` 4
 
 
 

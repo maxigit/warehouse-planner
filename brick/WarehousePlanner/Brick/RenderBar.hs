@@ -74,14 +74,16 @@ charWithPerc2 c r1 r2 = withDefAttr (percToAttrName r1 r2) (str [c])
 
 renderS :: SummaryView -> ShelvesSummary e f a -> Widget n
 renderS smode s = let 
-       c = case smode of
-              SVMaxLength -> '>'
-              SVMaxHeight -> '^'
-              SVMaxWidth -> '○'
-              SVSurfaceWH -> '◀'
-              SVSurfaceLH -> '◆'
-              SVSurfaceLW -> '▼'
-              SVVolume -> '★'
+       c = if  ratio (fromSummary smode) s <= 1e-6
+           then '·'
+           else case smode of
+                     SVMaxLength -> '▷'
+                     SVMaxHeight -> '△'
+                     SVMaxWidth -> '○'
+                     SVSurfaceWH -> '◀'
+                     SVSurfaceLH -> '◆'
+                     SVSurfaceLW -> '▼'
+                     SVVolume -> '★'
        in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
