@@ -288,6 +288,20 @@ data ShelfStyling = ShelfStyling
   , barTitle :: Maybe Text -- ^ text to display in the bar
   , displayBarGauge :: Bool -- ^ to display or the bar gauge
   } deriving (Show, Eq)
+
+-- | Internal types to deal with tag and tag operations
+-- we use a parametrized type only to get fmap for free
+data TagOperationF s = -- ClearTagValues  use SetValue []
+                    SetTag -- no value
+                  | RemoveTag 
+                  | SetValues [s]
+                  | AddValue s
+                  | RemoveValue s
+                  deriving (Eq, Show, Functor, Foldable, Traversable)
+
+type TagOperation = TagOperationF Text
+type Tag'Operation = (Text, TagOperation)
+
 -- * Classes 
 class ShelfIdable a where
     shelfId :: a s -> ShelfId s
@@ -656,4 +670,4 @@ mapRuns f = fmap  (fmap (fmap f) )
 
 traverseRuns :: (Monad m, Traversable f) => (a -> m b) -> Runs f a -> m (Runs f b)
 traverseRuns f = traverse (traverse (traverse f))
--- ** Similar 
+-- ** Tag

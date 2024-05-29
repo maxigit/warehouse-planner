@@ -57,8 +57,6 @@ module WarehousePlanner.Base
 , replaceSlashes
 , shelfBoxes
 , stairsFromCorners
-, TagOperationF(..)
-, Tag'Operation
 , updateBox
 , updateBoxTags
 , updateBoxTags'
@@ -120,19 +118,6 @@ isSorted f (x:xs@(y:_)) = if f x  /= f y
                         then False
                         else isSorted f xs
 isSorted _ _ = True
-
--- | Internal types to deal with tag and tag operations
--- we use a parametrized type only to get fmap for free
-data TagOperationF s = -- ClearTagValues  use SetValue []
-                    SetTag -- no value
-                  | RemoveTag 
-                  | SetValues [s]
-                  | AddValue s
-                  | RemoveValue s
-                  deriving (Eq, Show, Functor, Foldable, Traversable)
-
-type TagOperation = TagOperationF Text
-type Tag'Operation = (Text, TagOperation)
 
 -- | Computes the max length or height used within a shelf
 -- | by all the boxes. Should be able to be cached.

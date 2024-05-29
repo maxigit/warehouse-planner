@@ -7,6 +7,7 @@ import ClassyPrelude hiding(some, many, try)
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Selector
 import WarehousePlanner.Type
+import WarehousePlanner.Base
 -- import WarehousePlanner.Type
 import Text.Megaparsec as P
 import Text.Megaparsec.Char
@@ -95,14 +96,27 @@ atom :: MParser Statement
 atom = notFollowedBy "|" >> Action <$> command
   
 
-command = asum $ map lexeme [ move, shelfSelector, boxSelector] where
+command = asum $ map lexeme [ toggleTag, tag, move, shelfSelector, boxSelector] where
    move = do 
             lexeme "to" 
             shelf <- lexeme $ takeWhile1P (Just "shelf selector") isSelector
             return $ Move Nothing $ Just $ parseShelfSelector $ "/" <> shelf
-   boxSelector = SelectBoxes . parseBoxSelector <$> takeWhile1P (Just "box selector") isSelector
+   tag = do 
+           lexeme "tag"
+           tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
+           return $ Tag (parseTagOperations tagOps) 
+   toggleTag = do 
+           lexeme "tog"
+           tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
+           return $ ToggleTags (parseTagOperations tagOps) 
+   boxSelector = guardLower >> (SelectBoxes . parseBoxSelector <$> takeWhile1P (Just "box selector") isSelector)
    shelfSelector = "/" >> SelectShelves . ShelfSelector SelectAnything . parseSelector <$> takeWhile1P (Just "shelf selector") isSelector
    isSelector c = not $ isSpace c || c == ')'
+-- | Make sure things don't start with a lower case (to not be mixed
+-- with a mispelled command
+-- or escape with `
+guardLower :: MParser ()
+guardLower = label "Escape lower case with `" $ void (char '`') <|> notFollowedBy lowerChar
 {-
   spaces
   parseStatement <* eof

@@ -11,6 +11,7 @@ import WarehousePlanner.Selector (printBoxSelector, printShelfSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
+import Control.Monad(zipWithM_)
 
 
 runWPL :: [Statement] -> WH () s
@@ -41,6 +42,7 @@ executeStatement ec command =
 
 executeCommand :: ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
+    --------
     Move boxm shelfm -> do
       newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> maybe "" printShelfSelector shelfm)
       boxes <- getBoxes =<< case boxm of 
@@ -51,10 +53,27 @@ executeCommand ec command = case command of
                     Just sel -> narrowShelves sel ec
       inEx <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
       return ec { ecBoxes = fmap boxId inEx }
+    ---------
+    Tag tagOps -> do
+      newBaseEvent "TAG" (tshow tagOps)
+      boxes <- getBoxes ec
+      zipWithM_ (updateBoxTags tagOps) boxes [1..]
+      return ec
+    ---------
+    ToggleTags tagOps -> do
+      newBaseEvent "TOGGLE" (tshow tagOps)
+      boxes <- getBoxes ec
+      excluded <- getBoxes (inverseBoxes ec)
+      zipWithM_ (updateBoxTags tagOps) boxes [1..]
+      zipWithM_ (updateBoxTags $ negateTagOperations tagOps) excluded [1..]
+      return ec
+    ---------
     SelectBoxes selector -> do
       narrowBoxes selector ec
+    ---------
     SelectShelves selector -> do
       narrowShelves selector ec
+    ---------
   
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]

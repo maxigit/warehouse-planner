@@ -7,9 +7,11 @@ import WarehousePlanner.Selector(printBoxSelector, printShelfSelector)
 import Data.List.NonEmpty as NE
 
 
-data Command = Move { aSource :: Maybe BoxSelector
-                   , aDest   :: Maybe ShelfSelector
+data Command = Move { cSource :: Maybe BoxSelector
+                   , cDest   :: Maybe ShelfSelector
                    }
+             | Tag { cTagOps :: [Tag'Operation] }
+             | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
              | SelectBoxes BoxSelector
              | SelectShelves ShelfSelector 
             -- | Tag { source :: Text, tags }
@@ -17,7 +19,9 @@ data Command = Move { aSource :: Maybe BoxSelector
      deriving Eq
 instance Show Command where show = showCommand
 showCommand = \case
-      Move{..} -> "Move " <> maybe "∅" showBoxSelector aSource <> " " <>  maybe "∅" showShelfSelector aDest
+      Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  maybe "∅" showShelfSelector cDest
+      Tag{..} -> "Tag " <> show cTagOps
+      ToggleTags{..} -> "ToggleTag " <> show cTagOps
       SelectBoxes s -> showBoxSelector s
       SelectShelves s -> showShelfSelector s
       
