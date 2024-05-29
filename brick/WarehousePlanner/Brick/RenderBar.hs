@@ -77,13 +77,13 @@ renderS smode s = let
        c = if  ratio (fromSummary smode) s <= 1e-6
            then '·'
            else case smode of
-                     SVMaxLength -> '▷'
-                     SVMaxHeight -> '△'
-                     SVMaxWidth -> '○'
-                     SVSurfaceWH -> '◀'
-                     SVSurfaceLH -> '◆'
-                     SVSurfaceLW -> '▼'
-                     SVVolume -> '★'
+                     SVMaxLength -> '>'
+                     SVMaxHeight -> '^'
+                     SVMaxWidth -> 'o'
+                     SVSurfaceWH -> '<'
+                     SVSurfaceLH -> '#'
+                     SVSurfaceLW -> 'v'
+                     SVVolume -> '*'
        in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
