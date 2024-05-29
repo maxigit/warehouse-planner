@@ -12,8 +12,8 @@ data Command = Move { cSource :: Maybe BoxSelector
                    }
              | Tag { cTagOps :: [Tag'Operation] }
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
-             | SelectBoxes BoxSelector
-             | SelectShelves ShelfSelector 
+             | SelectBoxes (CSelector BoxSelector)
+             | SelectShelves (CSelector ShelfSelector)
             -- | Tag { source :: Text, tags }
      -- deriving (Show, Eq)
      deriving Eq
@@ -22,8 +22,8 @@ showCommand = \case
       Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  maybe "∅" showShelfSelector cDest
       Tag{..} -> "Tag " <> show cTagOps
       ToggleTags{..} -> "ToggleTag " <> show cTagOps
-      SelectBoxes s -> showBoxSelector s
-      SelectShelves s -> showShelfSelector s
+      SelectBoxes s -> showCSelector showBoxSelector s
+      SelectShelves s -> showCSelector showShelfSelector s
       
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"
@@ -38,4 +38,21 @@ data Statement = Action Command
 data Case = Case Statement (Maybe Statement)
     deriving (Show, Eq)
 
+
+
+-- | Context selector, a bit more than a selector
+-- as it allows accessing parent for example
+data CSelector  s = CSelector s
+                  | SwapContext
+                  | Parent 
+                  | Root
+     deriving (Eq, Show)
+     
+showCSelector shows sel = case sel of
+    CSelector s -> shows s
+    SwapContext -> "<SwapContext>"
+    Parent -> "<Parent>"
+    Root -> "<Root>"
+
+     
 

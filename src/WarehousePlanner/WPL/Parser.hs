@@ -41,7 +41,7 @@ lexeme :: MParser a -> MParser a
 lexeme = L.lexeme spaces
 
 wplParser ::  MParser [Statement]
-wplParser = (some $ L.nonIndented whites statement) <*  whites
+wplParser = (some $ L.nonIndented whites statement) <*  whites <* eof
  
 
 {-
@@ -93,7 +93,7 @@ caseLine = do
        _ -> Case c Nothing
           
 atom :: MParser Statement
-atom = (PassThrought <$> (lexeme "~" *> statement))
+atom = (PassThrought <$> (lexeme ";" *> statement))
        <|> (lexeme "("  *> statement <* lexeme ")")
        <|> (notFollowedBy "|" >> Action <$> command)
 
@@ -115,9 +115,26 @@ command = asum $ map lexeme [ toggleTag
            lexeme "tog"
            tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
            return $ ToggleTags (parseTagOperations tagOps) 
-   boxSelector = guardLower >> (SelectBoxes . parseBoxSelector <$> takeWhile1P (Just "box selector") isSelector)
-   shelfSelector = "/" >> SelectShelves . ShelfSelector SelectAnything . parseSelector <$> takeWhile1P (Just "shelf selector") isSelector
-   isSelector c = not $ isSpace c || c == ')'
+   boxSelector = guardLower >> label "box selector" (SelectBoxes <$> cselector parseBoxSelector)
+   shelfSelector = "/" >> label "shelf selector" (SelectShelves <$> cselector (ShelfSelector SelectAnything . parseSelector))
+
+isSelector :: Char -> Bool
+isSelector c = not $ isSpace c || c == ')'
+   
+   
+cselector :: (Text -> s) -> MParser (CSelector s)
+cselector mk = try $ asum [swapContext, root, parent, sel ] where
+     swapContext = do
+         (string "-~")
+         return SwapContext
+     sel = CSelector . mk <$> lexeme (takeWhile1P (Just "selector") isSelector)
+     parent = (lexeme $ char '~') >> return Parent
+     root = (lexeme $ string ".~") >> return Root
+
+
+
+     
+
 -- | Make sure things don't start with a lower case (to not be mixed
 -- with a mispelled command
 -- or escape with `

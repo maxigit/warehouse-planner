@@ -72,10 +72,10 @@ executeCommand ec command = case command of
       return ec
     ---------
     SelectBoxes selector -> do
-      narrowBoxes selector ec
+      narrowCSelector narrowBoxes selector ec
     ---------
     SelectShelves selector -> do
-      narrowShelves selector ec
+      narrowCSelector narrowShelves selector ec
     ---------
   
 
@@ -87,3 +87,12 @@ readWPL filename = do
        Left bundle -> error $ P.errorBundlePretty bundle
        Right statements -> return statements
 
+
+narrowCSelector :: (selector -> ExContext s -> WH (ExContext s) s) -> CSelector selector -> ExContext s -> WH (ExContext s) s
+narrowCSelector narrow cselector ec = 
+   case cselector of
+       CSelector selector -> narrow selector ec
+       Parent -> return $ fromMaybe withAll (ecParent ec)
+       Root -> return $ withAll --  . show $  up $ error $ show ec
+       SwapContext -> return $ inverseBoxes ec 
+   -- where up e = maybe e up (ecParent e)
