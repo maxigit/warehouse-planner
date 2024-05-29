@@ -7,7 +7,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
-import WarehousePlanner.Selector (printBoxSelector, printShelfSelector)
+import WarehousePlanner.Selector (printBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
@@ -46,14 +46,13 @@ executeStatement ec command =
 executeCommand :: ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
-    Move boxm shelfm -> do
-      newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> maybe "" printShelfSelector shelfm)
+    Move boxm shelf -> do
+      newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
       boxes <- getBoxes =<< case boxm of 
                  Nothing -> return ec
                  Just sel -> narrowBoxes sel ec
-      shelves <- getShelves =<< case shelfm of
-                    Nothing -> return ec
-                    Just sel -> narrowShelves sel ec
+      shelves <-  do
+         getShelves =<< narrowCSelector narrowShelves shelf ec
       inEx <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
       return ec { ecBoxes = fmap boxId inEx }
     ---------
@@ -95,4 +94,5 @@ narrowCSelector narrow cselector ec =
        Parent -> return $ fromMaybe withAll (ecParent ec)
        Root -> return $ withAll --  . show $  up $ error $ show ec
        SwapContext -> return $ inverseBoxes ec 
+       CStatement stmt -> executeStatement ec stmt
    -- where up e = maybe e up (ecParent e)

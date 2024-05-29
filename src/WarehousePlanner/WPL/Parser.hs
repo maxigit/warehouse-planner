@@ -100,13 +100,13 @@ atom = (PassThrought <$> (lexeme ";" *> statement))
 command = asum $ map lexeme [ toggleTag
                             , tag
                             , move
-                            , shelfSelector
-                            , boxSelector
+                            , shelfSel
+                            , boxSel
                             ] where
    move = do 
             lexeme "to" 
-            shelf <- lexeme $ takeWhile1P (Just "shelf selector") isSelector
-            return $ Move Nothing $ Just $ parseShelfSelector $ "/" <> shelf
+            shelf <-  shelfSelector
+            return $ Move Nothing $ shelf
    tag = do 
            lexeme "tag"
            tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
@@ -115,21 +115,35 @@ command = asum $ map lexeme [ toggleTag
            lexeme "tog"
            tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
            return $ ToggleTags (parseTagOperations tagOps) 
-   boxSelector = guardLower >> label "box selector" (SelectBoxes <$> cselector parseBoxSelector)
-   shelfSelector = "/" >> label "shelf selector" (SelectShelves <$> cselector (ShelfSelector SelectAnything . parseSelector))
+   boxSel = SelectBoxes <$> boxSelector
+   shelfSel = "/" >> (SelectShelves <$> shelfSelector)
 
+
+boxSelector :: MParser (CSelector BoxSelector)
+boxSelector =  label "box selector" $ asum
+    [  lexeme "in" >> cselector ((\sel -> BoxSelector (sBoxSelectors sel) (sShelfSelectors sel) (BoxNumberSelector Nothing Nothing Nothing) ) . parseShelfSelector)
+    , guardLower >> cselector parseBoxSelector
+    ]
+    
+shelfSelector :: MParser (CSelector ShelfSelector)
+shelfSelector = label "shelf selector" $ asum 
+     [ lexeme "with" >> cselector parseShelfSelector
+     , cselector (ShelfSelector SelectAnything . parseSelector)
+     ]
 isSelector :: Char -> Bool
 isSelector c = not $ isSpace c || c == ')'
    
    
 cselector :: (Text -> s) -> MParser (CSelector s)
-cselector mk = try $ asum [swapContext, root, parent, sel ] where
+cselector mk = try $ asum [swapContext, root, parent, stmt, sel ] where
      swapContext = do
          (string "-~")
          return SwapContext
      sel = CSelector . mk <$> lexeme (takeWhile1P (Just "selector") isSelector)
      parent = (lexeme $ char '~') >> return Parent
      root = (lexeme $ string ".~") >> return Root
+     stmt = CStatement <$> (lexeme "(" *> statement <* ")")
+         
 
 
 

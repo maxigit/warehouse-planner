@@ -8,7 +8,7 @@ import Data.List.NonEmpty as NE
 
 
 data Command = Move { cSource :: Maybe BoxSelector
-                   , cDest   :: Maybe ShelfSelector
+                   , cDest   :: CSelector ShelfSelector
                    }
              | Tag { cTagOps :: [Tag'Operation] }
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
@@ -19,7 +19,7 @@ data Command = Move { cSource :: Maybe BoxSelector
      deriving Eq
 instance Show Command where show = showCommand
 showCommand = \case
-      Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  maybe "∅" showShelfSelector cDest
+      Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  showCSelector showShelfSelector cDest
       Tag{..} -> "Tag " <> show cTagOps
       ToggleTags{..} -> "ToggleTag " <> show cTagOps
       SelectBoxes s -> showCSelector showBoxSelector s
@@ -46,6 +46,7 @@ data CSelector  s = CSelector s
                   | SwapContext
                   | Parent 
                   | Root
+                  | CStatement Statement
      deriving (Eq, Show)
      
 showCSelector shows sel = case sel of
@@ -53,6 +54,7 @@ showCSelector shows sel = case sel of
     SwapContext -> "<SwapContext>"
     Parent -> "<Parent>"
     Root -> "<Root>"
+    CStatement stmt -> "<" <> show stmt <> ">"
 
      
 
