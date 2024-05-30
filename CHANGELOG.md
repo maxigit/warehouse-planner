@@ -1,3 +1,10 @@
+# 1.3
+Add WPL 
+Misc Brick improvement 
+- add highlight status
+- improve history and diff
+Use Megaparser (instead of Parsec).
+Seems much faster
 # 1.2.6
 Add box and shelf selection
 Add custom box title using #ctitle
