@@ -183,8 +183,10 @@ defaultMainWith expandSection = do
   case oCommand of
        Summary -> do 
                -- workaround exec having a monomorphic type
-               Right (exec,_) <- getExec 
-               exec summary >>= outputText . pack . show
+               execE <- getExec
+               case execE of
+                 Left e -> error $ unpack e
+                 Right (exec, _) -> exec summary >>= outputText . pack . show
        Display -> whMain title do
                execE <- getExec
                case execE of

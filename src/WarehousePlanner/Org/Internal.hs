@@ -502,7 +502,7 @@ scenarioLayoutSize Scenario{..} =
 importDispatch :: (Monad io, MonadIO io) => FilePath -> (Text -> [Text] -> io (Either Text [Section])) -> Section -> io (Either Text [Section])
 importDispatch plannerDir dispatch (Section ImportH (Right content) _) = runExceptT $ do
   sectionss <- forM content $ \uri ->  do
-    let (main:tags) = splitOn "#" uri
+    let (main:tags) = splitOn "#" $ strip uri
         pieces = splitOn "/" main
     case map unpack pieces of
       ("file": paths@(_:_) ) ->  do
