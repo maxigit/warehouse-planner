@@ -14,6 +14,11 @@ flag brick
   manual: True
   default: True
 
+flag dev
+  description: Turn on development
+  manual: False
+  default: False
+
 library
   exposed-modules:
       WarehousePlanner.Affine
@@ -112,6 +117,10 @@ library
         WarehousePlanner.Brick.Input
     hs-source-dirs:
         brick
+  if flag(dev)
+    ghc-options: -O0
+  else
+    ghc-options: -O2
 
 executable whp
   main-is: Main.hs
