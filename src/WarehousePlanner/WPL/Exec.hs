@@ -36,7 +36,7 @@ executeStatement ec command =
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)
-             return $ inverseBoxes newEc
+             return $ inverseShelves $ inverseBoxes newEc
 
          
 
