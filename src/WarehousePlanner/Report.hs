@@ -19,6 +19,7 @@ module WarehousePlanner.Report
 , reportPairs
 , boxStyleWithTags
 , generateStockTakes
+, generateFuzzyStockTakes
 , generateBoxHistory
 ) where
 
@@ -504,18 +505,70 @@ generateStockTakes selectorm= do
     return $ [":STOCKTAKE:"
              ,"Bay No,Position,Style,Length,Width,Height,Orientations"
              ]
-             ++ map printBox sb 
+             ++ [ printStockTake sb (boxPositionSpec box) 
+                | sb@(_, box) <- sb
+                ]
              ++ [":END:"]
-    where printBox (shelf, box) =
-                   let Dimension l w h = _boxDim box
-                       BoxId_ (Arg bId _) = boxId box
-                   in intercalate  ","
-                      [ shelfName shelf
-                      , boxPositionSpec box
-                      , (boxStyleWithTags box) <> "#box_id=" <> tshow bId 
-                      , (pack $ printf "%0.2f,%0.2f,%0.f" l w h)
-                      , (concat $ map showOrientation' $ boxBoxOrientations box)
-                      ]
+printStockTake :: (Shelf s, Box s)  -> Text -> Text
+printStockTake (shelf, box) posititionSpec = 
+     let Dimension l w h = _boxDim box
+         BoxId_ (Arg bId _) = boxId box
+     in intercalate  ","
+        [ shelfName shelf
+        , posititionSpec
+        , (boxStyleWithTags box) <> "#box_id=" <> tshow bId 
+        , (pack $ printf "%0.2f,%0.2f,%0.f" l w h)
+        , (concat $ map showOrientation' $ boxBoxOrientations box)
+        ]
+-- | Like stocktake but don't use set offest but use a FillCommand syntax
+generateFuzzyStockTakes :: Maybe BoxSelector ->  WH [Text] s
+generateFuzzyStockTakes selectorm= do
+    boxes_ <- case selectorm of
+            Nothing -> findBoxByNameSelector (NameMatches [])
+            Just sel -> do
+              findBoxByNameAndShelfNames sel
+    -- boxes need to be sorted by shelf, depth , length and heigt
+    -- That is the order they are see
+    shelf0 <- defaultShelf
+    shelf'boxes_ <- mapM (\b -> (,b) <$> findShelf (fromMaybe shelf0 $ boxShelf b )) boxes_
+    let sortedS'B = flip sortOn shelf'boxes_ \(shelf, box) ->
+                         let (Dimension ol ow oh, offset) = boxPosition box 
+                             hasOffset = offset /= Dimension 0 0 0
+                         in (shelfName shelf, hasOffset, ow, ol, oh) 
+                
+    return $ [":STOCKTAKE:"
+             ,"Bay No,Position,Style,Length,Width,Height,Orientations"
+             ]
+             ++ [  printStockTake sb (posSpecs sb previous)
+                | (sb, previous) <-  zip sortedS'B (Nothing : map Just sortedS'B)
+                ]
+             ++ [":END:"]
+    where posSpecs (shelf, box) previous =
+                   let (Dimension ol ow oh, offset) = boxPosition box
+                       specs = breaks <> orient
+                       orient :: [Text]
+                       orient = case previous of
+                                 Just(pshelf, pbox) | boxDim box == boxDim pbox 
+                                                    , pshelf == shelf
+                                                    , orientation box == orientation pbox
+                                                    -> []
+                                 _ ->  [showOrientation' (orientation box) ]
+                       breaks :: [Text ]
+                       breaks = case previous of
+                                Nothing-> []
+                                Just (pshelf, pbox) | pshelf == shelf -> 
+                                     let Dimension pol pow _poh = boxCoordinate pbox
+                                     in if | pow /= ow -> replicate (round $ ow - pow) "nd"
+                                                          ++ replicate (round ol - 1) "nc"
+                                                          ++ skips
+                                           |ol /= pol || oh == 1 -> replicate (round $ ol -pol) "nc" ++ skips
+                                           | otherwise -> []
+                                _newShelf -> [ "cp" ]
+                       skips = replicate (round oh -1) "skip"
+
+                   in case offset of
+                        Dimension 0 0 0 -> intercalate " " specs
+                        _ -> boxPositionSpec box
 
 
 -- | Expands group related properties, which can't be processed on a indivial box

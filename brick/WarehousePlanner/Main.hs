@@ -36,6 +36,7 @@ data Options = Options
 
 data Command = Summary
              | Stocktake 
+             | FuzzyStocktake 
              | Expand 
              | Moves
              | MopLocation
@@ -84,6 +85,10 @@ optionsParser = do
 commandArg = flag' Stocktake (long "stocktake"
                              <> short 'k'
                              <> help "Generates a stocktake file with the final position of selected boxes"
+                             )
+          <|>flag' FuzzyStocktake (long "fuzzy-stocktake"
+                             <> short 'K'
+                             <> help "Generates a stocktake file with the fuzzy position of selected boxes"
                              )
           <|> flag' Display (long "display"
                             <> help "Launch interactive viewer"
@@ -203,6 +208,7 @@ defaultMainWith expandSection = do
                 let boxSelectorM = fmap parseBoxSelector oParam
                 case oCommand of
                   Stocktake -> withLines (generateStockTakes boxSelectorM)
+                  FuzzyStocktake -> withLines (generateFuzzyStockTakes boxSelectorM)
                   Expand -> scenarioToFullText scenario >>= outputText
                   MovesWithTags -> withLines (generateMoves DontSortBoxes boxSelectorM (boxStyleWithTags))
                   Moves -> withLines (generateMoves DontSortBoxes boxSelectorM boxStyle)
