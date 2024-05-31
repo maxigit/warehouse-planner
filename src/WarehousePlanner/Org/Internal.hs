@@ -332,8 +332,13 @@ cacheSection (Section InitialH content _) = do
         return $ Right (InitialH, (sha, "* Initial"))
     Right  _ -> return $ Left "Initial section needs a SHA (@...)"
 cacheSection Section{..} = runExceptT $ do
-  sha <- ExceptT $ cacheContent sectionContent
+  sha <- ExceptT $ cacheContent $ fmap stripContent sectionContent
   return $ (sectionType, (sha, sectionTitle))
+  where stripContent = case sectionType of
+                         WPLH{} -> id
+                         _ -> map strip
+  --    ^^^^^^^^^^^^ 
+  --       remove spaces left and right unless it is a WPL which is indentation sensitive
   
 -- | Load files and replace them by their text content
 unCacheSection :: MonadIO m => Section -> m Section
