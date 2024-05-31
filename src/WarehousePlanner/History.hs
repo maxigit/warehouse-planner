@@ -32,7 +32,7 @@ getShelfHistory shelf = do
 -------------------------------------------------- 
 computeBoxDiff :: Box s -> Box s -> DiffStatus (Set (ShelfId s))
 computeBoxDiff box1 box2 = DiffStatus{..} where
-   dsBoxUpdated = if box1 { _boxId = _boxId box2, boxShelf = boxShelf box2} == box2
+   dsBoxUpdated = if cleanBox box1  == cleanBox box2
                   then 0
                   else 1
    (dsBoxCreated, dsBoxDeleted) = case (boxShelf box1, boxShelf box2) of
@@ -41,10 +41,24 @@ computeBoxDiff box1 box2 = DiffStatus{..} where
                                       (_, Nothing) -> (0,1)
                                       _ -> (0,0)
     
-   (dsBoxOut, dsBoxIn) = if boxShelf box1 == boxShelf box2
-                         then (mempty, mempty)
-                         else (toSet $ boxShelf box2, toSet $ boxShelf box1)
+   (dsBoxOut, dsBoxIn, dsBoxShuffled) = if boxShelf box1 == boxShelf box2
+                         then ( mempty
+                              , mempty
+                              , if (orientation box1 /= orientation box2)
+                                || (boxOffset box1 /= boxOffset box2)
+                                then 1
+                                else 0
+                              )
+                                           
+                         else (toSet $ boxShelf box2, toSet $ boxShelf box1, 0)
    toSet = maybe mempty singletonSet
+   cleanBox box = box { boxTags = Map.delete "@prop" (boxTags box) 
+                      , boxOffset = boxOffset box2
+                      , orientation = orientation box2
+                      , boxShelf = boxShelf box2
+                      , _boxId = _boxId box2
+                      }
+   --                                    ^^^^^ set by brick, so should be seen as a diff
                          
 computeBoxDiffM :: Maybe (Box s) -> (Maybe (Box s) -> DiffStatus (Set (ShelfId s)))
 computeBoxDiffM Nothing Nothing = mempty
@@ -68,6 +82,7 @@ computeShelfDiff shelf1 shelf2 = DiffStatus{..} where
   dsBoxUpdated = 0
   dsBoxDeleted = 0
   dsBoxCreated = 0
+  dsBoxShuffled = 0
   boxesFor :: forall s . Shelf s -> Set (BoxId s)
   boxesFor = setFromList . toList . _shelfBoxes
 computeShelfDiffM :: Maybe (Shelf s) -> Maybe (Shelf s) -> DiffStatus (Set (ShelfId s))

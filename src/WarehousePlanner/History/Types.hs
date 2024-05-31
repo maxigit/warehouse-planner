@@ -142,6 +142,7 @@ data DiffStatus s = DiffStatus
      , dsBoxCreated :: Int
      , dsBoxOut :: s
      , dsBoxIn :: s
+     , dsBoxShuffled :: Int
      }
      deriving (Show, Eq)
 
@@ -151,9 +152,10 @@ instance Semigroup s => Semigroup (DiffStatus s) where
                          (dsBoxCreated d1 + dsBoxCreated d2)
                          (dsBoxOut d1 <> dsBoxOut d2)
                          (dsBoxIn d1 <> dsBoxIn d2)
+                         (dsBoxShuffled d1 + dsBoxShuffled d2)
 
 instance Monoid s => Monoid (DiffStatus s) where
-  mempty = DiffStatus 0 0 0 mempty mempty
+  mempty = DiffStatus 0 0 0 mempty mempty 0
      
      
 

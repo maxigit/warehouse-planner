@@ -195,6 +195,7 @@ renderDiffStatus def inSummary (DiffStatus{..}) = let
      | isOut             -> withAttr eventOut $ str "<"
      | dsBoxCreated > 0 -> withAttr eventIn $ str "+"
      | isIn              -> withAttr eventIn $ str ">"
+     | dsBoxShuffled > 0  -> withAttr eventUpdated $ str "@"
      | dsBoxUpdated > 0  -> withAttr eventUpdated $ str "#"
      | otherwise         -> def
   
