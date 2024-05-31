@@ -186,7 +186,7 @@ initState title = do
   return . runUpdated
          $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                  ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
-                 , asBoxOrder = BOByName
+                 , asBoxOrder = BOByShelve
                  , asLastKeys = []
                  , asWarehouse = warehouse
                  , asTitle = title
