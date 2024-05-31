@@ -89,7 +89,8 @@ renderS smode s = let
 renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
 -- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
 renderHorizontalSummary _sview ssum = hBox . map (\s -> withShelfHLStatus s $ renderBestBar sviews s) $ sDetailsList ssum  where
-    sviews = SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
+    sviews = SVMaxLength :| [ SVMaxWidth, SVMaxHeight ]
+    -- SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n
 renderBestBar sviews ssum = let

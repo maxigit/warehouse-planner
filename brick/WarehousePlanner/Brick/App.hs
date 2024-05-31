@@ -34,6 +34,7 @@ import Diagrams.Backend.Cairo (renderCairo)
 import Diagrams (mkSizeSpec2D)
 import System.Process (rawSystem)
 import Data.Set qualified as Set
+import Text.Printf
 
 type WHApp = B.App AppState WHEvent Resource
 data WHEvent = ENextMode
@@ -654,6 +655,7 @@ debugShelf state = let
                      $ [  B.str (show m)
                        , B.txt $ sName ssum
                        , renderS m ssum
+                       , B.str $ printf "%02.0f%%" (ratio(fromSummary m) ssum * 100)
                        , B.txt "shelf" 
                        , B.str . show $ suCount $ sShelvesSummary ssum
                        , B.str . show $ fromSummary m $ sShelvesSummary ssum
