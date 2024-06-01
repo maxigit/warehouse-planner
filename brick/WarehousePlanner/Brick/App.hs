@@ -693,11 +693,15 @@ renderRun renderBox run =  concat
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable
-            . baySummaryToTable (B.vBox . map renderBox)
+            . baySummaryToTable renderBoxes
             $ bay
             ]
           | bay <- F.toList . sDetails $ run
           ]
+     where renderBoxes = \case
+              [] -> B.emptyWidget
+              [box] -> renderBox box
+              boxes -> B.hBox $ B.str "(" : map renderBox boxes <> [ B.str ")" ]
           
 -- * 
 withHLBoxAttr :: AppState -> (Box RealWorld -> B.Widget n) ->  Box RealWorld -> B.Widget n
