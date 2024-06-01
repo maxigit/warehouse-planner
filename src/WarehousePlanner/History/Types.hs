@@ -1,7 +1,7 @@
 module WarehousePlanner.History.Types
 ( HiSTRef(..)
 , newHiSTRef
-, readHiSTRef
+, readHiSTRef, readHiSTRef'
 , writeHiSTRef
 , Event(..), evPreviousM, evParent
 , newEvent
@@ -27,7 +27,7 @@ import Data.Map qualified as Map
 
 
 type History a s = NonEmpty (Event, a s)
-data HiSTRef a s = HiSTRef (STRef s (NonEmpty (Event, a s)))
+data HiSTRef a s = HiSTRef (STRef s (History a s))
 
 fromHistory :: History a s -> a s
 fromHistory = snd . NE.head
@@ -38,14 +38,17 @@ newHiSTRef ev a = do
   return $ HiSTRef ref
 
 readHiSTRef :: Show (a s) => Event -> HiSTRef a s -> ST s (a s)
-readHiSTRef ev (HiSTRef ref) = do
+readHiSTRef ev ref = fmap snd $ readHiSTRef' ev ref
+
+readHiSTRef' :: Show (a s) => Event -> HiSTRef a s -> ST s (Event, a s)
+readHiSTRef' ev (HiSTRef ref) = do
   history <- readSTRef ref
   -- find first element with event <= given event
   let 
   case NE.dropWhile ((> ev) . fst) history of
      [] -> error $ "Finding reference in the past for " ++ show ev ++ " in " <> show history
      -- ^ should not normally happen as reference in the past should not be given.
-     (_, a) :_ -> return a
+     history :_ -> return history
   
 writeHiSTRef :: Event -> HiSTRef a s -> a s -> ST s ()
 writeHiSTRef NoHistory (HiSTRef ref) a = writeSTRef ref $ pure (NoHistory, a)

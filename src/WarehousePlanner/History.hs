@@ -6,6 +6,7 @@ module WarehousePlanner.History
 , computeShelfDiffHistoryFrom
 , diffFor
 , toZHistory
+, historyFor
 , findNextEvent, findNextSibling, findPreviousSibling, findFirstChild
 , mergeEventMaps
 ) 
@@ -15,6 +16,8 @@ import ClassyPrelude
 import WarehousePlanner.Type
 import Data.STRef
 import Data.Map qualified as Map
+import Control.Monad.State(gets)
+import Data.List.NonEmpty qualified as NE
 
 _reverseDiff :: DiffStatus a -> DiffStatus a
 _reverseDiff d = d { dsBoxOut = dsBoxIn d, dsBoxIn = dsBoxOut d }
@@ -133,6 +136,13 @@ toZHistory ev history = let
   (before, currentm, zAfter) = Map.splitLookup ev m
   zBefore = maybe mempty (Map.singleton ev) currentm <> before
   in ZHistory{..}
+
+historyFor :: History a s -> WH (History a s) s
+historyFor history = do
+   ev <- gets whCurrentEvent
+   case NE.dropWhile ((> ev) . fst) history of
+        [] -> return history
+        (h:hs) -> return $ h NE.:| hs
 
 -- * Find events
 findNextEvent :: Event -> [Event] -> Maybe Event

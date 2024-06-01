@@ -90,6 +90,7 @@ import WarehousePlanner.Type
 import WarehousePlanner.Slices
 import WarehousePlanner.SimilarBy
 import WarehousePlanner.Selector
+import WarehousePlanner.History
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
 import Data.Text (splitOn, uncons, stripPrefix)
 import Data.Text qualified as T 
@@ -101,7 +102,7 @@ import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
-import Data.List.NonEmpty (NonEmpty, nonEmpty)
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import WarehousePlanner.Affine
 
 
@@ -1441,6 +1442,12 @@ expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i ->
                        [] -> tshow i
                        values -> values List.!! mod (evalArg arg i - 1) (length values)
                  return $ e <> xs
+    "event" -> do
+        event <- forEvent box prop
+        return $ evDescription event <> xs
+    "eventId" -> do
+        event <- forEvent box prop
+        return $ tshow event <> xs
 
     _ -> return $ "<not a stat> xs"
     where evalArg arg i = case arg of
@@ -1454,6 +1461,30 @@ expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i ->
           propText = case prop of
                       OrdTag tag -> tag
                       OrdAttribute att -> att
+          -- | Find the event for when the given prop as been modified
+          forEvent box prop = do
+                    h :| hs <- getBoxHistory box >>= historyFor
+                    let fm =
+                              case prop of
+                                   OrdTag "" -> Nothing
+                                   OrdAttribute "" -> Nothing
+                                   OrdTag tag -> expandAttributeMaybe ("[" <> tag <> "]")
+                                   OrdAttribute att -> expandAttributeMaybe ("{" <> att)
+                    fst <$> case fm  of
+                         Nothing ->  return h
+                         Just f' -> do
+                              let f box = f' box 1
+                              propValue <- f box
+                              let next current (previous: ps) = do
+                                    new <- f (snd previous)
+                                    if new /= propValue -- found
+                                    then return current
+                                    else next previous ps
+                                  next current [] = return current
+                              next h hs 
+                              
+                    
+
 
 
 expandAttribute' text = \_ _ -> return text
@@ -1553,7 +1584,7 @@ stripStatFunction :: Text --  ^ text  to parse
                            , Text) -- left over
 stripStatFunction xs = either (const Nothing) Just $  P.parse parser  (unpack xs) xs where
   parser = do
-        stat <- asum $ map P.string  ["rank", "index", "ago", "n", "select", "cycle"]
+        stat <- asum $ map P.string  ["rank", "index", "ago", "n", "select", "cycle", "eventId", "event"]
         opM <- P.optional  do
                 op <- P.satisfy (`elem` ("-+*/%^" :: String))
                 Just n <- P.optional P.decimal
