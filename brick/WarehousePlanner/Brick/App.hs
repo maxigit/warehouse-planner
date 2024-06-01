@@ -178,26 +178,32 @@ updateHLStatus fbox fshelf theRuns = let
 updateHLState :: AppState -> AppState
 updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (shelfHLStatus state) (asShelvesSummary state) }
 
-initState :: String -> WH (AppState) RealWorld
-initState title = do
-  asShelvesSummary <- makeAppShelvesSummary Nothing
+initState :: (AppState -> AppState) -> String -> WH (AppState) RealWorld
+initState adjust title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
+      state = adjust $ AppState
+                  { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
+                  ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
+                  , asBoxOrder = BOByShelve
+                  , asLastKeys = []
+                  , asWarehouse = error "Warehouse not initialized"
+                  , asTitle = title
+                  , asDiffEvent = NoHistory
+                  , asNavigateCurrent = False
+                  , asDebugShowDiffs = False
+                  , asInput = Nothing
+                  , asBoxSelection = Nothing
+                  , asShelfSelection = Nothing
+                  , asShelvesSummary = error "Shelves Summary not initialized"
+                  , ..
+                  }
+  asShelvesSummary <- makeAppShelvesSummary (asProperty state)
   warehouse <- get
-  return . runUpdated
-         $ AppState{ asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
-                 ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
-                 , asBoxOrder = BOByShelve
-                 , asLastKeys = []
-                 , asWarehouse = warehouse
-                 , asTitle = title
-                 , asDiffEvent = whCurrentEvent warehouse
-                 , asNavigateCurrent = False
-                 , asDebugShowDiffs = False
-                 , asInput = Nothing
-                 , asBoxSelection = Nothing
-                 , asShelfSelection = Nothing
-                 , ..}
+  return . runUpdated $ state { asWarehouse = warehouse
+                              , asDiffEvent = whCurrentEvent warehouse
+                              ,asShelvesSummary
+                              }
 
 
 whApp :: _ -> (IO (Either Text (Warehouse RealWorld))) -> WHApp
@@ -244,13 +250,13 @@ whApp extraAttrs reload =
       appStartEvent = return ()
   in app
   
-whMain :: String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
-whMain title reload = do
+whMain :: (AppState -> AppState) -> String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
+whMain adjust title reload = do
   whE <- reload
   let wh = case whE of
             Left e -> error (unpack e)
             Right w -> w
-  state0 <- execWH wh $ initState title 
+  state0 <- execWH wh $ initState adjust title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let attrs state =

@@ -18,6 +18,7 @@ import Options.Applicative
 import Data.Text.IO qualified as Text
 import Control.Monad.State (get)
 import System.FilePath (takeBaseName)
+import WarehousePlanner.Brick.Types
 
 -- * Type
 data Options = Options
@@ -30,6 +31,7 @@ data Options = Options
             , oTagsAndMoves :: Maybe Text
             , oDir :: Maybe FilePath
             , oNoHistory :: Bool
+            , oProperty :: Maybe Text
             }
      deriving (Show, Generic)
      
@@ -79,6 +81,9 @@ optionsParser = do
                  )
   oNoHistory <- switch $ long "no-history"
                              <> help "DeActivate history"
+  oProperty <- optional $ strOption $ long "property"
+                                    <> metavar "PROPERTY"
+                                    <> help "property to use highlight boxes differently"
 
   return Options{..}
   
@@ -192,11 +197,13 @@ defaultMainWith expandSection = do
                case execE of
                  Left e -> error $ unpack e
                  Right (exec, _) -> exec summary >>= outputText . pack . show
-       Display -> whMain title do
-               execE <- getExec
-               case execE of
-                 Right (exec,_) -> fmap Right $  exec get
-                 Left e -> return $ Left e
+       Display -> let
+               setParam state = state { asProperty = oProperty }
+               in whMain setParam title do
+                      execE <- getExec
+                      case execE of
+                        Right (exec,_) -> fmap Right $  exec get
+                        Left e -> return $ Left e
        _ -> do
         execE <- getExec
         case execE of
