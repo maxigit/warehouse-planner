@@ -1,6 +1,16 @@
 {-# LANGUAGE DeriveTraversable #-}
-module WarehousePlanner.Slices where 
-import ClassyPrelude hiding (uncons, stripPrefix, unzip)
+module WarehousePlanner.Slices
+( Slices(..)
+, partitionEitherSlices
+, filterSlices
+, filterSlicesWithKey
+, dropTillSlice
+, dropTillSlot
+, unconsSlicesTo
+, buildSlices
+, numSlices
+)where 
+import ClassyPrelude hiding (uncons, stripPrefix )
 import WarehousePlanner.Type (BoxBreak(..))
 -- | An ordered list. Modifying it using fmap doesn't reorder it.
 -- It is so that we can work with infinite list.
@@ -153,9 +163,38 @@ filterSlices :: (a -> Bool)  -> Slices k a -> Slices k a
 filterSlices keep = filterSlicesWithKey (\_ a ->  keep a)
 filterSlicesWithKey :: (k -> a -> Bool)  -> Slices k a -> Slices k a
 filterSlicesWithKey keep (SlicesO xs) = cleanSlices $ SlicesO $ map (second $ uncleanFilterSliceWithKey keep) xs
+
+
+partitionEitherSlices :: Slices k (Either a b) -> (Slices k a, Slices k b)
+partitionEitherSlices (SlicesO xs) = let
+ (as, bs) = unzip $ [ ((k, lefts), (k, rights))
+                    | (k, slice) <- xs 
+                    , let (lefts, rights) = uncleanPartitionESlice slice
+                    ] 
+ in (cleanSlices $ SlicesO as, cleanSlices $ SlicesO bs)
+
 --  * Unclean functions, need to be cleaned afterward
 uncleanFilterSliceWithKey :: (k -> a -> Bool) -> Slice k a -> Slice k a
 uncleanFilterSliceWithKey keep (SliceO xs) = SliceO (map (second $ uncleanFilterSlotWithKey keep) xs)
 
 uncleanFilterSlotWithKey :: (k  -> a -> Bool) -> Slot k a -> Slot k a
 uncleanFilterSlotWithKey keep (SlotO xs)  = SlotO $ filter (uncurry keep) xs
+
+
+uncleanPartitionESlot :: forall a k b . Slot k (Either a b) -> (Slot k a, Slot k b)
+uncleanPartitionESlot (SlotO xs) = let
+   as :: [(k, a)]
+   bs :: [(k, b)]
+   (as, bs) = partitionEithers $ map biseq xs
+   in (SlotO as, SlotO bs)
+   
+uncleanPartitionESlice :: Slice k (Either a b) -> (Slice k a, Slice k b)
+uncleanPartitionESlice (SliceO xs) = let
+ (as, bs) = unzip $ [ ((k, lefts), (k, rights))
+                    | (k, slot) <- xs 
+                    , let (lefts, rights) = uncleanPartitionESlot slot
+                    ] 
+ in (SliceO as, SliceO bs)
+
+biseq :: (x, Either a b) -> Either (x, a) (x, b)
+biseq (x, e)= bimap (x,) (x,) e
