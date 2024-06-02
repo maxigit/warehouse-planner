@@ -4,6 +4,7 @@ module WarehousePlanner.Optimum
 where
 import Prelude
 import WarehousePlanner.Base
+import WarehousePlanner.Move
 import Data.List(sortOn)
 
 data Ranking = Rank3D 

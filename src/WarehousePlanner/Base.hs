@@ -4,19 +4,17 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
 module WarehousePlanner.Base
-( aroundArrangement 
-, assignShelf
-, bestArrangement
-, bestPositions, bestPositions'
+( assignShelf
 , boxCoordinate
 , boxContentPriority
+, boxGlobalPriority
+, boxStylePriority
 , boxPosition
 , boxPositionSpec
 , boxRank
 , boxStyleAndContent
 , buildWarehouse
 , clearCache
-, cornerHull
 , defaultShelf
 , deleteBoxes
 , deleteShelf
@@ -35,13 +33,10 @@ module WarehousePlanner.Base
 , findBoxByShelf
 , getOrCreateBoxTagMap
 , findShelvesByBoxNameAndNames
-, howMany, howManyWithDiagonal
 , incomingShelf
-, indexToOffsetDiag, d0, r
 , maxUsedOffset
 , modifyTags
 , module WarehousePlanner.Type
-, moveBoxes, SortBoxes(..)
 , negateTagOperations
 , newBox, newBox'
 , newShelf
@@ -56,30 +51,25 @@ module WarehousePlanner.Base
 , readOrientations
 , replaceSlashes
 , shelfBoxes
-, stairsFromCorners
 , updateBox
 , updateBoxTags
 , updateBoxTags'
 , updateShelf
 , updateShelfTags
 , usedDepth
-, Slices
-, unconsSlices
-, dropTillSlice, dropTillSlot
+, sortOnIf
 , withBoxOrientations
 , newWHEvent
 , newBaseEvent
 )
 where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
-import qualified Prelude
 import Text.Printf(printf)
 import Data.Map.Strict qualified as Map'
 import Data.Map.Lazy qualified as Map
 import Control.Monad.State(gets, get, put, modify)
 import Data.Map.Merge.Lazy(merge, preserveMissing, mapMaybeMissing, zipWithMaybeMatched)
 -- import Data.List(sort, sortBy, groupBy, nub, (\\), union, maximumBy, delete, stripPrefix, partition)
-import Data.List.NonEmpty(unzip)
 import Data.List qualified as List
 import Data.Foldable qualified as Foldable
 import Data.STRef
@@ -87,8 +77,6 @@ import Data.Sequence ((|>))
 import Data.Sequence qualified as Seq
 import Data.Set qualified as Set
 import WarehousePlanner.Type
-import WarehousePlanner.Slices
-import WarehousePlanner.SimilarBy
 import WarehousePlanner.Selector
 import WarehousePlanner.History
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
@@ -103,7 +91,6 @@ import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import WarehousePlanner.Affine
 
 
 -- import Debug.Trace qualified as T
@@ -642,512 +629,7 @@ deleteShelf shelfId = do
   warehouse <- get
   put warehouse { shelves = filter (/= shelfId) $ shelves warehouse }
   
-clampTilingMode :: Maybe Int -> Maybe (Int, Int) -> Maybe Int -> TilingMode -> TilingMode
-clampTilingMode maxLM' mWM' maxHM' mode' = fst $ go maxLM' mWM' maxHM' mode' where
-  go maxLM mWM maxHM mode = 
-    case mode of 
-       Regular hmany -> mk Regular hmany
-       Diagonal hmany d -> mk (flip Diagonal d) hmany
-       TilingCombo Horizontal m1 m2 -> let
-                    -- in horizontal mode, only "uses" length param
-                    (m1', (maxLM', _, _)) = go maxLM mWM maxHM m1
-                    (m2', next) = go maxLM' mWM maxHM m2
-                    in (TilingCombo Horizontal m1' m2', next)
-       TilingCombo Vertical m1 m2 -> let
-                    -- in vertical mode, only "uses" length param
-                    (m1', (_, _, maxHM')) = go maxLM mWM maxHM m1
-                    (m2', next) = go maxLM mWM maxHM' m2
-                    in (TilingCombo Vertical m1' m2', next)
-       TilingCombo Depth m1 m2 -> let
-                    -- in vertical mode, only "uses" length param
-                    (m1', (_, mWM',_)) = go maxLM mWM maxHM m1
-                    (m2', next) = go maxLM mWM' maxHM m2
-                    in (TilingCombo Depth m1' m2', next)
-    where clamp (HowMany _ nl nw nh) = let
-                (minW, maxW) = unzip mWM
-                hwmany = mkHowMany (minMaybe maxLM nl)
-                                   (maxMaybe minW (minMaybe maxW nw))
-                                   (minMaybe maxHM nh)
-                nextParam = (fmap (\maxL -> maxL - perLength hwmany) maxLM
-                            , fmap (\(_,maxW) -> (0, maxW - perDepth hwmany )) mWM
-                            , fmap (\maxH -> maxH - perHeight hwmany) maxHM
-                            )
-                in (hwmany, nextParam)
-          mk constr hw = let
-             (hw', nextParams) = clamp hw
-             in (constr hw', nextParams)
-          minMaybe minm x = fromMaybe x  $ fmap (min x) minm
-          maxMaybe maxm x = fromMaybe x  $ fmap (max x) maxm
-
--- | find the best way to arrange some boxes within the given space
--- For the same number of boxes. use the biggest diagonal first, then  the smallest shelf
-bestArrangement :: Show a => [OrientationStrategy] -> [(Dimension, Dimension, a)] -> Dimension -> (Orientation, TilingMode, a)
-bestArrangement orientations shelves box = let
-    options = [ (o, tilingMode, extra, volume shelf)
-              | (OrientationStrategy o  minW  maxW maxLM maxHM useIrregular) <-   orientations
-              , (minShelf, shelf, extra) <- shelves
-              , tilingMode0 <- if useIrregular
-                                   then  [ howManyWithDiagonal minShelf shelf (rotate o box)
-                                         , howManyWithSplitH minShelf shelf (rotate o box)
-                                         , howManyWithSplitV minShelf shelf (rotate o box)
-                                         ]
-                                   else [Regular (howMany minShelf shelf (rotate o box))]
-              , let tilingMode = clampTilingMode maxLM (Just (minW, maxW)) maxHM tilingMode0
-              ]
-
-    bests = 
-                [ ( ( tilingMode
-                    , tmLength tilingMode
-                    , vol
-                    )
-                  , (ori, tilingMode, extra)
-
-                  )
-                 | (ori, tilingMode, extra, vol ) <- options
-                 -- , let Dimension bl bh _bw = rotate ori box
-                 ]
-    in
-        -- trace ({-show shelves ++ show box ++-}  show bests) $
-        snd $ minimumByEx (compare `on` fst) bests
-
-
--- | * test
-{-
-dx = Dimension 192 100 145
-dn = Dimension 160 100 145
-box = Dimension 47 39 85
-os = [tiltedForward, tiltedFR]
--}
-
-
--- | How many inner rectangle can fit in the outer one ?
--- The outer min corresponds to the maximum of the n-1 box
--- This allows to set for example a maximum height for the bottom the last box
--- this is the maximum height a operator can reach the box
--- and the actual height of the shelf or ceiling, the physical limit.
---
---   max ----------------------
---           2    X   
---           2    X
---   min ____2____2___________
---           1    2
---           1    1
---           1    1
---
--- X is accepted even though it fit within max
--- but starts after min
---
-howMany :: Dimension --  ^ Outer min
-        -> Dimension -- ^ Out max
-        -> Dimension --  ^ Inner
-        -> HowMany
-howMany (Dimension l0 w0 h0) (Dimension l w h) (Dimension lb wb hb) =
-        mkHowMany ( fit l0 l lb)
-                  ( fit w0 w wb)
-                  ( fit h0 h hb)
-        where
-        fit d0 d1 db = 
-          let d = min (d0+db) d1
-          in floor (max 0 (d-0) /(db+0))
-
-
--- | Find how many boxes fits using a "diagnal trick", when one box is rotated the other along a diagoral.
--- For example
---    1477
---    14 8
---    2558
---    2 69
---    3369
---  3, 5 and 7 box are rotated down allowing f
-howManyWithDiagonal :: Dimension -> Dimension -> Dimension -> TilingMode
-howManyWithDiagonal minOuter outer inner@(Dimension lb _ hb) | lb == hb =
-  Regular $ howMany minOuter outer inner
-howManyWithDiagonal minOuter outer@(Dimension l _ h) inner@(Dimension lb _ hb) | lb < hb = 
-  let normal@(HowMany _ _ wn hn) = howMany minOuter outer inner
-      fit d db = floor (max 0 (d-0) /(db+0))
-      -- how many extra can we squeeze horizontally
-      -- if we turn the box
-      diff = hb - lb -- >0 
-      -- check how many squares actually fit height wise
-      minSquareNumberV = max 1 do  (diff - 1 + fromIntegral (hn+1) * hb - h) `fit` diff
-      maxSquareWidth = case minSquareNumberV of
-                       0 -> hn 
-                       _ -> (hn + 1) `div` minSquareNumberV
-      nForDiag n =
-         --  | = =  | = =
-         --
-         --  = = |  = = |     1 square x 2
-         --  = | =  = | =
-         --  | = =  | = =
-         --
-         let squareL = fromIntegral (n-1)*lb+hb
-             squareH = fromIntegral (n-1)*hb+lb
-             sqNL = fit l squareL
-             sqNH = fit h squareH
-             leftL = l - squareL * fromIntegral sqNL
-             leftH = h - squareH * fromIntegral sqNH
-             mb = hb -- max lb hb
-             -- find how many row/column can we use
-             -- in a partial square
-             -- We use mb because the first row/column
-             -- will use both orientation for one of the box
-             leftOver remaining b =
-              if remaining < mb
-              then 0
-              else -- traceShow ("Remaining", remaining, remaining-mb, "b" , b)
-                   fit (remaining -  mb) b +1
-              
-         in Diagonal (mkHowMany (sqNL * n + leftOver leftL lb)
-                                 wn
-                                 (sqNH * n + leftOver leftH hb)
-                      )
-                      n
-   -- in case (min maxSquareNumberH minSquareNumberV , [max 2 minSquareWidth .. maxSquareWidth]) of
-   in case (minSquareNumberV, [2 .. maxSquareWidth]) of
-         (0, _) -> Regular normal
-         (_, []) -> Regular normal
-         (_, ds) -> let options = map nForDiag ds
-                        bests = (Regular normal): options
-                    in if outer /= minOuter
-                       then Regular normal
-                       else case bests of
-                        [] -> error "Shouldn't happen"
-                        _ -> minimumEx bests
-howManyWithDiagonal minOuter outer inner = 
-  rotateTM $ howManyWithDiagonal (r minOuter) (r outer) (r inner) where
-  r = rotate tiltedRight
-
--- | Find how many  boxes  fit using two regular tiling as 
--- For example
---  44 55 66 7 8
---  11 22 33 7 8
--- At the moment tries different diagonol layout.
-howManyWithSplitH :: Dimension -> Dimension -> Dimension -> TilingMode
-howManyWithSplitH minOuter outer inner =  let
-  tmode = Regular $ howMany minOuter outer inner 
-  currentTotal = tmTotal tmode
-  tries = [ TilingCombo Horizontal leftMode rightMode
-          | i <- [tmLength tmode `div` 2 .. tmLength tmode ]
-          -- we only need to try half of the solution, because
-          -- the other will be tested when we try the rotated box
-          , let leftMode = clampTilingMode (Just i) Nothing Nothing tmode
-          , let bbox = tmBoundingBox leftMode inner
-          , let used = invert $ Dimension (dLength bbox) 0 0
-          , let rightMode =  howManyWithDiagonal (minOuter <> used) (outer <> used) (rotate tiltedRight inner)
-          , tmTotal rightMode + tmTotal leftMode > currentTotal
-          ]
-  in minimumEx (tmode: tries)
-howManyWithSplitV :: Dimension -> Dimension -> Dimension -> TilingMode
-howManyWithSplitV minOuter outer inner = let
-  rot = rotate tiltedRight 
-  in rotateTM $ howManyWithSplitH (rot minOuter) (rot outer) (rot inner)
-  
-rotateTM (Regular hmany) = Regular (rotateH hmany)
-rotateTM (Diagonal hmany n) = Diagonal (rotateH hmany) n
-rotateTM (TilingCombo dir m1 m2) = let
-         dir' = case dir of
-                 Horizontal -> Vertical
-                 Vertical -> Horizontal
-                 Depth -> Depth
-         in TilingCombo dir' (rotateTM m1) (rotateTM m2)
-rotateH (HowMany n l w h) = HowMany n h w l
-  
--- | Given a box and a tiling mode, returns the bounding box
-tmBoundingBox :: TilingMode -> Dimension -> Dimension
-tmBoundingBox (Regular (HowMany _ l w h)) (Dimension lb wb hb) =
-  Dimension (fromIntegral l * lb)
-            (fromIntegral w * wb)
-            (fromIntegral h * hb)
-tmBoundingBox (Diagonal (HowMany _ l w h) d) box =
-  fst $ indexToOffsetDiag box d (l+1, w+1, h+1)
-tmBoundingBox (TilingCombo dir m1 m2) box = let
-  Dimension l1 w1 h1 = tmBoundingBox m1 box
-  Dimension l2 w2 h2 = tmBoundingBox m2 (rotate tiltedRight box)
-  in case dir of
-       Horizontal -> Dimension ((+) l1 l2) (max w1 w2) (max h1 h2)
-       Depth -> Dimension (max l1 l2) ((+) w1 w2) (max h1 h2)
-       Vertical -> Dimension (max l1 l2) (max w1 w2) ((+) h1 h2)
-
-
-
-                 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-type SimilarBoxes s = SimilarBy Dimension (Box s)
-
-
--- | Find the  best box positions for similar boxes and a given shelf.
--- This takes into account the boxes already present in the shelf and
--- the possible orientation and shelf strategy.
-bestPositions :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double Position) s
-bestPositions partitionMode shelf simBoxes = do
-  let SimilarBy dim box _ = simBoxes
-  boxesInShelf <- findBoxByShelf shelf
-  boxo <- gets boxOrientations
-  let orientations = boxo box shelf
-  return $ bestPositions' partitionMode orientations shelf mempty (map boxAffDimension boxesInShelf) dim 
-
-bestPositions' :: PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [AffDimension] -> Dimension -> Slices Double Position
-bestPositions' POverlap orientations shelf start used dim = let
-   -- try each orientation strategy individually as if the box was empty
-   -- and remove the "used" positions. Then get the best one
-  solutions = [ removeUsed $ bestPositions' PRightOnly [strategy]  shelf start [] dim 
-              | strategy <- orientations
-              ]
-  sorted = sortOn (Down . Prelude.length) solutions
-  in  case sorted of
-     [] -> mempty
-     (best:_) -> best
-  where removeUsed :: Slices Double Position -> Slices Double Position
-        removeUsed = filterSlices (not . isUsed) 
-        isUsed :: Position -> Bool
-        isUsed (Position offset orientation) = any (affDimensionOverlap $ AffDimension offset (offset <> rotate orientation dim)) used
-
-  
-bestPositions' partitionMode orientations shelf start usedBoxes dim = let
-  starti = invert start
-  topRightCorners = filter (not . outOfBound)
-                  . map ((starti <>) . aTopRight)
-                  $ usedBoxes
-  Dimension lused wused hused = maxDimension $ topRightCorners
-  (bestO, tilingMode, (lused', wused', hused')) =
-                      bestArrangement orientations
-                                        [( minDim shelf <> starti <> used, maxDim shelf <> starti <> used, (l,w,h))
-                                        -- [ (Dimension (max 0 (shelfL -l)) shelfW (max 0 (shelfH-h)), (l,h))
-                                        -- | (Dimension shelfL shelfW shelfH) <- [ minDim shelf, maxDim shelf ]
-                                      -- try min and max. Choose min if  possible
-                                        | (l,w,h) <- let go pmode =
-                                                          case pmode of
-                                                            PAboveOnly -> [(0,0,hused)]
-                                                            PRightOnly -> [(lused,0, 0)]
-                                                            PBehind -> [(0,wused, 0)]
-                                                            PBestEffort -> case map (\(x,y) -> (x,0,y)) $ bestEffort topRightCorners of
-                                                                            -- remove corners if more than 3 options
-                                                                            xs@(_:_:_:_) -> drop 1 $ dropEnd 1 $ xs
-                                                                            xs -> xs
-                                                            POr m1 m2 -> go m1 ++ go m2
-                                                            POverlap -> error "POverlap not implemented"
-                                                   in go partitionMode
-                                        , let used = Dimension (min 0 (0-l)) (min 0 (0-w)) (min 0 (0-h))
-                                        ] dim
-  rotated = rotate bestO dim
-  base = Dimension lused' wused' hused' <> start
-  in generatePositions base (shelfFillingStrategy shelf) bestO rotated tilingMode
-  where outOfBound dim = minimumEx (dimensionToList dim) <= 0
-
-
-generatePositions :: Dimension -> FillingStrategy -> Orientation -> Dimension -> TilingMode -> Slices Double Position
-generatePositions base fillingStrategy ori (Dimension l' w' h') (Regular HowMany{..}) = 
-  case fillingStrategy of
-    ColumnFirst -> let
-     mkPos il ih iw = (k2w iw, Position (mkDim (i2l il) (k2w iw) (j2h ih)) ori)
-     in buildSlices perLength perHeight perDepth i2l (\_ j -> j2h j) mkPos 
-    RowFirst -> let
-     mkPos ih il iw = (k2w iw, Position (mkDim (i2l il) (k2w iw) (j2h ih)) ori)
-     in buildSlices perHeight perLength perDepth j2h (\_ i -> i2l i) mkPos 
-  where
-     i2l i = l' * fromIntegral i + dLength base
-     j2h j = h' * fromIntegral j + dHeight base
-     k2w k = w' * fromIntegral k + dWidth base
-     mkDim l w h = Dimension l w h
-
-generatePositions base fillingStrategy ori boxDim (Diagonal HowMany{..} diag) =
-  case fillingStrategy of
-    ColumnFirst -> let
-     mkPos il ih iw = let 
-            (dim, turned) = mkOffset il iw ih
-            in (dWidth dim, Position dim $ newOrientation turned)
-     mkl i = dLength . fst $ mkOffset i 0 0
-     mkh i j = dHeight . fst $ mkOffset i j 0
-     in buildSlices perLength perHeight perDepth mkl mkh mkPos 
-    RowFirst -> let
-     mkPos ih il iw = let 
-            (dim, turned) = mkOffset il iw ih
-            in (dWidth dim, Position dim $ newOrientation turned)
-     mkl i j = dLength . fst $ mkOffset j i 0
-     mkh i = dHeight . fst $ mkOffset 0 i 0
-     in buildSlices perHeight perLength perDepth mkh mkl mkPos 
-  where newOrientation t = if t 
-                           then  (rotateO ori)
-                           else ori
-        mkOffset i j k = first (base <>) $ indexToOffsetDiag boxDim diag (i, j, k)
-
-generatePositions base fillingStrategy ori boxDim (TilingCombo dir m1 m2) = let
-  positions1 = generatePositions base fillingStrategy ori boxDim m1
-  positions2 = generatePositions base2 fillingStrategy (rotateO ori) (rotate tiltedRight boxDim) m2
-  Dimension l w h = tmBoundingBox m1 boxDim
-  base2 = base <> case ( dir) of
-               Horizontal -> Dimension l 0 0 
-               Depth -> Dimension 0 w 0
-               Vertical -> Dimension 0 0 h
-  in positions1 <> positions2
-
-
-
-d0, r :: Dimension
-d0 = Dimension 0 0 0
-r = Dimension 13 1 10
--- | Computes position and orientation of a box within a "Diagonal" pattern
--- see `howManyWithDiagonal`
-indexToOffsetDiag :: Dimension -> Int -> (Int, Int, Int) -> (Dimension, Bool)
-indexToOffsetDiag (Dimension l w h) diagSize (il, iw, ih) =
-  let (lq, lr) = il `divMod`  diagSize
-      (hq, hr) = ih `divMod` diagSize
-      --    
-      --    b   X|    X
-      --      X  |  X c
-      --    X   a|X  
-      -- lq  0    1     2
-      --    
-      -- X) turned
-      -- a) (il, ih) = (2,0)
-      --    (lq, lr) = (0,2) 1 before
-      --    (hq, hr) = (0,0) 0 below
-      --    
-      --
-      -- c) (il, ih) = (5,1)
-      --    (lq, lr) = (1,2) 2 before
-      --    (hq, hr) = (0,1) 0 below
-      (turnedBefore, turnedBelow, turned) =
-        if lr > hr
-        then -- left of the diagonal turnedBelow +1
-          (lq+1, hq, False)
-        else if lr ==  hr -- on the diagnoal
-        then
-          (lq, hq, True)
-        else -- right of diagonal
-          (lq, hq+1, False)
-  in  (Dimension (fromIntegral (il-turnedBefore) * l + fromIntegral turnedBefore*h)
-                 (fromIntegral iw * w)
-                 (fromIntegral (ih - turnedBelow) * h + fromIntegral turnedBelow*l)
-      , turned
-      )
-          
-
-data SortBoxes = SortBoxes | DontSortBoxes
-     deriving (Eq, Ord, Show)
--- Try to Move a block of boxes  into a block of shelves.
--- Boxes are move in sequence and and try to fill shelve
--- in sequence. If they are not enough space the left boxes
--- are returned.
-moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [box s] -> [shelf s] -> WH (InExcluded (Box s)) s
-
-moveBoxes exitMode partitionMode sortMode bs ss = do
-  boxes <- mapM findBox bs
-  let layers = groupBy ((==)  `on` boxBreak)
-               $ (if sortMode == SortBoxes then sortOnIf boxGlobalRank else id)
-               $ boxes
-      boxGlobalRank box = (boxGlobalPriority box, boxStyle box, boxStylePriority box,  _boxDim box, boxContent box, boxContentPriority box)
-      boxBreak box = (boxStyle box, _boxDim box)
-      -- \^ we need to regroup box by style and size
-      -- However we take into the account priority within the style before the dimension
-      -- so that we can set the priority
-        
-  (unzip -> (ins, exs))  <- forM layers $ \layer -> do
-    let groups = groupSimilar _boxDim layer
-    -- forM groups $ \(SimilarBy dim _ boxes) -> traceShowM ("  GROUP", dim, 1 + length boxes)
-    -- traceShowM ("GRoups", length groups, map (\(SimilarBy dim g1 g ) -> (show $ length g + 1, show . _roundDim $ dim )) groups)
-    moved'lefts <- mapM (\g -> moveSimilarBoxes exitMode partitionMode g ss) groups
-    let (moveds, lefts) = unzip moved'lefts
-    return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
-  return $ InExcluded (Just $ concat ins) (Just $ concat exs)
-
-_roundDim :: Dimension -> [Int]
-_roundDim (Dimension l w h) = map (round . (*100)) [l,w,h]
-
  
--- | Move boxes of similar size to the given shelf if possible
-moveSimilarBoxes :: (Shelf' shelf) => ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
-moveSimilarBoxes exitMode partitionMode boxes shelves' = do
-  shelves <- mapM findShelf shelves'
-  positionss <- mapM (\s -> bestPositions partitionMode s boxes) shelves
-  let    positionsWithShelf = combineSlices exitMode $ zip shelves positionss
-  assignBoxesToPositions positionsWithShelf boxes
-  
--- | Sort positions (box offsets), so that they are in order to be assigned
--- according to the 'exitmode' and filling strategy.
---
---      ExitLeft RowFirst  : shelf -> height
---      7 8  | 9 
---      -----+--
---           | 6 
---      4  5 |  
---      1  2 | 3
---
---      ExitLeft ColumFirst  : length -> shelf
---      7 8  | 9 
---      -----+--
---           | 6 
---      2  4 |  
---      1  3 | 5
---
---      ExitOnTop RowFirst : shelf -> height
---      5 6  | 9 
---      -----+--
---           | 8 
---      3  4 |  
---      1  2 | 7
---
---      ExitOnTop ColumFirst : length -> shelf
---      3 4  | 9 
---      -----+--
---           | 8 
---      2  6 |  
---      1  5 | 7
---
--- depending on exitMode and their filling strategy,
--- consecutives shelves must be seen at one or not.
--- The sorting can then be done by group of shelf with the same
--- strategy.
-combineSlices :: ExitMode -> [(Shelf s, Slices Double Position)] -> Slices (Int, Double, Int) (Shelf s, Position)
-combineSlices exitMode shelf'slicess = let
-  -- assign a number for each shelf and then
-  -- reuse the same number within a group if needed.
-  -- This way 1 2 3 4 5 will become 1 2 3 4 5 
-  -- if shelves 3 and 4 are need to be filled togother
-  withN = zipWith (\s i -> first (i,) s) shelf'slicess [(1::Int)..]
-  sameStrategy = groupSimilar (shelfFillingStrategy . snd . fst) withN
-  withGroupN = map adjustN sameStrategy
-  -- adjustN :: SimilarBy FillingStrategy (_Shelf, Slices Double Position) -> Slices (Int, Double) (_Shelf, Position)
-  adjustN (SimilarBy strategy s'is1 s'i'slices) = 
-    let firstI = fst (fst s'is1)
-        adjust i d = if (exitMode, strategy) `elem` [(ExitOnTop, ColumnFirst), (ExitLeft, RowFirst)]
-                   then (firstI, d, i) -- sames "group" , within a group fill slice then go to the next shelf
-                   else (i, d, i) -- fill shelf first, then go to the next one
-    in [ bimap (adjust i) (shelf,) slices
-       | ((i, shelf), slices) <- s'is1 : s'i'slices
-       ]
-  in foldMap concat withGroupN
--- | Assign boxes to positions in order (like a zip) but with respect to box breaks.
--- (skip to the next column if column break for example)
-assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
-assignBoxesToPositions slices simBoxes = do
-  let boxes = unSimilar simBoxes
-  let go _ _ [] = return []
-      go prevShelf slices allboxes@(box:boxes) =
-        case (unconsSlicesTo fst prevShelf (boxBreak box) slices) of
-             Nothing -> return allboxes
-             Just ((shelf'pos), _, newSlices) ->
-              shiftBox box shelf'pos >> go (Just $ fst shelf'pos) newSlices boxes 
-      shiftBox box (shelf, Position offset orientation) = do
-            _ <- updateBox (\box_ -> box_ { orientation = orientation
-                                          , boxOffset = offset}) box
-            assignShelf (Just shelf) box
-  leftOver <- go Nothing (numSlices slices) boxes 
-  return $ splitSimilar (length boxes - length leftOver) simBoxes
   
 boxRank :: Box s -> (Text, Int, Text, Int)
 boxRank box = ( boxStyle box , boxStylePriority box, boxContent box, boxContentPriority box)
@@ -1164,38 +646,6 @@ boxStylePriority  box = p where (_,p,_)  = boxPriorities box
 -- look at @n in tags
 boxGlobalPriority  :: Box s -> Int
 boxGlobalPriority  box = p where (p, _, _) = boxPriorities box
-
-
--- | Remove boxes for shelves and rearrange
--- shelves before doing any move
--- aroundArrangement  :: WH a -> WH a
-aroundArrangement :: (Shelf' shelf, Box' box, Box' box2)
-                  => AddOldBoxes 
-                  -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s)
-                -> [box s] -> [shelf s] -> WH (InExcluded (box2 s)) s
-aroundArrangement useOld arrangement newBoxishs shelves = do
-    newBoxes <- mapM findBox newBoxishs
-    boxes <- case useOld of
-              NewBoxesOnly -> return newBoxes
-              AddOldBoxes -> do
-                          oldBoxes <- concatMap reverse `fmap` mapM findBoxByShelf shelves
-                          return $ oldBoxes ++ newBoxes
-
-    let nothing = Nothing `asTypeOf` headMay shelves -- trick to typecheck
-    void $ mapM (assignShelf nothing) boxes
-    -- rearrange what's left in each individual space
-    -- so that there is as much space left as possible
-
-    inEx <- arrangement boxes shelves
-    s0 <- defaultShelf
-    void $ mapM (assignShelf (Just s0)) $ excludedList inEx
-    return $ inEx
-
-
-
-
-
-
 
 
 
@@ -2001,52 +1451,6 @@ __getBoxTagMap prop = do
                                  | box <- toList boxes
                                  , value <- getTagValues box prop
                                  ]
-
--- * Find  the corners of the boxes which are enough
--- to describe the "stair" hull of all of the top right corner
--- of the given boxes.
--- For example
---
---       B
---    A
---            C
---            D
---
--- Will return B nd C
-cornerHull :: [(Double, Double)] -> [(Double, Double)]
-cornerHull corners = let
-  -- allCorners = map boxCorner boxes
-  -- boxCorner box = boxDim box <> boxOffset box
-  -- we sort them in reverse order
-  -- in exapmle C D B A
-  sorted = sortOn Down corners
-  go corner [] = [corner]
-  go (x, y)  s@((x0,y0):_) = 
-    if y > y0 && x < x0
-    then ((x, y): s)
-    else s
-  in List.foldl (flip go) [] sorted
-
-
--- | Creates the "inner" corners of a "stairs"
---  (the Xs fro the '.')
--- X   .
---     X     .
---
---           X     .
---                 X
-stairsFromCorners :: [(Double, Double)] -> [(Double, Double)]
-stairsFromCorners corners =
-  let (xs, ys) = unzip corners
-  in zipWith (,) (0:xs) (ys ++ [0]) 
-
-
-bestEffort :: [Dimension] -> [(Double, Double)]
-bestEffort boxes = let
-  allCorners = map xy boxes
-  xy (Dimension x _ y ) = (x,y)
-  in stairsFromCorners $ cornerHull allCorners
-  
   
 -- | Create a new even only if the previous one is not NoHistory
 -- or level is 0.

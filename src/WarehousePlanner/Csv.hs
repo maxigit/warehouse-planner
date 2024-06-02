@@ -30,6 +30,7 @@ import WarehousePlanner.Base
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
 import WarehousePlanner.Selector
+import WarehousePlanner.Move
 import WarehousePlanner.Expr qualified as E
 import Data.Csv qualified as Csv
 import Data.ByteString.Lazy qualified as BL

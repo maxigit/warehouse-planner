@@ -6,6 +6,7 @@ where
 
 import ClassyPrelude
 import WarehousePlanner.Type
+import WarehousePlanner.Move
 import WarehousePlanner.Summary as S
 import WarehousePlanner.History
 import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector)

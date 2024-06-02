@@ -5,9 +5,11 @@ where
 
 import ClassyPrelude;
 import qualified Prelude
-import  WarehousePlanner.Base
-import  WarehousePlanner.Expr
-import  WarehousePlanner.Selector
+import WarehousePlanner.Base
+import WarehousePlanner.Slices
+import WarehousePlanner.Move
+import WarehousePlanner.Expr
+import WarehousePlanner.Selector
 import Data.Text(splitOn, split)
 import Data.Text qualified as Text
 -- import Data.Map qualified as Map

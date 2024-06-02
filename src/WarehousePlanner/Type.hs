@@ -606,6 +606,9 @@ selectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
                              (BoxNumberSelector Nothing Nothing Nothing)
 
+-- ** For moves
+data SortBoxes = SortBoxes | DontSortBoxes
+     deriving (Eq, Ord, Show)
 -- ** For Context
 -- | Pair of included and excluded things.
 -- Used to keep track of which boxes have been processed or not

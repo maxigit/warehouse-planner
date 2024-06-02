@@ -27,7 +27,9 @@ import WarehousePlanner.Base
 import WarehousePlanner.Optimum
 import WarehousePlanner.Summary
 import WarehousePlanner.History
+import WarehousePlanner.Move
 import WarehousePlanner.Selector
+import WarehousePlanner.Tiling
 import ClassyPrelude hiding(or)
 import Control.Monad.ST.Unsafe(unsafeSTToIO)
 import System.IO.Unsafe(unsafePerformIO)

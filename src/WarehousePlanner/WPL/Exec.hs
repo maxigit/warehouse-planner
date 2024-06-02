@@ -7,6 +7,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
+import WarehousePlanner.Move
 import WarehousePlanner.Selector (printBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
