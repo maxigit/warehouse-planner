@@ -153,7 +153,7 @@ filterSlices :: (a -> Bool)  -> Slices k a -> Slices k a
 filterSlices keep = filterSlicesWithKey (\_ a ->  keep a)
 filterSlicesWithKey :: (k -> a -> Bool)  -> Slices k a -> Slices k a
 filterSlicesWithKey keep (SlicesO xs) = cleanSlices $ SlicesO $ map (second $ uncleanFilterSliceWithKey keep) xs
--- 
+--  * Unclean functions, need to be cleaned afterward
 uncleanFilterSliceWithKey :: (k -> a -> Bool) -> Slice k a -> Slice k a
 uncleanFilterSliceWithKey keep (SliceO xs) = SliceO (map (second $ uncleanFilterSlotWithKey keep) xs)
 
