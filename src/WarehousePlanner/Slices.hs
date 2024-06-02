@@ -7,6 +7,8 @@ module WarehousePlanner.Slices
 , dropTillSlice
 , dropTillSlot
 , unconsSlicesTo
+, unconsSlice
+, unconsSlices
 , buildSlices
 , numSlices
 )where 
@@ -16,16 +18,16 @@ import WarehousePlanner.Type (BoxBreak(..))
 -- It is so that we can work with infinite list.
 -- Therefore fmap should be used with caution and make sure
 -- the order is kept.
-newtype OrderedList a = OrderedList [a] deriving (Eq, Show, Foldable, Functor)
+newtype OrderedList a = OrderedList [a] deriving (Eq, Show, Foldable, Functor, Traversable)
 
 newtype Slot k a = Slot (OrderedList (k, a))
-  deriving (Eq, Show, Functor, Foldable)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 newtype Slice k a = Slice (OrderedList (k, Slot k a))
-  deriving (Eq, Show, Functor, Foldable)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 -- | Everything within slices are supposed to be sorted according
 -- the k. When using fmap (etc) only monotone function should be used.
 newtype Slices k a = Slices (OrderedList (k, Slice k a))
-  deriving (Eq, Show, Functor, Foldable)
+  deriving (Eq, Show, Functor, Foldable, Traversable)
 
 {-# COMPLETE SlotO #-}
 pattern SlotO xs = Slot (OrderedList xs)

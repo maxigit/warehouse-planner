@@ -2,9 +2,10 @@ module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
 , bestPositions, bestPositions'
+, cornerHull
 , stairsFromCorners
 , moveBoxes
-, moveSimilarBoxes
+-- , moveSimilarBoxes
 )
 where 
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
@@ -78,6 +79,7 @@ bestArrangement orientations shelves box = let
         snd $ minimumByEx (compare `on` fst) bests
 
 type SimilarBoxes s = SimilarBy Dimension (Box s)
+type BoxesOrPos b = Either [b] Position
 
 
 -- | Find the  best box positions for similar boxes and a given shelf.
@@ -85,34 +87,45 @@ type SimilarBoxes s = SimilarBy Dimension (Box s)
 -- the possible orientation and shelf strategy.
 bestPositions :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double Position) s
 bestPositions partitionMode shelf simBoxes = do
+  bOrPs <- bestPositionOrBoxes partitionMode shelf simBoxes
+  return . snd $ partitionEitherSlices bOrPs
+
+bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos (Box s))) s
+bestPositionOrBoxes partitionMode shelf simBoxes = do
   let SimilarBy dim box _ = simBoxes
   boxesInShelf <- findBoxByShelf shelf
   boxo <- gets boxOrientations
   let orientations = boxo box shelf
-  return $ bestPositions' partitionMode orientations shelf mempty (map boxAffDimension boxesInShelf) dim 
+  return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim 
 
-bestPositions' :: PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [AffDimension] -> Dimension -> Slices Double Position
-bestPositions' POverlap orientations shelf start used dim = let
+bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Slices Double (BoxesOrPos b)
+bestPositions' getAff pmode orientations shelf start used dim | pmode `elem` [POverlap, PSortedOverlap ]= let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
-  solutions = [ removeUsed $ bestPositions' PRightOnly [strategy]  shelf start [] dim 
+  solutions = [ fmap isUsed $ bestPositions' getAff PRightOnly [strategy]  shelf start [] dim 
               | strategy <- orientations
               ]
-  sorted = sortOn (Down . Prelude.length) solutions
+  sorted = sortOn (Down . Prelude.length . snd . partitionEitherSlices) solutions
   in  case sorted of
      [] -> mempty
      (best:_) -> best
-  where removeUsed :: Slices Double Position -> Slices Double Position
-        removeUsed = filterSlices (not . isUsed) 
-        isUsed :: Position -> Bool
-        isUsed (Position offset orientation) = any (affDimensionOverlap $ AffDimension offset (offset <> rotate orientation dim)) used
+  where overlap :: Position -> b -> Bool
+        overlap (Position offset orientation) = \box -> let
+                used = getAff box
+                in affDimensionOverlap (AffDimension offset (offset <> rotate orientation dim)) used
+         -- return the position if empty or the boxes overlapping it if any               isUsed :: Position -> BoxesOrPos s
+        isUsed (Right pos) = let 
+           overlappings = filter  (overlap pos) used
+           in case overlappings of
+                [] -> Right pos
+                _ -> Left overlappings
+        isUsed left = left
 
-  
-bestPositions' partitionMode orientations shelf start usedBoxes dim = let
+bestPositions' getAff partitionMode orientations shelf start usedBoxes dim = let
   starti = invert start
   topRightCorners = filter (not . outOfBound)
                   . map ((starti <>) . aTopRight)
-                  $ usedBoxes
+                  $ map getAff usedBoxes
   Dimension lused wused hused = maxDimension $ topRightCorners
   (bestO, tilingMode, (lused', wused', hused')) =
                       bestArrangement orientations
@@ -131,12 +144,13 @@ bestPositions' partitionMode orientations shelf start usedBoxes dim = let
                                                                             xs -> xs
                                                             POr m1 m2 -> go m1 ++ go m2
                                                             POverlap -> error "POverlap not implemented"
+                                                            PSortedOverlap -> error "PSortedOverlap not implemented"
                                                    in go partitionMode
                                         , let used = Dimension (min 0 (0-l)) (min 0 (0-w)) (min 0 (0-h))
                                         ] dim
   rotated = rotate bestO dim
   base = Dimension lused' wused' hused' <> start
-  in generatePositions base (shelfFillingStrategy shelf) bestO rotated tilingMode
+  in fmap Right $ generatePositions base (shelfFillingStrategy shelf) bestO rotated tilingMode
   where outOfBound dim = minimumEx (dimensionToList dim) <= 0
 
 
@@ -189,14 +203,7 @@ generatePositions base fillingStrategy ori boxDim (TilingCombo dir m1 m2) = let
 -- * Find  the corners of the boxes which are enough
 -- to describe the "stair" hull of all of the top right corner
 -- of the given boxes.
--- For example
---
---       B
---    A
---            C
---            D
---
--- Will return B nd C
+-- 
 cornerHull :: [(Double, Double)] -> [(Double, Double)]
 cornerHull corners = let
   -- allCorners = map boxCorner boxes
@@ -235,9 +242,17 @@ bestEffort boxes = let
 moveSimilarBoxes :: (Shelf' shelf) => ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
 moveSimilarBoxes exitMode partitionMode boxes shelves' = do
   shelves <- mapM findShelf shelves'
-  positionss <- mapM (\s -> bestPositions partitionMode s boxes) shelves
-  let    positionsWithShelf = combineSlices exitMode $ zip shelves positionss
-  assignBoxesToPositions positionsWithShelf boxes
+  pos'boxs <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
+  let positionsWithShelf = combineSlices exitMode $ zip shelves pos'boxs
+      posWithShelf'boxesz = case partitionMode of
+         PSortedOverlap -> forSortedOverlap positionsWithShelf boxes
+         _              -> [(snd $ partitionEitherSlices $ fmap sequenceA positionsWithShelf, boxes)]
+  toUnzip <- mapM (\(pws, bs) ->  assignBoxesToPositions pws bs) posWithShelf'boxesz
+  let (lefts, rights) = unzip toUnzip
+      tomaybe xms = case catMaybes xms of
+                      [] -> Nothing 
+                      (x:xs) -> foldM (\m s -> unsplitSimilar m s) x xs
+  return (tomaybe lefts, tomaybe rights)
   
 -- | Sort positions (box offsets), so that they are in order to be assigned
 -- according to the 'exitmode' and filling strategy.
@@ -274,7 +289,7 @@ moveSimilarBoxes exitMode partitionMode boxes shelves' = do
 -- consecutives shelves must be seen at one or not.
 -- The sorting can then be done by group of shelf with the same
 -- strategy.
-combineSlices :: ExitMode -> [(Shelf s, Slices Double Position)] -> Slices (Int, Double, Int) (Shelf s, Position)
+combineSlices :: ExitMode -> [(Shelf s, Slices Double p)] -> Slices (Int, Double, Int) (Shelf s, p)
 combineSlices exitMode shelf'slicess = let
   -- assign a number for each shelf and then
   -- reuse the same number within a group if needed.
@@ -311,12 +326,15 @@ assignBoxesToPositions slices simBoxes = do
   leftOver <- go Nothing (numSlices slices) boxes 
   return $ splitSimilar (length boxes - length leftOver) simBoxes
 
+-- | make group of pair slots boxes so that boxes are "authorized" to be in the correct slots
+forSortedOverlap :: Slices k (Shelf s, BoxesOrPos (Box s)) -> (SimilarBoxes s) -> [(Slices k (Shelf s, Position), (SimilarBoxes s))]
+forSortedOverlap positionsWithShelf boxes =
+         [(snd $ partitionEitherSlices $ fmap sequenceA positionsWithShelf, boxes)]
 -- Try to Move a block of boxes  into a block of shelves.
 -- Boxes are move in sequence and and try to fill shelve
 -- in sequence. If they are not enough space the left boxes
 -- are returned.
 moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [box s] -> [shelf s] -> WH (InExcluded (Box s)) s
-
 moveBoxes exitMode partitionMode sortMode bs ss = do
   boxes <- mapM findBox bs
   let layers = groupBy ((==)  `on` boxBreak)

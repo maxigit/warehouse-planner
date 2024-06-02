@@ -3,7 +3,7 @@ module Planner.OptimumSpec where
 import ClassyPrelude
 import Test.Hspec
 import WarehousePlanner.Org.Types
-import WarehousePlanner.Base
+import WarehousePlanner.Move
 
 spec :: Spec
 spec = parallel pureSpec

@@ -236,6 +236,7 @@ data PartitionMode
   | PRightOnly -- ^ max used weight only
   | PBestEffort -- ^ try to find all available rectangles
   | POverlap -- ^ partition as if shelf was empty then removed used slots.
+  | PSortedOverlap -- ^ partition as if shelf was empty then removed used slots. but keep overall boxe in order
   | PBehind
   | POr PartitionMode PartitionMode -- ^ combination
   deriving (Show, Eq, Ord)

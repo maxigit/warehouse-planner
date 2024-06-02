@@ -1361,6 +1361,8 @@ modesParser = do
                           , (P.string "above", PAboveOnly)
                           , (P.string "best", PBestEffort)
                           , (P.string "overlap", POverlap)
+                          , (P.string "->", PSortedOverlap)
+                          , (P.string "sorted", PSortedOverlap)
                           , (P.string "behind", PBehind)
                           ]
         go (p, v) = const v <$> P.try p

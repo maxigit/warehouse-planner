@@ -10,6 +10,7 @@ import WarehousePlanner.Slices
 import WarehousePlanner.Move
 import WarehousePlanner.Expr
 import WarehousePlanner.Selector
+import WarehousePlanner.Affine
 import Data.Text(splitOn, split)
 import Data.Text qualified as Text
 -- import Data.Map qualified as Map
@@ -19,7 +20,6 @@ import Data.Set qualified as Set
 import Data.Map qualified as Map
 import GHC.Utils.Monad (mapAccumLM)
 import Data.List (unfoldr)
-import WarehousePlanner.Affine
 
 -- * Type {{{1
 data ShiftStrategy = ShiftAll | StayInPlace deriving (Show, Eq)
@@ -380,10 +380,14 @@ executeFillCommand shelf state@FillState{..} = \case
                         )
           doStrategy partitionMode strategy offset = do
               -- find the next positions 
-              used <- case partitionMode of
-                        POverlap -> map boxAffDimension <$> findBoxByShelf shelf
-                        _ -> return [AffDimension mempty fMaxCorner]
-              let positions = bestPositions' partitionMode [strategy] shelf offset used fLastBox_
+              positions <- case partitionMode of
+                        POverlap -> do
+                                      used <- findBoxByShelf shelf
+                                      return $ snd $ partitionEitherSlices $ bestPositions' boxAffDimension partitionMode [strategy] shelf offset used fLastBox_
+                        PSortedOverlap -> error "Sorted overlap NOT IMPLEMENTED"
+                        _ -> do
+                              let used = [AffDimension mempty fMaxCorner]
+                              return $ snd $ partitionEitherSlices $ bestPositions' id partitionMode [strategy] shelf offset used fLastBox_
               if  Prelude.length positions == 0
               then error . unpack $ "Strategy "  <> tshow partitionMode <> " " <> tshow strategy <> " doesn't allow any boxes.\nCheck if the shelf is deep enough: "
                            <>  (shelfName shelf)

@@ -5,6 +5,7 @@ import ClassyPrelude
 import Test.Hspec
 import WarehousePlanner.Csv
 import WarehousePlanner.Base
+import WarehousePlanner.Tiling
 import WarehousePlanner.Org.Internal
 import WarehousePlanner.Exec
 
