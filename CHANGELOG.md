@@ -1,3 +1,9 @@
+# 1.3.1
+Add fuzzy Stocktake
+Refactoring split Base.hs in Move.hs and Tiling.hs
+Brick: 
+  Add --property
+  Display overlapping boxes
 # 1.3
 Add WPL 
 Misc Brick improvement 
