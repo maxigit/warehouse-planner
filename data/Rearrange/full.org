@@ -1,0 +1,801 @@
+* LAYOUT
+:Layout:
+E02.01/* E02.02/* E02.025/sep E02.03/*  E02.04/* pending*
+E02.01/* E02.02/* E02.025/sep E02.03/*  E02.04/*
+error
+pending
+pending2
+pending3
+pending4
+pending5
+pending6
+C1
+C2
+C3
+ignore
+:END:
+
+:Shelves:
+name,comment,length,width,height,type
+error#summary=_error#bg=pink#out,error,3800,100,1200,Shelf
+C[123]#summary=_pending#_coming#bg=lightgreen;_white#out,coming,3800,100,1200,Shelf
+TL#summary=_pending,Trolley Tall,127,90,172,Shelf
+TS#summary=_pending,Trolley Short,127,90,152,Shelf
+ignore#sep,ignore,3800,100,1200,Shelf
+pendin[g g2 g3 g4 g5 g6]#summary=_pending#bg=lightgreen;_white#out,pending,3800,100,1200,Shelf
+:END:
+
+:Shelves:
+name,comment,length,width,height,type,bottom
+W01.01/0#wall,new wall of death,398,91,250;450,Shelf,0
+W01.03/0#wall,new wall of death,387,91,{W01.01/0},Shelf,0
+W01.05/0#wall,new wall of death,384,91,{W01.01/0};450,Shelf,0
+W01.07/0#wall,new wall of death,477,91,{W01.01/0},Shelf,0
+W01.09/0#wall,new wall of death,491,91,{W01.01/0},Shelf,0
+W01.11/0#wall,new wall of death,506,91,{W01.01/0},Shelf,0
+W01.0[28]/0#wall,pillar ,43,74,{W01.01/0},Shelf,0
+W01.[06 10]/0#wall,pillar,45,74,{W01.01/0},Shelf,0
+W01.0[4]/0#wall,pillar + plugs ,44,74,136,Shelf,0
+W0[24].050/0#sep#boyes,separator,140,0,500,Separator,11
+W0[35].030/0#sep#boyes,separator,140,0,500,Separator,11
+W06.005/sep#sep#boyes|W07.045/sep#sep,separator,140,0,500,Separator,11
+W02.0[123]/1#boyes,opposite to wall,224,80,151,Shelf,8.5
+W02.0[45]/1#boyes,opposite to wall,300,32,146,Shelf,11
+W02.0[12345]/2#boyes,opposite to wall,{%-},{%-},146,Shelf,{%-}
+W02.0[12345]/3#top#boyes,opposite to wall,{%-},{%-},146;250,Shelf,{%-}
+W02.0[678]/1#boyes,opposite to wall after pillar,300,42,171,Shelf,11
+W02.0[678]/[2]#boyes,opposite to wall after pillar,{%-},{%-},124,Shelf,11
+W02.0[678]/[3#top]#boyes,opposite to wall after pillar,{%-},{%-},180,Shelf,11
+W03.01/[1]#boyes,,300,114-{W0-.08%},171,Shelf,11
+W03.01/[2]#boyes,,300,114-{W0-.08%},124,Shelf,11
+W03.01/[3#top]#boyes,,300,114-{W0-.08%},180,Shelf,11
+W03.02/[1]#boyes,,300,113-{W0-.07%},169,Shelf,11
+W03.02/[2]#boyes,,300,113-{W0-.07%},123,Shelf,11
+W03.02/[3#top]#boyes,,300,113-{W0-.07%},180,Shelf,11
+W03.03/[1]#boyes,,300,113-{W0-.06%},169,Shelf,11
+W03.03/[2]#boyes,,300,113-{W0-.06%},123,Shelf,11
+W03.03/[3#top]#boyes,,300,113-{W0-.06%},180,Shelf,11
+W03.04/[123#top]#boyes,,300,113-{W0-.05%},146,Shelf,11
+W03.05/[123#top]#boyes,,300,113-{W0-.04%},146,Shelf,11
+W03.06/[12]#boyes,,224,113-{W0-.03%},146,Shelf,8.5
+W03.06/[3#top]#boyes,,224,113-{W0-.03%},180,Shelf,8.5
+W03.07/[123#top]#boyes,,224,113-{W0-.02%},146,Shelf,8.5
+W03.08/[123#top]#boyes,,224,113-{W0-.01%},146,Shelf,8.5
+W04.0[123]/[12]#boyes,,224,30,151,Shelf,8.5
+W04.0[123]/[3#top]#boyes,,224,30,180,Shelf,8.5
+W04.04/[12]#boyes,,300,30,148,Shelf,11
+W04.05/[12]#boyes,,300,35,148,Shelf,11
+W05.0[123]/[12]#boyes,For 1FC,300,42,146,Shelf,11
+W05.0[123]/[3#top]#boyes,For 1FC,300,62,146,Shelf,11
+W05.0[45]/[3#top]#boyes,MW-1DA stickout,300,79,146,Shelf,11
+W05.04/[12]#boyes,,300,91,146,Shelf,11
+W05.05/[12]#boyes,,300,115-{W0-.04%},146,Shelf,11
+W05.06/[123#top]#boyes,,224,115-{W0-.03%},146,Shelf,8.5
+W05.07/[123#top]#boyes,,224,115-{W0-.02%},146,Shelf,8.5
+W05.08/[123#top]#boyes,,224,115-{W0-.01%},146,Shelf,8.5
+W04.04/[3#top]#boyes, after pillar,300,130-{W0+.05%},180,Shelf,11
+W04.05/[3#top]#boyes, after pillar,300,130-{W0+.04%},180,Shelf,11
+W04.06/[12]#boyes, after pillar,300,110-{W0+.03%},146,Shelf,11
+W04.0[67]/[3#top]#boyes, stickout after pillar,300,68,146,Shelf,11
+W04.07/[12]#boyes, after pillar,300,112-{W0+.02%},146,Shelf,11
+W04.08/[123#top]#boyes, after pillar,300,112-{W0+.01%},146,Shelf,11
+W06.01/[12]#blue,old 1DA,270,86,151,Shelf,8.5
+W06.01/3#top#blue,old 1DA,270,62,151,Shelf,8.5
+W06.02/[1]#blue,old 1DA,270,86,151,Shelf,8.5
+W06.02/[2]#blue,old 1DA,270,86,151,Shelf,8.5
+W06.03/1#blue,old 1DA,270,86,151,Shelf,8.5
+W06.03/2#blue,old 1DA,270,86,151,Shelf,8.5
+W06.04/[12]#blue,old 1DA,180,80,151,Shelf,8.5
+W06.0[4]/3#top#blue,old 1DA,180,80,151,Shelf,8.5
+W06.0[23]/3#top#blue,old 1DA,270,86,151,Shelf,8.5
+W07.01/[123#top]#blue,old 1DA,180,123-{W06.04%},151,Shelf,8.5
+W07.02/[3#top]#blue,old 1DA,270,130-{W06.03%},151,Shelf,8.5
+W07.02/2#blue,old 1DA,270,80,151,Shelf,8.5
+W07.02/1#blue,old 1DA,270,50,151,Shelf,8.5
+W07.03/[123#top]#blue,old 1DA,270,123-{W06.02%},151,Shelf,8.5
+W07.04/[123#top]#blue,old 1DA,270,123-{W06.01%},151,Shelf,8.5
+W07.05/[1]#setam,SETAM,117,60,88,Shelf,3.5
+W07.05/[2]#setam,SETAM,117,60,60,Shelf,3.5
+W07.05/3#setam,SETAM,117,60,100,Shelf,3.5
+W06.00/[123]#setam,SETAM,117,48,48,Shelf,3.5
+W06.00/4#setam,SETAM,117,48,100,Shelf,3.5
+W08.025/sep#sep#setam|W00.sep#sep#wall|W09.015/sep#sep,,270,0,300,Separator,3.5
+W08.00/[12]#setam,,89,45,32,Shelf,3.5
+W08.00/3#setam,,89,46,48,Shelf,3.5
+W08.00/4#setam,,89,46,39,Shelf,3.5
+W08.00/5#setam,,89,46,100,Shelf,3.5
+W08.0[12]/[12]#blue,,270,58,151,Shelf,8.5
+W08.0[12]/3#top#blue,,270,60,74,Shelf,8.5
+W08.0[3]/[1234567#top]#blue,,270,52,48,Shelf,8.5
+W09.01/[1234567#top]#blue,,270,114-{W08.03%},48,Shelf,8.5
+W09.02/[123#top]#blue,,270,100-{W08.02%},151,Shelf,8.5
+W09.03/[123#top]#blue,,270,102-{W08.01%},151,Shelf,8.5
+W09.04/[123]#setam,SETAM,117,60,87,Shelf,3.5
+W10.sep#sep,,254,0,300,Separator,0
+W1[01].0[12]/[12345]#waitrose,Scarves shelves,340,60,45,Shelf,11
+W1[01].0[12]/6#top#blue,Scarves shelves,340,60,70,Shelf,8.5
+W1[23].0[12]/[123]#blue,2XA dedicated shelves,270,32,77,Shelf,8.5
+W1[23].0[12]/[4#top]#blue,2XA dedicated shelves,270,32,140;200,Shelf,8.5
+W11.03/[123]#setam,SETAM,117,60,90,Shelf,3.5
+W14.01/[12]#setam,petals,115,61,26,Shelf,3.5
+W14.01/[345]#setam,petals,115,61,27,Shelf,3.5
+W14.01/[67]#setam,petals,115,61,22,Shelf,3.5
+W14.02/[12]#setam,petals,119,61,26,Shelf,3.5
+W14.02/[345]#setam,petals,119,61,27,Shelf,3.5
+W14.02/[67]#setam,petals,119,61,22,Shelf,3.5
+W14.03/0#setam,plastic trays,60,24,93,Shelf,3.5
+W00.01/1#darkBoyes,against wall,179,95,145,Shelf,8
+W00.01/2#darkBoyes,against wall,179,95,98,Shelf,8
+W00.01/3#top#darkBoyes,against wall,179,95,165,Shelf,8
+W00.02/1#darkBoyes,against wall,179,95,252,Shelf,8
+W00.02/2#top#darkBoyes,against wall,179,95,165,Shelf,8
+W51.01/1#darkBoyes,against wall,180,95,141,Shelf,8
+W51.01/2#darkBoyes,against wall,180,95,119,Shelf,8
+W51.01/3#top#darkBoyes,against wall,179,95,165,Shelf,8
+W51.02/1#darkBoyes,against wall,180,95,269,Shelf,8
+W51.02/2#top#darkBoyes,against wall,179,95,165,Shelf,8
+:END:
+
+:Shelves:
+name,comment,length,width,height,type,bottom
+E00.01/[12]#blue,against start,185,91,156,Shelf,8.5
+E00.01/[3#top]#blue,against start,185,91,171,Shelf,8.5
+E00.02/[12]#blue,against start,270,91,156,Shelf,8.5
+E00.02/[3#top]#blue,against start,270,91,171,Shelf,8.5
+E01.01/1#blue,against wall,180,80,171,Shelf,8.5
+E01.01/2#blue,against wall,180,92,117,Shelf,8.5
+E01.01/3#top#blue,against wall,180,80,171,Shelf,8.5
+E01.0[234567]/1#blue,wall,270,80,171,Shelf,8.5
+E01.0[234567]/2#blue,wall,270,80,117,Shelf,8.5
+E01.0[234567]/3#top#blue,wall,270,80,171,Shelf,8.5
+E02.0[1234]/[123]#boyes,,360.00,120.00,93.5,Shelf,11
+E02.0[1234]/4#top#boyes,,360.00,120.00,135.5;150,Shelf,11
+E0[2345].025/sep#sep#boyes,,140.00,0.00,435.5,Separator,11
+E03.0[1234]/[123]#boyes,,360.00,132,93.5,Shelf,11
+E03.0[12]/4#top#boyes,,360.00,132,150,Shelf,11
+E03.0[34]/4#top#boyes,,360.00,132,150,Shelf,11
+E05.0[123]/[123]#boyes,,360.00,102.00,93.5,Shelf,11
+E05.0[123]/4#top#boyes,,360.00,{%1},150,Shelf,11
+E05.04/[123]#boyes,,360.00,{%3/1},93.5,Shelf,11
+E05.04/4#top#boyes,,360.00,140.00,150,Shelf,11
+E04.01/[123]#boyes,,360.00,244-{E05.04%},93.5,Shelf,11
+E04.01/4#top#boyes,,360.00,100,150,Shelf,11
+E04.02/[123]#boyes,,360.00,240-{E05.03%},93.5,Shelf,11
+E04.02/4#top#boyes,,360.00,240-{E05.03%},150,Shelf,11
+E04.03/[123]#boyes,,360.00,240-{E05.02%},93.5,Shelf,11
+E04.03/4#top#boyes,,360.00,240-{E05.02%},150,Shelf,11
+E04.04/[123]#boyes,,360.00,240-{E05.01%},93.5,Shelf,11
+E04.04/4#top#boyes,,360.00,240-{E05.01%},150,Shelf,11
+E06.01/[13#top#summary=top]#gavin,Gav rack near door,320,55,171,Shelf,0
+E06.01/2#gavin,Gav rack near door,320,55,121,Shelf,0
+E06.02/1#sep#gavin,Over the door,333,0,247,Separator,0
+E06.02/2#top#summary=top#gavin,Over the door,333,90,171,Shelf,0
+E06.0[3]/[13#top#summary=top]#gavin,,270,56,171,Shelf,0
+E06.0[3]/[2]#gavin,,270,55,110,Shelf,0
+E06.0[4]/[1]#gavin,,270,55,172,Shelf,0
+E06.0[4]/[3#top#summary=top]#gavin,,270,55,172,Shelf,0
+E06.0[4]/[2]#gavin,,270,55,110,Shelf,0
+E06.05/[13]#gavin,Gav Racking,320,58,171,Shelf,0
+E06.05/[2]#gavin,,320,58,110,shelf,0
+E06.06/[13#top#summary=top]#gavin,,320,58,171,Shelf,0
+E06.06/[2]#gavin,,320,58,121,shelf,0
+E07.06/[13#top]#gavin,Gav rack near door,320,112-{E06.01%},{E06.01%},Shelf,0
+E07.06/2#gavin,Gav rack near door,320,110-{E06.01%},{E06.01%},Shelf,0
+E07.05/1#sep#gavin,Over the door,333,0,{E06.02%},Separator,0
+E07.05/2#top#gavin,Over the door,333,110-{E06.02%},{E06.02%},Shelf,0
+E07.0[4]/[12]#gavin,,270,110-{E06.03%},{E06.03%},Shelf,0
+E07.0[4]/[3#top]#gavin,,270,110-{E06.03%},{E06.03%},Shelf,0
+E07.0[3]/[12]#gavin,,270,112-{E06.04%},{E06.04%},Shelf,0
+E07.0[3]/[3#top]#gavin,,270,112-{E06.04%},{E06.04%},Shelf,0
+E07.02/[12]#gavin,Gav Racking,320,113-{E06.05%},{E06.05%},Shelf,0
+E07.02/[3#top]#gavin,,320,110-{E06.05%},{E06.05%},shelf,0
+E07.01/[13#top]#gavin,,320,110-{E06.06%},{E06.06%},Shelf,0
+E07.01/[2]#gavin,,320,110-{E06.06%},{E06.06%},shelf,0
+E08.01/0#wall,floor,70,46,200,Shelf,0
+E08.02/0#wall,floor,503,46,200,Shelf,0
+E08.03/0#wall,floor,501,46,200,Shelf,0
+E2[2345].01/[1234]#blue,1XA,180,55,67,Shelf,8.5
+E26.01/[1234]#blue,1XA,180,37,67,Shelf,8.5
+E27.01/[1234]#blue,,180,73,67,Shelf,8.5
+E27.015/sep,,50,0,360,Shelf,0
+E2[234567].01/5#blue,,180,55,200,Shelf,8.5
+E28.01/1#blue,1TA,185,81,37,Shelf,8.5
+E28.01/2#blue,1TA,185,81,39,Shelf,8.5
+E28.01/3#blue,1TA,185,81,38,Shelf,8.5
+E28.01/4#blue,1TA,185,81,37,Shelf,8.5
+E28.01/5#blue,Behind 8DS Bases,185,34,82,Shelf,8.5
+E29.01/1#blue,Behind 1TA,185,19,37,Shelf,8.5
+E29.01/2#blue,Behind 1TA,185,19,39,Shelf,8.5
+E29.01/3#blue,Behind 1TA,185,19,38,Shelf,8.5
+E29.01/4#blue,Behind 1TA,185,19,37,Shelf,8.5
+E29.01/5#blue,8DS Bases,185,78,82,Shelf,8.5
+E2[89].01/6#top#blue,,180,50,200,Shelf,8.5
+E27.0[23]/[123]#setam,METAL SHELVES,117,50,86,Shelf,3.5
+E30.01/[123#top]#blue,ALE,270,81,170,shelf,8.5
+E30.02/0#blue,floor,200,80,225,Shelf,8.5
+:END:
+
+:Shelves:
+name,comment,length,width,height,type,bottom
+M01.0[12]/1#darkBoyes,edging strips,300,120,60,Shelf,0
+M01.0[12]/[23]#darkBoyes,edging strips,300,120,56,Shelf,0
+M02.01/1#darkBoyes,hold,120,55,95,Shelf,0
+M02.01/2#darkBoyes,hold,120,55,76,Shelf,0
+M02.01/3#darkBoyes,hold,120,55,51,Shelf,0
+M02.02/1#darkBoyes,hold,115,55,95,Shelf,0
+M02.02/2#darkBoyes,hold,115,55,76,Shelf,0
+M02.02/3#darkBoyes,hold,115,55,51,Shelf,0
+M02.sep#sep#darkBoyes,,106,0,221,Separator,0
+M02.03/1#darkBoyes,hold,120,55,95,Shelf,0
+M02.03/2#darkBoyes,hold,120,55,74,Shelf,0
+M02.03/3#darkBoyes,hold,120,55,52,Shelf,0
+M02.04/1#darkBoyes,hold,115,55,95,Shelf,0
+M02.04/2#darkBoyes,hold,115,55,74,Shelf,0
+M02.04/3#darkBoyes,hold,115,55,52,Shelf,0
+N01.0[12]/1#blue,near mezzanine,330,88,220,Shelf,8.5
+N01.03/1#sep,way to mezza,330,0,220,Separator,0
+N01.0[123]/2#top#blue,near mezzanine,330,85,95,Shelf,8.5
+N01.0[123]/3#sep,top mezzanine,330,0,145,Sep,0
+N03.0[1]/[12]#boyes,extra thickness,345,80,144,Shelf,17
+N03.0[1]/3#top#boyes,extra thickness,345,80,144,Shelf,17
+N03.0[23]/[123#top]#boyes,extra thickness,345,80,144,Shelf,17
+N02.0[1]/[123#top]#boyes,,345,50,144,Shelf,17
+N02.0[2]/[123#top]#boyes,,345,50,144,Shelf,17
+N02.0[3]/[23#top]#boyes,,345,50,144,Shelf,17
+/N0[23].0[123]/3,,{%},{%},130;230,Update,17
+N02.0[3]/1#boyes,,345,50,144,Shelf,17
+:END:
+
+:ShelfTags:
+selector,tags
+/#top,#summary=top
+:END:
+
+:Shelves:
+name,comment,length,width,height,type,bottom
+/*.*/1#setam,,{%},{%},{%},Update,6.5
+/*.*/2,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/3,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/4,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/5,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/6,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/7,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/8,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+/*.*/9,,{%},{%},{%},Update,{%:bottom}+{___.___-:top}
+:END:
+
+:ShelfTags:
+selector,tag
+/#wall,#bar-bg=black#bar-fg=white#bg=gray#border=black
+/#boyes,#bg=lightgray#border=dimgray#bar-bg=gold;orange
+/#darkBoyes,#bg=lightgray#border=dimgray#bar-bg=Goldenrod
+/#gavin,#bg=tan;_white#border=saddlebrown;black
+/#setam,#bg=white;Lavender#bar-bg=silver#border=LightSlateGray
+/#waitrose,#bar-bg=firebrick#bg=lightgray#border=dimgray
+/??[13579]*/*#-blue#-sep,#bg=+__white
+/??[13579]*/*#blue#-sep,#bg=__white;lightsteelblue;_lightsteelblue
+/#sep,bg=white#fg=gray
+:END:
+
+:Orientations:
+stock_id,orientation
+M31L05FA/W02.*/[12],|
+:END:
+
+:Orientations:
+stock_id,orientation
+M31L05DA/W0[23].*/3,3*
+:END:
+
+:Orientations:
+stock_id,orientation
+M02L09DA,!2%
+:END:
+
+:Orientations:
+stock_id,orientation
+M31L03FA#'l=6400,1|
+#af3small,2^
+:END:
+
+:Orientations:
+stock_id,orientation
+M02L06FH,xx2%
+:END:
+
+:ShelfSplit:
+box,location,l,w,h
+,W04.0[67]/[12],,,{}/2
+,W04.08/*,38*3,,{}/2
+:END:
+
+:ShelfJoin:
+location
+W04.0[678]/[12]
+:END:
+
+:ShelfSplit:
+box,location,l,w,h
+,W05.0[1-3]/1,,,{}/2
+,W05.0[1-3]/2,,,{}/2
+:END:
+
+:ShelfJoin:
+location
+W05.0[1-3]/[12]
+:END:
+
+:Orientations:
+stock_id,orientation
+M31L01FC/*/3,
+M31L01FC,!
+#cf1top,3'
+:END:
+
+:Orientations:
+stock_id,orientation
+M02L06DM,3=
+:END:
+
+:Orientations:
+stock_id,orientations
+:END:
+
+:Orientations:
+stock_id,orientation
+M71W04SO,1'
+:END:
+
+:Orientations:
+stock_id,orientation
+M51L01SA/#top,2^
+M51L01SA,1'
+:END:
+
+:Orientations:
+stock_id,orientation
+M61W01SH,1'
+:END:
+
+:Orientations:
+stock_id,orientation
+M51L02SA#'h=3000,1'
+M51L02SA/#top,2^
+M51L02SA#'h=1000,1>
+:END:
+
+:Orientations:
+stock_id,orientation
+C21M01ES,1'
+:END:
+
+:Orientations:
+stock,orientatios
+M32L01DT,9
+:END:
+
+:ShelfSplit:
+box,location,l,w,h
+,E01.0[2-6]/2,,,{}/2
+,E01.06/[12],{}/2,,
+,E01.06/2/aab,{}/2,,
+:END:
+
+:ShelfJoin:
+location
+E01.0[2-6]/2
+E01.06/1
+:END:
+
+:ShelfSplit:
+box,location,l,w,h
+,E02.0*/1,,,{}/2
+:END:
+
+:ShelfJoin:
+location
+E02.0*/1
+:END:
+
+:Orientations:
+stock_id,orientation
+/E02.*/4,3|
+M71L07DF,1:3
+:END:
+
+:ShelfSplit:
+box,location,l,w,h
+,E03.0[12]/1, , ,{}/2
+:END:
+
+:Orientations:
+stock_id,orientations
+M32L07DC,9
+:END:
+
+:ShelfJoin:
+location
+E03.0[12]/1
+:END:
+
+:Orientations:
+stock_id,orientation
+M61L03DG/#top,1*
+M61L03DG,2^'|=
+:END:
+
+:Orientations:
+stock_id,orientation
+M61E05DW/#top,3=
+M61E05DW,1:3^
+:END:
+
+:Orientations:
+stock_id,orientation
+M41L02DK,1:3
+:END:
+
+:Orientations:
+stock_id,orientation
+M31L01DA/#top,4=
+M31L01DA,1:4^'
+:END:
+
+:Orientations:
+stock_id,orientation
+M81L03DL/#-top,1:3^
+:END:
+
+:Orientations:
+stock_id,orientation
+M81L02HB,1:3^
+:END:
+
+:Orientations:
+stock_id,orientation
+:END:
+
+:Orientations:
+stock_id,orientation
+M81L08SC,1'
+:END:
+
+:Orientations:
+stock_id,orientation
+#at1m,1'
+M51L01TA#'THW*,1^
+:END:
+
+:ShelfTags:
+stock_id,tag
+:END:
+
+:STOCKTAKE_@include_barcode_first_location:
+Bay No,Position,Style,Length,Width,Height,Orientations
+E02.01/2,=1:1:1,M71L07DF-RZA#@content=50#@style=100#barcode=DL23SE01533D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1457#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1490,69.00,42.00,38,=|
+E02.01/1,=1:1:2+0+0+5,M71L07DF-AQA#@content=50#@style=100#barcode=DL23NV00268A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1458#create-model#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1491,69.00,42.00,38,=|
+E02.01/2,=3:1:1,M71L07DF-TLB#@content=50#@style=100#barcode=DL23NV00283B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1459#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1492,69.00,42.00,38,=|
+E02.01/1,=2:1:1,M71L07DF-KLB/YVI#@content=50#@style=100#BG=red#barcode=DL23FE05796W#bg=red#box_id=1460#date=2023-02-20#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1493,69.00,42.00,38,=|
+E02.01/2,=2:1:1,M71L07DF-KLB/THW#@content=50#@style=100#barcode=DL23FE05800Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1461#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1494,69.00,42.00,38,=|
+E02.01/1,=1:1:1,M71L07DF-MGB#@content=50#@style=100#BG=red#barcode=DL23SE01537F#bg=red#box_id=1462#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1495,69.00,42.00,38,=|
+E02.01/2,=1:2:1,M71L07DF-RZA#@style=100#barcode=DL23SE01534K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1463#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1496,69.00,42.00,38,=|
+E02.01/1,=1:2:1,M71L07DF-MGB#@style=100#BG=red#barcode=DL23SE01536Y#bg=red#box_id=1464#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1497,69.00,42.00,38,=|
+E02.01/1,=3:1:1,M71L07DF-FOC#@content=50#@style=100#BG=red#barcode=DL23NV00308U#bg=red#box_id=1465#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1498,69.00,42.00,38,=|
+E02.01/2,=3:2:1,M71L07DF-TLB#@style=100#barcode=DL23NV00284I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1466#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1499,69.00,42.00,38,=|
+E02.01/1,=1:3:1,M71L07DF-MGB#@style=100#BG=red#barcode=ST19NV00143B#bg=red#box_id=1467#date=2023-09-06#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1500,69.00,42.00,38,=|
+E02.01/1,=3:2:1,M71L07DF-FOC#@style=100#BG=red#barcode=DL23NV00309B#bg=red#box_id=1468#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1501,69.00,42.00,38,=|
+E02.01/1,=4:1:1,M71L07DF-NAD#@content=50#@style=100#BG=red#barcode=DL23SE01543V#bg=red#box_id=1469#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1502,69.00,42.00,38,=|
+E02.01/1,=4:2:1,M71L07DF-NAD#@style=100#BG=red#barcode=DL23SE01544C#bg=red#box_id=1470#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1503,69.00,42.00,38,=|
+E02.01/2,=5:1:1,M71L07DF-KHC#@content=50#@style=100#barcode=DL23MR01403N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1471#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'1#style=M71L07DF#box_id=1504,69.00,42.00,38,=|
+E02.01/1,=2:2:1,M71L07DF-KLB/YVI#@style=100#BG=red#barcode=DL23FE05795P#bg=red#box_id=1472#date=2023-02-20#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'1#low#style=M71L07DF#box_id=1505,69.00,42.00,38,=|
+E02.01/2,=5:1:2,M71L07DF-NHC#@content=50#@style=100#barcode=ST19NV00145P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1473#date=2023-09-26#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1506,69.00,42.00,38,=|
+E02.01/1,=4:1:2+0+0+5,M71L07DF-YUB#@content=50#@style=100#barcode=DL23NV00287D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1474#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1507,69.00,42.00,38,=|
+E02.01/2,=2:1:2,M71L07DF-LLB#@content=50#@style=100#barcode=DL23NV00280G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1475#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1508,69.00,42.00,38,=|
+E02.01/2,=3:1:2,M71L07DF-ZRB#@content=50#@style=100#barcode=ST23NV00432Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1476#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1509,69.00,42.00,38,=|
+E02.01/2,=3:2:2,M71L07DF-ZRB#@style=100#barcode=DL23AP02945H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1477#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1510,69.00,42.00,38,=|
+E02.01/1,=3:1:2+0+0+5,M71L07DF-MLB#@content=50#@style=100#barcode=DL23SE01540A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1478#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1511,69.00,42.00,38,=|
+E02.02/1,=1:1:2+0+0+5,M71L07DF-LOC#@content=50#@style=100#barcode=DL23NV00312W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1479#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1512,69.00,42.00,38,=|
+E02.01/2,=4:1:2,M71L07DF-YAC#@content=50#@style=100#barcode=DL23FE05815Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1480#date=2023-09-26#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1513,69.00,42.00,38,=|
+E02.01/1,=3:2:2+0+0+5,M71L07DF-MLB#@style=100#barcode=DL23SE01541H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1481#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1514,69.00,42.00,38,=|
+E02.01/2,=1:1:2,M71L07DF-HLB#@content=50#@style=100#barcode=DL23NV00270O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1482#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'2#style=M71L07DF#box_id=1515,69.00,42.00,38,=|
+E02.01/2,=1:3:1,M71L07DF-RZA#@style=100#barcode=DL23SE01535R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1483#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.01'3#style=M71L07DF#box_id=1516,69.00,42.00,38,=|
+E02.01/2,=2:2:1,M71L07DF-KLB/THW#@style=100#barcode=DL23FE05918S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1484#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'3#style=M71L07DF#box_id=1517,69.00,42.00,38,=|
+E02.02/2,=2:1:2,M71L07DF-KPG#@content=50#@style=100#barcode=DL23MR01292Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1485#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'3#style=M71L07DF#box_id=1518,69.00,42.00,38,=|
+E02.01/3,=1:1:1,M71L07DF-MGB#@style=100#barcode=DL23SE01538M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1486#date=2023-10-03#done#fa-sales-rank=3299#live-status=BoxUsed#location=E02.01'3#stock#style=M71L07DF#box_id=1519,69.00,42.00,38,=|
+E02.02/1,=2:1:1,M71L07DF-KPF#@content=50#@style=100#BG=red#barcode=DL23SE01550S#bg=red#box_id=1487#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.01'3#low#style=M71L07DF#box_id=1520,69.00,42.00,38,=|
+E02.01/2,=4:1:1,M71L07DF-OAC#@content=50#@style=100#barcode=DL23NV00299J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1488#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1521,69.00,42.00,38,=|
+E02.03/2,=3:1:1,M71L07DF-TWM#@content=50#@style=100#barcode=DL23NV00386U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1489#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1522,69.00,42.00,38,=|
+E02.01/2,=5:2:1,M71L07DF-KHC#@style=100#barcode=DL23MR01404U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1490#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1523,69.00,42.00,38,=|
+E02.01/1,=2:1:2+0+0+5,M71L07DF-KLB#@content=50#@style=100#barcode=DL23NV00276E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1491#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1524,69.00,42.00,38,=|
+E02.03/2,=1:1:1,M71L07DF-DNM#@content=50#@style=100#barcode=DL23NV00371T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1492#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1525,69.00,42.00,38,=|
+E02.03/2,=1:2:1,M71L07DF-DNM#@style=100#barcode=DL23NV00370M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1493#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1526,69.00,42.00,38,=|
+E02.02/2,=2:1:1,M71L07DF-AUF#@content=50#@style=100#barcode=DL23NV00337P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1494#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1527,69.00,42.00,38,=|
+E02.02/2,=2:2:1,M71L07DF-AUF#@style=100#barcode=DL23NV00336I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1495#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1528,69.00,42.00,38,=|
+E02.02/2,=2:3:1,M71L07DF-AUF#@style=100#barcode=DL23NV00335B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1496#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1529,69.00,42.00,38,=|
+E02.01/3,=3:2:1,M71L07DF-AUF#@style=100#barcode=DL23NV00333N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1497#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1530,69.00,42.00,38,=|
+E02.01/2,=5:3:1,M71L07DF-KHC#@style=100#barcode=DL23MR01264C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1498#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1531,69.00,42.00,38,=|
+E02.02/2,=3:1:2,M71L07DF-YVI#@content=50#@style=100#barcode=DL23NV00350C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1499#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1532,69.00,42.00,38,=|
+E02.02/2,=3:2:2,M71L07DF-YVI#@style=100#barcode=DL23NV00349V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1500#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1533,69.00,42.00,38,=|
+E02.02/2,=3:3:2,M71L07DF-YVI#@style=100#barcode=DL23NV00347H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1501#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1534,69.00,42.00,38,=|
+E02.01/3,=4:3:1,M71L07DF-YVI#@style=100#barcode=DL23NV00348O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1502#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1535,69.00,42.00,38,=|
+E02.03/2,=3:2:1,M71L07DF-TWM#@style=100#barcode=DL23NV00387B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1503#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1536,69.00,42.00,38,=|
+E02.01/1,=2:2:2+0+0+5,M71L07DF-KLB#@style=100#barcode=DL23NV00278S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1504#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1537,69.00,42.00,38,=|
+E02.01/1,=2:3:2+0+0+5,M71L07DF-KLB#@style=100#barcode=DL23NV00279Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1505#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1538,69.00,42.00,38,=|
+E02.01/3,=3:3:1,M71L07DF-AUF#@style=100#barcode=DL23NV00334U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1506#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1539,69.00,42.00,38,=|
+E02.01/3,=2:2:2,M71L07DF-KHC#@style=100#barcode=DL23MR01402G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1507#date=2023-09-05#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1540,69.00,42.00,38,=|
+E02.01/2,=5:2:2,M71L07DF-NHC#@style=100#barcode=DL23NV00306G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1508#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1541,69.00,42.00,38,=|
+E02.01/2,=5:3:2,M71L07DF-NHC#@style=100#barcode=DL23NV00307N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1509#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1542,69.00,42.00,38,=|
+E02.01/2,=1:2:2,M71L07DF-HLB#@style=100#barcode=DL23NV00274Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1510#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1543,69.00,42.00,38,=|
+E02.01/3,=1:1:2,M71L07DF-KLB#@style=100#barcode=DL23NV00277L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1511#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1544,69.00,42.00,38,=|
+E02.01/3,=2:3:2,M71L07DF-NHC#@style=100#barcode=ST19NV00144I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1512#date=2023-09-06#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.01'4#stock#style=M71L07DF#box_id=1545,69.00,42.00,38,=|
+E02.02/2,=1:1:1,M71L07DF-KUD#@content=50#@style=100#barcode=ST19NV00146W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1513#date=2023-09-06#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.01'4#style=M71L07DF#box_id=1546,69.00,42.00,38,=|
+E02.02/1,=4:1:1,M71L07DF-DAJ#@content=50#@style=100#BG=red#barcode=DL23SE01558W#bg=red#box_id=1514#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1547,69.00,42.00,38,=|
+E02.02/2,=5:1:1,M71L07DF-YEM#@content=50#@style=100#barcode=DL22JL07254I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1515#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'1#style=M71L07DF#box_id=1548,69.00,42.00,38,=|
+E02.02/1,=2:2:1,M71L07DF-KPF#@style=100#BG=red#barcode=DL23SE01548E#bg=red#box_id=1516#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1549,69.00,42.00,38,=|
+E02.02/1,=2:3:1,M71L07DF-KPF#@style=100#BG=red#barcode=DL23SE01549L#bg=red#box_id=1517#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1550,69.00,42.00,38,=|
+E02.02/1,=1:1:1,M71L07DF-NEF#@content=50#@style=100#BG=red#barcode=DL23SE01547X#bg=red#box_id=1518#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1551,69.00,42.00,38,=|
+E02.02/2,=4:1:1,M71L07DF-NEL#@content=50#@style=100#barcode=DL23NV00354E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1519#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'1#style=M71L07DF#box_id=1552,69.00,42.00,38,=|
+E02.01/1,=5:1:1,M71L07DF-VOD#@content=50#@style=100#BG=red#barcode=DL23NV00315R#bg=red#box_id=1520#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1553,69.00,42.00,38,=|
+E02.02/2,=5:2:1,M71L07DF-YEM#@style=100#barcode=DL22JL07255P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1521#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'1#style=M71L07DF#box_id=1554,69.00,42.00,38,=|
+E02.02/1,=1:2:1,M71L07DF-NEF#@style=100#BG=red#barcode=DL23SE01546Q#bg=red#box_id=1522#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1555,69.00,42.00,38,=|
+E02.02/2,=3:1:1,M71L07DF-ONI#@content=50#@style=100#barcode=DL23NV00341R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1523#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'1#style=M71L07DF#box_id=1556,69.00,42.00,38,=|
+E02.02/1,=4:2:1,M71L07DF-DAJ#@style=100#BG=red#barcode=DL23SE01559D#bg=red#box_id=1524#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'1#low#style=M71L07DF#box_id=1557,69.00,42.00,38,=|
+E02.02/1,=3:1:2+0+0+5,M71L07DF-PRG#@content=50#@style=100#barcode=DL23SE01555B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1525#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1558,69.00,42.00,38,=|
+E02.02/1,=3:1:1,M71L07DF-TRG#@content=50#@style=100#BG=red#barcode=DL23MR01296S#bg=red#box_id=1526#date=2023-09-05#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.02'2#low#style=M71L07DF#box_id=1559,69.00,42.00,38,=|
+E02.03/1,=1:1:2+0+0+5,M71L07DF-TIM#@content=50#@style=100#barcode=DL23NV00367R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1527#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1560,69.00,42.00,38,=|
+E02.02/2,=4:1:2,M71L07DF-MIL#@content=50#@style=100#barcode=DL23NV00359N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1528#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1561,69.00,42.00,38,=|
+E02.02/1,=2:1:2+0+0+5,M71L07DF-OLF#@content=50#@style=100#barcode=DL23NV00326Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1529#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1562,69.00,42.00,38,=|
+E02.02/1,=3:2:2+0+0+5,M71L07DF-PRG#@style=100#barcode=DL23SE01556I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1530#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1563,69.00,42.00,38,=|
+E02.03/1,=1:2:2+0+0+5,M71L07DF-TIM#@style=100#barcode=DL23NV00366K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1531#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1564,69.00,42.00,38,=|
+E02.02/1,=3:2:1,M71L07DF-TRG#@style=100#BG=red#barcode=DL23MR01297Z#bg=red#box_id=1532#date=2023-09-05#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'2#low#style=M71L07DF#box_id=1565,69.00,42.00,38,=|
+E02.02/2,=5:1:2,M71L07DF-KIM#@content=50#@style=100#barcode=DL23NV00363P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1533#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1566,69.00,42.00,38,=|
+E02.02/1,=5:1:2+0+0+5,M71L07DF-VAM#@content=50#@style=100#barcode=DL23SE01560K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1534#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1567,69.00,42.00,38,=|
+E02.02/1,=5:2:2+0+0+5,M71L07DF-VAM#@style=100#barcode=DL23SE01561R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1535#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1568,69.00,42.00,38,=|
+E02.02/1,=5:3:2+0+0+5,M71L07DF-VAM#@style=100#barcode=DL22JL07251N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1536#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1569,69.00,42.00,38,=|
+E02.02/2,=2:2:2,M71L07DF-KPG#@style=100#barcode=DL22JL00266Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1537#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'2#style=M71L07DF#box_id=1570,69.00,42.00,38,=|
+E02.01/3,=1:2:2,M71L07DF-KLB#@style=100#barcode=DL23NV00275X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1538#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1571,69.00,42.00,38,=|
+E02.02/3,=3:2:1,M71L07DF-WEY#@content=50#@style=100#barcode=DL23SE01624Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1539#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1572,69.00,42.00,38,=|
+E02.02/3,=3:3:1,M71L07DF-WEY#@style=100#barcode=DL23SE01623J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1540#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1573,69.00,42.00,38,=|
+E02.01/2,=1:3:2,M71L07DF-HLB#@style=100#barcode=DL23NV00273J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1541#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'3#style=M71L07DF#box_id=1574,69.00,42.00,38,=|
+E02.02/3,=3:1:2,M71L07DF-WEY#@style=100#barcode=DL23SE01622C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1542#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1575,69.00,42.00,38,=|
+E02.01/1,=1:2:2+0+0+5,M71L07DF-AQA#@style=100#barcode=DL23NV00269H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1543#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'3#style=M71L07DF#box_id=1576,69.00,42.00,38,=|
+E02.01/3,=1:2:1,M71L07DF-HLB#@style=100#barcode=DL23NV00272C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1544#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1577,69.00,42.00,38,=|
+E02.01/3,=1:3:1,M71L07DF-HLB#@style=100#barcode=DL23NV00271V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1545#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.02'3#stock#style=M71L07DF#box_id=1578,69.00,42.00,38,=|
+E02.03/2,=4:1:2,M71L07DF-NGN#@content=50#@style=100#barcode=DL23SE01589F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1546#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'3#ngn#style=M71L07DF#box_id=1579,69.00,42.00,38,=|
+E02.02/1,=4:1:2+0+0+5,M71L07DF-TAL#@content=50#@style=100#barcode=DL23MR01305D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1547#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1580,69.00,42.00,38,=|
+E02.02/1,=4:2:2+0+0+5,M71L07DF-TAL#@style=100#barcode=DL23MR01419V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1548#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1581,69.00,42.00,38,=|
+E02.02/1,=4:3:2+0+0+5,M71L07DF-TAL#@style=100#barcode=DL23MR01418O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1549#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1582,69.00,42.00,38,=|
+E02.04/1,=4:1:1,M71L07DF-THW/YAN#@content=50#@style=100#BG=red#barcode=DL23NV00513Z#bg=red#box_id=1550#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.02'4#low#style=M71L07DF#box_id=1583,69.00,42.00,38,=|
+E02.04/2,=5:1:1,M71L07DF-THW#@content=50#@style=100#barcode=DL23NV00510E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1551#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1584,69.00,42.00,38,=|
+E02.04/2,=5:2:1,M71L07DF-THW#@style=100#barcode=DL23NV00509X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1552#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1585,69.00,42.00,38,=|
+E02.02/3,=2:2:2,M71L07DF-LTW#@content=50#@style=100#barcode=DL23NV00515N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1553#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'4#stock#style=M71L07DF#box_id=1586,69.00,42.00,38,=|
+E02.02/3,=2:3:2,M71L07DF-LTW#@style=100#barcode=DL23NV00517B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1554#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#stock#style=M71L07DF#box_id=1587,69.00,42.00,38,=|
+E02.03/2,=3:3:1,M71L07DF-TWM#@style=100#barcode=DL23NV00388I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1555#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1588,69.00,42.00,38,=|
+E02.04/1,=4:2:1,M71L07DF-THW/YAN#@style=100#BG=red#barcode=DL23NV00512S#bg=red#box_id=1556#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'4#low#style=M71L07DF#box_id=1589,69.00,42.00,38,=|
+E02.04/2,=4:1:2,M71L07DF-TWT#@content=50#@style=100#barcode=DL23NV00507J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1557#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1590,69.00,42.00,38,=|
+E02.04/2,=5:3:1,M71L07DF-THW#@style=100#barcode=DL23NV00511L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1558#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#style=M71L07DF#box_id=1591,69.00,42.00,38,=|
+E02.04/1,=4:3:1,M71L07DF-THW/YAN#@style=100#BG=red#barcode=DL23NV00514G#bg=red#box_id=1559#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.02'4#low#style=M71L07DF#box_id=1592,69.00,42.00,38,=|
+E02.02/3,=3:1:1,M71L07DF-LTW#@style=100#barcode=DL23NV00516U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1560#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.02'4#stock#style=M71L07DF#box_id=1593,69.00,42.00,38,=|
+E02.02/1,=5:1:1,M71L07DF-NAL#@content=50#@style=100#BG=red#barcode=DL23NV00352Q#bg=red#box_id=1561#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1594,69.00,42.00,38,=|
+E02.03/1,=3:1:1,M71L07DF-DGP#@content=50#@style=100#BG=red#barcode=DL23NV00472Y#bg=red#box_id=1562#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1595,69.00,42.00,38,=|
+E02.03/1,=3:2:1,M71L07DF-DGP#@style=100#BG=red#barcode=ST19NV00148K#bg=red#box_id=1563#date=2023-09-05#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1596,69.00,42.00,38,=|
+E02.03/2,=5:1:1,M71L07DF-DRO#@content=50#@style=100#barcode=DL23SE01590M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1564#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'1#style=M71L07DF#box_id=1597,69.00,42.00,38,=|
+E02.03/2,=5:2:1,M71L07DF-DRO#@style=100#barcode=DL23SE01591T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1565#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'1#style=M71L07DF#box_id=1598,69.00,42.00,38,=|
+E02.03/1,=4:1:1,M71L07DF-LUP#@content=50#@style=100#BG=red#barcode=DL23NV00481J#bg=red#box_id=1566#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1599,69.00,42.00,38,=|
+E02.03/1,=5:1:1,M71L07DF-GOR#@content=50#@style=100#BG=red#barcode=DL23FE05879F#bg=red#box_id=1567#date=2023-02-20#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1600,69.00,42.00,38,=|
+E02.02/1,=5:2:1,M71L07DF-NAL#@style=100#BG=red#barcode=DL23NV00353X#bg=red#box_id=1568#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1601,69.00,42.00,38,=|
+E02.03/1,=3:3:1,M71L07DF-DGP#@style=100#BG=red#barcode=DL23NV00473F#bg=red#box_id=1569#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1602,69.00,42.00,38,=|
+E02.03/2,=2:1:1,M71L07DF-ZQM#@content=50#@style=100#barcode=DL23NV00372A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1570#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'1#style=M71L07DF#box_id=1603,69.00,42.00,38,=|
+E02.03/1,=4:2:1,M71L07DF-LUP#@style=100#BG=red#barcode=DL23NV00480C#bg=red#box_id=1571#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.03'1#low#style=M71L07DF#box_id=1604,69.00,42.00,38,=|
+E02.03/1,=2:1:2+0+0+5,M71L07DF-TPM#@content=50#@style=100#barcode=DL22JL00277X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1572#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'2#style=M71L07DF#box_id=1605,69.00,42.00,38,=|
+E02.03/2,=1:1:2,M71L07DF-YNM#@content=50#@style=100#barcode=DL22JL00275J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1573#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'2#style=M71L07DF#box_id=1606,69.00,42.00,38,=|
+E02.03/2,=2:1:2,M71L07DF-RSM#@content=50#@style=100#barcode=DL23NV00376C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1574#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'2#msr#style=M71L07DF#box_id=1607,69.00,42.00,38,=|
+E02.03/2,=4:2:2,M71L07DF-NGN#@style=100#barcode=DL23SE01587R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1575#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'2#ngn#style=M71L07DF#box_id=1608,69.00,42.00,38,=|
+E02.03/2,=4:3:2,M71L07DF-NGN#@style=100#barcode=DL23FE05910O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1576#date=2023-02-20#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'2#ngn#style=M71L07DF#box_id=1609,69.00,42.00,38,=|
+E02.03/1,=5:1:2+0+0+5,M71L07DF-DUN#@content=50#@style=100#barcode=DL22JL07270Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1577#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'2#style=M71L07DF#box_id=1610,69.00,42.00,38,=|
+E02.03/2,=1:2:2,M71L07DF-YNM#@style=100#barcode=DL22JL00274C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1578#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'2#style=M71L07DF#box_id=1611,69.00,42.00,38,=|
+E02.01/3,=5:3:2,M71L07DF-NGN#@style=100#barcode=DL23SE01588Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1579#date=2023-10-03#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'2#ngn#stock#style=M71L07DF#box_id=1612,69.00,42.00,38,=|
+E02.01/2,=2:2:2,M71L07DF-LLB#@style=100#barcode=DL23NV00282U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1580#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1613,69.00,42.00,38,=|
+E02.01/1,=3:3:1,M71L07DF-FOC#@style=100#BG=red#barcode=DL23NV00310I#bg=red#box_id=1581#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.03'3#low#style=M71L07DF#box_id=1614,69.00,42.00,38,=|
+E02.01/2,=4:2:1,M71L07DF-OAC#@style=100#barcode=DL23NV00295H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1582#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1615,69.00,42.00,38,=|
+E02.01/2,=4:3:1,M71L07DF-OAC#@style=100#barcode=DL23NV00294A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1583#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1616,69.00,42.00,38,=|
+E02.01/1,=4:2:2+0+0+5,M71L07DF-YUB#@style=100#barcode=DL23NV00289R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1584#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1617,69.00,42.00,38,=|
+E02.01/3,=2:3:1,M71L07DF-OAC#@style=100#barcode=DL23NV00293T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1585#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'3#stock#style=M71L07DF#box_id=1618,69.00,42.00,38,=|
+E02.03/1,=5:2:2+0+0+5,M71L07DF-DUN#@style=100#barcode=DL23FE05856A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1586#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1619,69.00,42.00,38,=|
+E02.03/1,=5:3:2+0+0+5,M71L07DF-DUN#@style=100#barcode=DL23FE05855T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1587#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1620,69.00,42.00,38,=|
+E02.01/3,=3:1:1,M71L07DF-NHC#@style=100#barcode=DL23NV00305Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1588#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'3#stock#style=M71L07DF#box_id=1621,69.00,42.00,38,=|
+E02.01/2,=3:3:1,M71L07DF-TLB#@style=100#barcode=DL23NV00285P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1589#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1622,69.00,42.00,38,=|
+E02.01/2,=2:3:2,M71L07DF-LLB#@style=100#barcode=DL23NV00281N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1590#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1623,69.00,42.00,38,=|
+E02.01/1,=4:3:2+0+0+5,M71L07DF-YUB#@style=100#barcode=DL23NV00288K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1591#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'3#style=M71L07DF#box_id=1624,69.00,42.00,38,=|
+E02.02/3,=1:1:1,M71L07DF-DUN#@style=100#barcode=DL23FE05857H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1592#date=2023-09-05#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'3#stock#style=M71L07DF#box_id=1625,69.00,42.00,38,=|
+E02.03/2,=3:1:2,M71L07DF-YAN#@content=50#@style=100#barcode=DL23NV00432E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1593#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1626,69.00,42.00,38,=|
+E02.03/2,=3:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00434S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1594#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1627,69.00,42.00,38,=|
+E02.03/2,=3:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00437N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1595#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1628,69.00,42.00,38,=|
+E02.03/3,=1:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00431X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1596#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1629,69.00,42.00,38,=|
+E02.03/2,=4:1:1,M71L07DF-YAN/THW#@content=50#@style=100#barcode=DL23NV00454C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1597#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1630,69.00,42.00,38,=|
+E02.03/3,=1:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00419R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1598#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1631,69.00,42.00,38,=|
+E02.03/2,=4:2:1,M71L07DF-YAN/THW#@style=100#barcode=DL23NV00453V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1599#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1632,69.00,42.00,38,=|
+E02.03/2,=4:3:1,M71L07DF-YAN/THW#@style=100#barcode=DL23NV00452O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1600#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1633,69.00,42.00,38,=|
+E02.03/3,=1:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00429J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1601#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1634,69.00,42.00,38,=|
+E02.03/3,=1:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00414I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1602#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1635,69.00,42.00,38,=|
+E02.03/3,=1:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00415P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1603#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1636,69.00,42.00,38,=|
+E02.02/2,=5:3:1,M71L07DF-YEM#@style=100#barcode=DL23MR01310M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1604#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.03'4#style=M71L07DF#box_id=1637,69.00,42.00,38,=|
+E02.03/3,=1:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00440I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1605#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1638,69.00,42.00,38,=|
+E02.03/3,=2:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00421F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1606#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1639,69.00,42.00,38,=|
+E02.03/3,=2:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00423T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1607#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1640,69.00,42.00,38,=|
+E02.03/3,=2:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00439B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1608#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1641,69.00,42.00,38,=|
+E02.03/3,=2:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00445R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1609#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1642,69.00,42.00,38,=|
+E02.03/3,=2:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00426O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1610#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1643,69.00,42.00,38,=|
+E02.03/3,=2:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00443D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1611#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1644,69.00,42.00,38,=|
+E02.03/3,=3:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00420Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1612#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1645,69.00,42.00,38,=|
+E02.03/3,=3:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00438U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1613#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1646,69.00,42.00,38,=|
+E02.03/3,=3:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00433L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1614#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1647,69.00,42.00,38,=|
+E02.03/3,=3:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00435Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1615#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1648,69.00,42.00,38,=|
+E02.03/3,=3:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00430Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1616#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1649,69.00,42.00,38,=|
+E02.03/3,=3:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00418K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1617#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1650,69.00,42.00,38,=|
+E02.03/3,=4:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00436G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1618#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1651,69.00,42.00,38,=|
+E02.03/3,=4:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00413B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1619#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1652,69.00,42.00,38,=|
+E02.03/3,=4:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00412U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1620#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1653,69.00,42.00,38,=|
+E02.03/3,=4:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00428C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1621#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1654,69.00,42.00,38,=|
+E02.03/3,=4:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00424A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1622#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1655,69.00,42.00,38,=|
+E02.03/3,=4:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00425H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1623#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1656,69.00,42.00,38,=|
+E02.03/3,=5:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00417D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1624#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1657,69.00,42.00,38,=|
+E02.03/3,=5:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00422M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1625#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1658,69.00,42.00,38,=|
+E02.03/3,=5:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00447F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1626#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1659,69.00,42.00,38,=|
+E02.01/3,=4:3:2,M71L07DF-YEM#@style=100#barcode=DL23MR01311T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1627#date=2023-09-05#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1660,69.00,42.00,38,=|
+E02.03/3,=5:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00441P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1628#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1661,69.00,42.00,38,=|
+E02.03/3,=5:2:2,M71L07DF-YAN#@style=100#barcode=DL23NV00416W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1629#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1662,69.00,42.00,38,=|
+E02.03/3,=5:3:2,M71L07DF-YAN#@style=100#barcode=DL23NV00446Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1630#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1663,69.00,42.00,38,=|
+E02.04/3,=1:1:1,M71L07DF-YAN#@style=100#barcode=DL23NV00427V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1631#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1664,69.00,42.00,38,=|
+E02.04/3,=1:2:1,M71L07DF-YAN#@style=100#barcode=DL23NV00444K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1632#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1665,69.00,42.00,38,=|
+E02.04/3,=1:3:1,M71L07DF-YAN#@style=100#barcode=DL23NV00448M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1633#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1666,69.00,42.00,38,=|
+E02.04/3,=1:1:2,M71L07DF-YAN#@style=100#barcode=DL23NV00442W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1634#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.03'4#stock#style=M71L07DF#box_id=1667,69.00,42.00,38,=|
+E02.04/1,=3:1:1,M71L07DF-QUT#@content=50#@style=100#BG=red#barcode=DL23SE01609P#bg=red#box_id=1635#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1668,69.00,42.00,38,=|
+E02.04/1,=1:1:1,M71L07DF-RLS#@content=50#@style=100#BG=red#barcode=DL23NV00501T#bg=red#box_id=1636#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1669,69.00,42.00,38,=|
+E02.04/1,=5:1:1,M71L07DF-AIW#@content=50#@style=100#BG=red#barcode=DL23SE01620O#bg=red#box_id=1637#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1670,69.00,42.00,38,=|
+E02.04/1,=3:2:1,M71L07DF-QUT#@style=100#BG=red#barcode=DL23SE01610W#bg=red#box_id=1638#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1671,69.00,42.00,38,=|
+E02.04/1,=1:2:1,M71L07DF-RLS#@style=100#BG=red#barcode=DL23NV00502A#bg=red#box_id=1639#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1672,69.00,42.00,38,=|
+E02.04/1,=5:2:1,M71L07DF-AIW#@style=100#BG=red#barcode=DL23SE01619H#bg=red#box_id=1640#date=2023-10-03#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1673,69.00,42.00,38,=|
+E02.04/2,=2:1:1,M71L07DF-YOP#@content=50#@style=100#barcode=DL23NV00475T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1641#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'1#style=M71L07DF#box_id=1674,69.00,42.00,38,=|
+E02.04/1,=2:1:1,M71L07DF-TLS#@content=50#@style=100#BG=red#barcode=DL22JL00358S#bg=red#box_id=1642#date=2023-09-05#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1675,69.00,42.00,38,=|
+E02.04/1,=1:3:1,M71L07DF-RLS#@style=100#BG=red#barcode=DL23NV00500M#bg=red#box_id=1643#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'1#low#style=M71L07DF#box_id=1676,69.00,42.00,38,=|
+E02.04/2,=3:1:1,M71L07DF-DGR#@content=50#@style=100#barcode=DL23NV00487Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1644#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'1#style=M71L07DF#box_id=1677,69.00,42.00,38,=|
+E02.02/3,=2:1:2,M71L07DF-THW/YAN#@style=100#barcode=DL23SE01618A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1645#date=2023-10-03#done#fa-sales-rank=3299#live-status=BoxUsed#location=E02.04'1#stock#style=M71L07DF#box_id=1678,69.00,42.00,38,=|
+E02.04/2,=1:1:1,M71L07DF-KEP#@content=50#@style=100#barcode=DL23FE05866S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1646#date=2023-02-20#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'1#style=M71L07DF#box_id=1679,69.00,42.00,38,=|
+E02.02/3,=3:2:2,M71L07DF-WEY#@style=100#barcode=ST19NV00149R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1647#date=2023-09-06#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'2#stock#style=M71L07DF#box_id=1680,69.00,42.00,38,=|
+E02.04/2,=1:1:2,M71L07DF-LEP#@content=50#@style=100#barcode=DL23NV00470K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1648#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'2#style=M71L07DF#box_id=1681,69.00,42.00,38,=|
+E02.04/1,=5:1:2+0+0+5,M71L07DF-TIV#@content=50#@style=100#barcode=DL23FE05898I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1649#date=2023-02-20#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'2#style=M71L07DF#box_id=1682,69.00,42.00,38,=|
+E02.04/1,=4:1:2+0+0+5,M71L07DF-RIS#@content=50#@style=100#barcode=DL22JL00353J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1650#date=2023-09-26#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'2#style=M71L07DF#box_id=1683,69.00,42.00,38,=|
+E02.04/2,=4:2:2,M71L07DF-TWT#@style=100#barcode=DL23NV00505V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1651#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'2#style=M71L07DF#box_id=1684,69.00,42.00,38,=|
+E02.04/2,=2:1:2,M71L07DF-ZUQ#@content=50#@style=100#barcode=DL23SE01598Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1652#date=2023-10-03#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'2#style=M71L07DF#box_id=1685,69.00,42.00,38,=|
+E02.02/2,=4:2:1,M71L07DF-NEL#@style=100#barcode=DL23NV00356S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1653#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1686,69.00,42.00,38,=|
+E02.01/3,=3:1:2,M71L07DF-AUF#@style=100#barcode=DL23NV00331Z#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1654#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1687,69.00,42.00,38,=|
+E02.01/3,=4:1:2,M71L07DF-YVI#@style=100#barcode=DL23NV00345T#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1655#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1688,69.00,42.00,38,=|
+E02.03/1,=1:1:1,M71L07DF-DGM#@content=50#@style=100#BG=red#barcode=DL23NV00362I#bg=red#box_id=1656#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#first#live-status=BoxUsed#location=E02.04'3#low#style=M71L07DF#box_id=1689,69.00,42.00,38,=|
+E02.03/2,=5:1:2,M71L07DF-GRO#@content=50#@style=100#barcode=DL23FE05948U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1657#date=2023-02-20#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1690,69.00,42.00,38,=|
+E02.03/1,=1:3:2+0+0+5,M71L07DF-TIM#@style=100#barcode=DL23NV00368Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1658#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1691,69.00,42.00,38,=|
+E02.02/1,=3:3:2+0+0+5,M71L07DF-PRG#@style=100#barcode=DL23NV00338W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1659#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1692,69.00,42.00,38,=|
+E02.01/3,=4:1:1,M71L07DF-PRG#@style=100#barcode=DL23NV00339D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1660#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1693,69.00,42.00,38,=|
+E02.02/1,=2:2:2+0+0+5,M71L07DF-OLF#@style=100#barcode=DL23NV00327X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1661#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1694,69.00,42.00,38,=|
+E02.04/1,=5:2:2+0+0+5,M71L07DF-TIV#@style=100#barcode=DL23FE05899P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1662#date=2023-09-05#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1695,69.00,42.00,38,=|
+E02.02/2,=5:2:2,M71L07DF-KIM#@style=100#barcode=DL23NV00365D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1663#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1696,69.00,42.00,38,=|
+E02.01/3,=3:2:2,M71L07DF-AUF#@style=100#barcode=DL23NV00329L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1664#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1697,69.00,42.00,38,=|
+E02.02/2,=3:2:1,M71L07DF-ONI#@style=100#barcode=DL23NV00342Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1665#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1698,69.00,42.00,38,=|
+E02.01/3,=4:2:1,M71L07DF-PRG#@style=100#barcode=DL23NV00340K#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1666#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1699,69.00,42.00,38,=|
+E02.03/2,=2:2:1,M71L07DF-ZQM#@style=100#barcode=DL23NV00373H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1667#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1700,69.00,42.00,38,=|
+E02.02/1,=1:2:2+0+0+5,M71L07DF-LOC#@style=100#barcode=DL23NV00313D#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1668#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1701,69.00,42.00,38,=|
+E02.01/1,=5:2:1,M71L07DF-VOD#@style=100#BG=red#barcode=DL23NV00316Y#bg=red#box_id=1669#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'3#low#style=M71L07DF#box_id=1702,69.00,42.00,38,=|
+E02.01/3,=3:3:2,M71L07DF-AUF#@style=100#barcode=DL23NV00330S#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1670#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1703,69.00,42.00,38,=|
+E02.03/1,=1:2:1,M71L07DF-DGM#@style=100#BG=red#barcode=DL23NV00361B#bg=red#box_id=1671#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'3#low#style=M71L07DF#box_id=1704,69.00,42.00,38,=|
+E02.01/3,=4:2:2,M71L07DF-YVI#@style=100#barcode=DL23NV00344M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1672#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#stock#style=M71L07DF#box_id=1705,69.00,42.00,38,=|
+E02.03/2,=2:3:1,M71L07DF-ZQM#@style=100#barcode=DL23NV00374O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1673#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1706,69.00,42.00,38,=|
+E02.02/2,=3:3:1,M71L07DF-ONI#@style=100#barcode=DL23NV00343F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1674#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1707,69.00,42.00,38,=|
+E02.02/2,=1:1:2,M71L07DF-DME#@content=50#@style=100#barcode=DL23NV00321H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1675#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1708,69.00,42.00,38,=|
+E02.02/2,=5:3:2,M71L07DF-KIM#@style=100#barcode=DL23NV00364W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1676#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1709,69.00,42.00,38,=|
+E02.04/1,=2:2:1,M71L07DF-TLS#@style=100#BG=red#barcode=DL23FE05892S#bg=red#box_id=1677#date=2023-09-05#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'3#low#style=M71L07DF#box_id=1710,69.00,42.00,38,=|
+E02.03/2,=2:2:2,M71L07DF-RSM#@style=100#barcode=DL23NV00377J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1678#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#msr#style=M71L07DF#box_id=1711,69.00,42.00,38,=|
+E02.02/1,=2:3:2+0+0+5,M71L07DF-OLF#@style=100#barcode=DL23NV00328E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1679#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1712,69.00,42.00,38,=|
+E02.02/2,=4:3:1,M71L07DF-NEL#@style=100#barcode=DL23NV00355L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1680#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1713,69.00,42.00,38,=|
+E02.03/2,=1:3:1,M71L07DF-DNM#@style=100#barcode=DL23NV00369F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1681#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#style=M71L07DF#box_id=1714,69.00,42.00,38,=|
+E02.03/2,=2:3:2,M71L07DF-RSM#@style=100#barcode=DL23NV00379X#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1682#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'3#msr#style=M71L07DF#box_id=1715,69.00,42.00,38,=|
+E02.01/3,=5:3:1,M71L07DF-RSM#@style=100#barcode=DL23NV00378Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1683#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'3#msr#stock#style=M71L07DF#box_id=1716,69.00,42.00,38,=|
+E02.01/3,=5:1:2,M71L07DF-YAN/THW#@style=100#barcode=DL23NV00456Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1684#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1717,69.00,42.00,38,=|
+E02.03/1,=2:1:1,M71L07DF-GRO*#@content=50#@style=100#BG=red#barcode=DL23NV00460S#bg=red#box_id=1685#date=2024-01-04#done#7df-slot#first#live-status=BoxUsed#location=E02.04'4#low#style=M71L07DF#box_id=1718,69.00,42.00,38,=|
+E02.03/1,=2:2:1,M71L07DF-GRO*#@style=100#BG=red#barcode=DL23NV00461Z#bg=red#box_id=1686#date=2024-01-04#done#7df-slot#live-status=BoxUsed#location=E02.04'4#low#style=M71L07DF#box_id=1719,69.00,42.00,38,=|
+E02.03/1,=2:3:1,M71L07DF-GRO*#@style=100#BG=red#barcode=DL23NV00459L#bg=red#box_id=1687#date=2024-01-04#done#7df-slot#live-status=BoxUsed#location=E02.04'4#low#style=M71L07DF#box_id=1720,69.00,42.00,38,=|
+E02.02/3,=1:2:1,M71L07DF-GRO*#@style=100#barcode=DL23NV00458E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1688#date=2024-01-04#done#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1721,69.00,42.00,38,=|
+E02.04/1,=3:1:2+0+0+5,M71L07DF-YAR#@content=50#@style=100#barcode=DL23NV00485L#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1689#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1722,69.00,42.00,38,=|
+E02.04/1,=1:1:2+0+0+5,M71L07DF-UBP#@content=50#@style=100#barcode=DL23NV00466I#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1690#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1723,69.00,42.00,38,=|
+E02.04/1,=1:2:2+0+0+5,M71L07DF-UBP#@style=100#barcode=DL23NV00468W#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1691#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1724,69.00,42.00,38,=|
+E02.04/2,=1:2:2,M71L07DF-LEP#@style=100#barcode=DL23NV00471R#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1692#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1725,69.00,42.00,38,=|
+E02.04/1,=1:3:2+0+0+5,M71L07DF-UBP#@style=100#barcode=DL23NV00464U#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1693#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1726,69.00,42.00,38,=|
+E02.04/2,=2:2:1,M71L07DF-YOP#@style=100#barcode=DL23NV00478O#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1694#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1727,69.00,42.00,38,=|
+E02.04/2,=2:3:1,M71L07DF-YOP#@style=100#barcode=DL23NV00476A#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1695#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1728,69.00,42.00,38,=|
+E02.02/3,=2:1:1,M71L07DF-DGP#@style=100#barcode=DL23NV00474M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1696#date=2024-01-04#done#fa-sales-rank=3299#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1729,69.00,42.00,38,=|
+E02.04/2,=3:1:2,M71L07DF-RAS#@content=50#@style=100#barcode=DL23NV00499F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1697#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#first#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1730,69.00,42.00,38,=|
+E02.01/3,=5:1:1,M71L07DF-DNM#@style=100#barcode=DL23MR01422Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1698#date=2023-09-05#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1731,69.00,42.00,38,=|
+E02.01/3,=5:2:2,M71L07DF-YAN/THW#@style=100#barcode=DL23NV00455J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1699#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1732,69.00,42.00,38,=|
+E02.02/3,=1:3:1,M71L07DF-GRO*#@style=100#barcode=DL23NV00462G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1700#date=2024-01-04#done#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1733,69.00,42.00,38,=|
+E02.02/3,=1:1:2,M71L07DF-UBP#@style=100#barcode=DL23NV00463N#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1701#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1734,69.00,42.00,38,=|
+E02.04/1,=3:2:2+0+0+5,M71L07DF-YAR#@style=100#barcode=DL23NV00484E#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1702#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1735,69.00,42.00,38,=|
+E02.02/3,=1:2:2,M71L07DF-UBP#@style=100#barcode=DL23NV00467P#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1703#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1736,69.00,42.00,38,=|
+E02.02/3,=1:3:2,M71L07DF-UBP#@style=100#barcode=DL23NV00465B#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1704#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1737,69.00,42.00,38,=|
+E02.04/2,=3:2:1,M71L07DF-DGR#@style=100#barcode=DL23NV00488G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1705#date=2024-01-04#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E02.04'4#style=M71L07DF#box_id=1738,69.00,42.00,38,=|
+E02.02/3,=2:2:1,M71L07DF-YOP#@style=100#barcode=DL23NV00477H#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1706#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1739,69.00,42.00,38,=|
+E02.01/3,=5:2:1,M71L07DF-DNM#@style=100#barcode=DL23MR01324G#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1707#date=2023-09-05#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1740,69.00,42.00,38,=|
+E02.02/3,=2:3:1,M71L07DF-YOP#@style=100#barcode=DL23NV00479V#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1708#date=2024-01-04#done#fa-sales-rank=1099#live-status=BoxUsed#location=E02.04'4#stock#style=M71L07DF#box_id=1741,69.00,42.00,38,=|
+E02.03/1,=4:3:1,M71L07DF-LUP#@style=100#BG=red#barcode=DL23NV00482Q#bg=red#box_id=1709#date=2024-01-04#done#fa-sales-rank=3299#7df-slot#live-status=BoxUsed#location=E02.04'4#low#style=M71L07DF#box_id=1742,69.00,42.00,38,=|
+E02.01/2,=4:2:2,M71L07DF-YAC#@style=100#barcode=DL23AP02559J#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1801#date=2023-09-26#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E03.04'4#style=M71L07DF#box_id=1834,69.00,42.00,38,=|
+E02.01/3,=1:3:2,M71L07DF-KLB#@style=100#barcode=DL23AP02942M#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1802#date=2023-09-26#done#fa-sales-rank=1099#live-status=BoxUsed#location=E03.04'4#stock#style=M71L07DF#box_id=1835,69.00,42.00,38,=|
+E02.01/2,=4:3:2,M71L07DF-YAC#@style=100#barcode=DL23AP02560Q#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1803#date=2023-09-26#done#fa-sales-rank=1099#7df-slot#live-status=BoxUsed#location=E03.04'4#style=M71L07DF#box_id=1836,69.00,42.00,38,=|
+E02.01/3,=2:1:2,M71L07DF-YAC#@style=100#barcode=DL23AP02558C#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1804#date=2023-09-26#done#fa-sales-rank=1099#live-status=BoxUsed#location=E03.04'4#stock#style=M71L07DF#box_id=1837,69.00,42.00,38,=|
+E02.01/3,=2:1:1,M71L07DF-KLB#@style=100#barcode=DL23AP02941F#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1805#date=2023-09-26#done#fa-sales-rank=1099#live-status=BoxUsed#location=E03.04'4#stock#style=M71L07DF#box_id=1838,69.00,42.00,38,=|
+E02.01/3,=2:2:1,M71L07DF-KLB#@style=100#barcode=DL23AP02940Y#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=1806#date=2023-09-26#done#fa-sales-rank=1099#live-status=BoxUsed#location=E03.04'4#stock#style=M71L07DF#box_id=1839,69.00,42.00,38,=|
+E02.01/1,=1:3:2+0+0+5,M71L07DF-AQA#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6065#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4556,69.00,42.00,38,=|
+E02.01/1,=2:3:1,M71L07DF-KLB/YVI#@content=4000#@style=100#BG=red#bg=red#box_id=6290#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4557,69.00,42.00,38,=|
+E02.01/2,=2:3:1,M71L07DF-KLB/THW#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6335#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4558,69.00,42.00,38,=|
+E02.01/1,=3:3:2+0+0+5,M71L07DF-MLB#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6425#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4559,69.00,42.00,38,=|
+E02.01/2,=3:3:2,M71L07DF-ZRB#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6515#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4560,69.00,42.00,38,=|
+E02.01/1,=5:1:2+0+0+5,M71L07DF-SEC#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6695#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4561,69.00,42.00,38,=|
+E02.01/1,=5:2:2+0+0+5,M71L07DF-SEC#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6696#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4562,69.00,42.00,38,=|
+E02.01/1,=5:3:2+0+0+5,M71L07DF-SEC#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6697#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4563,69.00,42.00,38,=|
+E02.02/1,=1:3:2+0+0+5,M71L07DF-LOC#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=6875#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4564,69.00,42.00,38,=|
+E02.01/1,=4:3:1,M71L07DF-NAD#@content=4000#@style=100#BG=red#bg=red#box_id=6920#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4565,69.00,42.00,38,=|
+E02.01/1,=5:3:1,M71L07DF-VOD#@content=4000#@style=100#BG=red#bg=red#box_id=6965#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4566,69.00,42.00,38,=|
+E02.02/2,=1:2:1,M71L07DF-KUD#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7010#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4567,69.00,42.00,38,=|
+E02.02/2,=1:3:1,M71L07DF-KUD#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7011#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4568,69.00,42.00,38,=|
+E02.02/2,=1:2:2,M71L07DF-DME#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7055#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4569,69.00,42.00,38,=|
+E02.02/2,=1:3:2,M71L07DF-DME#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7056#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4570,69.00,42.00,38,=|
+E02.02/1,=1:3:1,M71L07DF-NEF#@content=4000#@style=100#BG=red#bg=red#box_id=7100#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4571,69.00,42.00,38,=|
+E02.02/2,=2:3:2,M71L07DF-KPG#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7280#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4572,69.00,42.00,38,=|
+E02.02/1,=3:3:1,M71L07DF-TRG#@content=4000#@style=100#BG=red#bg=red#box_id=7370#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4573,69.00,42.00,38,=|
+E02.02/1,=4:3:1,M71L07DF-DAJ#@content=4000#@style=100#BG=red#bg=red#box_id=7505#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4574,69.00,42.00,38,=|
+E02.02/1,=5:3:1,M71L07DF-NAL#@content=4000#@style=100#BG=red#bg=red#box_id=7550#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4575,69.00,42.00,38,=|
+E02.02/2,=4:2:2,M71L07DF-MIL#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7685#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4576,69.00,42.00,38,=|
+E02.02/2,=4:3:2,M71L07DF-MIL#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=7686#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4577,69.00,42.00,38,=|
+E02.03/1,=1:3:1,M71L07DF-DGM#@content=4000#@style=100#BG=red#bg=red#box_id=7820#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4578,69.00,42.00,38,=|
+E02.03/2,=1:3:2,M71L07DF-YNM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8000#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4579,69.00,42.00,38,=|
+E02.03/1,=2:2:2+0+0+5,M71L07DF-TPM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8045#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4580,69.00,42.00,38,=|
+E02.03/1,=2:3:2+0+0+5,M71L07DF-TPM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8046#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4581,69.00,42.00,38,=|
+E02.03/1,=3:1:2+0+0+5,M71L07DF-YUM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8180#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4582,69.00,42.00,38,=|
+E02.03/1,=3:2:2+0+0+5,M71L07DF-YUM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8181#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4583,69.00,42.00,38,=|
+E02.03/1,=3:3:2+0+0+5,M71L07DF-YUM#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8182#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4584,69.00,42.00,38,=|
+E02.03/1,=4:1:2+0+0+5,M71L07DF-YAN/YVI#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8315#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=asleep#7df-slot#style=M71L07DF#box_id=4585,69.00,42.00,38,=|
+E02.03/1,=4:2:2+0+0+5,M71L07DF-YAN/YVI#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8316#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=asleep#7df-slot#style=M71L07DF#box_id=4586,69.00,42.00,38,=|
+E02.03/1,=4:3:2+0+0+5,M71L07DF-YAN/YVI#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8317#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=asleep#7df-slot#style=M71L07DF#box_id=4587,69.00,42.00,38,=|
+E02.03/2,=5:3:1,M71L07DF-DRO#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8495#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4588,69.00,42.00,38,=|
+E02.03/2,=5:2:2,M71L07DF-GRO#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8540#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4589,69.00,42.00,38,=|
+E02.03/2,=5:3:2,M71L07DF-GRO#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8541#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4590,69.00,42.00,38,=|
+E02.04/2,=1:2:1,M71L07DF-KEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8675#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4591,69.00,42.00,38,=|
+E02.04/2,=1:3:1,M71L07DF-KEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8676#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4592,69.00,42.00,38,=|
+E02.04/2,=1:3:2,M71L07DF-LEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8720#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4593,69.00,42.00,38,=|
+E02.04/1,=2:1:2+0+0+5,M71L07DF-TEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8765#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4594,69.00,42.00,38,=|
+E02.04/1,=2:2:2+0+0+5,M71L07DF-TEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8766#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4595,69.00,42.00,38,=|
+E02.04/1,=2:3:2+0+0+5,M71L07DF-TEP#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8767#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4596,69.00,42.00,38,=|
+E02.04/2,=2:2:2,M71L07DF-ZUQ#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8945#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4597,69.00,42.00,38,=|
+E02.04/2,=2:3:2,M71L07DF-ZUQ#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8946#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4598,69.00,42.00,38,=|
+E02.04/1,=3:3:2+0+0+5,M71L07DF-YAR#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=8990#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4599,69.00,42.00,38,=|
+E02.04/2,=3:3:1,M71L07DF-DGR#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9035#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4600,69.00,42.00,38,=|
+E02.03/1,=5:2:1,M71L07DF-GOR#@content=4000#@style=100#BG=red#bg=red#box_id=9080#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4601,69.00,42.00,38,=|
+E02.03/1,=5:3:1,M71L07DF-GOR#@content=4000#@style=100#BG=red#bg=red#box_id=9081#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4602,69.00,42.00,38,=|
+E02.04/2,=3:2:2,M71L07DF-RAS#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9125#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4603,69.00,42.00,38,=|
+E02.04/2,=3:3:2,M71L07DF-RAS#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9126#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4604,69.00,42.00,38,=|
+E02.04/1,=4:2:2+0+0+5,M71L07DF-RIS#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9170#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4605,69.00,42.00,38,=|
+E02.04/1,=4:3:2+0+0+5,M71L07DF-RIS#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9171#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4606,69.00,42.00,38,=|
+E02.04/1,=2:3:1,M71L07DF-TLS#@content=4000#@style=100#BG=red#bg=red#box_id=9260#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4607,69.00,42.00,38,=|
+E02.04/2,=4:1:1,M71L07DF-PAT#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9305#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4608,69.00,42.00,38,=|
+E02.04/2,=4:2:1,M71L07DF-PAT#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9306#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4609,69.00,42.00,38,=|
+E02.04/2,=4:3:1,M71L07DF-PAT#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9307#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4610,69.00,42.00,38,=|
+E02.04/1,=3:3:1,M71L07DF-QUT#@content=4000#@style=100#BG=red#bg=red#box_id=9350#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4611,69.00,42.00,38,=|
+E02.04/2,=4:3:2,M71L07DF-TWT#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9395#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4612,69.00,42.00,38,=|
+E02.04/1,=5:3:2+0+0+5,M71L07DF-TIV#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9440#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-sales-rank=1099#fa-status=running#7df-slot#style=M71L07DF#box_id=4613,69.00,42.00,38,=|
+E02.04/2,=5:1:2,M71L07DF-THW*#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9530#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-status=dead#7df-slot#style=M71L07DF#box_id=4614,69.00,42.00,38,=|
+E02.04/2,=5:2:2,M71L07DF-THW*#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9531#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-status=dead#7df-slot#style=M71L07DF#box_id=4615,69.00,42.00,38,=|
+E02.04/2,=5:3:2,M71L07DF-THW*#@content=4000#@style=100#bg=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat#box_id=9532#circle=Accent7-7;Paired12-6;___wheat;__wheat;_wheat;wheat;white#cloned#done#fa-status=dead#7df-slot#style=M71L07DF#box_id=4616,69.00,42.00,38,=|
+E02.04/1,=5:3:1,M71L07DF-AIW#@content=4000#@style=100#BG=red#bg=red#box_id=9620#circle=red;white#cloned#done#fa-sales-rank=3299#fa-status=running#7df-slot#low#style=M71L07DF#box_id=4617,69.00,42.00,38,=|
+:END:
+
+:TAGS:
+stock,tag
+*,location=${shelfname}#position=${orientation}${coordinate}
+:END:

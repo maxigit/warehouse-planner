@@ -96,6 +96,7 @@ library
     , regex-tdfa >=1.2.2 && <1.3
     , split
     , tabular >=0.2.2.7 && <0.3
+    , template-haskell ==2.18.*
     , text
     , time
     , vector
@@ -171,6 +172,7 @@ executable whp
     , regex-tdfa >=1.2.2 && <1.3
     , split
     , tabular >=0.2.2.7 && <0.3
+    , template-haskell ==2.18.*
     , text
     , time
     , vector
@@ -189,6 +191,7 @@ test-suite test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      Here
       Planner.AffineSpec
       Planner.FullSpec
       Planner.InternalSpec
@@ -241,6 +244,7 @@ test-suite test
     , regex-tdfa >=1.2.2 && <1.3
     , split
     , tabular >=0.2.2.7 && <0.3
+    , template-haskell ==2.18.*
     , text
     , time
     , vector
@@ -302,6 +306,7 @@ benchmark bench
     , regex-tdfa >=1.2.2 && <1.3
     , split
     , tabular >=0.2.2.7 && <0.3
+    , template-haskell ==2.18.*
     , text
     , time
     , vector

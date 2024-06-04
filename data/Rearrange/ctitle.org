@@ -1,0 +1,5 @@
+** For whp
+:TAGS:
+  stock_id,tag
+  ,ctitle=$[ghost?G:]$[n]
+:END:
