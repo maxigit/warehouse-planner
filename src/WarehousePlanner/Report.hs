@@ -935,10 +935,12 @@ generateBoxHistory selectorm = do
            <> concatMap history boxhistorys
     where history e'boxs@((_,lastBox) :| _) = replicate 50 '*'
                       :  tshow lastBox
-                      : boxStyleWithTags lastBox <> " " <> boxPositionSpec lastBox
+                      : boxStyleWithTags lastBox <> " " <> tshow (boxShelf lastBox) <> " " <> boxPositionSpec lastBox
                       : do
                           (ev, box) <- toList e'boxs
-                          [ tshow ev , "\t" <> tshow (boxStyleWithTags box) <> " " <> tshow (boxPositionSpec box) ]
+                          [ tshow ev , "\t" <> tshow (boxStyleWithTags box)
+                                     <> " " <> tshow (boxShelf box) 
+                                     <> " " <> tshow (boxPositionSpec box) ]
      
 
 
