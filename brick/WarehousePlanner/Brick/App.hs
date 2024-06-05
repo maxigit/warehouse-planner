@@ -373,6 +373,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HLast
        B.VtyEvent (V.EvKey (V.KChar '|') [] ) -> handleWH $ EHistoryEvent HResetCurrent
        B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
+       B.VtyEvent (V.EvKey _ _) -> return ()
        _ -> B.resizeOrQuit ev
  
 handleWH ev = 
