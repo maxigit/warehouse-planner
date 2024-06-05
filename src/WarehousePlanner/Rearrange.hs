@@ -212,7 +212,7 @@ freezeOrder boxesInOrder =  do
                 -- box is part of the boxesInOrder
                 if b `member` inOrderSet
                 then o : go os bs
-                else b : go os bs
+                else b : go (o:os) bs
   modify \warehouse -> warehouse {boxMap = fmap (fromList . go (toList boxesInOrder) . toList) (boxMap warehouse) }
             
   
