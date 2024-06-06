@@ -18,6 +18,7 @@ import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
 import WarehousePlanner.Summary
 import WarehousePlanner.Type
+import WarehousePlanner.Base(boxShortContent)
 import Data.Vector qualified as V
 import Text.Printf (printf)
 
@@ -74,7 +75,7 @@ collapseColumns = transpose . collapseRows . transpose
                     
 renderBoxContent box = withStyleAttr (boxPropValue box) $ txt $ content <> " " where
      content = case getTagValuem box "ctitle" of
-                   Nothing -> boxContent box
+                   Nothing -> boxShortContent box
                    Just v -> v
 renderBoxOrientation box = withStyleAttr (boxPropValue box)
                                  $ txt $ showOrientation' $ orientation box

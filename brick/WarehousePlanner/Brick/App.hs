@@ -299,6 +299,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
        B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
        B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${content}"
+       B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}"
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
        B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
        B.VtyEvent (V.EvKey (V.KChar 'o') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${orientation}"
@@ -306,6 +307,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'S') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style}"
        B.VtyEvent (V.EvKey (V.KChar 's') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style:-}"
        B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${content}"
+       B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}"
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory

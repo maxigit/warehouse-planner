@@ -12,6 +12,7 @@ module WarehousePlanner.Base
 , boxPosition
 , boxPositionSpec
 , boxRank
+, boxShortContent
 , boxStyleAndContent
 , buildWarehouse
 , clearCache
@@ -82,7 +83,7 @@ import WarehousePlanner.History
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
 import Data.Text (splitOn, uncons, stripPrefix)
 import Data.Text qualified as T 
-import Data.Char (isLetter, isDigit)
+import Data.Char (isLetter, isDigit, isAlphaNum)
 import Data.Time (diffDays)
 import Data.Semigroup (Arg(..))
 
@@ -984,6 +985,7 @@ expandIntrinsic' "coordinate" box _shelf = let (Dimension ol ow oh) = boxCoordin
 expandIntrinsic' "offset" box _shelf = Right $ printDim $ boxOffset box
 expandIntrinsic' "dimension" box _shelf = Right $ printDim $ _boxDim box
 expandIntrinsic' "orientation" box _shelf = Right $ showOrientation (orientation box)
+expandIntrinsic' "con" box _shelf = Right $ boxShortContent box
 expandIntrinsic' prop _box _shelf =  Right $ "${" <> prop <> "}"
 
 
@@ -1059,6 +1061,19 @@ _stripStatFunction xs  = do
             a -> Just a
 
 
+-- | Split content on special character
+-- BLK&WHT -> B&W
+boxShortContent :: Box s -> Text
+boxShortContent = shorten . boxContent
+shorten :: Text -> Text
+shorten content =  let
+   grouped = groupBy (\a b -> isAlphaNum a == isAlphaNum b) content
+   in case grouped of
+      [one] -> one
+      many -> foldMap (take 1) many
+   
+  
+  
 -- | Syntax tag[?]
 parseEvaluator :: Text -> (Text, [Text] -> Maybe Text)
 parseEvaluator tag0 | Right (tag, thenValue, elseValue) <- P.parse parser (unpack tag0) tag0 = 
