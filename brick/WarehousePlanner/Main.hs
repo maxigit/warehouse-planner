@@ -32,6 +32,7 @@ data Options = Options
             , oDir :: Maybe FilePath
             , oNoHistory :: Bool
             , oProperty :: Maybe Text
+            , oCurrentRun :: Maybe Int
             }
      deriving (Show, Generic)
      
@@ -84,6 +85,9 @@ optionsParser = do
   oProperty <- optional $ strOption $ long "property"
                                     <> metavar "PROPERTY"
                                     <> help "property to use highlight boxes differently"
+  oCurrentRun <- optional $ option auto $ long "run"
+                                        <> metavar "RUN NUMBER"
+                                        <> help "Number of the run to start with (0 based)"
 
   return Options{..}
   
@@ -198,7 +202,9 @@ defaultMainWith expandSection = do
                  Left e -> error $ unpack e
                  Right (exec, _) -> exec summary >>= outputText . pack . show
        Display -> let
-               setParam state = state { asProperty = oProperty }
+               setParam state = state { asProperty = oProperty 
+                                      , asCurrentRun = fromMaybe 0 oCurrentRun
+                                      }
                in whMain setParam title do
                       execE <- getExec
                       case execE of
