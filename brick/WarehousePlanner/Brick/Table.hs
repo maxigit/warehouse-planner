@@ -29,10 +29,10 @@ import Text.Printf (printf)
 -- with row correspending to 8 and 10 
 -- and column to 1 and 3
 -- One table is returned for each depth 
-shelfSummaryToTable :: ([ZHistory1 Box RealWorld] ->  Widget n) -> SumVec (ZHistory1 Box RealWorld) -> [ Table n ]
-shelfSummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
+shelfSummaryToTable :: (Dimension -> Dimension) ->  ([ZHistory1 Box RealWorld] ->  Widget n) -> SumVec (ZHistory1 Box RealWorld) -> [ Table n ]
+shelfSummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
    boxes = sDetailsList ssum
-   boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ zCurrentEx box , [box])
+   boxesByOffset = Map.fromListWith (<>) [ (project . boxOffset $ zCurrentEx box , [box])
                                          | box <- boxes
                                          ]
    offsets = keys boxesByOffset
@@ -46,9 +46,19 @@ shelfSummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
              ]
            | y <- ys
            ]
-   widgets = map (map (map $ renderBoxes . fromMaybe [] ))
+   widgets = map (map (map $ renderProjected . fromMaybe [] ))
            $ map (collapseColumns . collapseRows) cells
    in map (noBorders . table) widgets
+   where renderProjected boxes = let
+                         boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ zCurrentEx box , [box])
+                                                               | box <- boxes
+                                                               ]
+                         in case toList boxesByOffset of
+                              [] -> emptyWidget
+                              [ones]  -> renderBoxes ones
+                              multi -> str "[" <+> hBox (map renderBoxes multi) <+> str "]"
+
+
                                          
 noBorders = rowBorders False . columnBorders False
 -- | merge rows if nothing collide
@@ -83,11 +93,11 @@ renderBoxOrientation box = withStyleAttr (boxPropValue box)
   
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
-baySummaryToTable :: ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
-baySummaryToTable renderBoxes ssum@ShelvesSummary{..} = let
+baySummaryToTable :: (Dimension -> Dimension) -> ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
+baySummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
   shelves = sDetailsList ssum
   tableCellsWithGap = map (map (renderTable . surroundingBorder False)
-                    . shelfSummaryToTable renderBoxes
+                    . shelfSummaryToTable project renderBoxes
                     ) $ reverse shelves
   -- in case the depths is not the same for all shelves
   -- we need fill create empty cell if necessary

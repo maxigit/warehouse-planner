@@ -42,6 +42,7 @@ data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
              | EToggleDebugShowDiff
+             | EToggleCollapseDepth
              -- 
              | ENextRun
              | EPrevRun
@@ -197,6 +198,7 @@ initState adjust title = do
                   , asBoxSelection = Nothing
                   , asShelfSelection = Nothing
                   , asShelvesSummary = error "Shelves Summary not initialized"
+                  , asCollapseDepth = True
                   , ..
                   }
   asShelvesSummary <- makeAppShelvesSummary (asProperty state)
@@ -220,7 +222,8 @@ whApp extraAttrs reload =
                                               : B.hLimit 30 (stylesSideBar s)
                                               : B.vBorder
                                               : [ B.vBox $ (map B.hBox)
-                                                         [ renderRun (\bhistory ->
+                                                         [ renderRun project
+                                                                     (\bhistory ->
                                                                          let box = zCurrentEx bhistory
                                                                              rendered =  withHLBoxAttr s renderBoxOrientation box
                                                                          in if asDisplayHistory
@@ -232,12 +235,14 @@ whApp extraAttrs reload =
                                                                      )
                                                                      (currentRun s)
                                                          , [B.hBorder]
-                                                         , renderRun (withHLBoxAttr s renderBoxContent .  zCurrentEx)
+                                                         , renderRun project
+                                                                     (withHLBoxAttr s renderBoxContent .  zCurrentEx)
                                                                      (let run = currentRun s
                                                                       in run { sDetails = drop asCurrentBay $ sDetails run }
                                                                      )
                                                          ]
                                               ]
+                  project d = if asCollapseDepth then d {dWidth = 0 } else d
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
               in  [ vBoxB [ mainRun
                            , B.vLimit (if asDisplayHistory then 21 else 13) $ hBoxB (debugShelf s :  (pure . boxDetail asWarehouse (asHistoryRange s)) (currentBoxHistory s))
@@ -297,6 +302,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
        B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
+       B.VtyEvent (V.EvKey (V.KChar 'w') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleCollapseDepth
        B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
        B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${content}"
        B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}"
@@ -387,6 +393,7 @@ handleWH ev =
          EPrevMode -> modify prevMode
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
+         EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
@@ -695,15 +702,15 @@ debugShelf state = let
 
   
  -- * Render 
-renderRun :: (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
-renderRun renderBox run =  concat 
+renderRun :: (Dimension -> Dimension) -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
+renderRun project renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )
                              $ B.vBox (map (withHLStatus (seBoxHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable
-            . baySummaryToTable renderBoxes
+            . baySummaryToTable project renderBoxes
             $ bay
             ]
           | bay <- F.toList . sDetails $ run
