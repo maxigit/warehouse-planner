@@ -1115,7 +1115,7 @@ parseEvaluator tag0 | Right (tag, startm, endm) <- P.parse parser (unpack tag0) 
         parser = do
           tag <- P.takeWhileP Nothing (/= ':')
           P.char ':'
-          startm <- P.optional (P.takeWhileP Nothing (/= ':'))
+          startm <- P.optional (P.takeWhile1P (Just "start index") (/= ':'))
           endm <- P.optional do
             P.char ':' >> P.takeRest
           return (tag, startm, endm)
