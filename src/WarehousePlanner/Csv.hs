@@ -934,6 +934,10 @@ processStockTakeWithPosition lookupM tagOrPatterns newBoxOrientations splitter r
                                                             ]
                                                             [(minDim shelf, maxDim shelf, ())]
                                                             dim
+                  updatedTags = case lookupM tags of
+                                  Nothing -> []
+                                  Just old ->  ["@updated"] <> map ("_" <>) (readTagAndPatterns tagOrPatterns $ getTagList old)
+                   
               box <- newBox' (lookupM tags)
                              style
                              content
@@ -941,7 +945,7 @@ processStockTakeWithPosition lookupM tagOrPatterns newBoxOrientations splitter r
                              bestOrientation
                              (shelfId s0)
                              boxOrientations
-                             (readTagAndPatterns tagOrPatterns tags)
+                             (updatedTags <> readTagAndPatterns tagOrPatterns tags)
               let commandsE = case parsePositionSpec posSpec of
                                   Just (or, toPos) -> let pos = Position (toPos (_boxDim box)) or
                                                       in Right [FCBoxWithPosition box pos]
