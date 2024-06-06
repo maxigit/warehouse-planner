@@ -72,6 +72,7 @@ data WHEvent = ENextMode
              --
              | EHistoryEvent HistoryEvent
              | EToggleHistoryNavigation
+             | EToggleHistoryPrevious
              --
              | EReload
              -- Input
@@ -193,6 +194,7 @@ initState adjust title = do
                   , asTitle = title
                   , asDiffEvent = NoHistory
                   , asNavigateCurrent = False
+                  , asNavigateWithPrevious = True
                   , asDebugShowDiffs = False
                   , asInput = Nothing
                   , asBoxSelection = Nothing
@@ -301,6 +303,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'c') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByCount
        B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
        B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
+       B.VtyEvent (V.EvKey (V.KChar 'H') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryPrevious
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
        B.VtyEvent (V.EvKey (V.KChar 'w') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleCollapseDepth
        B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
@@ -439,6 +442,7 @@ handleWH ev =
          ERenderRun -> get >>= liftIO . drawCurrentRun
          EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
+         EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
          EReload -> error "Should have been caught earlier"
     modify updateHLState
@@ -493,12 +497,20 @@ navigateHistory ev = do
                                         zhistory -> fmap fst $ Map.lookupGT current $ zBefore zhistory <> zAfter zhistory
                      HNextSibling -> findNextSibling current events
                      HPreviousSibling -> findPreviousSibling current events
-   forM_ newEventM \new ->
+       setDiff e = put s { asDiffEvent = e }
+   forM_ newEventM \new -> do
         if asNavigateCurrent && ev /= HResetCurrent
         then 
           setNewWHEvent new
         else 
-          put s {asDiffEvent =  new}
+          setDiff new
+        when asNavigateWithPrevious
+           if asNavigateCurrent
+           then forM_ (evPreviousM new) setDiff 
+           else forM_ (findNextEvent new events) setNewWHEvent
+             
+
+
   
 nextMode :: AppState -> AppState
 nextMode state = state { asSummaryView = succ' $ asSummaryView state }
@@ -657,6 +669,7 @@ renderStatus state@AppState{..} = let
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
+                           , if asNavigateWithPrevious then B.str "~" else B.emptyWidget
                            , surroundIf asNavigateCurrent $ B.str $ show (whCurrentEvent asWarehouse)
                            , B.padLeft B.Max legend
                            ]

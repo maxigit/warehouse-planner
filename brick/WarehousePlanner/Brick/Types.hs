@@ -47,6 +47,7 @@ data ViewMode = ViewSummary SummaryView
               -- | ViewSplitBoxes (Box s -> Bool)
               -- 
               deriving (Show, Eq)
+              
 data BoxOrder = BOByName
               | BOByShelve
               | BOByCount
@@ -116,6 +117,7 @@ data AppState = AppState
      , asTitle :: String
      , asDiffEvent :: Event -- ^ Event to show diff with
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
+     , asNavigateWithPrevious ::  Bool -- ^ if true, make diff = previous of 
      , asDebugShowDiffs :: Bool
      , asInput :: Maybe Input
      , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
