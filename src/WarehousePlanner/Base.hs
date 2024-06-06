@@ -1070,6 +1070,7 @@ shorten content =  let
    grouped = groupBy (\a b -> isAlphaNum a == isAlphaNum b) content
    in case grouped of
       [one] -> one
+      [one,two] -> take 2 one <> take 1 two
       many -> foldMap (take 1) many
    
   
