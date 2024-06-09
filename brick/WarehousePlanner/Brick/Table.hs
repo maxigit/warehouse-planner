@@ -115,8 +115,8 @@ baySummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
-runsToTable hrange mode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: Maybe Text -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
+runsToTable propm hrange mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
                           then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
@@ -131,7 +131,10 @@ runsToTable hrange mode current runs = selectTable current mkRow  (sDetails runs
           attr run i = let status = seBoxHLStatus $ sExtra run
                        in case status of
                             HighlightStatus{..} |  hsSelected + hsHighlighted > 0
-                                                -> withHLStatus status  . ( <+> (str $ printf "(%d/%d)" hsSelected hsHighlighted   ))
+                                                -> let hl =  if hsHighlighted == 0
+                                                             then str "0"
+                                                             else maybe id withStyleAttr propm $ str (printf "%d" hsHighlighted)
+                                                   in withHLStatus status  . ( <+> (str ( printf "(%d/" hsSelected) <+> hl <+> str ")"   ))
                             _ -> selectAttr (current == i)
 
 

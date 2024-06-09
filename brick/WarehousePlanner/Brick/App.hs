@@ -686,7 +686,7 @@ runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunPr
     styles = fromList $ Map.toList $ sPropValues (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (currentPropValue state) (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
 
 -- * PropValues
 stylesSideBar :: AppState -> B.Widget Text
