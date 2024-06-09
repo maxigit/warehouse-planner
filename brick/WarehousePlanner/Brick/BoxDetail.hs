@@ -27,7 +27,8 @@ boxDetail warehouse HistoryRange{..} ZHistory{..} = let
   (events, boxes) = unzip $ if hrCurrent == hrToDiff then take 2 history else history
   mk name f = withAttr bold_ (txt name) : mkDiffs (Just . f)
   mkDiffs :: forall n . (Box RealWorld -> Maybe Text) -> [Widget n]
-  mkDiffs f = [ case toDiffM of 
+  mkDiffs f' = let f =  fmap (take 20) . f'
+               in [ case toDiffM of 
                  Nothing -> -- last diff
                             maybe emptyWidget txt $ f current
                  Just toDiff -> renderDiffText (f current) (f toDiff)

@@ -38,6 +38,8 @@ import Data.Set qualified as Set
 import Text.Printf
 
 type WHApp = B.App AppState WHEvent Resource
+data SearchDirection = Forward |  Backward
+    deriving (Eq, Show, Enum, Bounded)
 data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
@@ -56,6 +58,7 @@ data WHEvent = ENextMode
              | ELastRun
              | EFirstBay
              | ELastBay
+             | EFindNextBox SearchDirection
              -- 
              | ESelectCurrentPropValue
              | ENextPropValue
@@ -332,6 +335,8 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'B') [] ) -> handleWH EPrevBox
        B.VtyEvent (V.EvKey (V.KChar 'g') [] ) -> handleWH EFirstRun
        B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
+       B.VtyEvent (V.EvKey (V.KChar 'n') [] ) -> handleWH $ EFindNextBox Forward
+       B.VtyEvent (V.EvKey (V.KChar 'N') [] ) -> handleWH $ EFindNextBox Backward
        B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
        B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
        B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentPropValue
@@ -412,6 +417,14 @@ handleWH ev =
          ELastRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = lastOf (asShelvesSummary s) }
          EFirstBay -> modify \s -> resetBox $ s { asCurrentBay = 0 }
          ELastBay -> modify \s -> resetBox $ s { asCurrentBay = lastOf (currentRun s) }
+         EFindNextBox direction -> modify \s -> let conditionM = asum [ asBoxSelection s >>=  \sel -> case sSelected sel of
+                                                                                              selected | null selected -> Nothing 
+                                                                                              selected -> Just \box -> boxId box `member` selected
+                                                                      , flip fmap (selectedPropValue s) \_ -> \box -> hsHighlighted (boxHLStatus s box ) > 0
+                                                                      ]
+                                      in case fmap (flip (findNextBox direction) s) conditionM of
+                                           Just (new, Just _) -> new
+                                           _ -> s
          ESelectCurrentPropValue -> modify \s -> s { asSelectedPropValue = if currentPropValue s == asSelectedPropValue s
                                                                    then Nothing
                                                                    else currentPropValue s
@@ -557,7 +570,7 @@ nextBayThrough s@AppState{..} = let
 
 nextRunThrough s = let
   next = nextOf (asCurrentRun s) (asShelvesSummary s)
-  in if next == 0
+  in if next == (asCurrentRun s)
      then s { asCurrentRun = 0, asCurrentBay = 0 }
      else s { asCurrentRun = next }
 
@@ -646,6 +659,25 @@ drawCurrentRun app  = do
               diag
   void $ rawSystem "xdg-open" [filePath]
   
+-- * Find  nex Box
+findNextBox :: SearchDirection -> (Box RealWorld  -> Bool) -> AppState -> (AppState, Maybe (Box RealWorld))
+findNextBox direction good state =
+  let next = case direction of
+                  Forward -> nextBoxThrough
+                  Backward -> prevBoxThrough
+  in case next state of
+     new | coordinate new /= coordinate state , Just nextBox <- currentBox new -> 
+           if good nextBox
+           then (new, Just nextBox)
+           else findNextBox direction good new
+     new | coordinate new /= coordinate state , Nothing <- currentBox new -> 
+       findNextBox direction good new
+     _ -> (state , Nothing)
+  where coordinate s = ( asCurrentRun s
+                       , asCurrentBay s
+                       , asCurrentShelf s
+                       , asCurrentBox s
+                       )
 
 -- * Post update
 -- | update the list of current styles

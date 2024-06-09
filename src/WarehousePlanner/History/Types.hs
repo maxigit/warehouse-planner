@@ -46,7 +46,7 @@ readHiSTRef' ev (HiSTRef ref) = do
   -- find first element with event <= given event
   let 
   case NE.dropWhile ((> ev) . fst) history of
-     [] -> error $ "Finding reference in the past for " ++ show ev ++ " in " <> show history
+     [] -> return $ NE.last history --  error $ "Finding reference in the past for " ++ show ev ++ " in " <> show history
      -- ^ should not normally happen as reference in the past should not be given.
      history :_ -> return history
   
