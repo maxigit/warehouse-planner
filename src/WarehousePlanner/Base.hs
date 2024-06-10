@@ -453,25 +453,25 @@ newBox' boxM style content dim or_ shelf ors tagTexts = do
     let (Arg _ ref) = uniqueRef
     let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags (extractPriorities tags defaultPriorities) (extractBoxBreak tags)
     -- don't update box if not needed, to not polute history and make diff possible
+    moveShelf <- case boxM of
+          Just box | boxShelf box == Just (shelfId shelf) -> return False
+          Just box | Just bshelfId <- boxShelf box -> do 
+              bshelf <- findShelf bshelfId
+              unlinkBox (boxId box) bshelf
+              return True
+          _ -> return True
+    when moveShelf do
+         shelf' <- findShelf shelf
+         linkBox (BoxId_ uniqueRef) shelf'
+    writeCurrentRef ref box
     case boxM of
-        -- Just oldBox | oldBox == box -> return ()
-        _ -> do
-             moveShelf <- case boxM of
-                   Just box | boxShelf box == Just (shelfId shelf) -> return False
-                   Just box | Just bshelfId <- boxShelf box -> do 
-                       bshelf <- findShelf bshelfId
-                       unlinkBox (boxId box) bshelf
-                       return True
-                   _ -> return True
-             when moveShelf do
-                  shelf' <- findShelf shelf
-                  linkBox (BoxId_ uniqueRef) shelf'
-             writeCurrentRef ref box
+        Nothing -> do
              -- modify \warehouse ->  warehouse { boxes = boxes warehouse |> BoxId_ uniqueRef }
              modify \warehouse ->  warehouse { boxMap = snd $ Map.insertLookupWithKey (\_ new old -> old <> new)
                                                                                style (Seq.singleton $ BoxId_ uniqueRef)
                                                                                (boxMap warehouse)
                                              }
+        Just _ -> return ()
     return box
     
 -- |  create #content1=A, #content2=B from A&B
