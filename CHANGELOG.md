@@ -1,3 +1,11 @@
+# 1.3.4
+Add collapse depth option
+Find next and previous box
+Add run argument
+Misc bux fixes including
+- boxes duplicated after diff
+- empty start index not working
+- save previous tags when replacing box
 # 1.3.1
 Add fuzzy Stocktake
 Refactoring split Base.hs in Move.hs and Tiling.hs
@@ -62,3 +70,4 @@ Use boxMap (by style) instead of sequence.
 # 1.0.1
 
 Miscellaneous performance optimisation
+
