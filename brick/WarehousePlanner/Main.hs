@@ -180,7 +180,7 @@ defaultMainWith expandSection = do
                     extraScenarios <- case extraScenariosFrom o of
                                         [] -> return []
                                         extras -> do 
-                                             ss <- mapM (readScenario $ expandSection dir) extras
+                                             ss <- mapM (readScenario (expandSection dir) Nothing) extras
                                              return $ Right (mempty { sSteps = [ NewFile  "<ARGUMENTS>" ] }) : ss
                     case sequence (scenarioE: extraScenarios) of
                          Left e -> return $ Left e

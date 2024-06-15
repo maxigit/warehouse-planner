@@ -21,7 +21,7 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , ":END:"
                        ]
 
-    parseScenarioFile text `shouldBe` Right [ Section LayoutH (Right ["A|B|C"]) ""
+    parseScenarioFile Nothing text `shouldBe` Right [ Section LayoutH (Right ["A|B|C"]) ""
                                            , Section (MovesH []) (Right ["move 1", "move 2"]) ""
                                            ]
   it "parses scenario with headings" $ do
@@ -35,7 +35,7 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , ":END:"
                        ]
 
-    parseScenarioFile text `shouldBe` Right [ Section (TitleH 1) (Right []) "* Layout"
+    parseScenarioFile Nothing text `shouldBe` Right [ Section (TitleH 1) (Right []) "* Layout"
                                             , Section LayoutH (Right ["A|B|C"]) ""
                                             , Section (TitleH 1) (Right []) "* Initial Moves"
                                             , Section (MovesH []) (Right ["move 1", "move 2"]) ""
@@ -53,7 +53,7 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , ":END:"
                        ]
 
-    parseScenarioFile text `shouldBe` Right [ Section LayoutH (Right ["A|B|C"]) ""
+    parseScenarioFile Nothing text `shouldBe` Right [ Section LayoutH (Right ["A|B|C"]) ""
                                            , Section (MovesH []) (Left (DocumentHash "sha1")) ""
                                            , Section (MovesH []) (Right ["move 1", "move 2"]) ""
                                            , Section (MovesH []) (Left (DocumentHash "sha2")) ""
@@ -69,7 +69,7 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , "move 2"
                        , ":END"
                        ]
-    parseScenarioFile text `shouldBe` Left "unknown invalid header"
+    parseScenarioFile Nothing text `shouldBe` Left "unknown invalid header"
   it "parse with or without :END: markers" $ do
     let without = unlines [ ":LAYOUT:"
                        , "C1"
@@ -85,7 +85,7 @@ pureSpec = describe "Parsing Scenario file @planner" $ do
                        , "C1#_coming,coming,3800,100,1200,Shelf"
                        , ":END:"
                    ]
-    parseScenarioFile with `shouldBe` parseScenarioFile without
+    parseScenarioFile Nothing with `shouldBe` parseScenarioFile Nothing without
 
 ioSpec :: Spec
 ioSpec = describe "Reading scenario @planner" $ do
@@ -110,7 +110,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) t
+                               sc <- readScenario ( return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -138,7 +138,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) t
+                               sc <- readScenario ( return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -166,7 +166,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) t
+                               sc <- readScenario ( return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -184,7 +184,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                         , "move 4"
                         ]
     Right (DocumentHash shaPart1) <- do
-                  sc <- readScenario ( return . Right . (:[])) part1
+                  sc <- readScenario ( return . Right . (:[])) Nothing part1
                   return $ scenarioKey `fmap` sc
 
     let text1 = part1 <> part2
@@ -192,7 +192,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                         , "@" ++ shaPart1] ++ part2
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) t
+                               sc <- readScenario ( return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text1, text2]

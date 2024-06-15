@@ -7,7 +7,6 @@ module WarehousePlanner.Org.Internal
 , executeStep
 , contentPathM
 , sSortedSteps
-, readScenariosFromDir
 , readScenarioFromPath
 , readScenarioFromPaths
 , readScenario
@@ -30,8 +29,8 @@ import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Writer (tell, execWriter)
 import Data.Text(strip,splitOn)
 import Data.Text qualified as Text
-import System.Directory (doesFileExist, listDirectory, createDirectoryIfMissing)
-import System.FilePath (takeExtension, takeBaseName)
+import System.Directory (doesFileExist, createDirectoryIfMissing)
+import System.FilePath (takeExtension, takeBaseName, splitExtension)
 import Data.List qualified as List
 import GHC.Generics
 import Crypto.Hash qualified as Crypto
@@ -40,10 +39,20 @@ import WarehousePlanner.WPL.Exec
 
 -- * Parsing 
 -- | Read and cut a scenario file into different component
-parseScenarioFile :: Text -> Either Text [Section]
-parseScenarioFile text = do -- Either
+parseScenarioFile :: (Maybe FilePath) ->  Text -> Either Text [Section]
+parseScenarioFile pathm text = do -- Either
+  headerM <- case pathm of
+                Nothing -> Right Nothing
+                Just path -> case splitExtension path of
+                      (_, ".org") -> Right Nothing
+                      (csv, ".csv") -> let ftype = takeExtension csv
+                                      in case parseDrawer (pack $ drop 1 ftype) of
+                                         Right headertype -> Right $ Just headertype
+                                         _ -> Left $ tshow ftype <> " is an invalid csv type in " <> tshow path
+                      (_, ".wpl" ) -> Right $ Just $ WPLH []
+                      (_, ftype) -> Left $ tshow ftype <> " is an invalid type in " <> tshow path
   lineTypes <- traverse parseLine (lines text) 
-  sequence $ linesToSections lineTypes
+  sequence $ linesToSections $ maybe id (\h -> (HeaderL h "" :)) headerM $ lineTypes
   
 
 -- | Transform a line of text to a typed line
@@ -221,31 +230,22 @@ parseHeader header tags = to <$> gParse header tags
 -- just cache them once and use a SHA identify them.
 readScenario :: MonadIO m
              => (Section -> m (Either Text [Section])) --  ^ section expander, mainly to import sections for URI
+             -> (Maybe FilePath)
              -> Text
              -> m (Either Text Scenario)
-readScenario expandSection text = do
+readScenario expandSection pathm text = do
   runExceptT $ do
-    sections0 <-   ExceptT . return $ (parseScenarioFile text)
+    sections <-   ExceptT . return $ (parseScenarioFile pathm text)
+    ExceptT $ sectionsToScenario expandSection sections
+
+sectionsToScenario :: MonadIO m => (Section -> m (Either Text [Section])) -> [Section] -> m (Either Text Scenario)
+sectionsToScenario expandSection sections0 = do 
+  runExceptT $ do
     sections <- concat <$> ExceptT ( sequence <$> mapM expandSection sections0)
     steps' <- mapM (\s -> ExceptT $ cacheSection s) sections
     ExceptT . return $ makeScenario steps' 
 
--- | Read a sceanrio from a directory. Only read '.org'
--- Concatenate all files in alphabetical order
--- readScenarioDir :: MonadIO m => FilePath -> m Either [Step]
-readScenariosFromDir :: MonadIO io
-                     => (Section -> io (Either Text [Section]))
-                     -- \^ section expander, mainly to import sections for URI
-                     -> FilePath -> io (Either Text [Scenario])
-readScenariosFromDir expandSection path = do
-  contents <- liftIO $ do
-    entries0 <- listDirectory path
-    let entries = map (path </>) (sort  entries0)
-    files <- filterM  doesFileExist (filter fileValid entries)
-    mapM readFile files
-  scenariosE <- mapM (readScenario expandSection . decodeUtf8) contents
-  return $ sequence scenariosE
-
+  
 -- | Read one scenario file
 readScenarioFromPath :: MonadIO io
                      => Bool -> (Section -> io (Either Text [Section]))
@@ -265,7 +265,8 @@ readScenarioFromPath withHistory expandSection path = do
   
   case contentE of 
     Left e -> return $ Left e
-    Right content -> fmap (fmap (addNewFileEvent)) $ readScenario expandSection content
+    Right content -> fmap (fmap (addNewFileEvent)) $ readScenario expandSection (Just path) content
+
 
 readScenarioFromPaths :: MonadIO io
                       => Bool -> (Section -> io (Either Text [Section]))
@@ -289,7 +290,7 @@ readScenarioFromPaths withHistory expandSection currentDir paths = do
                         
 
 fileValid :: FilePath -> Bool
-fileValid = (== ".org") . takeExtension
+fileValid = (`elem` [".org", ".csv", ".wpl"]) . takeExtension
 
 savePointScenario :: Scenario
 savePointScenario = Scenario Nothing [SavingPoint] Nothing mempty
@@ -534,13 +535,13 @@ readLocalFiles plannerDir pat excluded = do
       exPats = map (compile . unpack . ("/**/" <>) ) excluded
       valid f =  all ($ f) $ fileValid : map (\p -> not . match p) exPats
   contents <- mapM readFile orgs
-  let sectionss = traverse (parseScenarioFile . decodeUtf8)  contents
+  let sectionss = traverse (\(c,fp) -> parseScenarioFile (Just fp) $ decodeUtf8 $ c)  $ zip contents orgs
   return $ fmap concat sectionss
 
 readLocalFile :: (Monad io, MonadIO io) => FilePath -> [Text] -> io (Either Text [Section])
 readLocalFile path tags = do
   content <- readFile path
-  let sections = parseScenarioFile . decodeUtf8 $ content
+  let sections = parseScenarioFile (Just path). decodeUtf8 $ content
       addTags section = section {sectionType = addTagsToHeader tags (sectionType section) }
   return $ fmap (map addTags) sections
 -- * 

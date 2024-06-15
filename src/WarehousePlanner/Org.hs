@@ -14,7 +14,6 @@ import WarehousePlanner.Org.Internal
             , readScenario
             , readScenarioFromPath
             , readScenarioFromPaths
-            , readScenariosFromDir
             , savePointScenario
             , scenarioToFullText
             , scenarioToTextWithHash
