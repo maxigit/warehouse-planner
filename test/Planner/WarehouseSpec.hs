@@ -19,19 +19,21 @@ pureSpec = do
   expandAttributes
 expandSpecs = describe "Expand" $ do
   it "exands brackets" $ do
-    expand "a[12]" `shouldBe` [("a1", Nothing), ("a2", Nothing)]
+    expand "a[12]" `shouldBe` [("a1", []), ("a2", [])]
 
   it "add tags" $ do
-    expand "a[12#tag]" `shouldBe` [("a1", Nothing), ("a2", Just "tag")]
+    expand "a[12#tag]" `shouldBe` [("a1", []), ("a2", ["tag"])]
 
   it "append tags" $ do
-    expand "a[12#tag]#old" `shouldBe` [("a1", Just "old"), ("a2", Just "tag#old")]
+    expand "a[12#tag]#old" `shouldBe` [("a1", ["old"]), ("a2", ["tag", "old"])]
   it "expands multiple times with tags" $ do
-    expand "a[12#two][XY#boo]#old" `shouldBe` [("a1X", Just "old")
-                                              , ("a1Y", Just "boo#old")
-                                              , ("a2X", Just "two#old")
-                                              , ("a2Y", Just "two#boo#old")
+    expand "a[12#two][XY#boo]#old" `shouldBe` [("a1X", ["old"])
+                                              , ("a1Y", ["boo", "old"])
+                                              , ("a2X", ["two", "old"])
+                                              , ("a2Y", ["two", "boo", "old"])
                                               ]
+  it "keep tags in words" $ do
+    expand "a[1#tag 2]#old" `shouldBe` [("a1", ["tag","old"]), ("a2", ["old"])]
 
 boxArrangements = describe "boxArrangements @F" $ do
   it "finds standard arrangement" $ do

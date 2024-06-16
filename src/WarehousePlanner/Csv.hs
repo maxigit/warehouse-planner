@@ -112,12 +112,12 @@ readShelves defaultOrientator filename = do
                             if toLower shelfType == "update"
                             then do
                               names <- shelvesFromSelector name
-                              return ( map (,Nothing) names , updateShelfWithFormula')
+                              return ( map (,[]) names , updateShelfWithFormula')
                             else
                               return ( expand =<< splitOn "|" name
                                      , newShelfWithFormula
                                      )
-                        mapM (\(n, tag) ->
+                        mapM (\(n, tags) ->
                             let r = dimFromRef n
                             in go
                                     (dimToFormula sMinD r dim)
@@ -126,7 +126,9 @@ readShelves defaultOrientator filename = do
                                     defaultOrientator
                                     fillStrat
                                     n
-                                    tag
+                                    (case tags of 
+                                       [] -> Nothing 
+                                       _ -> Just $ intercalate "#" tags)
                                     ) name'tagS
 
             return $ concat (Vec.toList v)
@@ -197,28 +199,26 @@ readUpdateShelves filename = do
 --   A[123#top] => A1 A2 A3#top
 -- If the string contains some spaces, the string will
 -- be using (space separated) words instead of chars
-expand :: Text -> [(Text, Maybe Text)]
+expand :: Text -> [(Text, [Text])]
 expand name = let
   (fix, vars0) = break (=='[') name
   in case vars0 of
-    "" -> [extractTag fix]
+    "" -> [extractTags fix]
     (uncons -> Just ('[', vars)) -> case break (==']') vars of
         (_,"") -> error $ "unbalanced brackets in " ++ unpack name
-        (elements'tag, rest) -> do
-              -- check if there is any tag at the end
-              let (elements0, tag) = extractTag elements'tag
-                  elements = case words elements0 of
-                               [_] -> map singleton $ toList elements0
-                               wds -> wds
-                  n  = length elements
-              (e,i) <- zip elements [1..n]
+        (elements'tag, rest) -> do -- [ ... ]
+              let (element'tagss, lasttag) =
+                   case words elements'tag of
+                        [one] -> -- each char has to be expanded
+                                 -- a tag if present has to be at the end 
+                                 let (chars,t) = extractTags one
+                                 in (map (\c -> (singleton c, [])) $ toList chars, t)
+                        es -> (map extractTags es, [])
+              let n  = length element'tagss
+              ((e, tags) ,i) <- zip element'tagss [1..n]
               (expanded, exTag) <- expand (drop 1 rest)
-              let finalTag =
-                    case catMaybes [if i == n then tag else Nothing, exTag] of
-                      [] -> Nothing
-                      tags -> Just $ intercalate "#" tags
-                    
-              return (fix <> e <> expanded , finalTag)
+              let finalTags = concat [tags, if i == n then lasttag else [], exTag]
+              return (fix <> e <> expanded , finalTags)
     _ -> error "Should not happen" -- We've been breaking on [
 
 
@@ -659,13 +659,14 @@ processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = w
   inEx <- case locationM of
               Just location' -> do
                    -- reuse leftover of previous locations between " " same syntax as Layout
-                   foldM (\boxInEx locations -> do
-                              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
-                              let locationss = splitOn "|" location
-                              shelves <- findShelfBySelectors (map parseSelector locationss)
-                              ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
-                              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
-                         ) (mempty { excluded = Just boxes}) (splitOn " " location')
+                   moveToLocations sortMode boxes location'
+                   -- foldM (\boxInEx locations -> do
+                   --            let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
+                   --            let locationss = splitOn "|" location
+                   --            shelves <- findShelfBySelectors (map parseSelector locationss)
+                   --            ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+                   --            return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
+                   --       ) (mempty { excluded = Just boxes}) (splitOn " " location')
               Nothing -> return $ mempty { included = Just boxes } 
   case tags of
     [] -> return boxes
@@ -674,6 +675,17 @@ processMovesAndTags tagsAndPatterns_ (style, tags_, locationM, orientations) = w
       new <- zipWithM (updateBoxTags tagOps) (includedList inEx) [1..]
       _ <- zipWithM (updateBoxTags untagOps) (excludedList inEx) [1..]
       return new
+
+-- with each group having "mode" and locations
+-- A|B ^C|D means try A or B, then C or D with exit on top mode
+moveToLocations sortMode boxes location = do
+   foldM (\boxInEx locations -> do
+             let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
+             let locationss = splitOn "|" location
+             shelves <- findShelfBySelectors (map parseSelector locationss)
+             ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+             return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
+        ) (mempty { excluded = Just boxes}) (splitOn " " location)
 
 -- | Parse tags operations from a list a text.
 -- If @include or @exclude is used, the tags on the right
@@ -854,18 +866,24 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
             -- we get bigger box first : -l*w*h
             let rows0 = [ ((qty, content, tags),  (-(l*w*h), shelf, style', l,w,h, if null os then "%" else os)) | (shelf, style, qty, l, w, h, os)
                        <- Vec.toList (rowsV ::  Vec.Vector (Text, Text, Int, Double, Double, Double, Text))
-                       , let (name, tags) = extractTags style
-                       , let (style', content) = splitStyle name
+                       , (styleAndContent, tags) <- expand style
+                       , let (style', content) = splitStyle styleAndContent
                        ]
             -- groups similar
                 groups = List.groupBy (\a b -> snd a == snd b)
                        $ List.sortBy (comparing snd) rows0
 
-            (_,v) <- mapAccumLM  ( \previousMatch rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
+            (_,v) <- mapAccumLM  ( \_previousMatch rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
                         s0 <- defaultShelf
                         lookup_ <- lookupM
                         let dim = Dimension l w h
-                            boxOrs = readOrientations newBoxOrientations os
+                            (orStrategies, boxOrs) = 
+                               -- don't override orientation rules
+                               -- if given orientation are just 
+                               case traverse readOrientationMaybe (toList os) of
+                                    Just _ -> ([], readOrientations newBoxOrientations os)
+                                    _ -> let strats = parseOrientationRule newBoxOrientations os
+                                         in (strats, map osOrientations strats)
                         boxesS <- forM rows $ \((qty, content, tags),_) ->
                           forM [1..qty] $   \_ -> do
                             newBox' (lookup_ tags)
@@ -874,36 +892,24 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                                     dim
                                     (headEx boxOrs)
                                    s0
-                                   boxOrs -- create box in the "ERROR self)
+                                   boxOrs -- create box in the ERROR self
                                    (readTagAndPatterns tagOrPatterns tags)
                         let boxes = concat boxesS
-                            pmode = POr PAboveOnly PRightOnly
-                        shelves <- if shelf == fst previousMatch  -- check previous match
-                                   then return $ snd previousMatch
-                                   else (mapM findShelf) =<< findShelfBySelector (Selector (NameMatches [MatchFull shelf]) [])
-                        leftOvers <- excludedList <$> moveBoxes ExitLeft pmode SortBoxes boxes shelves
+                            -- pmode = POr PAboveOnly PRightOnly
+                        leftOvers <- withBoxOrientations orStrategies do
+                                         excludedList <$> moveToLocations SortBoxes boxes shelf
 
                         let errs = if not (null leftOvers)
                                       then map (\b -> unlines [ "ERROR: box " <> tshow b <> " doesn't fit in " <> shelf
-                                                              , printDim dim <> " " <> (unwords $ map (printDim . maxDim) shelves)
+                                                              -- , printDim dim <> " " <> (unwords $ map (printDim . maxDim) shelves)
                                                               ]
                                                ) leftOvers
                                       else []
-
-                        -- detect if any error occurs
-                        -- shelfIds <- findShelvesByBoxes boxes
-                        -- let s0Id = shelfId s0
-                        --     numberOfError = length (filter (== s0Id) shelfIds)
-                        --     error = if numberOfError > 0
-                        --             then ["ERROR: " ++ show numberOfError ++ " boxes don't fit in shelf for row " ++ show rows ++ ". Found "
-                        --           ++ show (length shelves) ++ " shelves :  " ++ show shelves
-                        --      ]
-                                    -- else []
-                        return ( (shelf, shelves) -- last found
+                        return ( shelf
                                , (boxes, errs)
                                )
                         ) 
-                        ("", [])
+                        ""
                         groups
             let (boxes, errors) = unzip (v)
 

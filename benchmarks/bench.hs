@@ -2,6 +2,8 @@ import ClassyPrelude
 import Criterion.Main
 import WarehousePlanner.Repl
 import WarehousePlanner.Base
+import WarehousePlanner.Move(moveBoxes)
+import WarehousePlanner.Tiling(howManyWithDiagonal)
 import WarehousePlanner.Exec
 import WarehousePlanner.Report qualified as Report
 import Text.Printf
