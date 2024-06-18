@@ -9,6 +9,8 @@ module WarehousePlanner.Brick.RenderBar
 , renderWithStyleName
 , renderHorizontalSummary
 , renderBestBar
+, renderBestBarDef
+, bayToBars
 )
 where
 
@@ -25,10 +27,10 @@ import Data.List.NonEmpty (NonEmpty(..))
 
 
 -- * Bar
-shelfSummaryToBar :: BarDirection -> SummaryView -> ShelvesSummary e f a -> Widget n
-shelfSummaryToBar dir view ssum =  let
-  r = ratio (fromSummary view) ssum
-  perc8 = floor $ 8 * r
+shelfSummaryToBar :: BarDirection -> SummaryView -> SummaryView -> ShelvesSummary e f a -> Widget n
+shelfSummaryToBar dir view cview ssum =  let
+  r = ratio (fromSummary cview) ssum
+  perc8 = floor $ 8 * (ratio (fromSummary view) ssum)
   bar = case dir of
          HorizontalBar -> eigthH
          VerticalBar -> eigthV
@@ -49,17 +51,31 @@ fromSummary mode = case mode of
   
   
 -- * 
-renderHorizontalRun :: SummaryView -> Run SumVec (SumVec a) -> Widget n
-renderHorizontalRun sview run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay sview ) (sDetails run)
+renderHorizontalRun :: Run SumVec (SumVec a) -> Widget n
+renderHorizontalRun run = hBox $ intersperse vBorder $ F.toList $ fmap (padTop Max . renderBay ) (sDetails run)
 
-renderBay :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
-renderBay sview bay = let
+renderBay :: Bay SumVec (SumVec a) -> Widget n
+renderBay bay = let
   ws =  reverse $ F.toList $ fmap (B.border . renderShelf) (sDetails bay)
-  in joinBorders $ vBox $ ws <> [withShelfHLStatus bay (txt ( sName bay)) <+> renderHorizontalSummary sview bay ]
+  in joinBorders $ vBox $ ws <> [withShelfHLStatus bay (txt ( sName bay)) <+> renderHorizontalSummary renderBestBarDef bay ]
 
 renderShelf :: SumVec a -> Widget n
 renderShelf ssum = vBox $ map ($ ssum) [renderWithStyleName , shelfSummaryToAllBars ]
 
+-- | Display a shelf as a horizontal or vertical bar
+-- to show the use.
+-- shelfHOrVBar :: SumVec a -> Widget n
+
+bayToBars :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
+bayToBars sview bay =  let
+  -- ws = reverse $ F.toList $ fmap (renderBestBar [SVMaxHeight, SVMaxLength]) (sDetails bay)
+  ws = reverse $ F.toList $ fmap render (sDetails bay)
+  render ssum = withShelfHLStatus ssum $ 
+              if ratio (fromSummary SVMaxLength) ssum < ratio (fromSummary SVMaxHeight) ssum
+              then shelfSummaryToBar HorizontalBar SVMaxLength sview ssum
+              else shelfSummaryToBar VerticalBar SVMaxHeight sview ssum
+  _render = renderBestBarDef
+  in vBox ws
 
 shelfSummaryToAllBars :: ShelvesSummary e f a -> Widget n
 -- shelfSummaryToAllBars sum = hBox [ renderS v sum | v <- [minBound .. maxBound] ]
@@ -86,10 +102,8 @@ renderS smode s = let
                      SVVolume -> '*'
        in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
-renderHorizontalSummary :: SummaryView -> SumVec (SumVec a) -> Widget n
--- renderHorizontalSummary' sview = hBox . map (renderS sview) . sDetailsList 
-renderHorizontalSummary _sview ssum = hBox . map (\s -> withShelfHLStatus s $ renderBestBar sviews s) $ sDetailsList ssum  where
-    sviews = SVMaxLength :| [ SVMaxWidth, SVMaxHeight ]
+renderHorizontalSummary ::  (SumVec a -> Widget n) -> SumVec (SumVec a) -> Widget n
+renderHorizontalSummary renderBay ssum = hBox . map (\s -> withShelfHLStatus s $ renderBay s) $ sDetailsList ssum  where
     -- SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n
@@ -100,6 +114,9 @@ renderBestBar sviews ssum = let
                       ]
   in renderS sview ssum
 
+renderBestBarDef :: ShelvesSummary e f a -> Widget n
+renderBestBarDef = renderBestBar (SVMaxLength :| [SVMaxWidth, SVMaxHeight])
+
 renderWithStyleName :: ShelvesSummary SummaryExtra f a -> Widget n
 renderWithStyleName s | null (sPropValues s)  = str "∅"
 renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sPropValues s where
@@ -108,3 +125,5 @@ renderWithStyleName s = hBox $ map forStyle $ Map.toList $ sPropValues s where
                                 , str (show $ suCount bsum)
                                 , str " " 
                                 ]
+                                
+                                

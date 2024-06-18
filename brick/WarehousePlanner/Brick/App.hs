@@ -714,8 +714,11 @@ debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
   ssum = currentShelf state
   in B.vBox $
-     if | ViewSummary _ <- asViewMode state 
-        ->  [ B.hBox $ intersperse (B.str " ") 
+     if -- | ViewSummary SVSurfaceLH <- asViewMode state 
+        -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
+        | ViewSummary sview <- asViewMode state 
+        -> renderHorizontalSummary (bayToBars sview) (currentRun state)  :
+           [  B.hBox $ intersperse (B.str " ") 
                      $ [  B.str (show m)
                        , B.txt $ sName ssum
                        , renderS m ssum
