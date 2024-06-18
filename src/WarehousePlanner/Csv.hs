@@ -636,7 +636,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- This is to allows script to import partial tagging.
 processMovesAndTags :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
 processMovesAndTags tagsAndPatterns param = do
-  inEx <- moveAndTag tagsAndPatterns param 
+  inEx <- moveAndTag withAll tagsAndPatterns param 
   return (includedList inEx)
 
 -- | read a file assigning tags to styles
@@ -830,7 +830,7 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                         let boxes = concat boxesS
                             -- pmode = POr PAboveOnly PRightOnly
                         leftOvers <- withBoxOrientations orStrategies do
-                                         excludedList <$> moveToLocations SortBoxes boxes shelf
+                                         excludedList <$> moveToLocations withAll SortBoxes boxes shelf
 
                         let errs = if not (null leftOvers)
                                       then map (\b -> unlines [ "ERROR: box " <> tshow b <> " doesn't fit in " <> shelf

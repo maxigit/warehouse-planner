@@ -8,6 +8,8 @@ module WarehousePlanner.Move
 -- , moveSimilarBoxes
 , moveAndTag
 , moveToLocations
+-- reexport
+, withAll
 )
 where 
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
@@ -23,6 +25,7 @@ import WarehousePlanner.Base
 import WarehousePlanner.Selector
 import WarehousePlanner.Affine
 import WarehousePlanner.Tiling
+import WarehousePlanner.WPL.ExContext
 import Data.Text(splitOn)
 
 -- | Remove boxes for shelves and rearrange
@@ -360,8 +363,8 @@ moveBoxes exitMode partitionMode sortMode bs ss = do
     return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
   return $ InExcluded (Just $ concat ins) (Just $ concat exs)
 
-moveAndTag :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s))  s
-moveAndTag tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
+moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s))  s
+moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
   newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
                                  , intercalate "#" tags_
                                  , fromMaybe "" locationM
@@ -377,7 +380,7 @@ moveAndTag tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOri
                       BoxNumberSelector Nothing Nothing Nothing -> SortBoxes
                       _ -> DontSortBoxes
       tagOps = parseTagAndPatterns tagsAndPatterns tags
-  boxes0 <- findBoxByNameAndShelfNames style
+  boxes0 <- narrowBoxes style ec >>= getBoxes-- findBoxByNameAndShelfNames style
   case (boxes0, noEmpty) of
        ([], True) -> error $ show style ++ " returns an empty set"
        _         -> return ()
@@ -385,7 +388,7 @@ moveAndTag tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOri
   inEx <- case locationM of
               Just location' -> do
                    -- reuse leftover of previous locations between " " same syntax as Layout
-                   moveToLocations sortMode boxes location'
+                   moveToLocations ec sortMode boxes location'
                    -- foldM (\boxInEx locations -> do
                    --            let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
                    --            let locationss = splitOn "|" location
@@ -404,11 +407,15 @@ moveAndTag tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOri
 
 -- with each group having "mode" and locations
 -- A|B ^C|D means try A or B, then C or D with exit on top mode
-moveToLocations sortMode boxes location = do
+moveToLocations ec sortMode boxes location = do
    foldM (\boxInEx locations -> do
              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
              let locationss = splitOn "|" location
-             shelves <- findShelfBySelectors (map parseSelector locationss)
+             shelves_ <- findShelfBySelectors (map parseSelector locationss)
+             let shelves = filter inEC shelves_
+                 inEC s = case included (ecShelves ec) of
+                             Nothing -> True
+                             Just sid ->  s `elem` sid
              ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
         ) (mempty { excluded = Just boxes}) (splitOn " " location)
