@@ -109,6 +109,28 @@ pureSpec = describe "Parsing" do
                                , Action (SelectBoxes "B") `Then` Action (Move Nothing "S2")
                                ]
                    )
+   it "parses TAM with location" $ do
+      "tam loc" `parseAs` Action (TagAndMove "loc" [])
+   it "parses TAM with tag" do
+      "tam #tag" `parseAs` Action (TagAndMove "#tag" [])
+   it "parses TAM with orientations" do
+      "tam loc with |= " `parseAs` Action (TagAndMove "loc" [ OrientationStrategy {osOrientations = readOrientation '|'
+                                                                                   , osMinDepth = 0
+                                                                                   , osMaxDepth = 1
+                                                                                   , osMaxLenght = Nothing
+                                                                                   , osMaxHeight = Nothing
+                                                                                   , osUseDiagonal = True
+                                                                                   }
+                                                             , OrientationStrategy {osOrientations = readOrientation '='
+                                                                                   , osMinDepth = 0
+                                                                                   , osMaxDepth = 1
+                                                                                   , osMaxLenght = Nothing
+                                                                                   , osMaxHeight = Nothing
+                                                                                   , osUseDiagonal = True
+                                                                                   }
+                                                             ])
+
+
 
 
                   

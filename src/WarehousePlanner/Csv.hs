@@ -667,14 +667,6 @@ readMovesAndTags tags0 = readFromRecordWithPreviousStyle go where
     let (tags, locM) = splitTagsAndLocation tag'location
     in processMovesAndTags tags0 (style, tags, locM, orientations)
 
-splitTagsAndLocation :: Text -> ([Text], Maybe Text)
-splitTagsAndLocation tag'locations
-   -- -| (tag, _:location@(_:_)) <- break (=='/') tag'locations = (just tag, just location)
-   | (location , uncons -> Just (_,tag@(uncons -> Just _))) <- break (=='#') tag'locations = (splitOn "#" tag, just location)
-   | otherwise = ([], Just tag'locations)
-   where just "" = Nothing
-         just s = Just s
-    
 
 
 -- * Read Rearrange Boxes

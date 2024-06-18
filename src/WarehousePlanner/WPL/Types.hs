@@ -14,8 +14,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
              | SelectBoxes (CSelector BoxSelector)
              | SelectShelves (CSelector ShelfSelector)
-             -- | TagAndMove Text
-            -- | Tag { source :: Text, tags }
+             | TagAndMove Text [OrientationStrategy] -- as in :TAM:
      -- deriving (Show, Eq)
      deriving Eq
 instance Show Command where show = showCommand
@@ -25,7 +24,7 @@ showCommand = \case
       ToggleTags{..} -> "ToggleTag " <> show cTagOps
       SelectBoxes s -> showCSelector showBoxSelector s
       SelectShelves s -> showCSelector showShelfSelector s
-      -- TagAndMove txt -> "TagAndMove" <> show txt
+      TagAndMove txt ors -> "TagAndMove" <> show txt <> " " <> show ors
       
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"

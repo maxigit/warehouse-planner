@@ -8,6 +8,7 @@ module WarehousePlanner.Move
 -- , moveSimilarBoxes
 , moveAndTag
 , moveToLocations
+, splitTagsAndLocation
 -- reexport
 , withAll
 )
@@ -26,7 +27,7 @@ import WarehousePlanner.Selector
 import WarehousePlanner.Affine
 import WarehousePlanner.Tiling
 import WarehousePlanner.WPL.ExContext
-import Data.Text(splitOn)
+import Data.Text(splitOn, uncons)
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -420,3 +421,11 @@ moveToLocations ec sortMode boxes location = do
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
         ) (mempty { excluded = Just boxes}) (splitOn " " location)
 
+splitTagsAndLocation :: Text -> ([Text], Maybe Text)
+splitTagsAndLocation tag'locations
+   -- -| (tag, _:location@(_:_)) <- break (=='/') tag'locations = (just tag, just location)
+   | (location , uncons -> Just (_,tag@(uncons -> Just _))) <- break (=='#') tag'locations = (splitOn "#" tag, just location)
+   | otherwise = ([], Just tag'locations)
+   where just "" = Nothing
+         just s = Just s
+    

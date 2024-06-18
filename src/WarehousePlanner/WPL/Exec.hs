@@ -8,7 +8,7 @@ import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import WarehousePlanner.Move
-import WarehousePlanner.Selector (printBoxSelector)
+import WarehousePlanner.Selector (printBoxSelector, parseBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
@@ -76,6 +76,12 @@ executeCommand ec command = case command of
     ---------
     SelectShelves selector -> do
       narrowCSelector narrowShelves selector ec
+    ---------
+    TagAndMove txt ors -> do
+      let (tags, locm) = splitTagsAndLocation txt
+      inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
+      return ec { ecBoxes = fmap boxId inEx }
+      
     ---------
   
 

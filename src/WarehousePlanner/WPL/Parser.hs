@@ -14,6 +14,7 @@ import Text.Megaparsec.Char
 import Text.Megaparsec.Char.Lexer qualified as L
 import Data.Char
 import Data.List.NonEmpty (NonEmpty(..))
+import Control.Monad(fail)
 
 
 -- * Whitespaces & Co
@@ -102,6 +103,7 @@ command = asum $ map lexeme [ toggleTag
                             , move
                             , shelfSel
                             , boxSel
+                            , tam
                             ] where
    move = do 
             lexeme "to" 
@@ -115,6 +117,14 @@ command = asum $ map lexeme [ toggleTag
            lexeme "tog"
            tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
            return $ ToggleTags (parseTagOperations tagOps) 
+   tam = do
+          lexeme "tam"
+          tagloc <- lexeme $ takeWhile1P (Just "loc#tag") (not . isSpace)
+          ors <- (lexeme "with" >> orientationRules)
+                 <|> return []
+          return $ TagAndMove tagloc ors
+
+                    
    boxSel = SelectBoxes <$> boxSelector
    shelfSel = "/" >> (SelectShelves <$> shelfSelector)
 
@@ -144,10 +154,12 @@ cselector mk = try $ asum [swapContext, root, parent, stmt, sel ] where
      root = (lexeme $ string ".~") >> return Root
      stmt = CStatement <$> (lexeme "(" *> statement <* ")")
          
-
-
-
-     
+orientationRules :: MParser [OrientationStrategy]
+orientationRules = do
+  rule <- lexeme $ takeWhile1P (Just "orientation rules") (not . isSpace)
+  case parseOrientationRule [tiltedForward, tiltedFR] rule of
+        [] | not (null rule) -> fail "not an rule"
+        rules -> return rules
 
 -- | Make sure things don't start with a lower case (to not be mixed
 -- with a mispelled command

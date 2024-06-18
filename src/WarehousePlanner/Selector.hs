@@ -147,6 +147,7 @@ parseMatchPattern pat = MatchFull pat
   
 
 parseBoxSelector :: Text -> BoxSelector
+parseBoxSelector "*" = BoxSelector SelectAnything SelectAnything (parseBoxNumberSelector "")
 parseBoxSelector selector = let
   (box'location, drop 1 ->numbers) = break (=='^') selector
   (box, drop 1 -> location) = break (=='/') box'location
