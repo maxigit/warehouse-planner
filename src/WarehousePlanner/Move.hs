@@ -6,19 +6,24 @@ module WarehousePlanner.Move
 , stairsFromCorners
 , moveBoxes
 -- , moveSimilarBoxes
+, moveAndTag
+, moveToLocations
 )
 where 
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import qualified Prelude
 import Control.Monad.State(gets)
+import Control.Monad hiding(mapM_,foldM)
 import Data.List.NonEmpty(unzip)
 import Data.List qualified as List
 import WarehousePlanner.Type
 import WarehousePlanner.Slices
 import WarehousePlanner.SimilarBy
 import WarehousePlanner.Base
+import WarehousePlanner.Selector
 import WarehousePlanner.Affine
 import WarehousePlanner.Tiling
+import Data.Text(splitOn)
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -354,4 +359,57 @@ moveBoxes exitMode partitionMode sortMode bs ss = do
     let (moveds, lefts) = unzip moved'lefts
     return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
   return $ InExcluded (Just $ concat ins) (Just $ concat exs)
+
+moveAndTag :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s))  s
+moveAndTag tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
+  newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
+                                 , intercalate "#" tags_
+                                 , fromMaybe "" locationM
+                                 , mconcat $ map tshow orientations
+                                 ]
+  let withNoEmpty = partition (== "@noEmpty")
+      (noEmpty1, tagsAndPatterns) = withNoEmpty tagsAndPatterns_
+      (noEmpty2, tags) = withNoEmpty tags_
+      noEmpty = not . null $ noEmpty1 <> noEmpty2
+
+      -- don't resort boxes if a number selector has been set.
+      sortMode = case numberSelector style  of
+                      BoxNumberSelector Nothing Nothing Nothing -> SortBoxes
+                      _ -> DontSortBoxes
+      tagOps = parseTagAndPatterns tagsAndPatterns tags
+  boxes0 <- findBoxByNameAndShelfNames style
+  case (boxes0, noEmpty) of
+       ([], True) -> error $ show style ++ " returns an empty set"
+       _         -> return ()
+  boxes <- mapM findBox boxes0
+  inEx <- case locationM of
+              Just location' -> do
+                   -- reuse leftover of previous locations between " " same syntax as Layout
+                   moveToLocations sortMode boxes location'
+                   -- foldM (\boxInEx locations -> do
+                   --            let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
+                   --            let locationss = splitOn "|" location
+                   --            shelves <- findShelfBySelectors (map parseSelector locationss)
+                   --            ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+                   --            return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
+                   --       ) (mempty { excluded = Just boxes}) (splitOn " " location')
+              Nothing -> return $ mempty { included = Just boxes } 
+  case tags of
+    [] -> return inEx
+    _  -> do
+      let untagOps = negateTagOperations tagOps
+      newIn <- zipWithM (updateBoxTags tagOps) (includedList inEx) [1..]
+      newEx <- zipWithM (updateBoxTags untagOps) (excludedList inEx) [1..]
+      return $ InExcluded (Just newIn) (Just newEx)
+
+-- with each group having "mode" and locations
+-- A|B ^C|D means try A or B, then C or D with exit on top mode
+moveToLocations sortMode boxes location = do
+   foldM (\boxInEx locations -> do
+             let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
+             let locationss = splitOn "|" location
+             shelves <- findShelfBySelectors (map parseSelector locationss)
+             ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+             return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
+        ) (mempty { excluded = Just boxes}) (splitOn " " location)
 

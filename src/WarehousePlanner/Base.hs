@@ -44,12 +44,14 @@ module WarehousePlanner.Base
 , orTrue
 , parseTagOperation
 , parseTagOperations
+, parseTagAndPatterns
 , parsePositionSpec
 , parseOrientationRule
 , partitionBoxes
 , partitionShelves
 , printDim
 , readOrientations
+, readTagAndPatterns
 , replaceSlashes
 , shelfBoxes
 , updateBox
@@ -92,6 +94,7 @@ import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import System.FilePath.Glob qualified as Glob
 
 
 -- import Debug.Trace qualified as T
@@ -545,6 +548,25 @@ dimensionTagOps dim = [dshow 'l' dLength, dshow 'w' dWidth, dshow 'h' dHeight]
   where dshow c f = ( pack $ '\'' : c : []
                     , SetValues [tshow (floor $ 100 * f dim)]
                     )
+
+
+-- | Parse tags operations from a list a text.
+-- If @include or @exclude is used, the tags on the right
+-- will be used as glob pattern to filter the local tags
+--lThis allows to read boxes but only set a s
+parseTagAndPatterns :: [Text] ->  [Text] -> [Tag'Operation]
+parseTagAndPatterns tagsAndPatterns localTags = 
+  let (defaultTags, pats) = break (`elem` ["@exclude", "@include"]) tagsAndPatterns
+      globs = map (Glob.compile . unpack) $ drop 1 pats
+      keepTagOp = case pats of
+        "@exclude":_ -> \(tag, _) -> not $ any (flip Glob.match (unpack tag)) globs
+        "@include":_ -> \(tag, _) -> any (flip Glob.match (unpack tag)) globs
+        _ -> const True
+  in map parseTagOperation defaultTags <> filter keepTagOp (map parseTagOperation localTags)
+  
+readTagAndPatterns :: [Text] -> [Text] -> [Text]
+readTagAndPatterns tagsAndPatterns localTags = maybe [] flattenTags $ modifyTags (parseTagAndPatterns tagsAndPatterns localTags) mempty 
+  
 
 -- | Extract new dimensions from tags
 -- use given dimension for missing elements
