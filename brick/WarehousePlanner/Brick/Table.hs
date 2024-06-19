@@ -54,7 +54,7 @@ shelfSummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
                                                                | box <- boxes
                                                                ]
                          in case toList boxesByOffset of
-                              [] -> emptyWidget
+                              [] -> withAttr (percToAttrName 0 0) $ str "·" -- emptyWidget
                               [ones]  -> renderBoxes ones
                               multi -> str "[" <+> hBox (map renderBoxes multi) <+> str "]"
 
