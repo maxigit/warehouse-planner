@@ -695,7 +695,7 @@ stylesSideBar state@AppState{..} =
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
-  legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV $ max 1 i]) | i <- [0..9] , let r = fromIntegral i / 8 ]
+  legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..9] , let r = fromIntegral i / 8 ]
   in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
@@ -717,7 +717,7 @@ debugShelf state = let
      if -- | ViewSummary SVSurfaceLH <- asViewMode state 
         -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
         | ViewSummary sview <- asViewMode state 
-        -> renderHorizontalSummary (bayToBars sview) (currentRun state)  :
+        -> renderHorizontalSummary (B.padTop B.Max . bayToBars sview) (currentRun state)  :
            [  B.hBox $ intersperse (B.str " ") 
                      $ [  B.str (show m)
                        , B.txt $ sName ssum

@@ -54,7 +54,7 @@ percUsed shelves = do
   
 
 eigthV :: Int -> Char
-eigthV n | n <= 0  = ' '
+eigthV n | n <= 0  = '∅'
 eigthV 1 = '▁'
 eigthV 2 = '▂'
 eigthV 3 = '▃'
@@ -62,10 +62,11 @@ eigthV 4 = '▄'
 eigthV 5 = '▅'
 eigthV 6 = '▆'
 eigthV 7 = '▇'
-eigthV _ = '█'
+eigthV 8 = '█'
+eigthV _ = '▲'
 
 eigthH :: Int -> Char
-eigthH n | n <= 0  = ' '
+eigthH n | n <= 0  = '∅'
 eigthH 1 = '▏'
 eigthH 2 = '▎'
 eigthH 3 = '▍'
@@ -73,7 +74,8 @@ eigthH 4 = '▌'
 eigthH 5 = '▋'
 eigthH 6 = '▊'
 eigthH 7 = '▉'
-eigthH _ = '█'
+eigthH 8 = '█'
+eigthH _ = '▶'
 
 
 data Level = Empty -- blue
