@@ -106,12 +106,15 @@ renderHorizontalSummary ::  (SumVec a -> Widget n) -> SumVec (SumVec a) -> Widge
 renderHorizontalSummary renderBay ssum = hBox . map (\s -> withShelfHLStatus s $ renderBay s) $ sDetailsList ssum  where
     -- SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
+-- |  Find the dimension with the least ratio
+-- unless ones is over > 1. It needs to be displayed
 renderBestBar :: NonEmpty SummaryView -> ShelvesSummary e f a -> Widget n
-renderBestBar sviews ssum = let
-   (_, sview) :| _ = sortOn fst
-                   $ [ (ratio (fromSummary v)  ssum, v)
-                      | v <- sviews
-                      ]
+renderBestBar sviews ssum =
+  let sview = case filter (\(r, _) -> r > 1) sviewsWithRatios of
+                (_, v) : _ -> v
+                _          -> snd . headEx $ sortedViews
+      sviewsWithRatios = [(ratio (fromSummary v) ssum, v) | v <- toList sviews]
+      sortedViews = sortOn fst sviewsWithRatios
   in renderS sview ssum
 
 renderBestBarDef :: ShelvesSummary e f a -> Widget n
