@@ -193,7 +193,7 @@ initState adjust title = do
       state = adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
-                  , asPropertyAsGradient = False
+                  , asPropertyAsGradient = Nothing
                   , asShowSelected = True
                   , asBoxOrder = BOByShelve
                   , asLastKeys = []
@@ -282,11 +282,14 @@ whMain adjust title reload = do
             <> eventAttrs
             <> highlightAttrs
       propAttrs state = 
-            if asPropertyAsGradient state
-            then gradientAttributes $ map fst $ toList $ asCurrentRunPropValues state
-            else zipWith (\style attr -> (makeStyleAttrName style, attr))
-                         (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
-                         (cycle defaultStyleAttrs)
+            case asPropertyAsGradient state of
+               Nothing -> zipWith (\style attr -> (makeStyleAttrName style, attr))
+                                  (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
+                                  (cycle defaultStyleAttrs)
+               Just allProps -> let props = if allProps
+                                            then keys $ sePropValues $ sExtra $ asShelvesSummary  state
+                                            else map fst $ toList $ asCurrentRunPropValues state
+                                in gradientAttributes props
   void $ B.defaultMain (whApp attrs reload) state0
 
 
@@ -423,8 +426,8 @@ handleWH ev =
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
-         ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = not (asPropertyAsGradient s) }
-         EToggleShowSelected -> modify \s -> s { asShowSelected = not (asShowSelected s) }
+         ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
+         EToggleShowSelected -> modify \s -> s { asShowSelected = not  (asShowSelected s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
@@ -572,6 +575,12 @@ lastOf :: SumVec a -> Int
 lastOf ShelvesSummary{sDetails} = lastOf' sDetails
 lastOf' v = V.length v - 1
 
+
+nextPGradient :: Maybe Bool -> Maybe Bool
+nextPGradient = \case 
+              Nothing -> Just True
+              Just True -> Just False
+              Just False -> Nothing
 
 -- navigate through all boxes changing shelf if needed
 nextBoxThrough :: AppState -> AppState
