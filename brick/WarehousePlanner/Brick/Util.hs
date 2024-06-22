@@ -28,6 +28,7 @@ eigthH, eigthV
 , highlightAttrs
 , withBoxHLStatus, withShelfHLStatus
 , boxPropValue
+, gradientAttributes
 ) where
 
 import ClassyPrelude hiding (on)
@@ -152,6 +153,46 @@ defaultStyleAttrs = [ with $ fg `on` V.black
                                   | (a, b, c) <- [(0,100,200), (50,150,200), (0, 50,255)]
                                   ]
                     ]
+                    
+gradientAttributes :: [Text] -> [(AttrName, V.Attr)]
+gradientAttributes [] = []
+gradientAttributes [name] = [(makeStyleAttrName name, V.red `on` V.black)]
+gradientAttributes names = let
+  n = length names
+  ng = n `div` 4
+  ny = ng
+  nr = ny
+  np = n - ng - ny - nr
+  range _ end 0 _ = end
+  range start end nr i = start + ((end - start) * i `div` nr)
+  greenToYellow = [ V.srgbColor (range 0 255 ng i) 255 0
+                  | i <- [0..ng-1]
+                  ]
+  yellowToRed = [ V.srgbColor 255 (range 255 0 ny i) 0
+                | i <- [0..ny-1]
+                ]
+  redToPurple = [ V.srgbColor 255 0 (range 0 255 nr i)
+                | i <- [0..nr-1]
+                ]
+  purpleToCyan = [ V.srgbColor (range 255 0 (np-1) i) (range 0 255 (np-1) i) 255
+                | i <- [0..np-1]
+                ]
+                --                          ^^^^
+                -- so that we reach 255,
+                -- not needed for the other range
+                -- because the last color of a range
+                -- is the first of the next one
+  colors = greenToYellow
+         <> yellowToRed
+         <> redToPurple
+         <> purpleToCyan
+  in [ (makeStyleAttrName name,  fg `on` V.black)
+     | (name, fg) <- zip names colors
+     ]
+
+
+
+
 
 selected_ = attrName "selected"
 selectedAttr = (selected_, V.defAttr `V.withStyle` V.reverseVideo)

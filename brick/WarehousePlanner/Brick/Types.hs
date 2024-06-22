@@ -110,6 +110,7 @@ data AppState = AppState
      , asSelectedPropValue :: Maybe Text
      , asCurrentPropValue :: Int 
      , asCurrentRunPropValues :: Vector (Text, Summary)
+     , asPropertyAsGradient :: Bool
      ------ deal with multikey mapping
      , asLastKeys :: [Char]
      , asBoxOrder :: BoxOrder 

@@ -45,6 +45,7 @@ data WHEvent = ENextMode
              | EToggleViewHistory
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
+             | ETogglePropertyGradient
              -- 
              | ENextRun
              | EPrevRun
@@ -191,6 +192,7 @@ initState adjust title = do
       state = adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
+                  , asPropertyAsGradient = False
                   , asBoxOrder = BOByShelve
                   , asLastKeys = []
                   , asWarehouse = error "Warehouse not initialized"
@@ -274,11 +276,15 @@ whMain adjust title reload = do
             selectedAttr
             -- : bayNameAN
             : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
-            : zipWith (\style attr -> (makeStyleAttrName style, attr)) --  reverseIf (Just style == selectedStyle state) attr ))
-                      (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
-                      (cycle defaultStyleAttrs)
+            : propAttrs state
             <> eventAttrs
             <> highlightAttrs
+      propAttrs state = 
+            if asPropertyAsGradient state
+            then gradientAttributes (keys $ sePropValues $ sExtra $ currentRun state)
+            else zipWith (\style attr -> (makeStyleAttrName style, attr))
+                         (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
+                         (cycle defaultStyleAttrs)
   void $ B.defaultMain (whApp attrs reload) state0
 
 
@@ -309,6 +315,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'H') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryPrevious
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
        B.VtyEvent (V.EvKey (V.KChar 'w') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleCollapseDepth
+       B.VtyEvent (V.EvKey (V.KChar 'p') [] ) | 'z':_ <- lasts  -> handleWH $ ETogglePropertyGradient
        B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
        B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${boxname}"
        B.VtyEvent (V.EvKey (V.KChar 'B') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[batch]"
@@ -322,7 +329,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'S') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style}"
        B.VtyEvent (V.EvKey (V.KChar 's') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style:-}"
        B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${content}"
-       B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${boxnamboxnameboxnamee}"
+       B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${boxname}"
        B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "$[batch]"
        B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}:$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}"
@@ -408,6 +415,7 @@ handleWH ev =
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
+         ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = not (asPropertyAsGradient s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
