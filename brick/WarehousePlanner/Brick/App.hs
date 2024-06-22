@@ -46,6 +46,7 @@ data WHEvent = ENextMode
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
              | ETogglePropertyGradient
+             | EToggleShowSelected
              -- 
              | ENextRun
              | EPrevRun
@@ -193,6 +194,7 @@ initState adjust title = do
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
                   , asPropertyAsGradient = False
+                  , asShowSelected = True
                   , asBoxOrder = BOByShelve
                   , asLastKeys = []
                   , asWarehouse = error "Warehouse not initialized"
@@ -281,7 +283,7 @@ whMain adjust title reload = do
             <> highlightAttrs
       propAttrs state = 
             if asPropertyAsGradient state
-            then gradientAttributes (keys $ sePropValues $ sExtra $ currentRun state)
+            then gradientAttributes $ map fst $ toList $ asCurrentRunPropValues state
             else zipWith (\style attr -> (makeStyleAttrName style, attr))
                          (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
                          (cycle defaultStyleAttrs)
@@ -316,6 +318,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
        B.VtyEvent (V.EvKey (V.KChar 'w') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleCollapseDepth
        B.VtyEvent (V.EvKey (V.KChar 'p') [] ) | 'z':_ <- lasts  -> handleWH $ ETogglePropertyGradient
+       B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleShowSelected
        B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
        B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${boxname}"
        B.VtyEvent (V.EvKey (V.KChar 'B') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[batch]"
@@ -416,6 +419,7 @@ handleWH ev =
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = not (asPropertyAsGradient s) }
+         EToggleShowSelected -> modify \s -> s { asShowSelected = not (asShowSelected s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
@@ -442,10 +446,14 @@ handleWH ev =
                                                                    else currentPropValue s
                                                }
          ENextPropValue -> do
-                    modify \s -> s { asCurrentPropValue = nextOf' (asCurrentPropValue s) (asCurrentRunPropValues s) }
+                    modify \s -> s { asCurrentPropValue = nextOf' (asCurrentPropValue s) (asCurrentRunPropValues s) 
+                                   , asShowSelected = True
+                                   }
                     -- handleWH ESelectCurrentPropValue
          EPreviousPropValue -> do
-                    modify \s -> s { asCurrentPropValue = prevOf' (asCurrentPropValue s) (asCurrentRunPropValues s) }
+                    modify \s -> s { asCurrentPropValue = prevOf' (asCurrentPropValue s) (asCurrentRunPropValues s)
+                                   , asShowSelected = True
+                                   }
                     -- handleWH ESelectCurrentPropValue
          ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
          ESetProperty prop -> setProperty prop

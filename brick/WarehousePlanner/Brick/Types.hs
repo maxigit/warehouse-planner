@@ -111,6 +111,7 @@ data AppState = AppState
      , asCurrentPropValue :: Int 
      , asCurrentRunPropValues :: Vector (Text, Summary)
      , asPropertyAsGradient :: Bool
+     , asShowSelected :: Bool
      ------ deal with multikey mapping
      , asLastKeys :: [Char]
      , asBoxOrder :: BoxOrder 
@@ -161,6 +162,7 @@ sDetailsList :: Foldable f => ShelvesSummary e f a -> [a]
 sDetailsList ssum = F.toList (sDetails ssum)
 
 selectedPropValue :: AppState -> Maybe Text
+selectedPropValue state | asShowSelected state == False = Nothing
 selectedPropValue state | asViewMode state == ViewHistory = Nothing
 selectedPropValue state@AppState{..} = asSelectedPropValue <|> currentPropValue state
 
