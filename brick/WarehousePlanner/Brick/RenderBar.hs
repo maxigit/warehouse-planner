@@ -70,11 +70,16 @@ bayToBars :: SummaryView -> Bay SumVec (SumVec a) -> Widget n
 bayToBars sview bay =  let
   -- ws = reverse $ F.toList $ fmap (renderBestBar [SVMaxHeight, SVMaxLength]) (sDetails bay)
   ws = reverse $ F.toList $ fmap render (sDetails bay)
-  render ssum = str (eigthV 1 : []) <=> (withShelfHLStatus ssum (
+  forCurrent ssum w = if hsCurrent $ seShelfHLStatus $ sExtra ssum
+                      -- then withAttr  ("current" <> "cursor") w
+                      then withAttr (percToAttrName 2 0 ) w
+                      else w
+  render ssum = forCurrent ssum (str (eigthV 1 : [])) <=> ((
               if ratio (fromSummary SVMaxLength) ssum < ratio (fromSummary SVMaxHeight) ssum
               then shelfSummaryToBar HorizontalBar SVMaxLength sview ssum
               else shelfSummaryToBar VerticalBar SVMaxHeight sview ssum
-              ) <+> str (eigthH 1 : []) )
+              ) <+> forCurrent ssum (str (eigthH 1 : []))
+              )
   _render = renderBestBarDef
   in vBox ws
 
@@ -104,7 +109,7 @@ renderS smode s = let
        in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
 renderHorizontalSummary ::  (SumVec a -> Widget n) -> SumVec (SumVec a) -> Widget n
-renderHorizontalSummary renderBay ssum = hBox . map (\s -> withShelfHLStatus s $ renderBay s) $ sDetailsList ssum  where
+renderHorizontalSummary renderBay ssum = hBox . map (\s -> renderBay s) $ sDetailsList ssum  where
     -- SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 -- |  Find the dimension with the least ratio
