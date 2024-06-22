@@ -338,6 +338,9 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}:$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}"
        B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${volume}"
+       B.VtyEvent (V.EvKey (V.KChar 'p') _ ) |  't':_ <- lasts  -> do 
+                  prop <- gets asProperty 
+                  handleWH $ ESetBoxTitle $ fromMaybe "" prop
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
