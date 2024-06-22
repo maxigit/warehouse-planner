@@ -13,6 +13,6 @@ import Control.Monad.State (get)
 display :: IO ()
 display  = do
   let wh = fmap Right $ exec get
-  whMain Prelude.id "repl" wh
+  whMain id "repl" wh
 
 
