@@ -328,6 +328,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
        B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
        B.VtyEvent (V.EvKey (V.KChar 'o') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${orientation}"
+       B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${volume}"
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  't':_ <- lasts  -> handleWH (EStartInputSelect ISelectTag)
        B.VtyEvent (V.EvKey (V.KChar 'S') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style}"
        B.VtyEvent (V.EvKey (V.KChar 's') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style:-}"
@@ -336,6 +337,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "$[batch]"
        B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}:$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}"
+       B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${volume}"
        B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
        B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
        B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
