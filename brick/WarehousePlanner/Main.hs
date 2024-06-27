@@ -238,7 +238,11 @@ defaultMainWith expandSection = do
                   BoxHistory -> withLines (generateBoxHistory boxSelectorM)
                   Export -> do
                               let bare = scenario { sInitialState = Nothing
-                                                  , sSteps = filter (\(Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]) $ sSteps scenario
+                                                  , sSteps = filter (\case
+                                                                      (Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]
+                                                                      _ -> False
+                                                                    )
+                                                                    $ sSteps scenario
                                                   , sLayout = sLayout scenario
                                                   , sColourMap = sColourMap scenario
                                                   }
