@@ -327,6 +327,8 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar 'B') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${content}"
        B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}"
+       B.VtyEvent (V.EvKey (V.KChar 'd') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${dimension}"
+       B.VtyEvent (V.EvKey (V.KChar 'D') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style:-}-${dimension}"
        B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}:$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
        B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
