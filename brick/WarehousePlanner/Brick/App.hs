@@ -330,6 +330,7 @@ whHandleEvent reload ev = do
        B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}:$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
        B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
+       B.VtyEvent (V.EvKey (V.KChar 'S') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style:-}-$[batch]"
        B.VtyEvent (V.EvKey (V.KChar 'o') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${orientation}"
        B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${volume}"
        B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  't':_ <- lasts  -> handleWH (EStartInputSelect ISelectTag)
