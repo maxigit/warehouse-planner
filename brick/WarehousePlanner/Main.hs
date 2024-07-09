@@ -19,6 +19,7 @@ import Data.Text.IO qualified as Text
 import Control.Monad.State (get)
 import System.FilePath (takeBaseName)
 import WarehousePlanner.Brick.Types
+import Data.Map qualified as Map
 
 -- * Type
 data Options = Options
@@ -203,6 +204,10 @@ defaultMainWith expandSection = do
                  Right (exec, _) -> exec summary >>= outputText . pack . show
        Display -> let
                setParam state = state { asProperty = oProperty 
+                                      , asInputHistory = case oProperty of
+                                                           Nothing -> id
+                                                           Just prop -> \m ->  Map.singleton ISelectProperty [prop] <> m
+                                                         $ asInputHistory state
                                       , asCurrentRun = fromMaybe 0 oCurrentRun
                                       }
                in whMain setParam title do

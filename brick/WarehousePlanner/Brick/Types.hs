@@ -59,6 +59,7 @@ data InputMode = ISelectBoxes
                | ISelectShelves
                | ISelectProperty 
                | ISelectTag
+     deriving (Show, Eq, Ord, Enum)
 
 data Input = Input { iEditor :: Editor Text Resource
                    , iMode :: InputMode
@@ -74,6 +75,7 @@ data InputData = InputData { idInitial :: Text
                            , idContent :: Text
                            , idBoxSelector :: Text
                            , idShelfSelector :: Text
+                           , idHistory :: [Text]
                            }
    deriving (Show, Eq)
 -- | Summary with a "list" with current position
@@ -122,6 +124,7 @@ data AppState = AppState
      , asNavigateWithPrevious ::  Bool -- ^ if true, make diff = previous of 
      , asDebugShowDiffs :: Bool
      , asInput :: Maybe Input
+     , asInputHistory :: Map InputMode [Text]
      , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
      , asShelfSelection :: Maybe (Selection ShelfSelector Text)
      , asCollapseDepth :: Bool

@@ -203,7 +203,7 @@ initState adjust title = do
                   , asNavigateCurrent = False
                   , asNavigateWithPrevious = True
                   , asDebugShowDiffs = False
-                  , asInput = Nothing
+                  , asInput = Nothing, asInputHistory = mempty
                   , asBoxSelection = Nothing
                   , asShelfSelection = Nothing
                   , asShelvesSummary = error "Shelves Summary not initialized"
@@ -307,7 +307,11 @@ whHandleEvent reload ev = do
                                     ISelectShelves -> setShelfSelection result
                                     ISelectProperty -> setProperty result
                                     ISelectTag -> setTagAll result
-                               modify \s -> s  { asInput = Nothing }
+                               modify \s -> s  { asInput = Nothing 
+                                               , asInputHistory = Map.alter (pure . maybe [result] (result:)) 
+                                                                            (iMode input)
+                                                                            (asInputHistory s)
+                                               }
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
                 Right input -> modify \s -> s { asInput = Just input }
@@ -888,6 +892,7 @@ makeInputData imode state = let
                      _ -> ""
     idBoxSelector = maybe "" sText $ asBoxSelection state
     idShelfSelector = maybe "" sText $ asShelfSelection state
+    idHistory = findWithDefault [] imode (asInputHistory state)
     in InputData{..}
 
                                                                      
