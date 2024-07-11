@@ -396,7 +396,7 @@ executeFillCommand shelf state@FillState{..} = \case
           doStrategy partitionMode strategy offset = do
               -- find the next positions 
               positions <- case partitionMode of
-                        POverlap -> do
+                        POverlap _ -> do
                                       used <- findBoxByShelf shelf
                                       return $ snd $ partitionEitherSlices $ bestPositions' boxAffDimension partitionMode [strategy] shelf offset used fLastBox_
                         PSortedOverlap -> error "Sorted overlap NOT IMPLEMENTED"

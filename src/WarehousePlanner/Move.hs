@@ -28,6 +28,7 @@ import WarehousePlanner.Affine
 import WarehousePlanner.Tiling
 import WarehousePlanner.WPL.ExContext
 import Data.Text(splitOn, uncons)
+import Data.Foldable qualified as F
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -108,10 +109,10 @@ bestPositionOrBoxes partitionMode shelf simBoxes = do
   return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim 
 
 bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Slices Double (BoxesOrPos b)
-bestPositions' getAff pmode orientations shelf start used dim | pmode `elem` [POverlap, PSortedOverlap ]= let
+bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode = let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
-  solutions = [ fmap isUsed $ bestPositions' getAff PRightOnly [strategy]  shelf start [] dim 
+  solutions = [ fmap isUsed $ justifyPositions $ bestPositions' getAff PRightOnly [strategy]  shelf start [] dim 
               | strategy <- orientations
               ]
   sorted = sortOn (Down . Prelude.length . snd . partitionEitherSlices) solutions
@@ -119,9 +120,9 @@ bestPositions' getAff pmode orientations shelf start used dim | pmode `elem` [PO
      [] -> mempty
      (best:_) -> best
   where overlap :: Position -> b -> Bool
-        overlap (Position offset orientation) = \box -> let
+        overlap pos = \box -> let
                 used = getAff box
-                in affDimensionOverlap (AffDimension offset (offset <> rotate orientation dim)) used
+                in affDimensionOverlap (positionToAffine dim pos)  used
          -- return the position if empty or the boxes overlapping it if any               isUsed :: Position -> BoxesOrPos s
         isUsed (Right pos) = let 
            overlappings = filter  (overlap pos) used
@@ -129,6 +130,16 @@ bestPositions' getAff pmode orientations shelf start used dim | pmode `elem` [PO
                 [] -> Right pos
                 _ -> Left overlappings
         isUsed left = left
+        isOverlap = \case 
+                     POverlap _ -> True
+                     PSortedOverlap -> True
+                     _ -> False
+        justifyPositions = case pmode of
+                             POverlap ORight -> justifyRight dim (minDim shelf)
+                             POverlap OAligned -> justifyAlign (map getAff used) (minDim shelf)
+                             _ -> id
+                             
+                      
 
 bestPositions' getAff partitionMode orientations shelf start usedBoxes dim = let
   starti = invert start
@@ -152,7 +163,7 @@ bestPositions' getAff partitionMode orientations shelf start usedBoxes dim = let
                                                                             xs@(_:_:_:_) -> drop 1 $ dropEnd 1 $ xs
                                                                             xs -> xs
                                                             POr m1 m2 -> go m1 ++ go m2
-                                                            POverlap -> error "POverlap not implemented"
+                                                            POverlap _ -> error "POverlap not implemented"
                                                             PSortedOverlap -> error "PSortedOverlap not implemented"
                                                    in go partitionMode
                                         , let used = Dimension (min 0 (0-l)) (min 0 (0-w)) (min 0 (0-h))
@@ -209,6 +220,39 @@ generatePositions base fillingStrategy ori boxDim (TilingCombo dir m1 m2) = let
                Vertical -> Dimension 0 0 h
   in positions1 <> positions2
 
+-- | Offset positions to align with the right of the given dimension
+justifyRight :: Dimension -> Dimension -> Slices Double (BoxesOrPos b) -> Slices Double (BoxesOrPos b)
+justifyRight box shelf slices = let
+   (_,poss) = partitionEitherSlices slices
+   pos = F.toList poss
+   in case pos of
+           [] -> mempty
+           _ -> let maxL = maximumEx (map (dLength . aTopRight . positionToAffine box) pos)
+                    offset = Dimension (max 0 $ dLength shelf - maxL) 0 0 
+                in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
+-- | Offset positions to align with the most right start of a box
+justifyAlign :: [AffDimension] -> Dimension -> Slices Double (BoxesOrPos b) -> Slices Double (BoxesOrPos b)
+justifyAlign used shelf slices = let
+   (_,poss) = partitionEitherSlices slices
+   pos = F.toList poss
+   in case used of
+      [] -> slices
+      _ -> let maxL = maximumEx $ map (dLength . aBottomLeft) used
+               -- using maxL as offset doesn't allow to fit box on hole before maxL
+               -- to be able to use them we need to only offset  bit.
+               -- The whole grid can only be shifted by an amount lesser than the difference
+               -- between the used length and the shelf length (the extra space on the right).
+               -- We use that to do a module
+               spaceLeft = dLength shelf - maximumEx (map (dLength . pOffset) pos)
+               l = if maxL <= spaceLeft || spaceLeft == 0
+                   then maxL
+                   else let q = maxL / spaceLeft
+                        in maxL - (fromIntegral (floor q) * spaceLeft)
+               offset = Dimension l 0 0
+           in fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
+           
+   
+ 
 -- * Find  the corners of the boxes which are enough
 -- to describe the "stair" hull of all of the top right corner
 -- of the given boxes.

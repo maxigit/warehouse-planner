@@ -235,11 +235,23 @@ data PartitionMode
   = PAboveOnly -- ^ max used height only
   | PRightOnly -- ^ max used weight only
   | PBestEffort -- ^ try to find all available rectangles
-  | POverlap -- ^ partition as if shelf was empty then removed used slots.
+  | POverlap OJustify -- ^ partition as if shelf was empty then removed used slots.
   | PSortedOverlap -- ^ partition as if shelf was empty then removed used slots. but keep overall boxe in order
   | PBehind
   | POr PartitionMode PartitionMode -- ^ combination
   deriving (Show, Eq, Ord)
+  
+-- | Overlap justify mode
+-- Overlapping works by juxtaposing a grid (as if the shelf was empty)
+-- and remove the position which are not free (Because a box is overlapping it).
+-- For best result, it might be necessary to adjust the grid 
+-- To the right (ORight) or so that one of the line vertical line
+-- of the grid is aligned with the last of the used box.
+--  
+data OJustify = OLeft 
+              | ORight
+              | OAligned
+     deriving (Show, Eq, Ord)
 
 data AddOldBoxes = NewBoxesOnly | AddOldBoxes deriving (Show, Eq, Ord, Enum)
 

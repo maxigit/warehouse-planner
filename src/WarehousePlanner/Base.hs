@@ -1390,20 +1390,22 @@ modesParser = do
 
 
   where partitionP = asum $ map go
-                          [ (P.char '~', PAboveOnly)
-                          , (P.char ':', PRightOnly)
-                          , (P.char '%', PBestEffort)
-                          , (P.char '-', POverlap)
-                          , (P.char '_', PBehind)
-                          ]
-                          <> map go
                           [ (P.string "right", PRightOnly)
                           , (P.string "above", PAboveOnly)
                           , (P.string "best", PBestEffort)
-                          , (P.string "overlap", POverlap)
-                          , (P.string "->", PSortedOverlap)
+                          , (P.string "overlap", POverlap OLeft)
+                          , (P.string "->", POverlap ORight)
+                          , (P.string "-|", POverlap OAligned)
+                          , (P.string "-^", PSortedOverlap)
                           , (P.string "sorted", PSortedOverlap)
                           , (P.string "behind", PBehind)
+                          ]
+                          <> map go
+                          [ (P.char '~', PAboveOnly)
+                          , (P.char ':', PRightOnly)
+                          , (P.char '%', PBestEffort)
+                          , (P.char '-', POverlap OLeft )
+                          , (P.char '_', PBehind)
                           ]
         go (p, v) = const v <$> P.try p
         boxesP = asum $ map go

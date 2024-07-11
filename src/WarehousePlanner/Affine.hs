@@ -7,6 +7,7 @@ module WarehousePlanner.Affine
 , groupBoxesByTile
 , tileSurface
 , boxesSurface
+, positionToAffine
 )
 where 
 
@@ -58,6 +59,9 @@ affineToDimensions rec = let
      , y <- [y', y'']
      , z <- [z', z'']
      ]
+
+positionToAffine :: Dimension -> Position -> AffDimension
+positionToAffine dim Position{..} = AffDimension pOffset (pOffset <> rotate pOrientation dim)
 
 -- * Boxes operations
 boxAffDimension :: Box s -> AffDimension
