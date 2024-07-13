@@ -800,9 +800,21 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                         , (styleAndContent, tags) <- expand style
                         , let (style', content) = splitStyle styleAndContent
                         ]
+                -- dont sort if any of the shelves specification specify not no sort
+                dontSort = not $ null  [ True
+                                       | (_, (_,shelf,_
+                                             ,_,_,_
+                                             ,_
+                                             ) 
+                                         ) <- rows0
+                                       , let (_, ( _,_,_, sortM)) = extractModes shelf
+                                       , sortM == Just DontSortBoxes
+                                       ]
+                                       
             -- groups similar
                 groups = List.groupBy (\a b -> snd a == snd b)
-                       $ List.sortBy (comparing snd) rows0
+                       $ ( if dontSort then id else List.sortBy (comparing snd))
+                       rows0
 
             (_,v) <- mapAccumLM  ( \_previousMatch rows@((_, (_,shelf, style, l, w, h, os)):_) -> do
                         s0 <- defaultShelf

@@ -1409,6 +1409,9 @@ modesParser = do
                           ]
         go (p, v) = const v <$> P.try p
         boxesP = asum $ map go
+                [ (P.string "&", (NewBoxesOnly, Just DontSortBoxes))
+                ]
+                <> map go
                 [ (P.char '@', (AddOldBoxes, Just SortBoxes))
                 , (P.char '+', (AddOldBoxes, Just DontSortBoxes))
                 ]
