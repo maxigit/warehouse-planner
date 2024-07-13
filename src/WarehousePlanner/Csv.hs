@@ -789,11 +789,17 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                               processStockTakeWithPosition uniqueMap tagOrPatterns newBoxOrientations splitStyle $ Vec.toList rows
         Right (rowsV) -> return $ do
             -- we get bigger box first : -l*w*h
-            let rows0 = [ ((qty, content, tags),  (-(l*w*h), shelf, style', l,w,h, if null os then "%" else os)) | (shelf, style, qty, l, w, h, os)
-                       <- Vec.toList (rowsV ::  Vec.Vector (Text, Text, Int, Double, Double, Double, Text))
-                       , (styleAndContent, tags) <- expand style
-                       , let (style', content) = splitStyle styleAndContent
-                       ]
+            let rows0 = [ ( (qty, content, tags)
+                          ,  ( -(l*w*h)
+                             , shelf, style'
+                             , l,w,h
+                             , if null os then "%" else os
+                             )
+                          )
+                        | (shelf, style, qty, l, w, h, os) <- Vec.toList (rowsV ::  Vec.Vector (Text, Text, Int, Double, Double, Double, Text))
+                        , (styleAndContent, tags) <- expand style
+                        , let (style', content) = splitStyle styleAndContent
+                        ]
             -- groups similar
                 groups = List.groupBy (\a b -> snd a == snd b)
                        $ List.sortBy (comparing snd) rows0
