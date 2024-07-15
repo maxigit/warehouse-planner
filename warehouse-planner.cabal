@@ -197,6 +197,7 @@ test-suite test
       Planner.InternalSpec
       Planner.OptimumSpec
       Planner.RearrangeSpec
+      Planner.SelectorSpec
       Planner.WarehouseSpec
       Planner.WPL.ParserSpec
       Paths_warehouse_planner

@@ -3,6 +3,7 @@ module WarehousePlanner.Selector
 , applyTagSelectors
 , matchName
 , parseBoxSelector
+, parseBoxNumberSelector
 , parseShelfSelector
 , parseSelector
 , parseNameSelector

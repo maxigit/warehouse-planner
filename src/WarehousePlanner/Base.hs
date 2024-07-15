@@ -35,6 +35,7 @@ module WarehousePlanner.Base
 , getOrCreateBoxTagMap
 , findShelvesByBoxNameAndNames
 , incomingShelf
+, limitByNumber
 , maxUsedOffset
 , modifyTags
 , module WarehousePlanner.Type
