@@ -289,13 +289,16 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
 limitByNumber :: BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
 limitByNumber selector boxes0 = let
   sorted = sortOnIf (boxFinalPriority selector) boxes0
-  sndOrSel (box, shelf) = keyFromLimitM (nsPerShelf selector) (Right $ shelfName shelf) box shelf
+  -- sndOrSel (box, shelf) = keyFromLimitM (nsPerShelf selector) (Right $ shelfName shelf) box shelf
   boxes1 = maybe id (limitBy (pure . pure . boxSku . fst)) (nsPerContent selector) $ sorted
-  boxes2 = maybe id (limitBy sndOrSel) (nsPerShelf selector) $ boxes1
+  boxes2 = maybe id (limitBy ((:[]) . Right . boxStyle . fst )) (nsPerShelf selector) $ boxes1
+  -- boxes2 = maybe id (limitBy ((:[]) . Right . shelfName . snd )) (nsPerShelf selector) $ boxes1
   boxes3 = maybe id take_ (nsTotal selector) $ sortOnIf (boxFinalPriority selector) boxes2
   --                            -- ^ things might have been shuffle by previous sorting , so resort them                                                         
   -- limitBy :: Ord  k => ((Box s, Text) -> k) -> Limit -> [(Box s, Text)] -> [(Box s, Text)]
-  limitBy key n boxes = let
+  limitBy :: ((Box s, Shelf s) -> [Either Int Text]) -> Limit -> [(Box s, Shelf s)] -> Element [[(Box s, Shelf s)]]
+  limitBy def n boxes = let
+    key (box, shelf) = keyFromLimitM  (Just n) (def (box, shelf)) box shelf
     sorted = sortOnIf (boxFinalPriority selector) boxes
     group_ = Map'.fromListWith (flip(<>)) [(key box, [box]) | box <- sorted]
     limited = fmap (take_ n . sortOnIf (snd . boxFinalPriority selector) ) group_
@@ -305,10 +308,10 @@ limitByNumber selector boxes0 = let
     where rev = if liReverse sel then reverse else id
   in boxes3
 
-keyFromLimitM :: Maybe Limit -> Either Int Text -> Box s -> Shelf s ->  [Either Int Text]
+keyFromLimitM :: Maybe Limit -> [Either Int Text] -> Box s -> Shelf s ->  [Either Int Text]
 keyFromLimitM limit def box shelf =
   case liOrderingKey =<< toList limit of
-    [] -> [def]
+    [] -> def
     keys -> map evalKey keys
   where evalKey k = case k of
           OrdTag tag0 -> let (tag, evaluator) = parseEvaluator tag0
@@ -323,7 +326,7 @@ keyFromLimitM limit def box shelf =
   
 boxFinalPriority :: BoxNumberSelector -> (Box s, Shelf s) -> ([Either Int Text] , (Text, [Either Int Text], Text , [Either Int Text]))
 boxFinalPriority BoxNumberSelector{..} (box, shelf) = let -- reader
-  with selm p = keyFromLimitM selm (Left $ p box) box shelf
+  with selm p = keyFromLimitM selm [Left $ p box] box shelf
   global = with nsTotal boxGlobalPriority
   style = with nsPerShelf boxStylePriority
   content = with nsPerContent boxContentPriority
