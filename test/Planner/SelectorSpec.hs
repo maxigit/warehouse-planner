@@ -52,11 +52,23 @@ pureSpec = describe "Selector" do
                    limit "^^^4" `shouldReturn` words "A-1 A-2 A-3 B-1"
          context "style" do
                  it "takes one of each style sorted by content" do
-                   limit "^^{style}1" `shouldReturn` words "A-1 B-1 C-1"
+                   limit "^^1" `shouldReturn` words "A-1 B-1 C-1"
                  it "takes two of each style" do
-                   limit "^^{style}2" `shouldReturn` words "A-1 A-2 B-1 B-2 C-1 C-2"
+                   limit "^^2" `shouldReturn` words "A-1 A-2 B-1 B-2 C-1 C-2"
                  it "and global" do
-                   limit "^^{style}2^3" `shouldReturn` words "A-1 A-2 B-1" --  B-2"
+                   limit "^^2^3" `shouldReturn` words "A-1 A-2 B-1" --  B-2"
+                 context "explicit" do
+                         it "takes one of each style sorted by content" do
+                           limit "^^{style}1" `shouldReturn` words "A-1 B-1 C-1"
+                         it "takes two of each style" do
+                           limit "^^{style}2" `shouldReturn` words "A-1 A-2 B-1 B-2 C-1 C-2"
+                         it "and global" do
+                           limit "^^{style}2^3" `shouldReturn` words "A-1 A-2 B-1" --  B-2"
+                 context "explicit and limiting" do
+                    it "sorts all by regardless of style" do
+                        limit "^^^{content}" `shouldReturn` words "A-1 B-1 C-1 A-2 B-2 C-2 A-3"
+                    it "takes 1 of everything ..." do
+                        limit "^^1^{content}" `shouldReturn` words "A-1 B-1 C-1 A-2 B-2 C-2 A-3"
          context "content" do
                  let ?boxes = ["S1 A-1#id=1 B-1 C-1#id=1 B-2 A-1#id=2 C-1#id=2 A-2"]
                  -- A-1 A-1     A-2
@@ -73,11 +85,6 @@ pureSpec = describe "Selector" do
                        ,"S2 A-2 A-3 B-1 B-2"
                        ,"S3 B-1 C-1"
                        ]
-          context "default" do
-                  it "take one of each shelf" do
-                     limit "^^1"  `shouldReturn` words "A-1 A-2 B-1"
-                  it "take 2 of each shelf" do
-                     limit "^^2"  `shouldReturn` words "A-1 A-2 A-2 A-3 B-1 C-1"
           context "{shelfname}" do
                   it "take one of each shelf" do
                      limit "^^{shelfname}1"  `shouldReturn` words "A-1 A-2 B-1"
