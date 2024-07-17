@@ -171,9 +171,11 @@ spec = describe "Full scenario" do
                  pending,|2:1:17+0+0+27,M71L07DF-KLB#dead#done#ghost#box_id=895,69.00,42.00,38,=|
                  pending,|2:2:17+0+0+27,M71L07DF-KLB#dead#done#ghost#box_id=896,69.00,42.00,38,=|
             :END:|]
-
-       
-         
+   it "read pl-65" do
+      -- full example with slots, rearrange and sorting
+      rows <- loadAndExec "data" "pl-65" (generateStockTakes Nothing)
+      expected <- readFileUtf8 ("data" </> "pl-65" <.> "stocktake")
+      rows `shouldBe'` lines expected
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
 -- to a given result.
