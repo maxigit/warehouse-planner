@@ -3,6 +3,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TransformListComp #-}
 module WarehousePlanner.Base
 ( assignShelf
 , boxCoordinate
@@ -69,7 +70,7 @@ module WarehousePlanner.Base
 where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import Text.Printf(printf)
-import Data.Map.Strict qualified as Map'
+-- import Data.Map.Strict qualified as Map'
 import Data.Map.Lazy qualified as Map
 import Control.Monad.State(gets, get, put, modify)
 import Data.Map.Merge.Lazy(merge, preserveMissing, mapMaybeMissing, zipWithMaybeMatched)
@@ -96,6 +97,7 @@ import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import System.FilePath.Glob qualified as Glob
+-- import GHC.Exts (groupWith)
 
 
 -- import Debug.Trace qualified as T
@@ -287,28 +289,43 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
 
 -- | Limit a box selections by numbers
 limitByNumber :: BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
-limitByNumber selector boxes0 = let
-  sorted = sortOnIf (boxFinalPriority selector) boxes0
-  -- sndOrSel (box, shelf) = keyFromLimitM (nsPerShelf selector) (Right $ shelfName shelf) box shelf
-  boxes1 = maybe id (limitBy (pure . pure . boxSku . fst)) (nsPerContent selector) $ sorted
-  boxes2 = maybe id (limitBy ((:[]) . Right . boxStyle . fst )) (nsPerShelf selector) $ boxes1
-  -- boxes2 = maybe id (limitBy ((:[]) . Right . shelfName . snd )) (nsPerShelf selector) $ boxes1
-  boxes3 = maybe id take_ (nsTotal selector) $ sortOnIf (boxFinalPriority selector) boxes2
-  --                            -- ^ things might have been shuffle by previous sorting , so resort them                                                         
-  -- limitBy :: Ord  k => ((Box s, Text) -> k) -> Limit -> [(Box s, Text)] -> [(Box s, Text)]
-  limitBy :: ((Box s, Shelf s) -> [Either Int Text]) -> Limit -> [(Box s, Shelf s)] -> Element [[(Box s, Shelf s)]]
-  limitBy def n boxes = let
-    key (box, shelf) = keyFromLimitM  (Just n) (def (box, shelf)) box shelf
-    sorted = sortOnIf (boxFinalPriority selector) boxes
-    group_ = Map'.fromListWith (flip(<>)) [(key box, [box]) | box <- sorted]
-    limited = fmap (take_ n . sortOnIf (snd . boxFinalPriority selector) ) group_
-    in concat (Map'.elems limited)
-  take_ :: Limit -> [a] -> [a]
-  take_ sel = maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel) . rev
-    where rev = if liReverse sel then reverse else id
-  in boxes3
+limitByNumber selector unsortedBoxes = let
+   -- box'prioritys = sortBy (comparing snd) snd $ map [(box, boxFinalPriority selector box) | box <- unsortedBoxes ]
+   -- style'p = groupWith globalKey box'prioritys
+   in [ one -- headEx b's
+      | b's <- unsortedBoxes
+      , let p = boxFinalPriority selector b's
+      , then sortOn by p
+      , then group by (fst p) using groupW
+      -- b's :: [(Box, Shelf)] 
+      -- p :: [(Keys, Keys,Keys)]
+      , one <- [ two
+               | (byStyle, (_, keys2)) <-  zip b's p
+               , then group by (fst keys2) using groupW
+               , two <- [ three
+                        | (byContent, (_,key)) <- zip byStyle keys2
+                        , then group by key using groupW
+                        , three <- byContent
+                        , then maybe id take_ (nsPerContent selector)
+                        ]
+               , then maybe id take_ (nsPerShelf selector)
+               ]
+      -- , one <- b's
+      , then maybe id take_ (nsTotal selector)
+      ]
+   where take_ :: Limit -> [a] -> [a]
+         take_ sel = let 
+             rev = if liReverse sel then reverse else id
+             in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel) . rev
+         groupW f =  groupBy (\x y -> f x == f y)
 
-keyFromLimitM :: Maybe Limit -> [Either Int Text] -> Box s -> Shelf s ->  [Either Int Text]
+   -- where globalKey = snd
+
+
+   
+
+type Keys = [Either Int Text]
+keyFromLimitM :: Maybe Limit -> Keys -> Box s -> Shelf s ->  Keys
 keyFromLimitM limit def box shelf =
   case liOrderingKey =<< toList limit of
     [] -> def
@@ -324,13 +341,17 @@ keyFromLimitM limit def box shelf =
 
 -- limitBy :: Ord k => (Box s -> k) -> Int -> [Box s] -> [a]
   
-boxFinalPriority :: BoxNumberSelector -> (Box s, Shelf s) -> ([Either Int Text] , (Text, [Either Int Text], Text , [Either Int Text]))
+boxFinalPriority :: BoxNumberSelector -> (Box s, Shelf s) -> (Keys, (Keys, Keys))
 boxFinalPriority BoxNumberSelector{..} (box, shelf) = let -- reader
   with selm p = keyFromLimitM selm [Left $ p box] box shelf
   global = with nsTotal boxGlobalPriority
   style = with nsPerShelf boxStylePriority
   content = with nsPerContent boxContentPriority
-  in (global, (boxStyle box, style, boxContent box, content))
+  in ( global <> [Right $ boxStyle box]
+     , (style <> [Right $ boxContent box]
+       , content
+       )
+     )
 
   
 -- | Use similar syntax to boxes but returns shelves instead
