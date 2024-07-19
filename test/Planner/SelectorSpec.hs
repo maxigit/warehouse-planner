@@ -87,9 +87,9 @@ pureSpec = describe "Selector" do
                        ]
           context "{shelfname}" do
                   it "take one of each shelf" do
-                     limit "^^{shelfname}1"  `shouldReturn` words "A-1 A-2 B-1"
+                     limit "^^=1^={shelfname}"  `shouldReturn` words "A-1 A-2 B-1"
                   it "take 2 of each shelf" do
-                     limit "^^{shelfname}2"  `shouldReturn` words "A-1 A-2 A-2 A-3 B-1 C-1"
+                     limit "^^=2^={shelfname}"  `shouldReturn` words "A-1 A-2 A-2 A-3 B-1 C-1"
    context "with tag" do
          let ?boxes = [ "S1 B-1#id=4"
                       , "S1 A-1#id=2 A-1#id=3 A-1#id=1"
@@ -103,7 +103,7 @@ pureSpec = describe "Selector" do
             it "take hight priority of each content" do
                limit "^[id]2"  `shouldReturn` words "A-1#1 A-1#2 B-1#4 B-1#4 B-2#5 B-2#6"
             it "take hight priority of each explicit content" do
-               limit "^[id]1^-{style}"  `shouldReturn` words "B-1#4 B-2#5 A-1#1"
+               limit "^[id]1^^=-{style}"  `shouldReturn` words "B-1#4 B-2#5 A-1#1"
 
    it "selects" do
       let ?shelves = ["S1", "S2", "S3"]
@@ -123,7 +123,7 @@ select selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
 limit selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let selected = limitByNumber (traceShowId $ parseBoxNumberSelector $ drop 1 selection) boxes
+   let selected = limitByNumber (parseBoxNumberSelector $ drop 1 selection) boxes
    --                                                                   ^^^^^
    -- parseBoxNumberSelector doesn't expect a ^ at the begining as parseBox
    -- the boxname and the box number selector)
