@@ -17,6 +17,7 @@ spec = parallel pureSpec
 pureSpec :: Spec
 pureSpec = describe "Selector" do
    let ?shelves = ["S1", "S2", "S3"]
+       ?useDefault = UseDefault
    context "sorting" do
       context "by default" do
               it "sorts by style and content" do
@@ -108,6 +109,36 @@ pureSpec = describe "Selector" do
                limit "^[id]2"  `shouldReturn` words "A-1#1 A-1#2 B-1#4 B-1#4 B-2#5 B-2#6"
             it "take hight priority of each explicit content" do
                limit "^[id]1^^=-{style}"  `shouldReturn` words "B-1#4 B-2#5 A-1#1"
+   context "without default" do
+      let ?useDefault = DontUseDefault
+      let ?boxes = [ "S1 B-1#id=4"
+                   , "S1 A-1#id=2 A-1#id=3 A-1#id=1"
+                   , "S1 B-2#id=6 B-1#id=4 B-2#id=5"
+                   ]
+      it "doesn't change order with nothing" do
+         limit "" `shouldReturn` words "B-1#4 A-1#2 A-1#3 A-1#1 B-2#6 B-1#4 B-2#5"
+      it "doesn't change order with nothing (^)" do
+         limit "^" `shouldReturn` words "B-1#4 A-1#2 A-1#3 A-1#1 B-2#6 B-1#4 B-2#5"
+      it "doesn't change order with nothing (^^)" do
+         limit "^^" `shouldReturn` words "B-1#4 A-1#2 A-1#3 A-1#1 B-2#6 B-1#4 B-2#5"
+      it "doesn't change order with nothing (^^^)" do
+         limit "^^^" `shouldReturn` words "B-1#4 A-1#2 A-1#3 A-1#1 B-2#6 B-1#4 B-2#5"
+      it "keeps the first one (global)" do
+         limit "^^^1" `shouldReturn` words "B-1#4"
+      it "keeps the first one (content)" do
+         -- no group are made, therefore everything should be in one big group
+         limit "^1" `shouldReturn` words "B-1#4"
+      it "keeps original sub order" do
+          limit "^^{style}" `shouldReturn` words "A-1#2 A-1#3 A-1#1 B-1#4 B-2#6 B-1#4 B-2#5"
+      it "behaves not as with UseDefault with '='" do
+          without <- limit "^^{style}"
+          let ?useDefault = UseDefault
+          limit "^^{style}" `shouldNotReturn` without
+      it "behaves as with UseDefault with '='" do
+          without <- limit "^^{style}"
+          let ?useDefault = UseDefault
+          limit "^=^={style}^=" `shouldReturn` without
+
 
    it "selects" do
       let ?shelves = ["S1", "S2", "S3"]
@@ -127,7 +158,7 @@ select selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
 limit selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let selected = limitByNumber (parseBoxNumberSelector $ drop 1 selection) boxes
+   let selected = limitByNumber ?useDefault (parseBoxNumberSelector $ drop 1 selection) boxes
    --                                                                   ^^^^^
    -- parseBoxNumberSelector doesn't expect a ^ at the begining as parseBox
    -- the boxname and the box number selector)
