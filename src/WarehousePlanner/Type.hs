@@ -52,12 +52,14 @@ data BoxNumberSelector = BoxNumberSelector
 data Limit = Limit 
   { liStart :: !(Maybe Int) -- ^ first box to take, starts a 1
   , liEnd :: !(Maybe Int) -- ^ last box to take
-  , liOrderingKey :: ![OrderingKey] -- ^ which tag to use to sort boxes
-  , liReverse :: !Bool -- ^ if true reverse the sorting order
+  , liOrderingKey :: ![(OrderingKey, SortingOrder)] -- ^ which tag to use to sort boxes
+  , liUseBase :: !Bool -- ^ if true add the base key when sorting
   } deriving (Show, Eq)
   
 data OrderingKey = OrdTag Text | OrdAttribute Text
      deriving (Show, Eq)
+data SortingOrder = NormalOrder | ReverseOrder
+    deriving (Show, Eq)
 
 -- | How something is oriented. It indicates  the direction of
 -- the normal of the given face.

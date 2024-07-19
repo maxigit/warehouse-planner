@@ -315,8 +315,7 @@ limitByNumber selector unsortedBoxes = let
       ]
    where take_ :: Limit -> [a] -> [a]
          take_ sel = let 
-             rev = if liReverse sel then reverse else id
-             in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel) . rev
+             in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel)
          groupW f =  groupBy (\x y -> f x == f y)
 
    -- where globalKey = snd
@@ -324,18 +323,23 @@ limitByNumber selector unsortedBoxes = let
 
    
 
-type Keys = [Either Int Text]
+type Keys = [Either (Down (Either Int Text)) (Either Int Text)]
 keyFromLimitM :: Maybe Limit -> Keys -> Box s -> Shelf s ->  Keys
 keyFromLimitM limit def box shelf =
   case liOrderingKey =<< toList limit of
     [] -> def
     keys -> map evalKey keys
-  where evalKey k = case k of
-          OrdTag tag0 -> let (tag, evaluator) = parseEvaluator tag0
-                         in case evaluator $ getTagValuesWithPresence box tag of
-                                 Nothing -> Right maxString
-                                 Just v -> maybe (Right v) Left (readMay v) -- :: Either Int Text
-          OrdAttribute att -> expandIntrinsic att box shelf
+  where evalKey (k, order) = let
+          val = case k of
+                     OrdTag tag0 -> let (tag, evaluator) = parseEvaluator tag0
+                                    in case evaluator $ getTagValuesWithPresence box tag of
+                                            Nothing -> Right maxString
+                                            Just v -> maybe (Right v) Left (readMay v) -- :: Either Int Text
+                     OrdAttribute att -> expandIntrinsic att box shelf
+          in case order of
+               NormalOrder -> Right val
+               ReverseOrder -> Left $ Down val
+
         maxString = T.replicate 100 (singleton maxBound)
 
 
@@ -343,15 +347,16 @@ keyFromLimitM limit def box shelf =
   
 boxFinalPriority :: BoxNumberSelector -> (Box s, Shelf s) -> (Keys, (Keys, Keys))
 boxFinalPriority BoxNumberSelector{..} (box, shelf) = let -- reader
-  with selm p = keyFromLimitM selm [Left $ p box] box shelf
-  global = with nsTotal boxGlobalPriority
-  style = with nsPerShelf boxStylePriority
-  content = with nsPerContent boxContentPriority
-  in ( global <> [Right $ boxStyle box]
-     , (style <> [Right $ boxContent box]
+  global = with nsTotal boxGlobalPriority  [Right $ boxStyle box]
+  style = with nsPerShelf boxStylePriority [Right $ boxContent box]
+  content = with nsPerContent boxContentPriority []
+  in ( global 
+     , (style
        , content
        )
      )
+  where useBase = maybe True liUseBase
+        with selm p base = keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else []
 
   
 -- | Use similar syntax to boxes but returns shelves instead

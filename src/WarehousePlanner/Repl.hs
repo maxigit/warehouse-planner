@@ -42,14 +42,14 @@ loads paths = do
   scenarioEs <- forM paths \path -> readScenarioFromPath False (importDispatchDef (currentDir state))
                                          (currentDir state </> path <.> "org")
   let scenarioE = sequence scenarioEs
-  print scenarioE
+  -- print scenarioE
   case scenarioE of
     Left e -> error $ unpack e
     Right scenarios -> do
           let scenario = mconcat scenarios
           wh <- execScenario scenario
           writeIORef stateRef state { warehouse = wh }
-          print wh
+          -- print wh
 
 summary :: IO ()
 summary = do

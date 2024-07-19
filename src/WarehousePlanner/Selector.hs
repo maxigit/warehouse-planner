@@ -177,8 +177,11 @@ parseBoxNumberSelector s = case P.parse parser (unpack s) s of
 -- | Parsel [[tag]|{attribue}][min:][max]
 parseLimit :: MParser Limit      
 parseLimit = do
-  reverse <- P.option False (P.char '-' >> return True)
-  keys <- P.many (parseTag <|> parseAttribute)
+  useBase <- P.option True (P.char '=' >> return False)
+  keys <- P.many do
+      order <- P.option NormalOrder (P.char '-' >> return ReverseOrder)
+      key <- (parseTag <|> parseAttribute)
+      return $ (key, order)
   minM <- P.optional $ P.decimal
   maxMM <- P.optional $ P.char ':' >> P.optional P.decimal
   let (start, end) = case (minM , maxMM ) of
@@ -190,7 +193,7 @@ parseLimit = do
         (Just min_, Just Nothing) -> (Just min_, Nothing)
         (minm, Just maxm) -> (minm, maxm)
         (Nothing, Nothing) -> (Nothing, Nothing)
-  return $  Limit start end keys reverse
+  return $  Limit start end keys useBase
   where parseTag = OrdTag  <$> between '[' ']'
         parseAttribute = OrdAttribute  <$> between '{' '}'
 
@@ -249,12 +252,12 @@ printNumberSelector  BoxNumberSelector{..} = mconcat [ "^" <> maybe "" printLimi
 
 
 printLimit :: Limit -> Text
-printLimit Limit{..} = rev <> key <> lim where
-  rev = if liReverse then "-" else ""
-  key = mconcat [ case k of
+printLimit Limit{..} = key <> lim where
+  key = mconcat [ rev <> case k of
                    OrdTag t -> "[" <> t <> "]"
                    OrdAttribute a -> "{" <> a <> "}"
-                | k <- liOrderingKey
+                | (k, reverse) <- liOrderingKey
+                , let rev = if reverse == ReverseOrder then "-" else ""
                 ]
   lim = case (liStart, liEnd) of
          (Just s, Just e) -> tshow s <> ":" <> tshow e
