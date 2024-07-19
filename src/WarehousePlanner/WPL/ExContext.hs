@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.WPL.ExContext
 
 where
@@ -14,6 +15,7 @@ data ExContext s = ExContext
                { ecBoxes :: InExcluded (BoxId s)
                , ecShelves :: InExcluded (ShelfId s)
                , ecParent :: Maybe (ExContext s)
+               , ecSelector :: BoxNumberSelector
                }
      deriving (Show, Eq)
      
@@ -22,9 +24,11 @@ instance Semigroup (ExContext s) where
    ec1 <> ec2 = ExContext (ecBoxes ec1 <> ecBoxes ec2)
                           (ecShelves ec1 <> ecShelves ec2)
                           (ecParent ec1 <|> ecParent ec2)
+                          (error "ExContext <> not IMPLEMENTED")
+
                           
 instance Monoid (ExContext s) where
-   mempty = ExContext mempty mempty Nothing
+   mempty = ExContext mempty mempty Nothing (BoxNumberSelector Nothing Nothing Nothing)
    
 -- We don't update the parent in purpose
 inverseBoxes :: ExContext s -> ExContext s
@@ -35,22 +39,24 @@ inverseShelves ec = ec { ecShelves = inverseInEx $ ecShelves ec }
     
 -- * Impure
 withAll :: ExContext s
-withAll = ExContext allIncluded allIncluded Nothing
+withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector Nothing Nothing Nothing)
                      
 -- | Boxes of the current which satisfy the given selector.
 -- At the moment, it is implemented as the intersection of 
 -- the context boxes and all boxes 
 narrowBoxes :: BoxSelector -> ExContext s -> WH (ExContext s) s
 narrowBoxes selector ec = do
+   let finalSelector = combineSelector (ecSelector ec) selector
+   traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
    ecB <- case included (ecBoxes ec) of 
      Nothing {- AllOf -} -> do
-           inc <- findBoxByNameAndShelfNames selector
+           inc <- findBoxByNameAndShelfNames finalSelector
            return allIncluded { included = Just inc } 
      Just inc -> do 
-          (incs, exs) <- partitionBoxes selector inc
+          (incs, exs) <- partitionBoxes finalSelector inc
           return $ InExcluded (Just incs) (Just exs)
 
-   return $ ec { ecBoxes = fmap boxId ecB }
+   return $ ec { ecBoxes = fmap boxId ecB, ecSelector = numberSelector finalSelector }
    
 narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
 narrowShelves selector ec = do
@@ -79,4 +85,21 @@ getShelves ec = do
     mapM findShelf sIds
   
 
+combineSelector :: BoxNumberSelector -> BoxSelector -> BoxSelector
+combineSelector bns sel = let
+   bns' = numberSelector sel
+   in sel { numberSelector = BoxNumberSelector{ nsPerContent = combineLimitKeys (nsPerContent bns) (nsPerContent bns') 
+                                              , nsPerShelf = combineLimitKeys (nsPerShelf bns) (nsPerShelf bns') 
+                                              , nsTotal = combineLimitKeys (nsTotal bns) (nsTotal bns') 
+                                              }
+          }
 
+-- | Combine Limit Keys but reset start and stops
+combineLimitKeys :: Maybe Limit -> Maybe Limit -> Maybe Limit
+combineLimitKeys Nothing b = b
+combineLimitKeys (Just a) Nothing = Just a { liStart = Nothing, liEnd = Nothing} -- , liUseBase =False }
+combineLimitKeys (Just a) (Just b) = Just b { liOrderingKey = if liUseBase b 
+                                                              then liOrderingKey a <> liOrderingKey b
+                                                              else liOrderingKey b
+                                            , liUseBase = liUseBase a && liUseBase b
+                                            }

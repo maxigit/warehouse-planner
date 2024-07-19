@@ -1,6 +1,8 @@
 module WarehousePlanner.WPL.Exec
 ( runWPL
+, runWPLWith
 , readWPL
+, parseWPL
 )
 where 
 
@@ -16,8 +18,12 @@ import Control.Monad(zipWithM_)
 
 
 runWPL :: [Statement] -> WH () s
-runWPL statements = do
-   mapM_ (void . executeStatement withAll) statements
+runWPL = runWPLWith (const $ return ())
+
+runWPLWith :: (Maybe (ExContext s) -> WH r s) -> [Statement] -> WH r s
+runWPLWith action statements = do
+  ecs <- mapM (executeStatement withAll) statements
+  action $ lastMay ecs
 
 executeStatement :: ExContext s -> Statement -> WH (ExContext s) s
 executeStatement ec command = 
@@ -91,6 +97,12 @@ readWPL filename = do
     let e = P.runParser wplParser filename content
     case e of
        Left bundle -> error $ P.errorBundlePretty bundle
+       Right statements -> return statements
+
+parseWPL :: FilePath -> Text -> Either  Text [Statement]
+parseWPL source content =
+    case P.runParser wplParser source content of
+       Left bundle -> Left $ pack $ P.errorBundlePretty bundle
        Right statements -> return statements
 
 
