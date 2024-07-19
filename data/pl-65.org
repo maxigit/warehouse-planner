@@ -5826,7 +5826,7 @@ M02L04PK,pending
 /E06.06/1,pending2
 M02L04PK^[batch]2^{content},^E06.05/[12] ^@E06.06/[12]#done
 M02L04PK#'YAN#-done,-E06.06/2#done
-M02L04PK#-done^^^[batch],E06.0<4-6>/3,xx2
+M02L04PK#-done^^^=[batch],E06.0<4-6>/3,xx2
 /pending2,E06.06/1
 :END:
 ** 1HA
@@ -5835,7 +5835,7 @@ M02L04PK#-done^^^[batch],E06.0<4-6>/3,xx2
 stock,loc.or
 M31L01HA,pending*#-done#'l=4700#'w=3900#'h=8500
 /W01.09/0,pending3
-M31L01HA^[batch]5^{content},W01.0[13579]/0#done,xx5
+M31L01HA^5^=[batch]^={content},W01.0[13579]/0#done,xx5
 M31L01HA#-done,~W01.07/0
 /pending3,:W01.09/0,xx5=
 :END:
@@ -6121,13 +6121,13 @@ M22L07DL#ghost^^^-{ow}
 
 :Rearrange_done:
 box,actions
-M22L07DL,-!#-ghost#-cloned > !#ghost
+M22L07DL^[batch],-!#-ghost#-cloned > !#ghost
 :END:
 
 :Moves:
 stock,loc
-M22L07DL/pending*,~E03.0[34]/3 E04.01/3,2=
-M22L07DL/error,E03.0[34]/4 E04.01/4,2|
+M22L07DL/pending*,~E03.0[34]/3 E04.01/3#done,2=
+M22L07DL#-done,E03.0[34]/4 E04.01/4,2|
 :END:
 
 :Deletes:

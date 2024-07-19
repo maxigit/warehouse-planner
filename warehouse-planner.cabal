@@ -198,7 +198,9 @@ test-suite test
       Planner.OptimumSpec
       Planner.RearrangeSpec
       Planner.SelectorSpec
+      Planner.SpecUtil
       Planner.WarehouseSpec
+      Planner.WPL.ExecSpec
       Planner.WPL.ParserSpec
       Paths_warehouse_planner
   hs-source-dirs:
