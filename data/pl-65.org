@@ -6344,13 +6344,13 @@ M32L09DB]&,#-done#-big#@global=1
 /W09*/[123],pending
 #'l=7200,W09.02/1#big#done
 #-done,#-bid
-#-big^^{content}1,^W09.02/[12] ^W09.03/[12]#done
+#-big^^1^={content},^W09.02/[12] ^W09.03/[12]#done
 #-done^^[batch],W09.0[23]/3#done=$n[%02d]
 ]&/W09.03/1,pending#a
 #a,W09.03/1#-a
 /W09.03/2,pending#a
 #a,W09.03/2#-a
-M32L09DB/W09.03/[12]^^{content},^-W09.03/[12]
+M32L09DB/W09.03/[12]^=^={content},^-W09.03/[12]
 :END:
 ** 9DA
 
@@ -6358,7 +6358,7 @@ M32L09DB/W09.03/[12]^^{content},^-W09.03/[12]
 stock,loc,or
 M02L09DA]&/W03.*/3,pending*
 /C*,pending*
-/pending*^^[batch]{$content},W03.*/3
+/pending*^^[batch]${content},W03.*/3
 :END:
 ** 1PX
 
