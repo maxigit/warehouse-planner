@@ -82,14 +82,18 @@ pureSpec = describe "Selector" do
                     limit "^1^{style}2" `shouldReturn` words "A-1#1 A-2 B-1 B-2 C-1#1"
       context "by shelf" do
           let ?boxes = ["S1 A-1 A-2 B-1"
-                       ,"S2 A-2 A-3 B-1 B-2"
+                       ,"S2 A-3 A-2 B-1 B-2"
                        ,"S3 B-1 C-1"
                        ]
           context "{shelfname}" do
-                  it "take one of each shelf" do
-                     limit "^^=1^={shelfname}"  `shouldReturn` words "A-1 A-2 B-1"
+                  it "take one of each shelf ordered by style" do
+                     limit "^^={style}1^={shelfname}"  `shouldReturn` words "A-1 A-3 B-1"
+                  it "take one of each shelf ordered by style/content" do
+                     limit "^^{style}1^={shelfname}"  `shouldReturn` words "A-1 A-2 B-1"
+                  it "take one of each shelf ordered by content regardless of style" do
+                     limit "^^1^={shelfname}"  `shouldReturn` words "A-1 B-1 B-1"
                   it "take 2 of each shelf" do
-                     limit "^^=2^={shelfname}"  `shouldReturn` words "A-1 A-2 A-2 A-3 B-1 C-1"
+                     limit "^^={style}2^={shelfname}"  `shouldReturn` words "A-1 A-2 A-3 A-2 B-1 C-1"
    context "with tag" do
          let ?boxes = [ "S1 B-1#id=4"
                       , "S1 A-1#id=2 A-1#id=3 A-1#id=1"

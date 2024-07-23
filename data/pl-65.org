@@ -6358,7 +6358,7 @@ M32L09DB/W09.03/[12]^^{content},^-W09.03/[12]
 stock,loc,or
 M02L09DA]&/W03.*/3,pending*
 /C*,pending*
-/pending*^^[batch]{$content},W03.*/3
+/pending*^^[batch]${content},W03.*/3
 :END:
 ** 1PX
 

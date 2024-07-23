@@ -1040,7 +1040,9 @@ expandIntrinsic' "orientation" box _shelf = Right $ showOrientation (orientation
 expandIntrinsic' "volume" box _shelf = Right $ pack $ printf "%09.2f" (boxVolume box)
 expandIntrinsic' "vol" box _shelf = Right $ pack $ printf "%.2e" (boxVolume box)
 expandIntrinsic' "con" box _shelf = Right $ boxShortContent box
-expandIntrinsic' prop _box _shelf =  Right $ "${" <> prop <> "}"
+expandIntrinsic' "id" box _shelf = let BoxId_ (Arg bId _)  = boxId box
+                                   in Left bId
+expandIntrinsic' prop _box _shelf = error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
 
 
 expandStatistic :: (PropertyStats -> Map Text Int) -> Maybe (Char, Int) -> Box s -> OrderingKey -> Text -> WH Text s
