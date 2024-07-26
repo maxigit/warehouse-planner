@@ -307,7 +307,7 @@ groupBySelector useDefault selector unsortedBoxes = let
    bs'p = [ (b's, boxFinalPriority useDefault selector b's)
           | b's <- unsortedBoxes
           ]
-   byContent = groupSimilar (\(_, (g, (s,_) )) -> (g,s)) bs'p
+   byContent = groupSimilar (\(_, (g, (s,_) )) -> (g,s)) $ sortOn snd bs'p
    byStyle = groupSimilar (\(SimilarBy g's _ _) -> fst g's) byContent
    in map ( map ( map fst . unSimilar)
           . unSimilar
