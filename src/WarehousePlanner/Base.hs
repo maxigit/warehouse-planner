@@ -83,6 +83,7 @@ import Data.Sequence qualified as Seq
 import Data.Set qualified as Set
 import WarehousePlanner.Type
 import WarehousePlanner.Selector
+import WarehousePlanner.SimilarBy
 import WarehousePlanner.History
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
 import Data.Text (splitOn, uncons, stripPrefix)
@@ -289,37 +290,29 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
 
 -- | Limit a box selections by numbers
 limitByNumber :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
-limitByNumber useDefault selector unsortedBoxes = let
-   -- box'prioritys = sortBy (comparing snd) snd $ map [(box, boxFinalPriority selector box) | box <- unsortedBoxes ]
-   -- style'p = groupWith globalKey box'prioritys
-   in [ one -- headEx b's
-      | b's <- unsortedBoxes
-      , let p = boxFinalPriority useDefault selector b's
-      , then sortOn by p
-      , then group by (fst p) using groupW
-      -- b's :: [(Box, Shelf)] 
-      -- p :: [(Keys, Keys,Keys)]
-      , one <- [ two
-               | (byStyle, (_, keys2)) <-  zip b's p
-               , then group by (fst keys2) using groupW
-               , two <- [ three
-                        | (byContent, (_,key)) <- zip byStyle keys2
-                        , then group by key using groupW
-                        , three <- byContent
-                        , then maybe id take_ (nsPerContent selector)
-                        ]
-               , then maybe id take_ (nsPerShelf selector)
-               ]
-      -- , one <- b's
-      , then maybe id take_ (nsTotal selector)
-      ]
-   where take_ :: Limit -> [a] -> [a]
-         take_ sel = let 
-             in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel)
-         groupW f =  groupBy (\x y -> f x == f y)
+
+limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
+  grouped = groupBySelector useDefault selector unsortedBoxes
+  in take_ nsTotal $ concatMap (take_ nsPerShelf . concat . map (take_ nsPerContent)) grouped
+  where take_ :: Maybe Limit -> [a] -> [a]
+        take_ Nothing = id
+        take_ (Just sel) = let 
+                    in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel)
 
    -- where globalKey = snd
 
+
+groupBySelector :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [[[(Box s, Shelf s)]]]
+groupBySelector useDefault selector unsortedBoxes = let
+   bs'p = [ (b's, boxFinalPriority useDefault selector b's)
+          | b's <- unsortedBoxes
+          ]
+   byContent = groupSimilar (\(_, (g, (s,_) )) -> (g,s)) bs'p
+   byStyle = groupSimilar (\(SimilarBy g _ _) -> fst g) byContent
+   in map ( map ( map fst . unSimilar)
+          . unSimilar
+          )
+          byStyle
 
    
 
