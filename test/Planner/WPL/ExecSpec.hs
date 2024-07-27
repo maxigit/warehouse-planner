@@ -59,7 +59,7 @@ select wpl = do
    runWith wpl $ \(Just ec) -> case included $ ecBoxes ec of
                          Nothing -> return "Nothing"
                          Just ids -> do
-                             boxes <- mapM findBox ids
+                             boxes <- mapM (findBox . fst) ids
                              return $ boxesWithId boxes
 
 -- runWith  :: MonadIO (mio r) => Text -> (Maybe (ExContext s) -> WH r s) -> mio r s
