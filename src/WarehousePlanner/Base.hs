@@ -345,10 +345,11 @@ keyFromLimitM limit def box shelf =
   
 data UseDefault = UseDefault | DontUseDefault
 boxFinalPriority :: UseDefault -> BoxNumberSelector -> ((Box s, Shelf s), Maybe Priority) -> Priority
-boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), _pm) = let -- reader
-  global = with nsTotal boxGlobalPriority  [Right $ boxStyle box]
-  style = with nsPerShelf boxStylePriority [Right $ boxContent box]
-  content = with nsPerContent boxContentPriority [Left break , Left $ bId ]
+boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- reader
+  (pglob, (pstyle, pcon)) = fromMaybe ([], ([], [])) pm 
+  global = with nsTotal boxGlobalPriority  [Right $ boxStyle box] pglob
+  style = with nsPerShelf boxStylePriority [Right $ boxContent box] pstyle
+  content = with nsPerContent boxContentPriority [Left break , Left $ bId ] pcon
   -- boxes with break specification first
   break = case getTagValuem box "@start" of
             Nothing -> 1
@@ -363,9 +364,9 @@ boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), _pm) = let -- r
        )
      )
   where useBase = maybe True liUseBase
-        with selm p base = case useDefault of
+        with selm p base pb = case useDefault of
                             UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else []
-                            DontUseDefault ->  keyFromLimitM selm [] box shelf 
+                            DontUseDefault ->  keyFromLimitM selm pb box shelf 
 
 
   
