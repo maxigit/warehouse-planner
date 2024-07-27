@@ -262,7 +262,7 @@ findBoxByNameAndShelfNames ( BoxSelector ( Selector (NameMatches [])
   let box'shelfS =  [ (box, shelf) | (box, Just shelf) <- box'shelfms] 
         
   -- filter boxes by number
-  return . map fst $ limitByNumber UseDefault numSel box'shelfS
+  return . map (fst . fst) $ limitByNumber UseDefault numSel box'shelfS
 
 
 findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
@@ -285,11 +285,11 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
   let box'nameS =  [ (box, shelf) | (box, Just shelf) <- box'shelfms] 
         
   -- filter boxes by number
-  return . map fst $ limitByNumber UseDefault numSel box'nameS
+  return . map (fst . fst) $ limitByNumber UseDefault numSel box'nameS
 
 
 -- | Limit a box selections by numbers
-limitByNumber :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
+limitByNumber :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [((Box s, Shelf s), Priority)]
 
 limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
   grouped = groupBySelector useDefault selector unsortedBoxes
@@ -302,14 +302,14 @@ limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
    -- where globalKey = snd
 
 
-groupBySelector :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [[[(Box s, Shelf s)]]]
+groupBySelector :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [[[((Box s, Shelf s), Priority)]]]
 groupBySelector useDefault selector unsortedBoxes = let
    bs'p = [ (b's, boxFinalPriority useDefault selector b's)
           | b's <- unsortedBoxes
           ]
    byContent = groupSimilar (\(_, (g, (s,_) )) -> (g,s)) $ sortOn snd bs'p
    byStyle = groupSimilar (\(SimilarBy g's _ _) -> fst g's) byContent
-   in map ( map ( map fst . unSimilar)
+   in map ( map unSimilar
           . unSimilar
           )
           byStyle
@@ -317,6 +317,7 @@ groupBySelector useDefault selector unsortedBoxes = let
    
 
 type Keys = [Either (Down (Either Int Text)) (Either Int Text)]
+type Priority = (Keys, (Keys , Keys))
 keyFromLimitM :: Maybe Limit -> Keys -> Box s -> Shelf s ->  Keys
 keyFromLimitM limit def box shelf =
   case liOrderingKey =<< toList limit of
@@ -339,7 +340,7 @@ keyFromLimitM limit def box shelf =
 -- limitBy :: Ord k => (Box s -> k) -> Int -> [Box s] -> [a]
   
 data UseDefault = UseDefault | DontUseDefault
-boxFinalPriority :: UseDefault -> BoxNumberSelector -> (Box s, Shelf s) -> (Keys, (Keys, Keys))
+boxFinalPriority :: UseDefault -> BoxNumberSelector -> (Box s, Shelf s) -> Priority
 boxFinalPriority useDefault BoxNumberSelector{..} (box, shelf) = let -- reader
   global = with nsTotal boxGlobalPriority  [Right $ boxStyle box]
   style = with nsPerShelf boxStylePriority [Right $ boxContent box]
@@ -385,7 +386,7 @@ partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s) -> W
 partitionBoxes BoxSelector{..} bids = do
   box'shelves <- findBoxesWithShelf bids
   let (goods, bads) = partition isSelected $ Foldable.toList box'shelves
-      sorted = limitByNumber DontUseDefault numberSelector goods
+      sorted = map fst $ limitByNumber DontUseDefault numberSelector goods
       -- TODO make faster, make limitByNumber return an InExcluded
       -- the current implementation keep the truncated in the original order
       truncated = filter (flip notMember (Set.fromList sorted)) goods
