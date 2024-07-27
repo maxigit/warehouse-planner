@@ -76,7 +76,7 @@ boxArrangements = describe "boxArrangements @F" $ do
                         (Dimension 38 1 29) 
                         (Dimension 10 1 9)
             `shouldBe` Diagonal (HowMany 12 4 1 3) 2
-  forM_ [ (l,h) | l <- [3..25] , h <- [3..25]] \(l, h) -> do
+  forM_ {- [ (l,h) | l <- [3..25] , h <- [3..25]] -} []  \(l, h) -> do
        let howManyWithDiagonalOld = error "Use old implementation"
        xit ("finds complex arrangement " <> show l <> "x" <> show h) $ do
          let box = (Dimension l 1 h)
