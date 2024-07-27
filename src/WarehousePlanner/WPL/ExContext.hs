@@ -12,7 +12,7 @@ import Control.Monad.State(gets)
 -- We store ids (and not box or shelf( in purpose
 -- to force a reload if necessary when narrowing 
 data ExContext s = ExContext
-               { ecBoxes :: InExcluded (BoxId s)
+               { ecBoxes :: InExcluded (BoxId s, Priority)
                , ecShelves :: InExcluded (ShelfId s)
                , ecParent :: Maybe (ExContext s)
                , ecSelector :: BoxNumberSelector
@@ -50,13 +50,13 @@ narrowBoxes selector ec = do
    traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
    ecB <- case included (ecBoxes ec) of 
      Nothing {- AllOf -} -> do
-           inc <- findBoxByNameAndShelfNames finalSelector
+           inc <- findBoxByNameAndShelfNamesWithPriority finalSelector
            return allIncluded { included = Just inc } 
      Just inc -> do 
           (incs, exs) <- partitionBoxes finalSelector inc
           return $ InExcluded (Just incs) (Just exs)
 
-   return $ ec { ecBoxes = fmap boxId ecB, ecSelector = numberSelector finalSelector }
+   return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector }
    
 narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
 narrowShelves selector ec = do
@@ -73,7 +73,7 @@ getBoxes :: ExContext s -> WH [Box s] s
 getBoxes ec = do
    bIds <- case included (ecBoxes ec) of 
                 Nothing {- AllOff -} -> toList <$> gets boxes
-                Just bIds -> return bIds
+                Just bIds -> return $ map fst bIds
    mapM findBox bIds
 
 

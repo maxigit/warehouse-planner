@@ -61,7 +61,7 @@ executeCommand ec command = case command of
       shelves <-  do
          getShelves =<< narrowCSelector narrowShelves shelf ec
       inEx <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
-      return ec { ecBoxes = fmap boxId inEx }
+      return ec { ecBoxes = fmap ((,error "boom") . boxId) inEx }
     ---------
     Tag tagOps -> do
       newBaseEvent "TAG" (tshow tagOps)
@@ -86,7 +86,7 @@ executeCommand ec command = case command of
     TagAndMove txt ors -> do
       let (tags, locm) = splitTagsAndLocation txt
       inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
-      return ec { ecBoxes = fmap boxId inEx }
+      return ec { ecBoxes = fmap ((,error "boom2") . boxId) inEx }
       
     ---------
   

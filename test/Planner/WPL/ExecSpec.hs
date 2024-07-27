@@ -46,7 +46,7 @@ pureSpec = describe "WPL" do
             select (base <> " ^-[id]1") `shouldReturn` "B-1#2 A-1 B-2 A-2 A-3"
          context "allows subsorting" do
             it "with =" do
-               select (base <> " ^^=[style]^") `shouldReturn` "A-1 B-1#1 B-1#2 A-2 B-2 A-3"
+               select (base <> " ^^={style}^") `shouldReturn` "A-1 B-1#1 B-1#2 A-2 B-2 A-3"
             it "without =" do
                select (base <> " ^^-[id]^") `shouldReturn` "B-1#2 B-1#1 A-1 B-2 A-2 A-3"
 
@@ -59,7 +59,7 @@ select wpl = do
    runWith wpl $ \(Just ec) -> case included $ ecBoxes ec of
                          Nothing -> return "Nothing"
                          Just ids -> do
-                             boxes <- mapM findBox ids
+                             boxes <- mapM (findBox . fst) ids
                              return $ boxesWithId boxes
 
 -- runWith  :: MonadIO (mio r) => Text -> (Maybe (ExContext s) -> WH r s) -> mio r s

@@ -32,6 +32,7 @@ module WarehousePlanner.Base
 , findShelfBySelector
 , findShelfBySelectors
 , findBoxByNameAndShelfNames
+, findBoxByNameAndShelfNamesWithPriority
 , findBoxByShelf
 , getOrCreateBoxTagMap
 , findShelvesByBoxNameAndNames
@@ -66,6 +67,7 @@ module WarehousePlanner.Base
 , withBoxOrientations
 , newWHEvent
 , newBaseEvent
+, Priority, Keys
 )
 where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
@@ -235,7 +237,9 @@ orTrue bs = or bs
 --
 -- syntax is  Box#tag^3/shelf#tag : 3 box from shelf shelf
 findBoxByNameAndShelfNames :: BoxSelector -> WH [Box s] s
-findBoxByNameAndShelfNames ( BoxSelector ( Selector (NameMatches [])
+findBoxByNameAndShelfNames selector = map fst <$> findBoxByNameAndShelfNamesWithPriority selector
+findBoxByNameAndShelfNamesWithPriority :: BoxSelector -> WH [(Box s, Priority)] s
+findBoxByNameAndShelfNamesWithPriority ( BoxSelector ( Selector (NameMatches [])
                                                     [ TagIsKeyAndValues (MatchFull prop)
                                                                         [MatchFull value]
                                                     ]
@@ -262,10 +266,10 @@ findBoxByNameAndShelfNames ( BoxSelector ( Selector (NameMatches [])
   let box'shelfS =  [ (box, shelf) | (box, Just shelf) <- box'shelfms] 
         
   -- filter boxes by number
-  return . map fst $ limitByNumber UseDefault numSel box'shelfS
+  return . map (first fst) $ limitByNumber UseDefault numSel $ map (,Nothing) box'shelfS
 
 
-findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
+findBoxByNameAndShelfNamesWithPriority (BoxSelector boxSel shelfSel numSel) = do
   -- all boxes matching name
   allBoxesBeforeTag <- findBoxByNameSelector (nameSelector boxSel)
   let allBoxes = filter (applyTagSelectors (tagSelectors boxSel) boxTags) allBoxesBeforeTag
@@ -285,11 +289,11 @@ findBoxByNameAndShelfNames (BoxSelector boxSel shelfSel numSel) = do
   let box'nameS =  [ (box, shelf) | (box, Just shelf) <- box'shelfms] 
         
   -- filter boxes by number
-  return . map fst $ limitByNumber UseDefault numSel box'nameS
+  return . map (first fst) $ limitByNumber UseDefault numSel $ map (,Nothing) box'nameS
 
 
 -- | Limit a box selections by numbers
-limitByNumber :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [(Box s, Shelf s)]
+limitByNumber :: UseDefault -> BoxNumberSelector -> [((Box s, Shelf s), Maybe Priority)] -> [((Box s, Shelf s), Priority)]
 
 limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
   grouped = groupBySelector useDefault selector unsortedBoxes
@@ -302,14 +306,14 @@ limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
    -- where globalKey = snd
 
 
-groupBySelector :: UseDefault -> BoxNumberSelector -> [(Box s, Shelf s)] -> [[[(Box s, Shelf s)]]]
+groupBySelector :: UseDefault -> BoxNumberSelector -> [((Box s, Shelf s), Maybe Priority)] -> [[[((Box s, Shelf s), Priority)]]]
 groupBySelector useDefault selector unsortedBoxes = let
-   bs'p = [ (b's, boxFinalPriority useDefault selector b's)
-          | b's <- unsortedBoxes
+   bs'p = [ (b's, boxFinalPriority useDefault selector b's'p)
+          | b's'p@(b's,_) <- unsortedBoxes
           ]
    byContent = groupSimilar (\(_, (g, (s,_) )) -> (g,s)) $ sortOn snd bs'p
    byStyle = groupSimilar (\(SimilarBy g's _ _) -> fst g's) byContent
-   in map ( map ( map fst . unSimilar)
+   in map ( map unSimilar
           . unSimilar
           )
           byStyle
@@ -317,6 +321,7 @@ groupBySelector useDefault selector unsortedBoxes = let
    
 
 type Keys = [Either (Down (Either Int Text)) (Either Int Text)]
+type Priority = (Keys, (Keys , Keys))
 keyFromLimitM :: Maybe Limit -> Keys -> Box s -> Shelf s ->  Keys
 keyFromLimitM limit def box shelf =
   case liOrderingKey =<< toList limit of
@@ -339,11 +344,12 @@ keyFromLimitM limit def box shelf =
 -- limitBy :: Ord k => (Box s -> k) -> Int -> [Box s] -> [a]
   
 data UseDefault = UseDefault | DontUseDefault
-boxFinalPriority :: UseDefault -> BoxNumberSelector -> (Box s, Shelf s) -> (Keys, (Keys, Keys))
-boxFinalPriority useDefault BoxNumberSelector{..} (box, shelf) = let -- reader
-  global = with nsTotal boxGlobalPriority  [Right $ boxStyle box]
-  style = with nsPerShelf boxStylePriority [Right $ boxContent box]
-  content = with nsPerContent boxContentPriority [Left break , Left $ bId ]
+boxFinalPriority :: UseDefault -> BoxNumberSelector -> ((Box s, Shelf s), Maybe Priority) -> Priority
+boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- reader
+  (pglob, (pstyle, pcon)) = fromMaybe ([], ([], [])) pm 
+  global = with nsTotal boxGlobalPriority  [Right $ boxStyle box] pglob
+  style = with nsPerShelf boxStylePriority [Right $ boxContent box] pstyle
+  content = with nsPerContent boxContentPriority [Left break , Left $ bId ] pcon
   -- boxes with break specification first
   break = case getTagValuem box "@start" of
             Nothing -> 1
@@ -358,9 +364,9 @@ boxFinalPriority useDefault BoxNumberSelector{..} (box, shelf) = let -- reader
        )
      )
   where useBase = maybe True liUseBase
-        with selm p base = case useDefault of
-                            UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else []
-                            DontUseDefault ->  keyFromLimitM selm [] box shelf 
+        with selm p base pb = case useDefault of
+                            UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else pb
+                            DontUseDefault ->  keyFromLimitM selm pb box shelf 
 
 
   
@@ -381,16 +387,15 @@ findShelvesByBoxNameAndNames (ShelfSelector (Selector boxNameSel boxTagSel) shel
 
 
 
-partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s) -> WH ([Box s], [Box s]) s
-partitionBoxes BoxSelector{..} bids = do
-  box'shelves <- findBoxesWithShelf bids
-  let (goods, bads) = partition isSelected $ Foldable.toList box'shelves
-      sorted = limitByNumber DontUseDefault numberSelector goods
-      -- TODO make faster, make limitByNumber return an InExcluded
-      -- the current implementation keep the truncated in the original order
+partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s, Priority) -> WH ([(Box s, Priority)], [(Box s, Priority)]) s
+partitionBoxes BoxSelector{..} bid'ps = do
+  let (bids, priorities) = List.unzip $ Foldable.toList bid'ps
+  box'shelves <-  flip zip priorities <$> findBoxesWithShelf bids
+  let (goods, bads) = partition isSelected box'shelves
+      sorted = limitByNumber DontUseDefault numberSelector $ map (fmap Just) goods
       truncated = filter (flip notMember (Set.fromList sorted)) goods
-  return (map fst sorted, map fst $ truncated <> bads)
-  where isSelected (box, shelf) = applySelector boxSelectors  box && applySelector shelfSelectors shelf
+  return (map (first fst) sorted, map (first fst) $ truncated <> bads)
+  where isSelected ((box, shelf),_p) = applySelector boxSelectors  box && applySelector shelfSelectors shelf
    
   
 

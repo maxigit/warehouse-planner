@@ -161,11 +161,11 @@ select selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
 limit selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let selected = limitByNumber ?useDefault (parseBoxNumberSelector $ drop 1 selection) boxes
+   let selected = limitByNumber ?useDefault (parseBoxNumberSelector $ drop 1 selection) $ map (,Nothing) boxes
    --                                                                   ^^^^^
    -- parseBoxNumberSelector doesn't expect a ^ at the begining as parseBox
    -- the boxname and the box number selector)
-   return $ boxesWithId $ map fst selected
+   return $ boxesWithId $ map (fst . fst) selected
    
    
    
