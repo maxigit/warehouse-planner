@@ -365,7 +365,7 @@ boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- re
      )
   where useBase = maybe True liUseBase
         with selm p base pb = case useDefault of
-                            UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else []
+                            UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else pb
                             DontUseDefault ->  keyFromLimitM selm pb box shelf 
 
 
