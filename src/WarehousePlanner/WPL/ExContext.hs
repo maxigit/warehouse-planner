@@ -47,7 +47,7 @@ withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector Nothing N
 narrowBoxes :: BoxSelector -> ExContext s -> WH (ExContext s) s
 narrowBoxes selector ec = do
    let finalSelector = combineSelector (ecSelector ec) selector
-   traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
+   -- traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
    ecB <- case included (ecBoxes ec) of 
      Nothing {- AllOf -} -> do
            inc <- findBoxByNameAndShelfNamesWithPriority finalSelector
