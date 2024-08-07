@@ -422,7 +422,7 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
 
       -- don't resort boxes if a number selector has been set.
       sortMode = case numberSelector style  of
-                      BoxNumberSelector Nothing Nothing Nothing -> SortBoxes
+                      BoxNumberSelector NoLimit NoLimit NoLimit -> SortBoxes
                       _ -> DontSortBoxes
       tagOps = parseTagAndPatterns tagsAndPatterns tags
   boxes0 <- narrowBoxes style ec >>= getBoxes-- findBoxByNameAndShelfNames style

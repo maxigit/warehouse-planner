@@ -43,9 +43,9 @@ defaultFlow = LeftToRight
 -- Filtering by content means only n boxes of the same style content will be selected.
 -- This is use full to for example only keep one box of each variations and move them on top
 data BoxNumberSelector = BoxNumberSelector
-   { nsPerContent :: !(Maybe Limit)
-   , nsPerShelf :: !(Maybe Limit)
-   , nsTotal :: !(Maybe Limit)
+   { nsPerContent :: !(Limit)
+   , nsPerShelf :: !(Limit)
+   , nsTotal :: !(Limit)
    } deriving (Show, Eq)
 
 -- | How to take slice of a selection
@@ -55,6 +55,9 @@ data Limit = Limit
   , liOrderingKey :: ![(OrderingKey, SortingOrder)] -- ^ which tag to use to sort boxes
   , liUseBase :: !Bool -- ^ if true add the base key when sorting
   } deriving (Show, Eq)
+  
+pattern NoLimit <- Limit Nothing Nothing []  _  where
+        NoLimit = Limit Nothing Nothing [] True
   
 data OrderingKey = OrdTag Text | OrdAttribute Text
      deriving (Show, Eq)
@@ -619,7 +622,7 @@ data ShelfSelector = ShelfSelector
 selectAllBoxes :: BoxSelector
 selectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
-                             (BoxNumberSelector Nothing Nothing Nothing)
+                             (BoxNumberSelector NoLimit NoLimit NoLimit)
 
 -- ** For moves
 data SortBoxes = SortBoxes | DontSortBoxes

@@ -162,15 +162,15 @@ parseShelfSelector selector = let
   in ShelfSelector boxSel shelfSel
 
 parseBoxNumberSelector :: Text -> BoxNumberSelector
-parseBoxNumberSelector "" = BoxNumberSelector Nothing Nothing Nothing
+parseBoxNumberSelector "" = BoxNumberSelector NoLimit NoLimit NoLimit
 parseBoxNumberSelector s = case P.parse parser (unpack s) s of 
   Left err -> error (show err)
   Right expr -> expr
   where parser = do
-          limits <- P.optional parseLimit `P.sepBy` P.char '^'
+          limits <- parseLimit `P.sepBy` P.char '^'
           case limits of 
                (_:_:_:_:_) -> fail "Too many limits in"
-               _ -> let (content: shelves: total:_) =  limits ++ List.cycle [Nothing]
+               _ -> let (content: shelves: total:_) =  limits ++ List.cycle [NoLimit]
                     in return $ BoxNumberSelector content shelves total
                 
 
@@ -245,8 +245,8 @@ printPattern (MatchGlob pat) = pack $ Glob.decompile pat
 
 
 printNumberSelector :: BoxNumberSelector -> Text
-printNumberSelector (BoxNumberSelector Nothing Nothing Nothing) = ""
-printNumberSelector  BoxNumberSelector{..} = mconcat [ "^" <> maybe "" printLimit lim
+printNumberSelector (BoxNumberSelector NoLimit NoLimit NoLimit) = ""
+printNumberSelector  BoxNumberSelector{..} = mconcat [ "^" <> printLimit lim
                                                      | lim <- [nsPerContent, nsPerShelf, nsTotal ]
                                                      ]
 

@@ -131,7 +131,7 @@ command = asum $ map lexeme [ toggleTag
 
 boxSelector :: MParser (CSelector BoxSelector)
 boxSelector =  label "box selector" $ asum
-    [  lexeme "in" >> cselector ((\sel -> BoxSelector (sBoxSelectors sel) (sShelfSelectors sel) (BoxNumberSelector Nothing Nothing Nothing) ) . parseShelfSelector)
+    [  lexeme "in" >> cselector ((\sel -> BoxSelector (sBoxSelectors sel) (sShelfSelectors sel) (BoxNumberSelector NoLimit NoLimit NoLimit) ) . parseShelfSelector)
     , guardLower >> cselector parseBoxSelector
     ]
     
