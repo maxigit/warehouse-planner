@@ -42,7 +42,7 @@ lexeme :: MParser a -> MParser a
 lexeme = L.lexeme spaces
 
 wplParser ::  MParser [Statement]
-wplParser = (some $ L.nonIndented whites statement) <*  whites <* eof
+wplParser = (some $ L.nonIndented whites $ statement True) <*  whites <* eof
  
 
 {-
@@ -60,10 +60,10 @@ caseBlock = do
                   return $ Case c st
                   -}
      
-statement :: MParser Statement
-statement = do
+statement :: Bool -> MParser Statement
+statement first = do
    iLvl <- L.indentLevel
-   a <- lexeme atom
+   a <- lexeme $ atom first
    let iguard =  do
                     eof <|> (void $ L.indentGuard whites GT iLvl)
    nextm <- optional $ try do
@@ -76,29 +76,29 @@ statement = do
            cs <- many $ iguard >> caseLine
            return $ Then a $ Cases (c :| cs)
       Just (Right s) -> do
-           ss <- many $ iguard >> statement
+           ss <- many $ iguard >> statement False
            return $ Then a $ case ss of 
                               [] -> s
                               _ -> Ors (s :| ss )
 
 
 statementOrCase :: MParser (Either Case Statement)
-statementOrCase = fmap Left caseLine <|> fmap Right statement
+statementOrCase = fmap Left caseLine <|> fmap Right (statement False)
 
 caseLine :: MParser Case
 caseLine = do
     lexeme "|"
-    c <- statement
+    c <- statement False
     return case c of 
        Then a b -> Case a (Just b)
        _ -> Case c Nothing
           
-atom :: MParser Statement
-atom = (PassThrought <$> (lexeme ";" *> statement))
-       <|> (lexeme "("  *> statement <* lexeme ")")
-       <|> (notFollowedBy "|" >> Action <$> command)
+atom :: Bool -> MParser Statement
+atom first = (PassThrought <$> (lexeme ";" *> statement first))
+       <|> (lexeme "("  *> statement first <* lexeme ")")
+       <|> (notFollowedBy "|" >> Action <$> command first)
 
-command = asum $ map lexeme [ toggleTag
+command first = asum $ map lexeme [ toggleTag
                             , tag
                             , move
                             , shelfSel
@@ -125,14 +125,14 @@ command = asum $ map lexeme [ toggleTag
           return $ TagAndMove tagloc ors
 
                     
-   boxSel = SelectBoxes <$> boxSelector
+   boxSel = SelectBoxes <$> boxSelector first
    shelfSel = "/" >> (SelectShelves <$> shelfSelector)
 
 
-boxSelector :: MParser (CSelector BoxSelector)
-boxSelector =  label "box selector" $ asum
-    [  lexeme "in" >> cselector ((\sel -> BoxSelector (sBoxSelectors sel) (sShelfSelectors sel) (BoxNumberSelector Nothing Nothing Nothing) ) . parseShelfSelector)
-    , guardLower >> cselector parseBoxSelector
+boxSelector :: Bool -> MParser (CSelector BoxSelector)
+boxSelector first =  label "box selector" $ asum
+    [  lexeme "in" >> cselector ((\sel -> BoxSelector (sBoxSelectors sel) (sShelfSelectors sel) (BoxNumberSelector NoLimit NoLimit NoLimit) ) . parseShelfSelector)
+    , guardLower >> cselector (parseBoxSelectorWithDef $ first == True)
     ]
     
 shelfSelector :: MParser (CSelector ShelfSelector)
@@ -152,7 +152,7 @@ cselector mk = try $ asum [swapContext, root, parent, stmt, sel ] where
      sel = CSelector . mk <$> lexeme (takeWhile1P (Just "selector") isSelector)
      parent = (lexeme $ char '~') >> return Parent
      root = (lexeme $ string ".~") >> return Root
-     stmt = CStatement <$> (lexeme "(" *> statement <* ")")
+     stmt = CStatement <$> (lexeme "(" *> statement False <* ")")
          
 orientationRules :: MParser [OrientationStrategy]
 orientationRules = do

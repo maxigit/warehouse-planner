@@ -28,7 +28,7 @@ instance Semigroup (ExContext s) where
 
                           
 instance Monoid (ExContext s) where
-   mempty = ExContext mempty mempty Nothing (BoxNumberSelector Nothing Nothing Nothing)
+   mempty = ExContext mempty mempty Nothing (BoxNumberSelector NoLimit NoLimit NoLimit)
    
 -- We don't update the parent in purpose
 inverseBoxes :: ExContext s -> ExContext s
@@ -39,7 +39,7 @@ inverseShelves ec = ec { ecShelves = inverseInEx $ ecShelves ec }
     
 -- * Impure
 withAll :: ExContext s
-withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector Nothing Nothing Nothing)
+withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit NoLimit NoLimit)
                      
 -- | Boxes of the current which satisfy the given selector.
 -- At the moment, it is implemented as the intersection of 
@@ -95,11 +95,11 @@ combineSelector bns sel = let
           }
 
 -- | Combine Limit Keys but reset start and stops
-combineLimitKeys :: Maybe Limit -> Maybe Limit -> Maybe Limit
-combineLimitKeys Nothing b = b
-combineLimitKeys (Just a) Nothing = Just a { liStart = Nothing, liEnd = Nothing} -- , liUseBase =False }
-combineLimitKeys (Just a) (Just b) = Just b { liOrderingKey = if liUseBase b 
-                                                              then liOrderingKey a <> liOrderingKey b
-                                                              else liOrderingKey b
-                                            , liUseBase = liUseBase a && liUseBase b
-                                            }
+combineLimitKeys :: Limit -> Limit -> Limit
+combineLimitKeys NoLimit b = b
+combineLimitKeys a NoLimit = a { liStart = Nothing, liEnd = Nothing} -- , liUseBase =False }
+combineLimitKeys a b = b { liOrderingKey = if liUseBase b 
+                                           then liOrderingKey a <> liOrderingKey b
+                                           else liOrderingKey b
+                         , liUseBase = liUseBase a && liUseBase b
+                         }

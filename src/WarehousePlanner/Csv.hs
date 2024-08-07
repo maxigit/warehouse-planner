@@ -597,7 +597,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
                          (shelfSelectors previous `merges` shelfSelectors sel)
                          (numberSelector previous `mergen` numberSelector sel)
           merges (Selector namep tagsp) (Selector namep' tags) = Selector (mergeNames namep namep') (tagsp <> tags) 
-          mergen p (BoxNumberSelector Nothing Nothing Nothing) = p
+          mergen p (BoxNumberSelector NoLimit NoLimit NoLimit) = p
           mergen _ bn = bn
           -- merge easy ones
           mergeNames AnyNames ns = ns

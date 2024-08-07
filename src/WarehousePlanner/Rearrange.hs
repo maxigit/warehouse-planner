@@ -139,7 +139,7 @@ parseSelectors isLocation s = let
   ss = split (`elem` t " |") s
   parse selector | null selector = Nothing
   parse selector = Just $ if isLocation
-                   then BoxSelector SelectAnything (parseSelector selector) (BoxNumberSelector Nothing Nothing Nothing)
+                   then BoxSelector SelectAnything (parseSelector selector) (BoxNumberSelector NoLimit NoLimit NoLimit)
                    else parseBoxSelector selector
   r =  mapMaybe parse ss
   in  r

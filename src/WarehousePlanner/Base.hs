@@ -298,10 +298,9 @@ limitByNumber :: UseDefault -> BoxNumberSelector -> [((Box s, Shelf s), Maybe Pr
 limitByNumber useDefault selector@BoxNumberSelector{..} unsortedBoxes = let
   grouped = groupBySelector useDefault selector unsortedBoxes
   in take_ nsTotal $ concatMap (take_ nsPerShelf . concat . map (take_ nsPerContent)) grouped
-  where take_ :: Maybe Limit -> [a] -> [a]
-        take_ Nothing = id
-        take_ (Just sel) = let 
-                    in maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel)
+  where take_ :: Limit -> [a] -> [a]
+        take_ NoLimit = id
+        take_ sel = maybe id (drop . (subtract 1)) (liStart sel) . maybe id take (liEnd sel)
 
    -- where globalKey = snd
 
@@ -322,9 +321,9 @@ groupBySelector useDefault selector unsortedBoxes = let
 
 type Keys = [Either (Down (Either Int Text)) (Either Int Text)]
 type Priority = (Keys, (Keys , Keys))
-keyFromLimitM :: Maybe Limit -> Keys -> Box s -> Shelf s ->  Keys
+keyFromLimitM :: Limit -> Keys -> Box s -> Shelf s ->  Keys
 keyFromLimitM limit def box shelf =
-  case liOrderingKey =<< toList limit of
+  case liOrderingKey limit of
     [] -> def
     keys -> map evalKey keys
   where evalKey (k, order) = let
@@ -364,9 +363,9 @@ boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- re
        )
      )
   where useBase = maybe True liUseBase
-        with selm p base pb = case useDefault of
-                            UseDefault ->  keyFromLimitM selm [Right $ Left $ p box] box shelf <> if useBase selm then (fmap Right base) else pb
-                            DontUseDefault ->  keyFromLimitM selm pb box shelf 
+        with sel p base pb = case useDefault of
+                            UseDefault ->  keyFromLimitM sel [Right $ Left $ p box] box shelf <> if useBase (Just sel) then (fmap Right base) else pb
+                            DontUseDefault ->  keyFromLimitM sel pb box shelf 
 
 
   

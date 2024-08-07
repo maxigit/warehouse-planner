@@ -15,9 +15,9 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SelectBoxes (CSelector BoxSelector)
              | SelectShelves (CSelector ShelfSelector)
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
-     -- deriving (Show, Eq)
-     deriving Eq
-instance Show Command where show = showCommand
+     deriving (Show, Eq)
+     -- deriving Eq
+-- instance Show Command where show = showCommand
 showCommand = \case
       Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  showCSelector showShelfSelector cDest
       Tag{..} -> "Tag " <> show cTagOps
