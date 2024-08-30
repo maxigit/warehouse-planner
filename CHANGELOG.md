@@ -1,3 +1,13 @@
+# 1.4.1
+- change how limit works
+  ^= in limit don't use the default sort order but only the given one
+  ^@ forces the use of default order
+  WPL first selection uses default order and then not
+    so that in effect subsequent limit reuse the previous limit order
+- misc in Brick
+- add ${id} props
+- split by style instead of shelfves in limits
+
 # 1.3.4
 Add collapse depth option
 Find next and previous box
