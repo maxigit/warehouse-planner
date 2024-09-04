@@ -1046,6 +1046,7 @@ expandIntrinsic' "coordinate" box _shelf = let (Dimension ol ow oh) = boxCoordin
 expandIntrinsic' "offset" box _shelf = Right $ printDim $ boxOffset box
 expandIntrinsic' "dimension" box _shelf = Right $ printDim $ _boxDim box
 expandIntrinsic' "orientation" box _shelf = Right $ showOrientation (orientation box)
+expandIntrinsic' "position-spec" box _shelf = Right $ boxPositionSpec box
 expandIntrinsic' "volume" box _shelf = Right $ pack $ printf "%09.2f" (boxVolume box)
 expandIntrinsic' "vol" box _shelf = Right $ pack $ printf "%.2e" (boxVolume box)
 expandIntrinsic' "con" box _shelf = Right $ boxShortContent box

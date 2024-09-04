@@ -31,15 +31,15 @@ data ForGrouping = Don'tGroup | GroupByContent
      deriving (Show, Eq)
 
 -- * Export {{1
-rearrangeBoxesByContent ::  ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
-rearrangeBoxesByContent deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
+rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
   boxes <- findBoxByNameAndShelfNames boxsel >>= mapM findBox
   -- group boxes by style and content
   let content b = (boxStyle b, boxContent b)
       boxByContent = case groupByContent of
                      GroupByContent ->  groupBy ((==) `on` content) $ sortOn content boxes
                      Don'tGroup ->  [boxes]
-  newss <- mapM (\boxes ->  shiftUsedBoxes isUsed isSticky boxes actions) boxByContent
+  newss <- mapM (\boxes ->  shiftUsedBoxes debugm isUsed isSticky boxes actions) boxByContent
   let news = concat newss
       untagOps = negateTagOperations tagOps
       newSet = Set.fromList news
@@ -58,11 +58,25 @@ rearrangeBoxesByContent deleteUnused groupByContent tagOps isUsed isSticky boxse
 
         
   
-shiftUsedBoxes :: forall s . (Box s -> Bool) -> (Text -> Bool) -> [Box s] -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
-shiftUsedBoxes isUsed isSticky boxes inBucket'strategies = do
+shiftUsedBoxes :: forall s . Maybe Text -> (Box s -> Bool) -> (Text -> Bool) -> [Box s] -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
   box'shelves <- mapM (\b -> (return $ boxShelf b) >>= mapM findShelf >>= \s -> return (b, s)) boxes
-  let swaps = shiftUsedInBucketsWithStrategy isUsed (map mkBucket inBucket'strategies)
+  let boxWithBuckets0 = map mkBucket inBucket'strategies
       mkBucket (inBucket, strategy) = (map fst $ filter (uncurry inBucket) box'shelves, strategy)
+  boxWithBuckets <- case debugPrefix of 
+                       Nothing -> return boxWithBuckets0
+                       Just prefix -> zipWithM  (\(boxes, strategy) bucket -> do
+                                         newBoxes <- forM  (zip [1..] boxes) \(i,box) ->  updateBoxTags [ (prefix <> "-bucket", SetValues [tshow bucket])
+                                                                                                        , (prefix <> "-strategy", SetValues [tshow strategy])
+                                                                                                        , (prefix <> "-order", SetValues [tshow i])
+                                                                                                        , (prefix <> "-pos", SetValues [tshow bucket <> ":" <> tshow i])
+                                                                                                        ]
+                                                                                                        box 
+                                                                                                        1
+                                         return (newBoxes, strategy)) -- boxes, strategy))
+                              boxWithBuckets0
+                              [1..]
+  let swaps = shiftUsedInBucketsWithStrategy isUsed boxWithBuckets 
   newms <- mapM doSwap swaps
   return $ catMaybes newms
   where doSwap :: (Box s, Box s) -> WH (Maybe (Box s)) s
@@ -82,6 +96,11 @@ shiftUsedBoxes isUsed isSticky boxes inBucket'strategies = do
                  -- remove sticky tags from dest and set them to the source, so in effect
                  -- the sticky tags are attached to the location not the boxes.
                  let (sticky, nonSticky) = Map.partitionWithKey (\k _ -> isSticky k) (boxTags dest)
+                 debugTag <- case debugPrefix of
+                                  Nothing -> return mempty
+                                  Just prefix -> do 
+                                          from <- expandAttribute source 1 "${shelfname}${position-spec}"
+                                          return $ mapFromList [(prefix <> "-from=" , singleton from)]
                  when (not $ null sticky) do
                    void $ updateBox (\b -> b { boxTags = nonSticky} ) dest
                       
@@ -89,7 +108,7 @@ shiftUsedBoxes isUsed isSticky boxes inBucket'strategies = do
                                   , boxBoxOrientations = boxBoxOrientations dest
                                   , orientation = orientation dest
                                   , boxBreak = boxBreak dest
-                                  , boxTags = boxTags source <> sticky
+                                  , boxTags = boxTags source <> sticky <> debugTag
                                   }
                                   ) source
                                   >>= assignShelf (boxShelf dest)

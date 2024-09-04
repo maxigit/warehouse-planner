@@ -675,11 +675,18 @@ readRearrangeBoxes tags'Sticky = readFromRecordWithPreviousStyle go
   where go style (Csv.Only action) = do
            let (deleteUnused, grouping, actions) = parseActions action
            newBaseEvent "RAR"  action
-           rearrangeBoxesByContent deleteUnused grouping tagOps isUsed isSticky style actions
-        tagOps = parseTagAndPatterns tags0 []
+           rearrangeBoxesByContent debugm deleteUnused grouping tagOps isUsed isSticky style actions
         (tags0, drop 1 -> sticky) = break (== "@sticky") tags'Sticky
-        isUsed = not . flip tagIsPresent "dead" 
+        (deadm, tags1) = extractTagValue ("@dead") tags0
+        (debugm, tags2) = extractTagValue ("@debug") tags1
+        tagOps = parseTagAndPatterns tags2 []
+        isUsed = not . flip tagIsPresent (fromMaybe "dead" deadm)
         isSticky = (`List.elem` sticky)
+        
+extractTagValue :: Text -> [Text] -> (Maybe Text, [Text])
+extractTagValue needle tags0 = let
+  (values, tags) = partitionEithers $ map (\t -> maybe (Right t) Left $ stripPrefix (needle <> "=") t) tags0
+  in (headMay values, tags)
 -- * Freeze order  
 readFreezeOrder :: [Text] -> FilePath -> IO (WH [Box s] s)
 readFreezeOrder tags0 = readFromRecordWith go
