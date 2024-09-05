@@ -27,18 +27,35 @@ data ShiftStrategy = ShiftAll | StayInPlace deriving (Show, Eq)
 data ForUnused = DeleteUnused | KeepUnused 
      deriving (Show, Eq)
  
-data ForGrouping = Don'tGroup | GroupByContent
+data ForGrouping = Don'tGroup | GroupByContent | GroupBySelector
      deriving (Show, Eq)
 
 -- * Export {{1
 rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
 rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
-  boxes <- findBoxByNameAndShelfNames boxsel >>= mapM findBox
+  let findBoxWithDebug (boxId, p@(k1, (k2, k3))) = do
+        box <- findBox boxId
+        newBox <- case debugm of
+             Nothing -> return box
+             Just prefix -> updateBoxTags [ (prefix <> "-priority", SetValues [ intercalate "|" $ map showkey [k1, k2, k3]])
+                                          , (prefix <> "-style", SetValues [showkey k1])
+                                          , (prefix <> "-cgroup", SetValues [showkey k2])
+                                          , (prefix <> "-corder", SetValues [showkey k3])
+                                          ]
+                                          box
+                                          1
+        return (newBox, p)
+  box'prioritys <- findBoxByNameAndShelfNamesWithPriority boxsel >>= mapM findBoxWithDebug
   -- group boxes by style and content
-  let content b = (boxStyle b, boxContent b)
-      boxByContent = case groupByContent of
-                     GroupByContent ->  groupBy ((==) `on` content) $ sortOn content boxes
-                     Don'tGroup ->  [boxes]
+  let content (b,_) = (boxStyle b, boxContent b)
+      -- ^ the difference between this and normla selector
+      -- is that style and content priority are ignored
+  let content2 (_box, (p1, (p2,_))) = (p1, p2)
+      boxByContent = map (map fst) case groupByContent of
+                     GroupByContent ->  groupBy ((==) `on` content) $ sortOn content box'prioritys
+                     GroupBySelector ->  groupBy ((==) `on` content2) box'prioritys -- we don't sort, already sorted
+                     Don'tGroup -> [box'prioritys]
+      boxes = map fst box'prioritys
   newss <- mapM (\boxes ->  shiftUsedBoxes debugm isUsed isSticky boxes actions) boxByContent
   let news = concat newss
       untagOps = negateTagOperations tagOps
@@ -56,6 +73,11 @@ rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isStick
   zipWithM (updateBoxTags tagOps) news [1..]
             
 
+showkey = intercalate " " . map go where
+   go (Left (Down v)) = "-" <> showv v
+   go (Right v) = showv v
+   showv (Left i) = "#" <> tshow i
+   showv (Right t) = t
         
   
 shiftUsedBoxes :: forall s . Maybe Text -> (Box s -> Bool) -> (Text -> Bool) -> [Box s] -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
@@ -120,11 +142,11 @@ boxStyleWithTags b = let
 
 -- * Parse {{1
 -- Actions are of the shape
--- [/][#] selector1 >[!] selector2.1 [|] selector2.2 > [!]selector3
+-- [/][-][%] selector1 >[!] selector2.1 [|] selector2.2 > [!]selector3
 -- 
 parseActions :: Text -> (ForUnused, ForGrouping, [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)])
 parseActions s0 = let
-  (flags, s1) = span (`elem` t "/-%") s0
+  (flags, s1) = span (`elem` t "/-%^") s0
   asLocation = '/' `elem` flags
   ss = splitOn ">" s1
   forUnused = if '-' `elem` flags
@@ -132,7 +154,9 @@ parseActions s0 = let
               else KeepUnused
   forGrouping = if '%' `elem` flags
                 then Don'tGroup
-                else GroupByContent
+                else if '^' `elem` flags
+                     then GroupBySelector
+                     else GroupByContent
   mkFn ss' = let
     (c, ss) = span (`elem` t "!_ ") ss'
     strat = if '!' `elem` c

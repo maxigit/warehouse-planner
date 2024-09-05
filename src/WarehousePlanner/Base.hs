@@ -337,7 +337,7 @@ keyFromLimitM limit def box shelf =
                NormalOrder -> Right val
                ReverseOrder -> Left $ Down val
 
-        maxString = T.replicate 100 (singleton maxBound)
+        maxString = T.replicate 8 (singleton '~')
 
 
 -- limitBy :: Ord k => (Box s -> k) -> Int -> [Box s] -> [a]
