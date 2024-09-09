@@ -51,6 +51,7 @@ data HeaderType
   | ColourMapH
   | RearrangeH [Text]
   | FreezeOrderH [Text]
+  | CheckShelvesH 
   | WPLH [Text]
   deriving (Show, Eq, Ord, Generic)
 

@@ -18,6 +18,7 @@ module WarehousePlanner.Csv
 , readTags
 , readTransformTags
 , readUpdateShelves
+, readCheckShelves
 , readWarehouse
 , readColourMap
 , readRearrangeBoxes
@@ -29,6 +30,7 @@ module WarehousePlanner.Csv
 import WarehousePlanner.Base
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
+import WarehousePlanner.Check
 import WarehousePlanner.Selector
 import WarehousePlanner.Move
 import WarehousePlanner.Expr qualified as E
@@ -187,6 +189,17 @@ readUpdateShelves filename = do
               
 
           
+
+readCheckShelves :: FilePath -> IO (WH () s)
+readCheckShelves filename = do
+    csvData <- BL.readFile filename
+    case Csv.decode Csv.HasHeader csvData of
+       Left err  -> error $ "File:" <> filename <> " " <> err
+       Right (rows) -> return do
+          void $ Vec.forM rows \(Csv.Only selector) -> do
+             shelves <- findShelvesByBoxNameAndNames selector
+             mapM_ tagBoxesStatus shelves
+              
 
 
 -- | Expand chars (or words) between bracket to all possible string

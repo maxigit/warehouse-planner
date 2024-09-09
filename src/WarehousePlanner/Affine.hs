@@ -1,6 +1,7 @@
 module WarehousePlanner.Affine
 ( AffDimension(..)
 , inAffDimension
+, affDimensionContains
 , affDimensionOverlap
 , affDimensionIntersection
 , boxAffDimension
@@ -8,6 +9,7 @@ module WarehousePlanner.Affine
 , tileSurface
 , boxesSurface
 , positionToAffine
+, affineToDimension
 )
 where 
 
@@ -48,7 +50,11 @@ affDimensionIntersection a b = let
      then Just (AffDimension bottomLeft topRight)
      else Nothing
 
-
+-- | Check if a rectance contains another one
+-- We need only to check the two extreme corners
+affDimensionContains :: AffDimension -> AffDimension -> Bool
+affDimensionContains big small =
+    inAffDimension (aBottomLeft small) big && inAffDimension (aTopRight small <> Dimension 1e-6 1e-6 1e-6) big
   
 affineToDimensions :: AffDimension -> [Dimension]
 affineToDimensions rec = let
@@ -59,6 +65,9 @@ affineToDimensions rec = let
      , y <- [y', y'']
      , z <- [z', z'']
      ]
+
+affineToDimension :: AffDimension -> Dimension
+affineToDimension rec = aTopRight rec <> invert (aBottomLeft rec)
 
 positionToAffine :: Dimension -> Position -> AffDimension
 positionToAffine dim Position{..} = AffDimension pOffset (pOffset <> rotate pOrientation dim)

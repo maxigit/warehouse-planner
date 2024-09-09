@@ -34,6 +34,7 @@ data Options = Options
             , oNoHistory :: Bool
             , oProperty :: Maybe Text
             , oCurrentRun :: Maybe Int
+            , oNoCheck :: Bool
             }
      deriving (Show, Generic)
      
@@ -89,6 +90,8 @@ optionsParser = do
   oCurrentRun <- optional $ option auto $ long "run"
                                         <> metavar "RUN NUMBER"
                                         <> help "Number of the run to start with (0 based)"
+  oNoCheck <- switch $ long "no-check"
+                     <> help "Disable automatic checks"
 
   return Options{..}
   
@@ -256,10 +259,13 @@ defaultMainWith expandSection = do
 
 
 extraScenariosFrom :: Options -> [Text]
-extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM] where
+extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM, checkM] where
     deleteM = flip fmap oDelete \del -> [ ":DELETE:" , del , ":END:" ]
     importM = flip fmap oImport \imp -> [ ":IMPORT:" , imp , ":END:" ]
     tamM = flip fmap oTagsAndMoves \tam -> [ ":Tags and Moves:" , "stock_id,tam" , tam , ":END:" ]
+    checkM = if oNoCheck
+             then Nothing
+             else Just [ ":CHECK_SHELVES:", "shelves", "*", ":END:" ]
                                  
 
 

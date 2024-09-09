@@ -1,11 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.37.0.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        1.4.0
+version:        1.4.1
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -23,6 +23,7 @@ library
   exposed-modules:
       WarehousePlanner.Affine
       WarehousePlanner.Base
+      WarehousePlanner.Check
       WarehousePlanner.Csv
       WarehousePlanner.Display
       WarehousePlanner.Exec

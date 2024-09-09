@@ -154,10 +154,13 @@ parseDrawer h = case splitOn "_" (toLower h) of
                                       ])
                  ,(ClonesH [],        [ ["clone"]])
                  ,(DeletesH,          [ ["delete"]])
-                 ,(ColourMapH,           [ ["colors"]
-                                         , ["colours"]
+                 ,(ColourMapH,        [ ["colors"]
+                                      , ["colours"]
                                       ])
                  ,(RearrangeH [],     [ ["rar"]])
+                 ,(CheckShelvesH, [ ["check", "shelves"]
+                                  , ["check"]
+                                  ])
                  ]
   
 -- | remove the H and to lower
@@ -488,6 +491,7 @@ executeStep (Step header sha txt) = do
           RearrangeH tags -> execute $ readRearrangeBoxes tags path
           FreezeOrderH tags -> execute $ readFreezeOrder tags path
           WPLH _tags -> execute $ fmap runWPL $ readWPL path
+          CheckShelvesH -> execute $ readCheckShelves path
   return do
      case header of
        TitleH level -> newWHEvent level txt
