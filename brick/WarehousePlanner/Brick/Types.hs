@@ -39,27 +39,27 @@ data SummaryView = SVVolume
                  | SVSurfaceLH
                  | SVSurfaceWH
                  -- | SVLW
-     deriving (Show, Eq, Enum, Bounded)
+     deriving (Show, Eq, Ord, Enum, Bounded)
      
 data ViewMode = ViewSummary SummaryView
               | ViewHistory
               -- | ViewSplitShelves (Shelf s -> Bool)
               -- | ViewSplitBoxes (Box s -> Bool)
               -- 
-              deriving (Show, Eq)
+              deriving (Show, Eq, Ord)
               
 data BoxOrder = BOByName
               | BOByShelve
               | BOByCount
               | BOByVolume
-     deriving (Show, Eq, Enum, Bounded)
+     deriving (Show, Eq, Ord, Enum, Bounded)
 
 type Resource = Text
 data InputMode = ISelectBoxes
                | ISelectShelves
                | ISelectProperty 
                | ISelectTag
-     deriving (Show, Eq, Ord, Enum)
+     deriving (Show, Eq, Ord, Enum, Bounded)
 
 data Input = Input { iEditor :: Editor Text Resource
                    , iMode :: InputMode
@@ -115,7 +115,8 @@ data AppState = AppState
      , asPropertyAsGradient :: Maybe Bool -- Just True for all False for current run
      , asShowSelected :: Bool
      ------ deal with multikey mapping
-     , asLastKeys :: [Char]
+     , asSubmap :: Maybe Char
+     , asDisplayMainHelp :: Bool
      , asBoxOrder :: BoxOrder 
      , asWarehouse :: Warehouse RealWorld 
      , asTitle :: String

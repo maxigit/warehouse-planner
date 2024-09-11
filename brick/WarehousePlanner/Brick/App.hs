@@ -1,3 +1,4 @@
+{-# LANGUAGE UndecidableInstances #-}
 module WarehousePlanner.Brick.App
 (
 whMain
@@ -26,6 +27,7 @@ import Data.List.NonEmpty(NonEmpty(..), (!!))
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
 import Brick.Widgets.Table qualified as B
+import Brick.Keybindings qualified as B
 import Data.List (cycle)
 import Data.Map qualified as Map
 import WarehousePlanner.Brick.Table
@@ -39,7 +41,7 @@ import Text.Printf
 
 type WHApp = B.App AppState WHEvent Resource
 data SearchDirection = Forward |  Backward
-    deriving (Eq, Show, Enum, Bounded)
+    deriving (Eq, Show, Ord, Enum, Bounded)
 data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
@@ -79,10 +81,17 @@ data WHEvent = ENextMode
              | EToggleHistoryNavigation
              | EToggleHistoryPrevious
              --
-             | EReload
              -- Input
              | EStartInputSelect InputMode
-             -- WH Action
+             -- Submap
+             | ESubMap Char
+             | EDisplayMainHelp
+             -- Misc
+             | EReload
+             | EQuit
+             -- Action
+             | EMove
+     deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
                   | HNext
                   | HParent
@@ -96,7 +105,7 @@ data HistoryEvent = HPrevious
                   | HFirst
                   | HLast
                   | HSwapCurrent
-     deriving(Show,Eq)
+     deriving(Show, Eq, Ord, Enum, Bounded)
 
 makeAppShelvesSummary :: Maybe Text -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
 makeAppShelvesSummary propm = do
@@ -192,11 +201,11 @@ initState adjust title = do
       asDisplayHistory = False
       state = adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
-                  ,asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
+                  , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
                   , asPropertyAsGradient = Nothing
                   , asShowSelected = True
                   , asBoxOrder = BOByShelve
-                  , asLastKeys = []
+                  , asSubmap = Nothing, asDisplayMainHelp = False
                   , asWarehouse = error "Warehouse not initialized"
                   , asTitle = title
                   , asDiffEvent = NoHistory
@@ -253,7 +262,11 @@ whApp extraAttrs reload =
                                               ]
                   project d = if asCollapseDepth then d {dWidth = 0 } else d
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
-              in  [ vBoxB [ mainRun
+                  help = case asSubmap of 
+                           Nothing | asDisplayMainHelp == False  -> B.emptyWidget
+                           _ -> B.centerLayer $ submapHelp asSubmap
+              in  [ help
+                  , vBoxB [ mainRun
                            , B.vLimit (if asDisplayHistory then 21 else 13) $ hBoxB (debugShelf s :  (pure . boxDetail asWarehouse (asHistoryRange s)) (currentBoxHistory s))
                            , main
                            , maybe (renderStatus s) renderInput asInput
@@ -265,8 +278,24 @@ whApp extraAttrs reload =
       appStartEvent = return ()
   in app
   
+submapHelp :: Maybe Char -> B.Widget Text
+submapHelp cm = let 
+   Just section'handlers = lookup cm handlerMap
+   Just conf = lookup cm keyConfigMap
+   in B.border $ B.txt $ B.keybindingTextTable conf section'handlers
+   -- in B.vBox [ B.borderWithLabel (B.txt section) $ B.keybindingHelpWidget conf handlers 
+   --           | (section, handlers) <- section'handlers
+   --           ]
+  
 whMain :: (AppState -> AppState) -> String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
 whMain adjust title reload = do
+  -- error $ unpack
+  --       $ unlines 
+  --       $ [ B.keybindingTextTable keyConfig handlers
+  --         | ((__section'cm, handlers), keyConfig) <- zip handlerGroups (map snd keyConfigGroups)
+  --         --                             ^
+  --         --                             +---- same as sectionm
+  --         ]
   whE <- reload
   let wh = case whE of
             Left e -> error (unpack e)
@@ -293,9 +322,145 @@ whMain adjust title reload = do
   void $ B.defaultMain (whApp attrs reload) state0
 
 
+
+keyBindingGroups :: [(Maybe (Text, Char),[ (Text,  [([B.Binding], WHEvent, Text, _)])])]
+keyBindingGroups =  groups
+  where  groups = [ (Nothing , [("Main",                       [ mk 'm' ENextMode "next summary view mode"
+                                                               , mk 'M' EPrevMode "previous summary view mode"
+                                                               , mk 'v' ERenderRun "visualize current run (jpg)"
+                                                               , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
+                                                               , mK "q C-c" (EQuit) "Quit"
+                                                               , mK "C-r" (EReload) "Reload"
+                                                               ])
+                               ,("Navigation",                 [ mk 'g' (EFirstRun) "first run"
+                                                               , mk 'G' (ELastRun) "last run"
+                                                               , mk 'j' (ENextRun) "next run"
+                                                               , mk 'k' (EPrevRun) "previous run"
+                                                               , mk 'l' (ENextBay) "next bay"
+                                                               , mk 'h' (EPrevBay) "previous bay"
+                                                               , mk '^' (EFirstBay) "first bay"
+                                                               , mk '$' (ELastBay) "last bay"
+                                                               , mk 'J' (ENextShelf) "next shelf"
+                                                               , mk 'K' (EPrevShelf) "previous shelf"
+                                                               , mk 'b' (ENextBox) "next box"
+                                                               , mk 'B' (EPrevBox) "previous box"
+                                                               ])
+                               ,("Search & Highlight",         [ mk '/' (EStartInputSelect ISelectBoxes) "search boxes by pattern"
+                                                               , mk '?' (EStartInputSelect ISelectShelves) "search shelves by box pattern "
+                                                               , mk ']' ENextHLRun "next highlight run"
+                                                               , mk '[' EPrevHLRun "previous highlight run"
+                                                               , mk 'n' (EFindNextBox Forward) "next searched/highlighted box"
+                                                               , mk 'N' (EFindNextBox Backward) "previous searched/highlighted box"
+                                                               , mk V.KEnter ESelectCurrentPropValue "pin current property value"
+                                                               , mk '>' (ENextPropValue) "next property value"
+                                                               , mk '<' (EPreviousPropValue) "previous property value"
+                                                               ])
+                               ,("Warehouss operations",       [ mk '%' EMove "Move selected boxes to selected shelves"
+                                                               ])
+                               ,("History",                    [ mK "S-right" (EHistoryEvent HNext) "next event"
+                                                               , mK "S-left" (EHistoryEvent HPrevious) "previous event"
+                                                               , mk V.KUp (EHistoryEvent HParent) "go to parent event"
+                                                               , mk V.KDown (EHistoryEvent HChild) "go to child" 
+                                                               , mk V.KPageUp (EHistoryEvent HSkipBackward) "next current box event"
+                                                               , mk V.KPageDown (EHistoryEvent HSkipForward) "previous curren box event"
+                                                               , mk V.KLeft (EHistoryEvent HPreviousSibling) "previous sibling"
+                                                               , mk V.KRight (EHistoryEvent HNextSibling) "next sibling"
+                                                               , mk '=' (EHistoryEvent HSetCurrent) "set current to 'previous'"
+                                                               , mk '\\' (EHistoryEvent HSwapCurrent) "swap current and previous position"
+                                                               , mk V.KEnd (EHistoryEvent HLast) "end of history"
+                                                               , mk '|' (EHistoryEvent HResetCurrent) "reset both 'current' and 'previous' event to end of history"
+                                                               , mk V.KHome (EHistoryEvent HFirst) "beginning of history"
+                                                               , mk '\t'(EToggleViewHistory) "view/hide history"
+                                                               ])
+                               ] <> [("Submaps", submaps)]
+                  ),(Just ("Order", 'o') , [("Property order", [ mk 'n' (ESetBoxOrder BOByName) "sort by box name"
+                                                               , mk 's' (ESetBoxOrder BOByShelve) "sort by position in shelf"
+                                                               , mk 'c' (ESetBoxOrder BOByCount) "sort by number of boxes"
+                                                               , mk 'v' (ESetBoxOrder BOByVolume) "sort by total volumes"
+                                                               ])
+                                           ]
+                  ),(Just ("Toggle", 'z'), [("History",        [ mk 'h' (EToggleHistoryNavigation) "navigation current/previous"
+                                                               , mk 'H' (EToggleHistoryPrevious) "move current and previous"
+                                                               ])
+                                           ,("Misc",           [ mk 'd' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
+                                                               , mk 'w' (EToggleCollapseDepth) "Display shelf depth as "
+                                                               , mk 'p' (ETogglePropertyGradient) "color properties: random/gradient/gradient (full)"
+                                                               , mk 's' (EToggleShowSelected)     "highlight selected property"
+                                                               ])
+                                           ]
+                  ),(Just ("Property", 'p'), [("Preset",       [ mk 'p' (EStartInputSelect ISelectProperty) "manual"
+                                                               , mk 'b' (ESetProperty "${boxname}") "boxname"
+                                                               , mk 'B' (ESetProperty "$[batch]")   "batch"
+                                                               , mk 'c' (ESetProperty "${content}") "content"
+                                                               , mk 'C' (ESetProperty "${con}")     "short contnet"
+                                                               , mk 'd' (ESetProperty "${dimension}") "box dimension"
+                                                               , mk 'D' (ESetProperty "${style:-}-${dimension}") "short style & dimension"
+                                                               , mk ':' (ESetProperty "${con}:$[batch]") "short content & batch"
+                                                               , mk 't' (ESetProperty "$[ctitle]") "current title"
+                                                               , mk 's' (ESetProperty "${style}") "style"
+                                                               , mk 'S' (ESetProperty "${style:-}-$[batch]") "short style & batch"
+                                                               , mk 'o' (ESetProperty "${orientation}") "orientation"
+                                                               , mk 'v' (ESetProperty "${volume}") "volume"
+                                                               , mk 'O' (ESetProperty "$[@check]$[@overlap? O]") "Stickout check"
+                                                               , mK "C-o" (ESetProperty "$[@ovolume]") "overlapping volume"
+                                                               , mk 'g' (ESetProperty "$[@ogroup]") "overlapping group"
+                                                               ])
+                                             ]
+                  ),(Just ("Title", 't'), [("Preset",          [ mk 't' (EStartInputSelect ISelectTag) "manual"
+                                                               , mk 'S' (ESetBoxTitle "${style}") "style"
+                                                               , mk 's' (ESetBoxTitle "${style:-}") "short style"
+                                                               , mk 'c' (ESetBoxTitle "${content}") "content"
+                                                               , mk 'b' (ESetBoxTitle "${boxname}") "boxname"
+                                                               , mk 'b' (ESetBoxTitle "$[batch]") "batch"
+                                                               , mk ':' (ESetBoxTitle "${con}:$[batch]") "short content & batch"
+                                                               , mk 'C' (ESetBoxTitle "${con}") "short content"
+                                                               , mk 'v' (ESetBoxTitle "${volume}") "volume"
+                                                               , mk 't' (ESetBoxTitle "") "current property"
+                                                               ])
+                                             ]
+                  )
+                  ]
+         mk binding event desc = ( [B.bind binding], event, desc, handleWH event)
+         mK t event desc = case traverse B.parseBinding (words t) of
+                                     Left err -> error err
+                                     Right bindings -> ( bindings, event, desc, handleWH event)
+         submaps = [  mk key (ESubMap key) (sub <> " submap")
+                   | (Just (sub, key), _ ) <- groups
+                   ]
+flattenSections :: [(Text, [a])] -> [a]
+flattenSections = concatMap snd
+keyEventGroups :: [(Maybe (Text, Char), B.KeyEvents WHEvent)]
+keyEventGroups = map (fmap \keyBindings -> B.keyEvents [ (tshow event, event)  | (_, event, _, _) <- flattenSections keyBindings])
+                     keyBindingGroups
+defaultBindingGroups = map (fmap \keyBindings -> [(event, k) | (k, event, _, _) <- flattenSections keyBindings ])
+                           keyBindingGroups
+keyConfigGroups = map (fmap \(defaultBindings, keyEvents) -> B.newKeyConfig keyEvents defaultBindings [])
+                      $ zipGroup defaultBindingGroups keyEventGroups
+keyDispatcherGroups = map (fmap \(handlers, keyConfig) ->
+                                case B.keyDispatcher keyConfig (flattenSections handlers) of 
+                                     Left errors -> error $ show $ [ (k, map (B.handlerDescription . B.kehHandler . B.khHandler) handlers)
+                                                                 | (k, handlers) <- errors
+                                                                 ]
+                                     Right d -> d)
+                          $ zipGroup handlerGroups keyConfigGroups
+keyDispatcherMap = groupsToMap keyDispatcherGroups
+keyConfigMap = groupsToMap keyConfigGroups
+handlerMap = groupsToMap handlerGroups
+handlerGroups :: [(Maybe (Text, Char), [ (Text, [ B.KeyEventHandler WHEvent _ ] )])]
+handlerGroups = map (fmap (map $ fmap (\keyBindings -> [ B.onEvent ev desc action | (_, ev, desc, action) <- keyBindings ])
+                          )
+                    )
+                    keyBindingGroups
+groupsToMap :: [ (Maybe (Text, Char), a) ] -> Map (Maybe Char) a
+groupsToMap groups = Map.fromList [(fmap snd section'cm, group) | (section'cm, group) <- groups ]
+
+
+zipGroup :: [(a,b)] -> [(a, c)] -> [(a, (b,c))]
+zipGroup = zipWith melt where melt (a, b) (_, c) = (a, (b, c))
+
 whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
 whHandleEvent reload ev = do
-  lasts <- gets asLastKeys
+  lasts <- toList <$> gets asSubmap
   inputM <- gets asInput
   case ev of 
        _ | Just input <- inputM -> do
@@ -315,118 +480,27 @@ whHandleEvent reload ev = do
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
                 Right input -> modify \s -> s { asInput = Just input }
-       B.AppEvent e -> handleWH e
-       B.VtyEvent (V.EvKey (V.KChar 'n') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByName
-       B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByShelve
-       B.VtyEvent (V.EvKey (V.KChar 'c') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByCount
-       B.VtyEvent (V.EvKey (V.KChar 'v') [] ) | 'o':_ <- lasts  -> handleWH $ ESetBoxOrder BOByVolume
-       B.VtyEvent (V.EvKey (V.KChar 'h') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryNavigation
-       B.VtyEvent (V.EvKey (V.KChar 'H') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleHistoryPrevious
-       B.VtyEvent (V.EvKey (V.KChar 'd') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleDebugShowDiff
-       B.VtyEvent (V.EvKey (V.KChar 'w') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleCollapseDepth
-       B.VtyEvent (V.EvKey (V.KChar 'p') [] ) | 'z':_ <- lasts  -> handleWH $ ETogglePropertyGradient
-       B.VtyEvent (V.EvKey (V.KChar 's') [] ) | 'z':_ <- lasts  -> handleWH $ EToggleShowSelected
-       B.VtyEvent (V.EvKey (V.KChar 'p') _ )  | 'p':_ <- lasts  -> handleWH (EStartInputSelect ISelectProperty)
-       B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${boxname}"
-       B.VtyEvent (V.EvKey (V.KChar 'B') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[batch]"
-       B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${content}"
-       B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}"
-       B.VtyEvent (V.EvKey (V.KChar 'd') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${dimension}"
-       B.VtyEvent (V.EvKey (V.KChar 'D') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style:-}-${dimension}"
-       B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${con}:$[batch]"
-       B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "$[ctitle]"
-       B.VtyEvent (V.EvKey (V.KChar 's') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style}"
-       B.VtyEvent (V.EvKey (V.KChar 'S') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${style:-}-$[batch]"
-       B.VtyEvent (V.EvKey (V.KChar 'o') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${orientation}"
-       B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  'p':_ <- lasts  -> handleWH $ ESetProperty "${volume}"
-       B.VtyEvent (V.EvKey (V.KChar 't') _ ) |  't':_ <- lasts  -> handleWH (EStartInputSelect ISelectTag)
-       B.VtyEvent (V.EvKey (V.KChar 'S') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style}"
-       B.VtyEvent (V.EvKey (V.KChar 's') [] ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${style:-}"
-       B.VtyEvent (V.EvKey (V.KChar 'c') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${content}"
-       B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${boxname}"
-       B.VtyEvent (V.EvKey (V.KChar 'b') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "$[batch]"
-       B.VtyEvent (V.EvKey (V.KChar ':') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}:$[batch]"
-       B.VtyEvent (V.EvKey (V.KChar 'C') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${con}"
-       B.VtyEvent (V.EvKey (V.KChar 'v') _ ) |  't':_ <- lasts  -> handleWH $ ESetBoxTitle "${volume}"
-       B.VtyEvent (V.EvKey (V.KChar 'p') _ ) |  't':_ <- lasts  -> do 
-                  prop <- gets asProperty 
-                  handleWH $ ESetBoxTitle $ fromMaybe "" prop
-       B.VtyEvent (V.EvKey (V.KChar 'm') [] ) -> handleWH ENextMode
-       B.VtyEvent (V.EvKey (V.KChar 'M') [] ) -> handleWH EPrevMode
-       B.VtyEvent (V.EvKey (V.KChar '\t' ) [] ) -> handleWH EToggleViewHistory
-       B.VtyEvent (V.EvKey (V.KChar 'j') [] ) -> handleWH ENextRun
-       B.VtyEvent (V.EvKey (V.KChar 'k') [] ) -> handleWH EPrevRun
-       B.VtyEvent (V.EvKey (V.KChar 'J') [] ) -> handleWH ENextShelf
-       B.VtyEvent (V.EvKey (V.KChar 'K') [] ) -> handleWH EPrevShelf
-       B.VtyEvent (V.EvKey (V.KChar 'l') [] ) -> handleWH ENextBay
-       B.VtyEvent (V.EvKey (V.KChar 'h') [] ) -> handleWH EPrevBay
-       B.VtyEvent (V.EvKey (V.KChar 'b') [] ) -> handleWH ENextBox
-       B.VtyEvent (V.EvKey (V.KChar 'B') [] ) -> handleWH EPrevBox
-       B.VtyEvent (V.EvKey (V.KChar 'g') [] ) -> handleWH EFirstRun
-       B.VtyEvent (V.EvKey (V.KChar 'G') [] ) -> handleWH ELastRun
-       B.VtyEvent (V.EvKey (V.KChar 'n') [] ) -> handleWH $ EFindNextBox Forward
-       B.VtyEvent (V.EvKey (V.KChar 'N') [] ) -> handleWH $ EFindNextBox Backward
-       B.VtyEvent (V.EvKey (V.KChar '^') [] ) -> handleWH EFirstBay
-       B.VtyEvent (V.EvKey (V.KChar '$') [] ) -> handleWH ELastBay
-       B.VtyEvent (V.EvKey (V.KEnter) [] ) -> handleWH ESelectCurrentPropValue
-       B.VtyEvent (V.EvKey (V.KChar 'j') [V.MCtrl] ) -> handleWH ENextPropValue
-       B.VtyEvent (V.EvKey (V.KChar 'k') [V.MCtrl ] ) -> handleWH EPreviousPropValue
-       B.VtyEvent (V.EvKey (V.KChar '>') [] ) -> handleWH ENextPropValue
-       B.VtyEvent (V.EvKey (V.KChar '<') [] ) -> handleWH EPreviousPropValue
-       B.VtyEvent (V.EvKey (V.KChar 'q') [] ) -> B.halt
-       B.VtyEvent (V.EvKey (V.KChar '%') [] ) -> do
-                  state <- get
-                  let currentEvent = whCurrentEvent (asWarehouse state)
-                  resultm <- liftIO $ execWH (asWarehouse state) do
-                      case (asBoxSelection state , asShelfSelection state) of
-                          (Just bs, Just ss) ->  do
-                             shelves <- findShelvesByBoxNameAndNames (sSelector ss)
-                             newBaseEvent "MOVE %" $ sText bs <> " TO " <> sText ss 
-                             leftOver <- excludedList <$> moveBoxes ExitLeft PBestEffort SortBoxes (toList $ sSelected bs) shelves
-                             zipWithM (updateBoxTags [("error", SetTag )]) leftOver [1..]
-                             newWH <- get
-                             return $ Just (newWH, bs { sSelected = setFromList $ map boxId leftOver } )
-                          _ -> return Nothing
-                  case resultm of 
-                     Just (newWH, newBoxSelection) -> do 
-                          modify \s -> s { asWarehouse = newWH, asBoxSelection = Just newBoxSelection  }
-                          setNewWHEvent $ whCurrentEvent newWH
-                          modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
-                     Nothing -> return ()
-       B.VtyEvent (V.EvKey (V.KChar 'r') [V.MCtrl] ) -> do
+       B.AppEvent EReload -> do
                   newWHE <- liftIO reload
                   case newWHE of
                        Left e -> error $ unpack e
                        Right newWH -> do
                              modify \s -> s { asWarehouse = newWH }
                              setNewWHEvent $ whCurrentEvent newWH
-       B.VtyEvent (V.EvKey (V.KChar '/') _ ) -> handleWH (EStartInputSelect ISelectBoxes)
-       B.VtyEvent (V.EvKey (V.KChar '?') _ ) -> handleWH (EStartInputSelect ISelectShelves)
-       B.VtyEvent (V.EvKey (V.KChar 'c') [V.MCtrl] ) -> B.halt
-       B.VtyEvent (V.EvKey (V.KChar ']') [] ) -> handleWH ENextHLRun
-       B.VtyEvent (V.EvKey (V.KChar '[') [] ) -> handleWH EPrevHLRun
-       B.VtyEvent (V.EvKey (V.KChar 'v') [] ) -> handleWH ERenderRun
-       B.VtyEvent (V.EvKey (V.KChar c) [] ) | c `elem` ("ozpt" :: String) -> modify \s -> s { asLastKeys = c : lasts }
-       B.VtyEvent (V.EvKey (V.KRight) [V.MShift] ) -> handleWH $ EHistoryEvent HNext
-       B.VtyEvent (V.EvKey (V.KLeft) [V.MShift] ) -> handleWH $ EHistoryEvent HPrevious
-       B.VtyEvent (V.EvKey (V.KUp) _ ) -> handleWH $ EHistoryEvent HParent
-       B.VtyEvent (V.EvKey (V.KDown) _ ) -> handleWH $ EHistoryEvent HChild
-       B.VtyEvent (V.EvKey (V.KPageUp) _ ) -> handleWH $ EHistoryEvent HSkipBackward
-       B.VtyEvent (V.EvKey (V.KPageDown) _ ) -> handleWH $ EHistoryEvent HSkipForward
-       B.VtyEvent (V.EvKey (V.KLeft) [] ) -> handleWH $ EHistoryEvent HPreviousSibling
-       B.VtyEvent (V.EvKey (V.KRight) [] ) -> handleWH $ EHistoryEvent HNextSibling
-       B.VtyEvent (V.EvKey (V.KChar '=') [] ) -> handleWH $ EHistoryEvent HSetCurrent
-       B.VtyEvent (V.EvKey (V.KChar '\\') [] ) -> handleWH $ EHistoryEvent HSwapCurrent
-       B.VtyEvent (V.EvKey (V.KEnd) [] ) -> handleWH $ EHistoryEvent HLast
-       B.VtyEvent (V.EvKey (V.KChar '|') [] ) -> handleWH $ EHistoryEvent HResetCurrent
-       B.VtyEvent (V.EvKey (V.KHome) [] ) -> handleWH $ EHistoryEvent HFirst
-       B.VtyEvent (V.EvKey _ _) -> return ()
+       B.AppEvent e -> handleWH e
+       B.VtyEvent (V.EvKey key mods)  -> do
+                  let Just keyDispatcher = lookup (headMay lasts) keyDispatcherMap
+                  handled <- B.handleKey keyDispatcher key mods
+                  when (not handled) do
+                       modify \s -> s { asSubmap = Nothing , asDisplayMainHelp = False }
        _ -> B.resizeOrQuit ev
  
 handleWH ev = 
   do
     -- reset last keys
-    modify \s -> s { asLastKeys = [] }
+    modify \s -> s { asSubmap = Nothing
+                   , asDisplayMainHelp = False
+                   }
     case ev of 
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
@@ -472,6 +546,11 @@ handleWH ev =
                     -- handleWH ESelectCurrentPropValue
          ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
          ESetProperty prop -> setProperty prop
+         ESetBoxTitle "" -> do 
+                               propm <- gets asProperty
+                               case propm of 
+                                    Nothing -> return ()
+                                    Just prop -> setBoxTitle prop
          ESetBoxTitle title -> setBoxTitle title
          ENextHLRun -> do
                     asSelected <- gets asSelectedPropValue
@@ -495,6 +574,28 @@ handleWH ev =
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
          EReload -> error "Should have been caught earlier"
+         ESubMap c -> modify \s -> s { asSubmap = Just c } 
+         EDisplayMainHelp -> modify \s -> s { asDisplayMainHelp = True }
+         EQuit -> B.halt
+         EMove -> do
+                  state <- get
+                  let currentEvent = whCurrentEvent (asWarehouse state)
+                  resultm <- liftIO $ execWH (asWarehouse state) do
+                      case (asBoxSelection state , asShelfSelection state) of
+                          (Just bs, Just ss) ->  do
+                             shelves <- findShelvesByBoxNameAndNames (sSelector ss)
+                             newBaseEvent "MOVE %" $ sText bs <> " TO " <> sText ss 
+                             leftOver <- excludedList <$> moveBoxes ExitLeft PBestEffort SortBoxes (toList $ sSelected bs) shelves
+                             zipWithM (updateBoxTags [("error", SetTag )]) leftOver [1..]
+                             newWH <- get
+                             return $ Just (newWH, bs { sSelected = setFromList $ map boxId leftOver } )
+                          _ -> return Nothing
+                  case resultm of 
+                     Just (newWH, newBoxSelection) -> do 
+                          modify \s -> s { asWarehouse = newWH, asBoxSelection = Just newBoxSelection  }
+                          setNewWHEvent $ whCurrentEvent newWH
+                          modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
+                     Nothing -> return ()
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
 
