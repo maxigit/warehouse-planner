@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, DefaultSignatures #-}
 module WarehousePlanner.Brick.Util
 (
 eigthH, eigthV
@@ -29,6 +29,7 @@ eigthH, eigthV
 , withBoxHLStatus, withShelfHLStatus
 , boxPropValue
 , gradientAttributes
+, Rendered(..)
 ) where
 
 import ClassyPrelude hiding (on)
@@ -42,6 +43,35 @@ import WarehousePlanner.History (diffFor)
 import WarehousePlanner.Brick.Types
 import Data.Bits ((.|.))
 
+-- * Output Text or Widget
+-- | Output to a text (for file) or Widget
+class Rendered w where
+    txtR :: Text -> w
+    emptyR :: w
+    txtmR :: Maybe Text -> w
+    withAttrR, withDefAttrR :: AttrName -> w -> w
+    {-# MINIMAL withAttrR , withDefAttrR,  (txtmR | (txtR, emptyR)) #-}
+    default txtR :: Text -> w
+    txtR = txtmR . Just
+    default emptyR :: w
+    emptyR = txtmR Nothing
+    default txtmR :: Maybe Text -> w
+    txtmR = maybe emptyR txtR
+
+instance Rendered Text where
+   txtR = id
+   emptyR = ""
+   withAttrR _  t = t
+   withDefAttrR _ t = t
+   
+instance Rendered (Widget n) where
+   txtR = txt
+   emptyR = emptyWidget
+   withAttrR = withAttr
+   withDefAttrR = withDefAttr
+    
+
+-- * Percentatge
 percUsed :: [Shelf s] -> WH Double s
 percUsed shelves = do
   boxess <- mapM findBoxByShelf shelves
@@ -133,8 +163,9 @@ pred' s = pred s
 makeStyleAttrName :: Text -> AttrName
 makeStyleAttrName style = attrName "style" <> attrName (unpack style)
 
-styleNameWithAttr style = withStyleAttr style (txt style)
-withStyleAttr style w = withDefAttr (makeStyleAttrName style) w
+styleNameWithAttr :: Rendered w => Text -> w
+styleNameWithAttr style = withStyleAttr style (txtR style)
+withStyleAttr style w = withDefAttrR (makeStyleAttrName style) w
 
 defaultStyleAttrs :: [V.Attr]
 defaultStyleAttrs = [ with $ fg `on` V.black
@@ -284,14 +315,14 @@ eventTree = go "" . Just where
    go _ Nothing = emptyWidget
 
 
-renderDiffText :: Maybe Text ->  Maybe Text -> Widget n
+renderDiffText :: Rendered w => Maybe Text ->  Maybe Text -> w
 renderDiffText valuem oldm = 
   case (valuem, oldm) of
-       (Nothing, Nothing) -> emptyWidget
-       (Nothing, Just _) -> withAttr eventOut $ str "∅" -- deleted
-       (Just value, Nothing) -> withAttr eventIn $ txt value
-       (Just value, Just old) | value /= old -> withAttr eventUpdated $ txt value
-       (Just value, Just _) {- | value == old -} -> txt value
+       (Nothing, Nothing) -> emptyR
+       (Nothing, Just _) -> withAttrR eventOut $ txtR "∅" -- deleted
+       (Just value, Nothing) -> withAttrR eventIn $ txtR value
+       (Just value, Just old) | value /= old -> withAttrR eventUpdated $ txtR value
+       (Just value, Just _) {- | value == old -} -> txtR value
 
 
 

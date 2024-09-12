@@ -38,6 +38,7 @@ import Diagrams (mkSizeSpec2D)
 import System.Process (rawSystem)
 import Data.Set qualified as Set
 import Text.Printf
+-- import System.Clipboard(setClipboardString)
 
 type WHApp = B.App AppState WHEvent Resource
 data SearchDirection = Forward |  Backward
@@ -91,6 +92,9 @@ data WHEvent = ENextMode
              | EQuit
              -- Action
              | EMove
+             -- Yanks
+             | EYankBoxDetails Bool -- ^ editor or yank
+
      deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
                   | HNext
@@ -267,7 +271,10 @@ whApp extraAttrs reload =
                            _ -> B.centerLayer $ submapHelp asSubmap
               in  [ help
                   , vBoxB [ mainRun
-                           , B.vLimit (if asDisplayHistory then 21 else 13) $ hBoxB (debugShelf s :  (pure . boxDetail asWarehouse (asHistoryRange s)) (currentBoxHistory s))
+                           , let chunk = if asDisplayHistory 
+                                         then 40
+                                         else 13
+                             in B.vLimit chunk $ hBoxB (debugShelf s :  (pure . boxDetail (\_ _ -> chunk) asWarehouse (asHistoryRange s)) (currentBoxHistory s))
                            , main
                            , maybe (renderStatus s) renderInput asInput
                            ]
@@ -417,7 +424,11 @@ keyBindingGroups =  groups
                                                                , mk 'v' (ESetBoxTitle "${volume}") "volume"
                                                                , mk 't' (ESetBoxTitle "") "current property"
                                                                ])
-                                             ]
+                                           ]
+                  ),(Just ("Yank/Edit", 'y'), [("Yank",        [ mk 'b' (EYankBoxDetails False) "yank box details to clipboard" 
+                                                               , mk 'B' (EYankBoxDetails True) "edit box details" 
+                                                               ])
+                                           ]
                   )
                   ]
          mk binding event desc = ( [B.bind binding], event, desc, handleWH event)
@@ -596,6 +607,11 @@ handleWH ev =
                           setNewWHEvent $ whCurrentEvent newWH
                           modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
                      Nothing -> return ()
+         EYankBoxDetails useEditor -> do
+                         s@AppState{..} <- get
+                         let text = boxDetailsTextTable  asWarehouse (asHistoryRange s) (currentBoxHistory s)
+                             extm = if useEditor then (Just ".tsv") else Nothing
+                         liftIO $ yankOrEdit extm text
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
 
@@ -999,3 +1015,10 @@ makeInputData imode state = let
                                                                      
 
                                                                      
+yankOrEdit :: (Maybe Text) -> Text -> IO ()
+yankOrEdit extm text = do
+   let filePath = "/tmp/whp-text" <> (unpack $ fromMaybe "" extm)
+   writeFileUtf8 filePath text
+   void $ case extm of 
+             Nothing -> rawSystem  "xclip" ["-i", "-selection", "clipboard", filePath]
+             Just _ -> rawSystem  "xdg-open" [filePath]
