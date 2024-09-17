@@ -74,6 +74,7 @@ library:
       # chatGPT advice to use gdb (core dump)
       - -fno-omit-yields
       - -debug
+      - -g
     else:
       ghc-options:
       - -O2

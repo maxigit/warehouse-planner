@@ -122,7 +122,7 @@ library
     hs-source-dirs:
         brick
   if flag(dev)
-    ghc-options: -O0 -fno-omit-yields -debug
+    ghc-options: -O0 -fno-omit-yields -debug -g
   else
     ghc-options: -O2
 
