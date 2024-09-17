@@ -418,11 +418,11 @@ keyBindingGroups =  groups
                                                                , mk 's' (ESetBoxTitle "${style:-}") "short style"
                                                                , mk 'c' (ESetBoxTitle "${content}") "content"
                                                                , mk 'b' (ESetBoxTitle "${boxname}") "boxname"
-                                                               , mk 'b' (ESetBoxTitle "$[batch]") "batch"
+                                                               , mk 'B' (ESetBoxTitle "$[batch]") "batch"
                                                                , mk ':' (ESetBoxTitle "${con}:$[batch]") "short content & batch"
                                                                , mk 'C' (ESetBoxTitle "${con}") "short content"
                                                                , mk 'v' (ESetBoxTitle "${volume}") "volume"
-                                                               , mk 't' (ESetBoxTitle "") "current property"
+                                                               , mk 'p' (ESetBoxTitle "") "current property"
                                                                ])
                                            ]
                   ),(Just ("Yank/Edit", 'y'), [("Yank",        [ mk 'b' (EYankBoxDetails False) "yank box details to clipboard" 
@@ -555,7 +555,8 @@ handleWH ev =
                                case propm of 
                                     Nothing -> return ()
                                     Just prop -> setBoxTitle prop
-         ESetBoxTitle title -> setBoxTitle title
+         ESetBoxTitle title -> do liftIO $ putStrLn (title) 
+                                  setBoxTitle title
          ENextHLRun -> do
                     asSelected <- gets asSelectedPropValue
                     case asSelected of
