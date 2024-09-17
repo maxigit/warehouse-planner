@@ -122,7 +122,7 @@ library
     hs-source-dirs:
         brick
   if flag(dev)
-    ghc-options: -O0
+    ghc-options: -O0 -fno-omit-yields -debug
   else
     ghc-options: -O2
 
@@ -145,7 +145,7 @@ executable whp
       ViewPatterns
       MultiWayIf
       LambdaCase
-  ghc-options: -rtsopts -threaded -rtsopts
+  ghc-options: -rtsopts -threaded
   build-depends:
       Glob
     , base

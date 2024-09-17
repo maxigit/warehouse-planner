@@ -71,6 +71,9 @@ library:
     then:
       ghc-options:
       - -O0
+      # chatGPT advice to use gdb (core dump)
+      - -fno-omit-yields
+      - -debug
     else:
       ghc-options:
       - -O2
@@ -107,7 +110,6 @@ executables:
     ghc-options:
     - -rtsopts
     - -threaded
-    - -rtsopts
     when:
     - condition: flag(brick)
       buildable: true
