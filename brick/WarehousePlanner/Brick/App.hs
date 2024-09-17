@@ -612,7 +612,7 @@ handleWH ev =
                          s@AppState{..} <- get
                          let text = boxDetailsTextTable  asWarehouse (asHistoryRange s) (currentBoxHistory s)
                              extm = if useEditor then (Just ".tsv") else Nothing
-                         liftIO $ yankOrEdit extm text
+                         void $ B.suspendAndResume' $ yankOrEdit extm text
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
 
@@ -1022,4 +1022,5 @@ yankOrEdit extm text = do
    writeFileUtf8 filePath text
    void $ case extm of 
              Nothing -> rawSystem  "xclip" ["-i", "-selection", "clipboard", filePath]
+             Just ".tsv" -> rawSystem  "vd" [filePath]
              Just _ -> rawSystem  "xdg-open" [filePath]
