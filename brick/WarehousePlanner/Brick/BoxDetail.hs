@@ -22,28 +22,34 @@ import System.IO.Unsafe (unsafePerformIO)
 
 boxDetail :: (Int -> Int -> Int) -> Warehouse RealWorld -> HistoryRange -> ZHistory1 Box RealWorld -> Widget n
 boxDetail chunk warehouse hrange boxHistory = 
-  case boxDetailTable warehouse hrange boxHistory of
+  case boxDetailTable (Just 40) warehouse hrange boxHistory of
        ([],_,_) -> B.emptyWidget
        (header, info, body)  -> let
            -- split the table into multiple tables which will be rendered side to side
-           tables = chunksOf (chunk (length info) (length header)) (info <> body)
+           tables = chunksOf (chunk (length info) (length header) - 4) (info <> body)
+           --                                                    ^^^ space for title and borders and header
            box = headEx $ zBefore boxHistory ++ zAfter boxHistory
            in hCenter (B.txt (boxStyleAndContent box ) )
               <=> hBox ( map ( renderTable . rowBorders False . table)
                              ( map (header:) tables )
                        )
-boxDetailTable :: Rendered w => Warehouse RealWorld -> HistoryRange -> ZHistory1 Box RealWorld -> ([w], [[w]], [[w]])
-boxDetailTable _ _ ZHistory{..} | null zBefore && null zAfter = ([], [], [])
-boxDetailTable warehouse HistoryRange{..} ZHistory{..} = let
+boxDetailTable :: Rendered w => Maybe Int -> Warehouse RealWorld -> HistoryRange -> ZHistory1 Box RealWorld -> ([w], [[w]], [[w]])
+boxDetailTable _ _ _ ZHistory{..} | null zBefore && null zAfter = ([], [], [])
+boxDetailTable widthM warehouse HistoryRange{..} ZHistory{..} = let
   history = if  hrCurrent >= hrToDiff
            then reverse $ Map.toList zBefore
            else reverse $ take 1 (Map.toList zBefore) ++ Map.toList zAfter
   box = headEx $ zBefore ++ zAfter
   (events, boxes) = unzip $ if hrCurrent == hrToDiff then take 2 history else history
   -- mk :: Text -> ((Box RealWorld) -> Text) -> [_]
-  mk name f = withAttrR bold_ (txtR name) : mkDiffs (Just . f)
+  truncate = case widthM of
+              Nothing -> id
+              Just w -> \t -> if length t > w
+                              then take (w-1) t <> "…"
+                              else take w t
+  mk name f = withAttrR bold_ (txtR $ truncate name) : mkDiffs (Just . f)
   -- mkDiffs :: (Box RealWorld -> Maybe Text) -> [w]
-  mkDiffs f' = let f =  fmap (take 20) . f'
+  mkDiffs f' = let f =  fmap truncate . f'
                in [ case toDiffM of 
                  Nothing -> -- last diff
                             txtmR $ f current
@@ -71,7 +77,7 @@ boxDetailTable warehouse HistoryRange{..} ZHistory{..} = let
                                True | special tag -> specialTagName_
                                True -> virtualTagName_
                                _ -> tagname_
-                in withAttrR att (txtR tag) : mkDiffs (\box -> case getTagValuem box tag of
+                in withAttrR att (txtR $ truncate tag) : mkDiffs (\box -> case getTagValuem box tag of
                                                                  Just "" -> Just "✓"
                                                                  v -> v
                                                     )
@@ -92,7 +98,7 @@ getShelfname warehouse shelfId = unsafePerformIO $ execWH warehouse do
     
 boxDetailsTextTable :: Warehouse RealWorld -> HistoryRange -> ZHistory1 Box RealWorld -> Text
 boxDetailsTextTable warehouse hrange boxHistory  =
-  case boxDetailTable warehouse hrange boxHistory of
+  case boxDetailTable Nothing warehouse hrange boxHistory of
        ([],_,_) -> emptyR
        (header, info, body)  -> let
            _box = headEx $ zBefore boxHistory ++ zAfter boxHistory
