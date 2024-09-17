@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
@@ -29,24 +30,29 @@ import WarehousePlanner.Tiling
 import WarehousePlanner.WPL.ExContext
 import Data.Text(splitOn, uncons)
 import Data.Foldable qualified as F
+import Data.Set qualified as Set
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
 -- aroundArrangement  :: WH a -> WH a
 aroundArrangement :: (Shelf' shelf, Box' box, Box' box2)
-                  => AddOldBoxes 
+                  => forall s . AddOldBoxes 
                   -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s)
                 -> [box s] -> [shelf s] -> WH (InExcluded (box2 s)) s
 aroundArrangement useOld arrangement newBoxishs shelves = do
     newBoxes <- mapM findBox newBoxishs
-    boxes <- case useOld of
+    let -- newSet :: Set (Box s)
+        newSet =  Set.fromList newBoxes 
+    boxesBefore <- case useOld of
               NewBoxesOnly -> return newBoxes
               AddOldBoxes -> do
-                          oldBoxes <- concatMap reverse `fmap` mapM findBoxByShelf shelves
+                          allOldBoxes <- concatMap reverse `fmap` mapM findBoxByShelf shelves
+                          -- make sure news and old boxes don't have boxes in commun
+                          let oldBoxes = filter (`notMember` newSet) allOldBoxes
                           return $ oldBoxes ++ newBoxes
 
     let nothing = Nothing `asTypeOf` headMay shelves -- trick to typecheck
-    void $ mapM (assignShelf nothing) boxes
+    boxes <-  mapM (assignShelf nothing) boxesBefore
     -- rearrange what's left in each individual space
     -- so that there is as much space left as possible
 
