@@ -199,8 +199,8 @@ updateHLStatus fbox fshelf theRuns = let
 updateHLState :: AppState -> AppState
 updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (shelfHLStatus state) (asShelvesSummary state) }
 
-initState :: (AppState -> AppState) -> String -> WH (AppState) RealWorld
-initState adjust title = do
+initState :: (AppState -> AppState) -> IO (Either Text (Warehouse RealWorld)) -> String -> WH (AppState) RealWorld
+initState adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
       state = adjust $ AppState
@@ -231,8 +231,8 @@ initState adjust title = do
                               }
 
 
-whApp :: _ -> (IO (Either Text (Warehouse RealWorld))) -> WHApp
-whApp extraAttrs reload =
+whApp :: _ -> WHApp
+whApp extraAttrs =
   let
       app = B.App {..}
       appDraw = \s@AppState{..} -> 
@@ -280,7 +280,7 @@ whApp extraAttrs reload =
                            ]
                   ]
       appChooseCursor = B.neverShowCursor
-      appHandleEvent = whHandleEvent reload
+      appHandleEvent = whHandleEvent
       appAttrMap state = B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs state
       appStartEvent = return ()
   in app
@@ -307,7 +307,7 @@ whMain adjust title reload = do
   let wh = case whE of
             Left e -> error (unpack e)
             Right w -> w
-  state0 <- execWH wh $ initState adjust title 
+  state0 <- execWH wh $ initState adjust reload title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let attrs state =
@@ -326,7 +326,7 @@ whMain adjust title reload = do
                                             then keys $ sePropValues $ sExtra $ asShelvesSummary  state
                                             else map fst $ toList $ asCurrentRunPropValues state
                                 in gradientAttributes props
-  void $ B.defaultMain (whApp attrs reload) state0
+  void $ B.defaultMain (whApp attrs) state0
 
 
 
@@ -469,8 +469,8 @@ groupsToMap groups = Map.fromList [(fmap snd section'cm, group) | (section'cm, g
 zipGroup :: [(a,b)] -> [(a, c)] -> [(a, (b,c))]
 zipGroup = zipWith melt where melt (a, b) (_, c) = (a, (b, c))
 
-whHandleEvent :: (IO (Either Text (Warehouse RealWorld))) -> B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
-whHandleEvent reload ev = do
+whHandleEvent ::  B.BrickEvent Resource WHEvent -> B.EventM Resource AppState ()
+whHandleEvent ev = do
   lasts <- toList <$> gets asSubmap
   inputM <- gets asInput
   case ev of 
@@ -491,13 +491,6 @@ whHandleEvent reload ev = do
                 Left Nothing -> -- ignore
                          modify \s -> s { asInput = Nothing }
                 Right input -> modify \s -> s { asInput = Just input }
-       B.AppEvent EReload -> do
-                  newWHE <- liftIO reload
-                  case newWHE of
-                       Left e -> error $ unpack e
-                       Right newWH -> do
-                             modify \s -> s { asWarehouse = newWH }
-                             setNewWHEvent $ whCurrentEvent newWH
        B.AppEvent e -> handleWH e
        B.VtyEvent (V.EvKey key mods)  -> do
                   let Just keyDispatcher = lookup (headMay lasts) keyDispatcherMap
@@ -584,7 +577,14 @@ handleWH ev =
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
-         EReload -> error "Should have been caught earlier"
+         EReload -> do
+                  reload <- gets asReload
+                  newWHE <- liftIO reload
+                  case newWHE of
+                       Left e -> error $ unpack e
+                       Right newWH -> do
+                             modify \s -> s { asWarehouse = newWH }
+                             setNewWHEvent $ whCurrentEvent newWH
          ESubMap c -> modify \s -> s { asSubmap = Just c } 
          EDisplayMainHelp -> modify \s -> s { asDisplayMainHelp = True }
          EQuit -> B.halt
