@@ -38,8 +38,12 @@ pureSpec :: Spec
 pureSpec = describe "Parsing" do
    it "parses boxes selections" do
       "BOXES" `parseAs` Action (SelectBoxes "BOXES")
-   it "parses shelf sections" do
+   it "parses shelves sections" do
       "/SHELF" `parseAs` Action (SelectShelves "SHELF")
+   it "parses boxes in shelves sections" do
+      "in SHELF" `parseAs` Action (SelectBoxes "/SHELF")
+   it "parses shelves containing boxes sections" do
+      "with BOXES" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "BOXES")
    it "parses simple move" do
       "BOXES to SHELF" `parseAs` (Action (SelectBoxes "BOXES") `Then` (Action (Move Nothing "SHELF")))
    xit "parses oneliner case" do
