@@ -20,7 +20,8 @@ module WarehousePlanner.Report
 , boxStyleWithTags
 , generateStockTakes
 , generateFuzzyStockTakes
-, generateBoxHistory
+, generateBoxesHistory
+, boxHistory
 ) where
 
 import WarehousePlanner.Base
@@ -922,8 +923,8 @@ showPair pair = let res = pRes1 pair
 
 --
 
-generateBoxHistory :: Maybe BoxSelector -> WH [Text] s
-generateBoxHistory selectorm = do
+generateBoxesHistory :: Maybe BoxSelector -> WH [Text] s
+generateBoxesHistory selectorm = do
     events <- gets whEventHistory
     
     boxes_ <- case selectorm of
@@ -933,8 +934,11 @@ generateBoxHistory selectorm = do
     boxhistorys <- mapM getBoxHistory boxes_
     return $ map displayEvent events
            <> concatMap history boxhistorys
-    where history e'boxs@((_,lastBox) :| _) = replicate 50 '*'
-                      :  tshow lastBox
+    where history xs = replicate 50 '*' : boxHistory xs
+           
+boxHistory :: History Box s -> [Text]
+boxHistory e'boxs@((_,lastBox) :| _)
+                      =  tshow lastBox
                       : boxStyleWithTags lastBox <> " " <> tshow (boxShelf lastBox) <> " " <> boxPositionSpec lastBox
                       : do
                           (ev, box) <- toList e'boxs

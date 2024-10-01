@@ -33,6 +33,7 @@ import Data.Map qualified as Map
 import WarehousePlanner.Brick.Table
 import Data.Vector qualified as V
 import WarehousePlanner.Display qualified as D
+import WarehousePlanner.Report qualified as Report
 import Diagrams.Backend.Cairo (renderCairo)
 import Diagrams (mkSizeSpec2D)
 import System.Process (rawSystem)
@@ -93,7 +94,13 @@ data WHEvent = ENextMode
              -- Action
              | EMove
              -- Yanks
-             | EYankBoxDetails Bool -- ^ editor or yank
+             | EYankBoxDetails EditMode -- ^ editor or yank
+             | EYankBoxHistory EditMode -- ^ editor or yank
+             | EYankSelectedBoxes EditMode -- ^ editor or yank
+             | EYankShelfContent EditMode -- ^ editor or yank
+             | EYankBestAvailableShelfFor EditMode
+             | EYankBestShelfFor EditMode
+             | EYankBestBoxesFor EditMode
 
      deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
@@ -334,7 +341,7 @@ keyBindingGroups :: [(Maybe (Text, Char),[ (Text,  [([B.Binding], WHEvent, Text,
 keyBindingGroups =  groups
   where  groups = [ (Nothing , [("Main",                       [ mk 'm' ENextMode "next summary view mode"
                                                                , mk 'M' EPrevMode "previous summary view mode"
-                                                               , mk 'v' ERenderRun "visualize current run (jpg)"
+                                                               , mk 'V' ERenderRun "visualize current run (jpg)"
                                                                , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
                                                                , mK "q C-c" (EQuit) "Quit"
                                                                , mK "C-r" (EReload) "Reload"
@@ -425,8 +432,21 @@ keyBindingGroups =  groups
                                                                , mk 'p' (ESetBoxTitle "") "current property"
                                                                ])
                                            ]
-                  ),(Just ("Yank/Edit", 'y'), [("Yank",        [ mk 'b' (EYankBoxDetails False) "yank box details to clipboard" 
-                                                               , mk 'B' (EYankBoxDetails True) "edit box details" 
+                  ),(Just ("Yank", 'y'), [("Yank",        [ mk key (mkEvent Yank) $ "yank " <> desc 
+                                                               | (key, mkEvent, desc)  <- yanks
+                                                               -- , mk 'B' (EYankBoxDetails True) "edit box details" 
+                                                               ])
+                                           ]
+                  ),(Just ("Edit", 'e'), [("Edit",        [ mk key (mkEvent UseVim) $ "edit " <> desc 
+                                                               | (key, mkEvent, desc)  <- yanks
+                                                               ])
+                                           ]
+                  ),(Just ("Edit External", 'E'), [("Edit",        [ mk key (mkEvent UseGvim) $ "edit " <> desc 
+                                                               | (key, mkEvent, desc)  <- yanks
+                                                               ])
+                                           ]
+                  ),(Just ("Visdata ", 'v'), [("visdata",        [ mk key (mkEvent UseVd) $ "vd " <> desc 
+                                                               | (key, mkEvent, desc)  <- yanks
                                                                ])
                                            ]
                   )
@@ -438,6 +458,14 @@ keyBindingGroups =  groups
          submaps = [  mk key (ESubMap key) (sub <> " submap")
                    | (Just (sub, key), _ ) <- groups
                    ]
+         yanks = [('b', EYankBoxDetails, "box details")
+                 ,('h', EYankBoxHistory, "box history")
+                 ,('/', EYankSelectedBoxes, "box selection")
+                 ,('s', EYankShelfContent, "shelf content (boxes)")
+                 ,('a', EYankBestAvailableShelfFor, "best available shelf")
+                 ,('S', EYankBestShelfFor, "best available shelf")
+                 ,('B', EYankBestBoxesFor, "best available boxes")
+                 ]
 flattenSections :: [(Text, [a])] -> [a]
 flattenSections = concatMap snd
 keyEventGroups :: [(Maybe (Text, Char), B.KeyEvents WHEvent)]
@@ -608,11 +636,56 @@ handleWH ev =
                           setNewWHEvent $ whCurrentEvent newWH
                           modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
                      Nothing -> return ()
-         EYankBoxDetails useEditor -> do
+         EYankBoxDetails mode -> do
                          s@AppState{..} <- get
                          let text = boxDetailsTextTable  asWarehouse (asHistoryRange s) (currentBoxHistory s)
-                             extm = if useEditor then (Just ".tsv") else Nothing
-                         void $ B.suspendAndResume' $ yankOrEdit extm text
+                         void $ yankOrEdit mode (Just ".txt") text
+         EYankBoxHistory mode -> do
+                         boxm <- gets currentBox
+                         case boxm of 
+                           Nothing -> return ()
+                           Just box -> do
+                                boxHistory <- execute $ getBoxHistory box
+                                let text = Report.boxHistory boxHistory
+                                void $ yankOrEdit mode (Just ".txt") (unlines text)
+         EYankSelectedBoxes mode' -> do
+            selection <- gets asBoxSelection
+            text0 <- execute $ Report.generateStockTakes (fmap sSelector selection)
+            let mode = case mode' of
+                         UseVd -> UseVdNoHeader
+                         _ -> mode'
+            let text = drop 2 . dropEnd 1 $ text0
+            yankOrEdit mode (Just ".csv") (unlines text)
+         EYankShelfContent mode' -> do
+            let mode = case mode' of
+                         UseVd -> UseVdNoHeader
+                         _ -> mode'
+            shelf <- gets currentShelf
+            let boxSelector = parseBoxSelector $ "/" <> sName shelf
+            text0 <- execute $ Report.generateStockTakes (Just boxSelector)
+            let text = drop 2 . dropEnd 1 $ text0
+            yankOrEdit mode (Just ".csv") (unlines text)
+         EYankBestAvailableShelfFor mode -> do
+            boxm <- gets currentBox
+            case boxm of 
+                 Nothing -> return ()
+                 Just box -> do
+                      text <- execute $ Report.bestAvailableShelvesFor PBestEffort ("!" <> boxStyle box)
+                      yankOrEdit mode (Just ".txt") (unlines text)
+         EYankBestBoxesFor mode -> do
+            shelf <- gets currentShelf
+            text <- execute $ Report.bestBoxesFor ("!" <> sName shelf)
+            yankOrEdit mode (Just ".txt") (unlines text)
+         EYankBestShelfFor mode -> do
+            boxm <- gets currentBox
+            case boxm of 
+                 Nothing -> return ()
+                 Just box -> do
+                      text <- execute $ Report.bestShelvesFor ("!" <> boxStyle box)
+                      yankOrEdit mode (Just ".txt") (unlines text)
+
+
+                    
     modify updateHLState
     where resetBox s = s { asCurrentBox = 0 }
 
@@ -1015,12 +1088,23 @@ makeInputData imode state = let
 
                                                                      
 
+data EditMode = UseVim 
+              | UseVd
+              | UseVdNoHeader
+              | UseGvim
+              | UseOpen
+              | Yank
+     deriving (Show, Eq, Ord)
                                                                      
-yankOrEdit :: (Maybe Text) -> Text -> IO ()
-yankOrEdit extm text = do
-   let filePath = "/tmp/whp-text" <> (unpack $ fromMaybe "" extm)
+yankOrEdit :: EditMode -> (Maybe Text) -> Text -> B.EventM Resource AppState ()
+yankOrEdit mode extm text = do
+   let filePath = "/tmp/whp-text" <> (unpack @Text $ fromMaybe "" extm)
+       console cmd args = B.suspendAndResume' $ rawSystem cmd args
    writeFileUtf8 filePath text
-   void $ case extm of 
-             Nothing -> rawSystem  "xclip" ["-i", "-selection", "clipboard", filePath]
-             Just ".tsv" -> rawSystem  "vd" [filePath]
-             Just _ -> rawSystem  "xdg-open" [filePath]
+   void $ case mode of 
+             Yank -> liftIO $ rawSystem  "xclip" ["-i", "-selection", "clipboard", filePath]
+             UseVd -> console  "vd" [filePath]
+             UseVdNoHeader -> console  "vd" ["--header=0", filePath]
+             UseOpen -> liftIO $ rawSystem  "xdg-open" [filePath]
+             UseVim -> console "vim" [filePath]
+             UseGvim -> liftIO $ rawSystem "gvim" [filePath]

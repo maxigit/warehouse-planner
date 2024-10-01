@@ -243,7 +243,7 @@ defaultMainWith expandSection = do
                   BoxGroupReport -> withLines do
                                     boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
                                     groupBoxesReport boxes
-                  BoxHistory -> withLines (generateBoxHistory boxSelectorM)
+                  BoxHistory -> withLines (generateBoxesHistory boxSelectorM)
                   Export -> do
                               let bare = scenario { sInitialState = Nothing
                                                   , sSteps = filter (\case
