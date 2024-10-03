@@ -86,7 +86,11 @@ data WHEvent = ENextMode
              -- Input
              | EStartInputSelect InputMode
              -- Submap
-             | ESubMap Char
+             | ESubMap Text Char
+             --        ^^^^ only so because for B.keyEvents to work
+             --        events need to be different regardless of the case
+             --        Ie ESubMap 'e' and ESupMap 'E' need to be different;
+             --        thus a title.
              | EDisplayMainHelp
              -- Misc
              | EReload
@@ -455,7 +459,7 @@ keyBindingGroups =  groups
          mK t event desc = case traverse B.parseBinding (words t) of
                                      Left err -> error err
                                      Right bindings -> ( bindings, event, desc, handleWH event)
-         submaps = [  mk key (ESubMap key) (sub <> " submap")
+         submaps = [  mk key (ESubMap sub key) ( sub <> " submap")
                    | (Just (sub, key), _ ) <- groups
                    ]
          yanks = [('b', EYankBoxDetails, "box details")
@@ -614,7 +618,7 @@ handleWH ev =
                        Right newWH -> do
                              modify \s -> s { asWarehouse = newWH }
                              setNewWHEvent $ whCurrentEvent newWH
-         ESubMap c -> modify \s -> s { asSubmap = Just c } 
+         ESubMap _ c -> modify \s -> s { asSubmap = Just c } 
          EDisplayMainHelp -> modify \s -> s { asDisplayMainHelp = True }
          EQuit -> B.halt
          EMove -> do
