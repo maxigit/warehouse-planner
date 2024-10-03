@@ -981,10 +981,11 @@ debugShelf state = let
                                                      )
                    , B.hBorder
                    ]
-              else []
-              ++ [ B.str "WH" B.<=> eventTree (asCurrentEvent state)
-                 , B.str "Diff" B.<=> eventTree (asDiffEvent state)
-                 ]
+              else [ displayEventRange (whEventHistory $ asWarehouse state)
+                                       (asNavigateCurrent state)
+                                       (asCurrentEvent state)
+                                       (asDiffEvent state)
+                   ]
 
   
  -- * Render 

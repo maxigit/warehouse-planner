@@ -22,6 +22,7 @@ eigthH, eigthV
 , historyIndicator
 , isInSummary
 , eventTree
+, displayEventRange 
 , renderDiffText
 , hlToAttr
 , withHLStatus
@@ -35,6 +36,7 @@ eigthH, eigthV
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import WarehousePlanner.Summary
+import WarehousePlanner.History (findPreviousSibling, findNextSibling, findNextEvent)
 import Brick
 import Brick.Widgets.Border
 import Graphics.Vty.Attributes qualified as V
@@ -42,6 +44,8 @@ import Data.Set qualified as Set
 import WarehousePlanner.History (diffFor)
 import WarehousePlanner.Brick.Types
 import Data.Bits ((.|.))
+import Data.List (unfoldr, nub)
+import Data.List qualified as List
 
 -- * Output Text or Widget
 -- | Output to a text (for file) or Widget
@@ -314,6 +318,36 @@ eventTree = go "" . Just where
    go tab (Just ev)  = (str tab <+> txt (displayEvent ev)) <=> go (tab ++ "  ") (evParent ev)
    go _ Nothing = emptyWidget
 
+displayEventRange :: [Event] -> Bool -> Event -> Event -> Widget n
+displayEventRange all current start end = let
+  [beg',last'] = sort [start, end]
+  _beg = fromMaybe beg' $ asum $  filter (/= (Just NoHistory)) [ findPreviousSibling beg' all , evParent beg' , evPreviousM beg' ]
+  beg = List.last $  beg' : take 10 (unfoldr (fmap (\c -> (c, c)) . evPreviousM) beg')
+  _last = fromMaybe last' $ findNextSibling last' all <|> findNextEvent last' all
+  last = List.last $ last' : take 10 (unfoldr (fmap (\c -> (c, c)) . flip findNextEvent all) last')
+  range = reverse $ unfoldr previousIf last
+  previousIf ev = case evPreviousM ev of
+                       Just p | p > beg -> Just (p,p)
+                       _ -> Nothing
+  events = nub $ sort $ beg : range ++ [last]
+  level ev = case ev of 
+               NoHistory -> 0
+               _ -> case evLevel ev of
+                         l | l < 10 -> l
+                         l | l < 100 -> 11
+                         _ -> 12
+
+
+  render ev = let w = txt (take (level ev) "                     " <> displayEvent ev)
+              in if | ev == start && ev == end  -> str "** " <+> w
+                    | ev == start && current  -> str "W* " <+> w
+                    | ev == start -> str "W: " <+> w
+                    | ev == end && current -> str "D: " <+> w
+                    | ev == end            -> str "D* " <+> w
+                    | otherwise -> str "   " <+> w
+  in vBox $ map render events
+
+  
 
 renderDiffText :: Rendered w => Maybe Text ->  Maybe Text -> w
 renderDiffText valuem oldm = 
