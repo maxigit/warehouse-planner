@@ -47,6 +47,7 @@ data SearchDirection = Forward |  Backward
 data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
+             | EToggleViewDetails
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
              | ETogglePropertyGradient
@@ -214,6 +215,7 @@ initState :: (AppState -> AppState) -> IO (Either Text (Warehouse RealWorld)) ->
 initState adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
+      asDisplayDetails = False
       state = adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
@@ -282,7 +284,7 @@ whApp extraAttrs =
                            _ -> B.centerLayer $ submapHelp asSubmap
               in  [ help
                   , vBoxB [ mainRun
-                           , let chunk = if asDisplayHistory 
+                           , let chunk = if asDisplayDetails
                                          then 40
                                          else 13
                              in B.vLimit chunk $ hBoxB (debugShelf s :  (pure . boxDetail (\_ _ -> chunk) asWarehouse (asHistoryRange s)) (currentBoxHistory s))
@@ -388,7 +390,7 @@ keyBindingGroups =  groups
                                                                , mk V.KEnd (EHistoryEvent HLast) "end of history"
                                                                , mk '|' (EHistoryEvent HResetCurrent) "reset both 'current' and 'previous' event to end of history"
                                                                , mk V.KHome (EHistoryEvent HFirst) "beginning of history"
-                                                               , mk '\t'(EToggleViewHistory) "view/hide history"
+                                                               , mk '\t'(EToggleViewHistory) "view/hide history difference"
                                                                ])
                                ] <> [("Submaps", submaps)]
                   ),(Just ("Order", 'o') , [("Property order", [ mk 'n' (ESetBoxOrder BOByName) "sort by box name"
@@ -400,7 +402,8 @@ keyBindingGroups =  groups
                   ),(Just ("Toggle", 'z'), [("History",        [ mk 'h' (EToggleHistoryNavigation) "navigation current/previous"
                                                                , mk 'H' (EToggleHistoryPrevious) "move current and previous"
                                                                ])
-                                           ,("Misc",           [ mk 'd' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
+                                           ,("Misc",           [ mk 'D' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
+                                                               , mk 'd'(EToggleViewDetails) "view/hide box/history details"
                                                                , mk 'w' (EToggleCollapseDepth) "Display shelf depth as "
                                                                , mk 'p' (ETogglePropertyGradient) "color properties: random/gradient/gradient (full)"
                                                                , mk 's' (EToggleShowSelected)     "highlight selected property"
@@ -541,6 +544,7 @@ handleWH ev =
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
+         EToggleViewDetails -> modify \s -> s { asDisplayDetails = not (asDisplayDetails s) }
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
@@ -606,7 +610,7 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
-         EHistoryEvent ev -> navigateHistory ev -- >> modify \s -> s { asDisplayHistory = True }
+         EHistoryEvent ev -> navigateHistory ev >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
@@ -953,6 +957,7 @@ debugShelf state = let
      if -- | ViewSummary SVSurfaceLH <- asViewMode state 
         -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
         | ViewSummary sview <- asViewMode state 
+        , not (asDisplayHistory state || asDisplayDetails state)
         -> renderHorizontalSummary (B.padTop B.Max . bayToBars sview) (currentRun state)  :
            [  B.hBox $ intersperse (B.str " ") 
                      $ [  B.str (show m)
