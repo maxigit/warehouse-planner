@@ -149,7 +149,7 @@ findNextEvent :: Event -> [Event] -> Maybe Event
 findNextEvent ev = find \e -> evPreviousM e == Just ev
 
 findFirstChild :: Event -> [Event] -> Maybe Event
-findFirstChild ev = find \e -> evParent e == Just ev 
+findFirstChild = findNextEvent -- ev = find \e -> evParent e == Just ev 
 
 findNextSibling :: Event -> [Event] -> Maybe Event
 findNextSibling ev = lastMay . fst . findSiblings ev
