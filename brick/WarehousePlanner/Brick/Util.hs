@@ -329,7 +329,7 @@ displayEventRange all current start end = let
   previousIf ev = case evPreviousM ev of
                        Just p | p > beg -> Just (p,p)
                        _ -> Nothing
-  events = nub $ sort $ beg : range ++ [last]
+  events = nub $ sort $ beg : range ++ [_beg, _last, last]
   level ev = case ev of 
                NoHistory -> 0
                _ -> case evLevel ev of
@@ -338,12 +338,14 @@ displayEventRange all current start end = let
                          _ -> 12
 
 
-  render ev = let w = txt (take (level ev) "                     " <> displayEvent ev)
-              in if | ev == start && ev == end  -> str "** " <+> w
-                    | ev == start && current  -> str "W* " <+> w
-                    | ev == start -> str "W: " <+> w
-                    | ev == end && current -> str "D: " <+> w
-                    | ev == end            -> str "D* " <+> w
+-- W => hl
+-- D => current
+  render ev = let w = withAttr (specialTagName_) (txt (take (level ev) ".   .    . |         ")) <+> txt (displayEvent ev)
+              in if | ev == start && ev == end  -> forceAttr eventIOut$ str "** " <+> w
+                    | ev == start && current  -> forceAttr eventIn $ str "W* " <+> w
+                    | ev == start -> forceAttr eventIn $ str "W: " <+> w
+                    | ev == end && current -> forceAttr eventOut $ str "D: " <+> w
+                    | ev == end            -> forceAttr eventOut $ str "D* " <+> w
                     | otherwise -> str "   " <+> w
   in vBox $ map render events
 
