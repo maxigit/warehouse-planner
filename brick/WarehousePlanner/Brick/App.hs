@@ -549,16 +549,16 @@ handleWH ev =
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
          ENextBay -> modify \s -> resetBox $ s { asCurrentBay = nextOf (asCurrentBay s) (currentRun s) }
          ENextShelf -> modify \s -> resetBox $ s { asCurrentShelf = nextOf (asCurrentShelf s) (currentBay s) }
-         ENextBox -> modify nextBoxThrough
+         ENextBox -> modify $ runUpdated .nextBoxThrough
          EPrevRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = prevOf (asCurrentRun s) (asShelvesSummary s) }
          EPrevBay -> modify \s -> resetBox $ s { asCurrentBay = prevOf (asCurrentBay s) (currentRun s) }
          EPrevShelf -> modify \s -> resetBox $ s { asCurrentShelf = prevOf (asCurrentShelf s) (currentBay s) }
-         EPrevBox -> modify prevBoxThrough
+         EPrevBox -> modify $ runUpdated .prevBoxThrough
          EFirstRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = 0 }
          ELastRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = lastOf (asShelvesSummary s) }
          EFirstBay -> modify \s -> resetBox $ s { asCurrentBay = 0 }
          ELastBay -> modify \s -> resetBox $ s { asCurrentBay = lastOf (currentRun s) }
-         EFindNextBox direction -> modify \s -> let conditionM = asum [ asBoxSelection s >>=  \sel -> case sSelected sel of
+         EFindNextBox direction -> modify $ runUpdated . \s -> let conditionM = asum [ asBoxSelection s >>=  \sel -> case sSelected sel of
                                                                                               selected | null selected -> Nothing 
                                                                                               selected -> Just \box -> boxId box `member` selected
                                                                       , flip fmap (selectedPropValue s) \_ -> \box -> hsHighlighted (boxHLStatus s box ) > 0
