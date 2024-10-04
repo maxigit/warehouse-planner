@@ -25,6 +25,7 @@ import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Csv
 import WarehousePlanner.Org.Types
+import Control.Monad (zipWithM)
 import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Writer (tell, execWriter)
 import Data.Text(strip,splitOn)
@@ -232,7 +233,7 @@ parseHeader header tags = to <$> gParse header tags
 -- To avoid creating the same temporary file over and over, which
 -- just cache them once and use a SHA identify them.
 readScenario :: MonadIO m
-             => (Section -> m (Either Text [Section])) --  ^ section expander, mainly to import sections for URI
+             => (Int -> Section -> m (Either Text [Section])) --  ^ section expander, mainly to import sections for URI
              -> (Maybe FilePath)
              -> Text
              -> m (Either Text Scenario)
@@ -241,17 +242,23 @@ readScenario expandSection pathm text = do
     sections <-   ExceptT . return $ (parseScenarioFile pathm text)
     ExceptT $ sectionsToScenario expandSection sections
 
-sectionsToScenario :: MonadIO m => (Section -> m (Either Text [Section])) -> [Section] -> m (Either Text Scenario)
+sectionsToScenario :: MonadIO m => (Int -> Section -> m (Either Text [Section])) -> [Section] -> m (Either Text Scenario)
 sectionsToScenario expandSection sections0 = do 
   runExceptT $ do
-    sections <- concat <$> ExceptT ( sequence <$> mapM expandSection sections0)
+    let levels _ [] = []
+        levels lastLevel (s:ss) = let level = case sectionType s of
+                                                TitleH l -> l 
+                                                _ -> lastLevel
+                                  in level : levels level ss
+                                    
+    sections <- concat <$> ExceptT ( sequence <$> zipWithM expandSection (levels 0 sections0) sections0)
     steps' <- mapM (\s -> ExceptT $ cacheSection s) sections
     ExceptT . return $ makeScenario steps' 
 
   
 -- | Read one scenario file
 readScenarioFromPath :: MonadIO io
-                     => Bool -> (Section -> io (Either Text [Section]))
+                     => Bool -> (Int -> Section -> io (Either Text [Section]))
                      -- \^ section expander, mainly to import sections for URI
                      -> FilePath -> io (Either Text Scenario)
 readScenarioFromPath withHistory expandSection path = do
@@ -272,7 +279,7 @@ readScenarioFromPath withHistory expandSection path = do
 
 
 readScenarioFromPaths :: MonadIO io
-                      => Bool -> (Section -> io (Either Text [Section]))
+                      => Bool -> (Int -> Section -> io (Either Text [Section]))
                       -> Maybe FilePath
                       -> [FilePath] -> io (Either Text Scenario)
 readScenarioFromPaths withHistory expandSection currentDir paths = do
@@ -485,7 +492,7 @@ executeStep (Step header sha txt) = do
           TransformTagsH tags -> execute $ readTransformTags path tags
           ClonesH tags -> execute $ readClones (tags) path
           DeletesH -> execute $ readDeletes path
-          TitleH level -> return $ newWHEvent level txt
+          TitleH _level -> return $ return () -- $ newWHEvent level txt
           ImportH -> return $ return ()
           ColourMapH -> return $ return ()
           RearrangeH tags -> execute $ readRearrangeBoxes tags path
@@ -509,26 +516,44 @@ scenarioLayoutSize Scenario{..} =
 
 
 -- * Default expansion
-importDispatch :: (Monad io, MonadIO io) => FilePath -> (Text -> [Text] -> io (Either Text [Section])) -> Section -> io (Either Text [Section])
-importDispatch plannerDir dispatch (Section ImportH (Right content) _) = runExceptT $ do
+importDispatch :: (Monad io, MonadIO io) => FilePath -> Int -> (Text -> [Text] -> io (Either Text [Section])) -> Section -> io (Either Text [Section])
+importDispatch plannerDir nestedLevel dispatch (Section ImportH (Right content) _) = runExceptT $ do
   sectionss <- forM content $ \uri ->  do
     let (main:tags) = splitOn "#" $ strip uri
         pieces = splitOn "/" main
-    case map unpack pieces of
-      ("file": paths@(_:_) ) ->  do
-        sections <- ExceptT $ readLocalFile (intercalate "/" (plannerDir : paths)) tags
-        ss <- mapM (ExceptT . importDispatch plannerDir dispatch) sections
-        return $ concat ss
-      ("files": paths@(_:_)) -> do
-        sections <- ExceptT $ readLocalFiles plannerDir (intercalate "/" paths) tags
-        sss <- mapM (ExceptT . importDispatch plannerDir dispatch) sections
-        return $ concat sss
-      _ -> ExceptT $ dispatch main tags
-  return $ concat sectionss
-importDispatch _ _ section = return $ Right [section]
+    ss <- case map unpack pieces of
+               ("file": paths@(_:_) ) ->  do
+                 sections <- ExceptT $ readLocalFile (intercalate "/" (plannerDir : paths)) tags
+                 ss <- mapM (ExceptT . importDispatch plannerDir (3) dispatch) sections
+                 return $ concat ss
+               ("files": paths@(_:_)) -> do
+                 sections <- ExceptT $ readLocalFiles plannerDir (intercalate "/" paths) tags
+                 sss <- mapM (ExceptT . importDispatch plannerDir (3) dispatch) sections
+                 return $ concat sss
+               _ -> ExceptT $ dispatch main tags
+    return $ Section (TitleH 0)
+                     (Right [])
+                     (" " <> uri)
+           : ss
+  return $ Section (TitleH (nestedLevel + 1))
+                   (Right [])
+                   (replicate (nestedLevel + 1) '*' <> " Import ")
+         : concatMap (map $ raiseLevel $ nestedLevel + 2) sectionss
+importDispatch _ _ _ section = return $ Right [section]
 
-importDispatchDef :: (MonadIO io) => FilePath -> Section -> io (Either Text [Section])
-importDispatchDef plannerDir = importDispatch plannerDir err where
+raiseLevel :: Int -> Section -> Section 
+raiseLevel nestedLevel section = 
+            case sectionType section of
+                 TitleH level -> section { sectionType = TitleH (level + nestedLevel)
+                                         , sectionTitle = replicate nestedLevel '*'  <> (sectionTitle section)
+                                         }
+                 _ -> section
+               
+                                 
+
+
+importDispatchDef :: (MonadIO io) => FilePath -> Int -> Section -> io (Either Text [Section])
+importDispatchDef plannerDir nestedLevel = importDispatch plannerDir nestedLevel err where
   err main tags = return $ Left $ intercalate "#" (main:tags) <> " is not a valid import"
 -- | Read local files using glob pattern(s)
 -- Uses the same directory as the planner

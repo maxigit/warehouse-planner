@@ -168,7 +168,7 @@ optionsPI = info (helper <*> optionsParser ) fullDesc
 -- * Main
 defaultMain ::  IO ()
 defaultMain = defaultMainWith (importDispatchDef)
-defaultMainWith :: (FilePath -> Section -> IO (Either Text [Section])) -> IO ()
+defaultMainWith :: (FilePath -> Int -> Section -> IO (Either Text [Section])) -> IO ()
 defaultMainWith expandSection = do
   o@Options{..} <- execParser optionsPI
   today <- case oToday of

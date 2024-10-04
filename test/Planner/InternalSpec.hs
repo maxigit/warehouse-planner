@@ -110,7 +110,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) Nothing t
+                               sc <- readScenario (const $ return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -138,7 +138,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) Nothing t
+                               sc <- readScenario ( const $ return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -166,7 +166,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                        ]
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) Nothing t
+                               sc <- readScenario ( const $ return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text, text2]
@@ -184,7 +184,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                         , "move 4"
                         ]
     Right (DocumentHash shaPart1) <- do
-                  sc <- readScenario ( return . Right . (:[])) Nothing part1
+                  sc <- readScenario ( const $ return . Right . (:[])) Nothing part1
                   return $ scenarioKey `fmap` sc
 
     let text1 = part1 <> part2
@@ -192,7 +192,7 @@ ioSpec = describe "Reading scenario @planner" $ do
                         , "@" ++ shaPart1] ++ part2
 
     [sha1, sha2] <- mapM ( \t -> do
-                               sc <- readScenario ( return . Right . (:[])) Nothing t
+                               sc <- readScenario ( const $ return . Right . (:[])) Nothing t
                                return $ scenarioKey `fmap` sc
                          )
                        [text1, text2]
