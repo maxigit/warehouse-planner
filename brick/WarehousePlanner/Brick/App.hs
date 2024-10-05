@@ -48,6 +48,8 @@ data WHEvent = ENextMode
              | EPrevMode
              | EToggleViewHistory
              | EToggleViewDetails
+             | ENextAdjustShelvesMode
+             | EPrevAdjustShelvesMode
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
              | ETogglePropertyGradient
@@ -123,9 +125,9 @@ data HistoryEvent = HPrevious
                   | HSwapCurrent
      deriving(Show, Eq, Ord, Enum, Bounded)
 
-makeAppShelvesSummary :: Maybe Text -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
-makeAppShelvesSummary propm = do
-  runs <- gets shelfGroup
+makeAppShelvesSummary :: AppState -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
+makeAppShelvesSummary state = do
+  runs <-  adjustedShelfGroup state
   shelvesSummary <- traverseRuns findShelf runs
                  >>= makeRunsSummary (makeExtra)
                  >>= traverseRuns findBoxes
@@ -149,7 +151,7 @@ makeAppShelvesSummary propm = do
         makeExtra shelf =  do
                         currentEvent <- gets whCurrentEvent
                         boxes <- mapM findBox (_shelfBoxes shelf)
-                        let getProp = case propm of
+                        let getProp = case asProperty state of
                                            Just prop -> case expandAttributeMaybe prop of
                                                              Nothing -> \_ _ -> return ""
                                                              Just expand -> expand
@@ -211,11 +213,56 @@ updateHLStatus fbox fshelf theRuns = let
 updateHLState :: AppState -> AppState
 updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (shelfHLStatus state) (asShelvesSummary state) }
 
+
+adjustedShelfGroup :: AppState -> WH (RunsWithId s) s
+adjustedShelfGroup state = do
+  runs <- gets shelfGroup
+  case asAdjustedShelvesMode state of
+      AllShelves -> return runs
+      SelectedShelves -> do
+             case asShelfSelection state of
+                 Nothing -> return runs
+                 Just selection -> do
+                      shelves <- traverseRuns findShelf runs
+                      let keep shelf= shelfName shelf `member` sSelected selection
+                      return $ maybe runs (mapRuns shelfId) $  filterRuns keep shelves
+      UnselectedShelves -> do
+             case asShelfSelection state of
+                 Nothing -> return runs
+                 Just selection -> do
+                      shelves <- traverseRuns findShelf runs
+                      let keep shelf= shelfName shelf `notMember` sSelected selection
+                      return $ maybe runs (mapRuns shelfId) $  filterRuns keep shelves
+      SelectedShelvesFirst -> do
+             case asShelfSelection state of
+                 Nothing -> return runs
+                 Just selection -> do
+                      shelves <- traverseRuns findShelf runs
+                      let keep shelf= shelfName shelf `member` sSelected selection
+                          selected = filterRuns keep shelves
+                          unselected = filterRuns (not . keep) shelves
+                      return $ case (mapRuns shelfId <$> selected , mapRuns shelfId <$> unselected) of
+                                (Nothing, Just us) -> us
+                                (Just ss, Just us) -> ss <> us
+                                (Just ss, Nothing) -> ss
+                                (Nothing, Nothing) -> runs
+      SelectedBoxes -> do
+        case asBoxSelection state of
+            Nothing -> return runs
+            Just selection -> do
+               boxes <- findBoxByNameAndShelfNames (sSelector selection) 
+               let shelfIds = Set.fromList $ mapMaybe boxShelf boxes
+               return $ fromMaybe runs $ filterRuns (`member` shelfIds) runs
+
+
+  
+  
 initState :: (AppState -> AppState) -> IO (Either Text (Warehouse RealWorld)) -> String -> WH (AppState) RealWorld
 initState adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
       asDisplayDetails = False
+      asAdjustedShelvesMode = AllShelves
       state = adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
@@ -236,7 +283,7 @@ initState adjust asReload title = do
                   , asCollapseDepth = True
                   , ..
                   }
-  asShelvesSummary <- makeAppShelvesSummary (asProperty state)
+  asShelvesSummary <- makeAppShelvesSummary state
   warehouse <- get
   return . runUpdated $ state { asWarehouse = warehouse
                               , asDiffEvent = whCurrentEvent warehouse
@@ -390,7 +437,9 @@ keyBindingGroups =  groups
                                                                , mk V.KEnd (EHistoryEvent HLast) "end of history"
                                                                , mk '|' (EHistoryEvent HResetCurrent) "reset both 'current' and 'previous' event to end of history"
                                                                , mk V.KHome (EHistoryEvent HFirst) "beginning of history"
-                                                               , mk '\t'(EToggleViewHistory) "view/hide history difference"
+                                                               , mK "tab" ENextAdjustShelvesMode "Next visible shelves mode"
+                                                               -- , mK "backspace" EPrevAdjustShelvesMode "Previous visible shelves mode"
+                                                               , mK "c-o" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                ])
                                ] <> [("Submaps", submaps)]
                   ),(Just ("Order", 'o') , [("Property order", [ mk 'n' (ESetBoxOrder BOByName) "sort by box name"
@@ -401,6 +450,7 @@ keyBindingGroups =  groups
                                            ]
                   ),(Just ("Toggle", 'z'), [("History",        [ mk 'h' (EToggleHistoryNavigation) "navigation current/previous"
                                                                , mk 'H' (EToggleHistoryPrevious) "move current and previous"
+                                                               , mk 'e'(EToggleViewHistory) "view/hide event history"
                                                                ])
                                            ,("Misc",           [ mk 'D' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
                                                                , mk 'd'(EToggleViewDetails) "view/hide box/history details"
@@ -545,6 +595,12 @@ handleWH ev =
          EPrevMode -> modify prevMode
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          EToggleViewDetails -> modify \s -> s { asDisplayDetails = not (asDisplayDetails s) }
+         ENextAdjustShelvesMode -> do 
+                                      modify \s -> s { asAdjustedShelvesMode = succ' (asAdjustedShelvesMode s) } 
+                                      execute (return ())
+         EPrevAdjustShelvesMode -> do
+                                     modify \s -> s { asAdjustedShelvesMode = pred' (asAdjustedShelvesMode s) }
+                                     execute (return ())
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
@@ -702,7 +758,7 @@ setNewWHEvent ev = do
    new <- liftIO $ execWH asWarehouse do
        let newWH = asWarehouse { whCurrentEvent = ev }
        put newWH
-       asShelvesSummary <- makeAppShelvesSummary asProperty
+       asShelvesSummary <- makeAppShelvesSummary s
        return $ updateHLState s {asWarehouse = newWH, asShelvesSummary  }
    put new
    
@@ -711,7 +767,7 @@ execute action = do
    s@AppState{..} <- get
    (newState, r) <- liftIO $ execWH asWarehouse do
       result <- action 
-      asShelvesSummary <- makeAppShelvesSummary asProperty
+      asShelvesSummary <- makeAppShelvesSummary s
       newWH <- get
       return $ (updateHLState s {asWarehouse = newWH, asShelvesSummary  }, result)
    put $ runUpdated newState
@@ -890,9 +946,10 @@ findPrevHLRun style AppState{..} = let
 drawCurrentRun :: AppState -> IO ()
 drawCurrentRun app  = do 
   let wh = asWarehouse app
-      run = shelfGroup wh !! asCurrentRun app
   diag <- execWH wh do
-              D.renderRun (shelfStyling wh) (boxStyling wh) run
+       runs <- adjustedShelfGroup app
+       let run = runs !! asCurrentRun app
+       D.renderRun (shelfStyling wh) (boxStyling wh) run
   let filePath = "/tmp/whp-" <> asTitle app <> "-" <> show (asCurrentRun app) <> ".png"
   renderCairo filePath
               (mkSizeSpec2D Nothing (Just 800))
@@ -940,6 +997,7 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                            , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
+                           , B.center $ B.str (show asAdjustedShelvesMode)
                            , B.center $ B.str (show asBoxOrder)
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
@@ -1038,12 +1096,14 @@ setBoxSelection sel = do
   state  <- get
   asBoxSelection <- liftIO $ execWH (asWarehouse state) $ makeBoxSelection sel
   put $ updateHLState state { asBoxSelection }
+  execute $ return ()
   
 setShelfSelection :: Text -> B.EventM n AppState ()
 setShelfSelection sel = do
   state  <- get
   asShelfSelection <- liftIO $ execWH (asWarehouse state) $ makeShelfSelection sel
   put $ updateHLState state { asShelfSelection }
+  execute $ return ()
 
 setProperty :: Text -> B.EventM Resource AppState ()
 setProperty value = do
@@ -1084,6 +1144,7 @@ makeInputData imode state = let
     idInitial = case imode of 
                   ISelectProperty -> "$"
                   ISelectTag -> "ctitle=$"
+                  ISelectShelves -> "/"
                   _ -> ""
     idShelf =  sName $ currentShelf state
     idPropertyValue = fromMaybe "" $ selectedPropValue state

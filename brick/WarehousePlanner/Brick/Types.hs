@@ -2,6 +2,7 @@ module WarehousePlanner.Brick.Types
 ( AppState(..)
 , ViewMode(..)
 , SummaryView(..)
+, AdjustShelveMode(..) 
 , BoxOrder(..)
 , BarDirection(..)
 , SumVec, sDetailsList
@@ -48,6 +49,13 @@ data ViewMode = ViewSummary SummaryView
               -- 
               deriving (Show, Eq, Ord)
               
+data AdjustShelveMode = AllShelves
+                      | SelectedShelves
+                      | UnselectedShelves
+                      | SelectedShelvesFirst
+                      | SelectedBoxes
+            deriving (Show, Eq, Ord, Enum, Bounded)
+
 data BoxOrder = BOByName
               | BOByShelve
               | BOByCount
@@ -103,6 +111,7 @@ data AppState = AppState
      asSummaryView :: SummaryView
      , asDisplayHistory :: Bool
      , asDisplayDetails :: Bool
+     , asAdjustedShelvesMode :: AdjustShelveMode
      , asShelvesSummary :: Runs SumVec (SumVec  (ZHistory (Box RealWorld)))
      , asCurrentRun :: Int
      , asCurrentBay :: Int
@@ -138,6 +147,7 @@ data Selection sel a =
                    , sSelector :: sel
                    , sSelected :: Set a
                    }
+     deriving Show
 
 asCurrentEvent :: AppState -> Event
 asCurrentEvent = whCurrentEvent . asWarehouse
