@@ -20,8 +20,9 @@ import System.FilePath.Glob qualified as Glob
 -- import Data.List(intercalate)
 import Data.Semigroup(Arg(..))
 import Data.Text qualified as Text
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import WarehousePlanner.History.Types
+import Data.Foldable qualified as F
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -681,14 +682,39 @@ type Bay f a = f a
 type Runs f a = f (Run f a)
 
   
-fromRuns :: (Functor f) => (f (Run g a) -> Runs g a) -> (f (Bay g a) -> Run g a)  -> (f a -> Bay g a) -> Runs f a -> Runs g a
-fromRuns f1 f2 f3 runs = f1 $ fmap fromRun runs where
+fromRuns3 :: (Functor f) => (f (Run g b) -> Runs g b) -> (f (Bay g b) -> Run g b)  -> (f a -> Bay g b) -> Runs f a -> Runs g b
+fromRuns3 f1 f2 f3 runs = f1 $ fmap fromRun runs where
   fromRun bays = f2 $ fmap fromBay bays 
   fromBay shelves = f3 shelves 
+
+fromRuns :: Functor f => (forall x . f x -> g x) -> Runs f a -> Runs g a
+fromRuns f = fromRuns3 f f f
 
 mapRuns :: Functor f => (a -> b) -> Runs f a -> Runs f b
 mapRuns f = fmap  (fmap (fmap f) )
 
 traverseRuns :: (Monad m, Traversable f) => (a -> m b) -> Runs f a -> m (Runs f b)
 traverseRuns f = traverse (traverse (traverse f))
+
+toRunsL :: (Functor f , Foldable f) => Runs f a -> Runs [] a
+toRunsL = fromRuns F.toList
+
+toBayE :: Foldable f => Bay f a -> Maybe (Bay NonEmpty a)
+toBayE = nonEmpty . F.toList
+
+toRunE :: Foldable f => Run f a -> Maybe (Run NonEmpty a)
+toRunE bays = let
+   baysE = mapMaybe toBayE $ F.toList bays
+   in nonEmpty baysE
+   
+toRunsE :: Foldable f => Runs f a -> Maybe (Runs NonEmpty a)
+toRunsE  runs = let
+   runsE = mapMaybe toRunE $ F.toList runs
+   in nonEmpty  runsE
+   
+filterRuns :: (Functor f, Foldable f) => (a -> Bool) -> Runs f a -> Maybe (Runs NonEmpty a)
+filterRuns keep runs = toRunsE 
+                     $ fmap (fmap $ filter keep)
+                     $ toRunsL runs 
+
 -- ** Tag

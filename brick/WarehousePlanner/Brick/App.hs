@@ -135,7 +135,7 @@ makeAppShelvesSummary propm = do
           in ShelvesSummary{sDetails=sumZip,..}
   currentEvent <- gets whCurrentEvent
   return $ do
-         fromRuns toL toL toL
+         fromRuns toL 
                        $ mapRuns (\s -> do
                                         s { sDetails = fromList $ map (toZHistory currentEvent) $ sortOn boxOrder  $ sDetails s }
                                      )  shelvesSummary

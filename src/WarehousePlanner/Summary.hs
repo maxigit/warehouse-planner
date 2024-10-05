@@ -115,7 +115,7 @@ data R' f a = R' (Runs f a)
 makeRunsSummary :: Semigroup e => (Shelf s -> WH e s) -> Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary e NonEmpty) (ShelvesSummary e NonEmpty (Shelf s))) s
 makeRunsSummary makeExtra runs = do
   runs' <- traverseRuns (summaryFromShelf makeExtra) runs
-  return $ fromRuns (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'
+  return $ fromRuns3 (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'
 
 
 promote :: ShelvesSummary e NonEmpty a -> ShelvesSummary e NonEmpty (ShelvesSummary e NonEmpty a)
