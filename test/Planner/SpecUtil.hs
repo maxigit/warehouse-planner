@@ -15,7 +15,11 @@ import Data.Text (breakOn)
 -- ex: "S1 S2" creates two shelves S1 and S2
 makeShelves :: [Text] -> WH [Shelf s] s
 makeShelves = mapM go where
-    go name = newShelf name Nothing shelfDim shelfDim 0 DefaultOrientation ColumnFirst
+    go name0 = let (name, tags) = breakOn "#" name0
+                   tagm = case tags of
+                           "" -> Nothing
+                           _ -> Just $ drop 1 tags
+              in newShelf name tagm shelfDim shelfDim 0 DefaultOrientation ColumnFirst
     shelfDim = Dimension 300 80 150
     
     

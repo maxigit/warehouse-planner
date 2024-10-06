@@ -7,7 +7,7 @@ import Test.Hspec
 import WarehousePlanner.Base
 import WarehousePlanner.Move
 import WarehousePlanner.Exec
-import WarehousePlanner.Selector(parseBoxNumberSelector, parseBoxSelector)
+import WarehousePlanner.Selector(parseBoxNumberSelector, parseBoxSelector, parseShelfSelector)
 import Planner.SpecUtil
 
 spec :: Spec
@@ -143,10 +143,26 @@ pureSpec = describe "Selector" do
           limit "^=^={style}^=" `shouldReturn` without
 
 
-   it "selects" do
-      let ?shelves = ["S1", "S2", "S3"]
-          ?boxes = ["S1 A-3 A-1 A-2"]
-      select "#'1" `shouldReturn` ["A-1"]
+   describe "selects" do
+      let ?shelves = ["S1", "S2", "S3#top"]
+          ?boxes = ["S1 A-3 A-1", "S3 A-2"]
+      it "direct" do
+         select "#'1" `shouldReturn` ["A-1"]
+      it "negative" do
+         select "#-'1" `shouldReturn` ["A-2", "A-3"]
+      context "box by shelf tag" do
+         it "direct" do
+            select "/#top" `shouldReturn` ["A-2"]
+         it "negative" do
+            select "/#-top" `shouldReturn` ["A-1", "A-3"]
+            select "/#!top" `shouldReturn` ["A-1", "A-3"]
+      context "shelves" do
+         it "positive tag" do
+            selectShelves "/#top" `shouldReturn` ["S3"]
+         it "negative tag -" do
+            selectShelves "/#-top" `shouldReturn` ["S1", "S2"]
+         it "negative tag !" do
+            selectShelves "/#!top" `shouldReturn` ["S1", "S2"]
 
 
 
@@ -158,6 +174,12 @@ select selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
    selected <- findBoxByNameAndShelfNames  (parseBoxSelector selection)
    return $ map boxStyleAndContent selected
    
+selectShelves selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
+   shelves <- makeShelves ?shelves
+   boxes <- makeBoxes ?boxes
+   selected <- findShelvesByBoxNameAndNames  (parseShelfSelector selection)
+   return $ map shelfName selected
+
 limit selection = execWH (emptyWarehouse $ fromGregorian 2024 07 15) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
