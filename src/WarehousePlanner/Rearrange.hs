@@ -122,7 +122,7 @@ shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
                                   Nothing -> return mempty
                                   Just prefix -> do 
                                           from <- expandAttribute source 1 "${shelfname}${position-spec}"
-                                          return $ mapFromList [(prefix <> "-from=" , singleton from)]
+                                          return $ mapFromList [(prefix <> "-from" , singleton from)]
                  when (not $ null sticky) do
                    void $ updateBox (\b -> b { boxTags = nonSticky} ) dest
                       
