@@ -421,7 +421,7 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
                                  , fromMaybe "" locationM
                                  , mconcat $ map tshow orientations
                                  ]
-  let withNoEmpty = partition (== "@noEmpty")
+  let withNoEmpty = partition ((== "@noempty") . toLower)
       (noEmpty1, tagsAndPatterns) = withNoEmpty tagsAndPatterns_
       (noEmpty2, tags) = withNoEmpty tags_
       noEmpty = not . null $ noEmpty1 <> noEmpty2
