@@ -105,6 +105,7 @@ command first = asum $ map lexeme [ toggleTag
                             , boxSel
                             , tam
                             , delete
+                            , traceCount
                             ] where
    move = do 
             lexeme "to" 
@@ -125,6 +126,10 @@ command first = asum $ map lexeme [ toggleTag
                  <|> return []
           return $ TagAndMove tagloc ors
    delete = lexeme "delete" >> return Delete
+   traceCount = do
+       lexeme "trace:count"
+       desc <- lexeme $ takeWhile1P (Just "description") (not . isSpace)
+       return $ TraceCount desc
 
                     
    boxSel = SelectBoxes <$> boxSelector first

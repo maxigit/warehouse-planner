@@ -16,6 +16,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SelectShelves (CSelector ShelfSelector)
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
              | Delete 
+             | TraceCount Text
      deriving (Show, Eq)
      -- deriving Eq
 -- instance Show Command where show = showCommand
@@ -27,6 +28,7 @@ showCommand = \case
       SelectShelves s -> showCSelector showShelfSelector s
       TagAndMove txt ors -> "TagAndMove" <> show txt <> " " <> show ors
       Delete -> "Delete"
+      TraceCount descr -> "TraceCount " <> show descr
       
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"

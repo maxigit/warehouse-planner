@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.WPL.Exec
 ( runWPL
 , runWPLWith
@@ -58,8 +59,10 @@ executeCommand ec command = case command of
       boxes <- getBoxes =<< case boxm of 
                  Nothing -> return ec
                  Just sel -> narrowBoxes sel ec
+      -- traceShowM ("BOXOS", length boxes)
       shelves <-  do
          getShelves =<< narrowCSelector narrowShelves shelf ec
+      -- traceShowM ("SHELVES", shelf, length shelves)
       inEx <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
       return ec { ecBoxes = fmap ((,error "boom") . boxId) inEx }
     ---------
@@ -92,6 +95,15 @@ executeCommand ec command = case command of
        boxes <- getBoxes ec
        deleteBoxes boxes
        return ec {ecBoxes = InExcluded (Just []) (Just []) }
+    ---------
+    TraceCount desc-> do
+       let ExContext{..} = ec
+       traceM $ "Trace Count " <> unpack desc -- <> " "  <> show ecSelector
+       traceM $ "     included boxes" <> show(  fmap length $ included ecBoxes )
+       traceM $ "     excluded boxes" <> show(  fmap length $ excluded ecBoxes)
+       traceM $ "     included shelves" <> show( fmap length $ included ecShelves)
+       traceM $ "     excluded shelves" <> show( fmap length $ excluded ecShelves)
+       return ec
 
       
        
