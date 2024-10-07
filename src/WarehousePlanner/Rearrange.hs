@@ -41,6 +41,7 @@ rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isStick
                                           , (prefix <> "-style", SetValues [showkey k1])
                                           , (prefix <> "-cgroup", SetValues [showkey k2])
                                           , (prefix <> "-corder", SetValues [showkey k3])
+                                          , (prefix <> "-by", SetValues [tshow groupByContent])
                                           ]
                                           box
                                           1
