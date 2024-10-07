@@ -87,8 +87,14 @@ executeCommand ec command = case command of
       let (tags, locm) = splitTagsAndLocation txt
       inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
       return ec { ecBoxes = fmap ((,error "boom2") . boxId) inEx }
-      
     ---------
+    Delete -> do
+       boxes <- getBoxes ec
+       deleteBoxes boxes
+       return ec {ecBoxes = InExcluded (Just []) (Just []) }
+
+      
+       
   
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]

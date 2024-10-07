@@ -104,6 +104,7 @@ command first = asum $ map lexeme [ toggleTag
                             , shelfSel
                             , boxSel
                             , tam
+                            , delete
                             ] where
    move = do 
             lexeme "to" 
@@ -123,6 +124,7 @@ command first = asum $ map lexeme [ toggleTag
           ors <- (lexeme "with" >> orientationRules)
                  <|> return []
           return $ TagAndMove tagloc ors
+   delete = lexeme "delete" >> return Delete
 
                     
    boxSel = SelectBoxes <$> boxSelector first
