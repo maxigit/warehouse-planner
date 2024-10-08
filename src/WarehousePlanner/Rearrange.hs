@@ -526,7 +526,7 @@ parseStrategyCommand _ _ _ [] = Nothing
 parseStrategyCommand l w h (com:coms) = do -- maybe
    let (orientations, (_,partitionMode, _, _)) = extractModes com 
    case parseOrientationRule [] orientations of
-    [strategy] -> Just (FCSetOrientationStrategy partitionMode strategy (parseMakeDimension l w h), coms)
+    [strategy] -> Just (FCSetOrientationStrategy (fromMaybe PRightOnly partitionMode) strategy (parseMakeDimension l w h), coms)
     _ -> Nothing
     
 

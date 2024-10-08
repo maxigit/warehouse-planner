@@ -467,7 +467,7 @@ moveToLocations ec sortMode boxes location = do
                  inEC s = case included (ecShelves ec) of
                              Nothing -> True
                              Just sid ->  s `elem` sid
-             ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+             ie <- aroundArrangement addOldBoxes (moveBoxes exitMode (fromMaybe (ecPartitionMode ec) partitionMode) $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
         ) (mempty { excluded = Just boxes}) (splitOn " " location)
 

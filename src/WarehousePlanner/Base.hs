@@ -45,6 +45,7 @@ module WarehousePlanner.Base
 , newBox, newBox'
 , newShelf
 , orTrue
+, partitionModeParser
 , parseTagOperation
 , parseTagOperations
 , parseTagAndPatterns
@@ -1410,26 +1411,42 @@ parseOrientationRule defOrs cs0 = let
     s -> readOrientations defOrs s
   in [(OrientationStrategy o  min_  max_ minLM minHM (rotateO o `elem` ors && diag)) | o <- ors ]
 
-extractModes :: Text -> (Text, (ExitMode, PartitionMode, AddOldBoxes, Maybe SortBoxes))
+extractModes :: Text -> (Text, (ExitMode, Maybe PartitionMode, AddOldBoxes, Maybe SortBoxes))
 extractModes modeLoc = case P.parse ((,) <$> modesParser <*> P.getInput) (unpack modeLoc) modeLoc of
   Left _ -> error "The unexpected happend. Contact your administrator" -- parser should succeed
   Right (r,e) -> (e,r)
-modesParser :: MParser (ExitMode, PartitionMode, AddOldBoxes, Maybe SortBoxes)
+modesParser :: MParser (ExitMode, Maybe PartitionMode, AddOldBoxes, Maybe SortBoxes)
 modesParser = do
   exitMaybe <- P.optional (const ExitOnTop <$> P.char '^')
-  es <- P.many (fmap Left partitionP <|> fmap Right boxesP)
+  es <- P.many (fmap Left partitionModeParser <|> fmap Right boxesP)
   let (parts, boxes) = partitionEithers es
       (oldBoxes, sortBoxes) = fromMaybe boxesDefault (headMay boxes)
       partitionMode = case parts of
-                      [] -> partitionDefault
-                      [p] -> p
-                      p:ps -> foldr POr p ps
+                      [] -> Nothing
+                      p:ps -> Just $ foldr POr p ps
   return ( fromMaybe exitDefault exitMaybe
          , partitionMode
          , oldBoxes
          , sortBoxes
          )
+  where
+        go (p, v) = const v <$> P.try p
+        boxesP = asum $ map go
+                [ (P.string "&", (NewBoxesOnly, Just DontSortBoxes))
+                ]
+                <> map go
+                [ (P.char '@', (AddOldBoxes, Just SortBoxes))
+                , (P.char '+', (AddOldBoxes, Just DontSortBoxes))
+                ]
+        exitDefault = ExitLeft
+        boxesDefault = (NewBoxesOnly, Nothing)
 
+partitionModeParser :: MParser PartitionMode
+partitionModeParser = do
+  parts <- P.some partitionP
+  return case parts of
+           [] -> error "the unexpected happened" -- use of some
+           p:ps -> foldr POr p ps
 
   where partitionP = asum $ map go
                           [ (P.string "right", PRightOnly)
@@ -1450,16 +1467,6 @@ modesParser = do
                           , (P.char '_', PBehind)
                           ]
         go (p, v) = const v <$> P.try p
-        boxesP = asum $ map go
-                [ (P.string "&", (NewBoxesOnly, Just DontSortBoxes))
-                ]
-                <> map go
-                [ (P.char '@', (AddOldBoxes, Just SortBoxes))
-                , (P.char '+', (AddOldBoxes, Just DontSortBoxes))
-                ]
-        exitDefault = ExitLeft
-        boxesDefault = (NewBoxesOnly, Nothing)
-        partitionDefault = PRightOnly
           
                  
 

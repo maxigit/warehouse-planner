@@ -16,6 +16,8 @@ data ExContext s = ExContext
                , ecShelves :: InExcluded (ShelfId s)
                , ecParent :: Maybe (ExContext s)
                , ecSelector :: BoxNumberSelector
+               , ecPartitionMode :: PartitionMode
+               , ecOrientationStrategies :: [OrientationStrategy]
                }
      deriving (Show, Eq)
      
@@ -24,11 +26,13 @@ instance Semigroup (ExContext s) where
    ec1 <> ec2 = ExContext (ecBoxes ec1 <> ecBoxes ec2)
                           (ecShelves ec1 <> ecShelves ec2)
                           (ecParent ec1 <|> ecParent ec2)
-                          (error "ExContext <> not IMPLEMENTED")
+                          (error "esSelector <> not IMPLEMENTED")
+                          (min (ecPartitionMode ec1) (ecPartitionMode ec2))
+                          (ecOrientationStrategies ec1 <> ecOrientationStrategies ec2)
 
                           
 instance Monoid (ExContext s) where
-   mempty = ExContext mempty mempty Nothing (BoxNumberSelector NoLimit NoLimit NoLimit)
+   mempty = ExContext mempty mempty Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly []
    
 -- We don't update the parent in purpose
 inverseBoxes :: ExContext s -> ExContext s
@@ -39,7 +43,7 @@ inverseShelves ec = ec { ecShelves = inverseInEx $ ecShelves ec }
     
 -- * Impure
 withAll :: ExContext s
-withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit NoLimit NoLimit)
+withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly []
                      
 -- | Boxes of the current which satisfy the given selector.
 -- At the moment, it is implemented as the intersection of 

@@ -106,11 +106,15 @@ command first = asum $ map lexeme [ toggleTag
                             , tam
                             , delete
                             , traceCount
+                            , partitionMode
+                            , orientationStrategies
                             ] where
    move = do 
             lexeme "to" 
+            pmode <- optional $ lexeme partitionModeParser
+            orules <- (lexeme "orules"  >> orientationRules) <|> return []
             shelf <-  shelfSelector
-            return $ Move Nothing $ shelf
+            return $ Move Nothing pmode orules shelf
    tag = do 
            lexeme "tag"
            tagOps <- lexeme $ takeWhile1P (Just "tags") (not . isSpace)
@@ -130,6 +134,14 @@ command first = asum $ map lexeme [ toggleTag
        lexeme "trace:count"
        desc <- lexeme $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceCount desc
+   partitionMode = do
+       lexeme  "place"
+       pmode <- lexeme partitionModeParser
+       return $ SetPartitionMode pmode
+   orientationStrategies = do
+      lexeme "orules"
+      os <- lexeme orientationRules
+      return $ SetOrientationStrategies os
 
                     
    boxSel = SelectBoxes <$> boxSelector first

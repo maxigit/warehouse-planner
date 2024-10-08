@@ -44,7 +44,7 @@ executeStatement ec command =
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)
-             return $ inverseShelves $ inverseBoxes newEc
+             return $ inverseBoxes newEc
 
          
 
@@ -54,7 +54,7 @@ executeStatement ec command =
 executeCommand :: ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
-    Move boxm shelf -> do
+    Move boxm pmodem orules shelf -> do
       newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
       boxes <- getBoxes =<< case boxm of 
                  Nothing -> return ec
@@ -63,7 +63,11 @@ executeCommand ec command = case command of
       shelves <-  do
          getShelves =<< narrowCSelector narrowShelves shelf ec
       -- traceShowM ("SHELVES", shelf, length shelves)
-      inEx <- moveBoxes ExitLeft PRightOnly DontSortBoxes boxes shelves
+      let rules = case orules of
+                    [] -> ecOrientationStrategies ec
+                    _ -> orules
+                  
+      inEx <- withBoxOrientations rules $ moveBoxes ExitLeft (fromMaybe (ecPartitionMode ec) pmodem) DontSortBoxes boxes shelves
       return ec { ecBoxes = fmap ((,error "boom") . boxId) inEx }
     ---------
     Tag tagOps -> do
@@ -86,8 +90,11 @@ executeCommand ec command = case command of
     SelectShelves selector -> do
       narrowCSelector narrowShelves selector ec
     ---------
-    TagAndMove txt ors -> do
+    TagAndMove txt ors0 -> do
       let (tags, locm) = splitTagsAndLocation txt
+          ors = case ors0 of
+                     [] -> ecOrientationStrategies ec
+                     _ -> ors0
       inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
       return ec { ecBoxes = fmap ((,error "boom2") . boxId) inEx }
     ---------
@@ -104,6 +111,14 @@ executeCommand ec command = case command of
        traceM $ "     included shelves" <> show( fmap length $ included ecShelves)
        traceM $ "     excluded shelves" <> show( fmap length $ excluded ecShelves)
        return ec
+    ---------
+    SetPartitionMode pmode -> do
+       return ec { ecPartitionMode = pmode }
+    ---------
+    SetOrientationStrategies os -> do
+       return ec { ecOrientationStrategies = os }
+
+
 
       
        

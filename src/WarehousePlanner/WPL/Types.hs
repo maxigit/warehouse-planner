@@ -8,6 +8,8 @@ import Data.List.NonEmpty as NE
 
 
 data Command = Move { cSource :: Maybe BoxSelector
+                    , cPartitionMode :: Maybe PartitionMode
+                    , cOrientationStrategies :: [OrientationStrategy]
                    , cDest   :: CSelector ShelfSelector
                    }
              | Tag { cTagOps :: [Tag'Operation] }
@@ -16,6 +18,8 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SelectShelves (CSelector ShelfSelector)
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
              | Delete 
+             | SetPartitionMode PartitionMode
+             | SetOrientationStrategies [OrientationStrategy]
              | TraceCount Text
      deriving (Show, Eq)
      -- deriving Eq
@@ -29,6 +33,9 @@ showCommand = \case
       TagAndMove txt ors -> "TagAndMove" <> show txt <> " " <> show ors
       Delete -> "Delete"
       TraceCount descr -> "TraceCount " <> show descr
+      SetPartitionMode pmode -> "Set PMode " <> show pmode
+      SetOrientationStrategies os -> "Orientations " <> show os
+       
       
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"
