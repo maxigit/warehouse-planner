@@ -1144,6 +1144,19 @@ shorten content =  let
   
 -- | Syntax tag[?]
 parseEvaluator :: Text -> (Text, [Text] -> Maybe Text)
+parseEvaluator tag0 | Right (tag, elseValue) <- P.parse parser (unpack tag0) tag0 = 
+  ( tag 
+  , \case
+      [] -> elseValue
+      vs -> Just $ intercalate ";" vs
+  )
+  where parser :: MParser (Text, Maybe Text)
+        parser = do
+          tag <- P.takeWhileP Nothing (/= '?')
+          P.string "??"
+          elseValue <- P.optional ( P.takeRest )
+          return (tag,  elseValue)
+-- value?then:else
 parseEvaluator tag0 | Right (tag, thenValue, elseValue) <- P.parse parser (unpack tag0) tag0 = 
   ( tag 
   , \case
@@ -1158,6 +1171,7 @@ parseEvaluator tag0 | Right (tag, thenValue, elseValue) <- P.parse parser (unpac
           elseValue <- P.optional ( P.char ':' >> P.takeRest )
           return (tag,  thenValue, elseValue)
 
+-- value??def
 -- parse value:start:end
 parseEvaluator tag0 | Right (tag, startm, endm) <- P.parse parser (unpack tag0) tag0 =
   let sub = removePrefix . removeSuffix
