@@ -1028,6 +1028,8 @@ debugShelf state = let
                        , B.txt "box" 
                        , B.str . show $ suCount $ sBoxSummary ssum
                        , B.str . show $ fromSummary m $ sBoxSummary ssum
+                       , B.str "diff"
+                       , B.str . show $ fromSummary m (sShelvesSummary ssum) - fromSummary m (sBoxSummary ssum)
                        ]
           | m <- [minBound .. maxBound ]
           ]
