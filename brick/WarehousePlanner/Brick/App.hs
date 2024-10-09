@@ -387,7 +387,8 @@ whMain adjust title reload = do
                Just allProps -> let props = if allProps
                                             then keys $ sePropValues $ sExtra $ asShelvesSummary  state
                                             else map fst $ toList $ asCurrentRunPropValues state
-                                in gradientAttributes props
+                                in (makeStyleAttrName "∅", grayAttr)
+                                   : (gradientAttributes $ filter (/= "∅") props)
   void $ B.defaultMain (whApp attrs) state0
 
 

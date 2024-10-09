@@ -31,6 +31,7 @@ eigthH, eigthV
 , boxPropValue
 , gradientAttributes
 , Rendered(..)
+, grayAttr
 ) where
 
 import ClassyPrelude hiding (on)
@@ -302,6 +303,7 @@ eventAttrs = [(ev, V.black `on` fg)
              -- , (eventOut, V.brightRed `on` V.red )
              -- ]
 
+grayAttr = V.color240 150 150 150 `on` V.black
 
 highlightAttrs :: [(AttrName, V.Attr)]
 highlightAttrs = [ (attrName "hl" , V.defAttr `V.withStyle` V.reverseVideo)
