@@ -123,11 +123,12 @@ data AppState = AppState
      , asCurrentPropValue :: Int 
      , asCurrentRunPropValues :: Vector (Text, Summary)
      , asPropertyAsGradient :: Maybe Bool -- Just True for all False for current run
+     , asPropertyGlobal :: Bool -- Displall property values (all runs)
      , asShowSelected :: Bool
      ------ deal with multikey mapping
      , asSubmap :: Maybe Char
      , asDisplayMainHelp :: Bool
-     , asBoxOrder :: BoxOrder 
+     , asBoxOrder :: (BoxOrder, Bool)
      , asWarehouse :: Warehouse RealWorld 
      , asTitle :: String
      , asDiffEvent :: Event -- ^ Event to show diff with

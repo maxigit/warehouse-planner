@@ -53,6 +53,7 @@ data WHEvent = ENextMode
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
              | ETogglePropertyGradient
+             | ETogglePropertyGlobal
              | EToggleShowSelected
              -- 
              | ENextRun
@@ -267,8 +268,9 @@ initState adjust asReload title = do
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
                   , asPropertyAsGradient = Nothing
+                  , asPropertyGlobal = False
                   , asShowSelected = True
-                  , asBoxOrder = BOByShelve
+                  , asBoxOrder = (BOByShelve, False)
                   , asSubmap = Nothing, asDisplayMainHelp = False
                   , asWarehouse = error "Warehouse not initialized"
                   , asTitle = title
@@ -456,6 +458,7 @@ keyBindingGroups =  groups
                                                                , mk 'd'(EToggleViewDetails) "view/hide box/history details"
                                                                , mk 'w' (EToggleCollapseDepth) "Display shelf depth as "
                                                                , mk 'p' (ETogglePropertyGradient) "color properties: random/gradient/gradient (full)"
+                                                               , mk 'P' (ETogglePropertyGlobal) "display properties for current run/all"
                                                                , mk 's' (EToggleShowSelected)     "highlight selected property"
                                                                ])
                                            ]
@@ -604,6 +607,9 @@ handleWH ev =
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
+         ETogglePropertyGlobal -> do 
+                                     modify \s -> s { asPropertyGlobal = not (asPropertyGlobal s) }
+                                     execute $ return ()
          EToggleShowSelected -> modify \s -> s { asShowSelected = not  (asShowSelected s) }
          --
          ENextRun -> modify \s -> resetBox $ runUpdated s { asCurrentRun = nextOf (asCurrentRun s) (asShelvesSummary s) }
@@ -640,7 +646,11 @@ handleWH ev =
                                    , asShowSelected = True
                                    }
                     -- handleWH ESelectCurrentPropValue
-         ESetBoxOrder boxOrder -> modify (setBoxOrder boxOrder)
+         ESetBoxOrder boxOrder -> modify \s -> let (oldOrder, oldRev) = asBoxOrder s 
+                                                   rev = if oldOrder == boxOrder
+                                                         then not oldRev
+                                                         else False
+                                               in setBoxOrder boxOrder rev s
          ESetProperty prop -> setProperty prop
          ESetBoxTitle "" -> do 
                                propm <- gets asProperty
@@ -905,9 +915,12 @@ prevRunThrough s@AppState{..} = let
                                  }
      else s { asCurrentRun = prev }
 
-setBoxOrder :: BoxOrder -> AppState -> AppState
-setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunPropValues=sorted,asBoxOrder=boxOrder,..} where
-  sorted = case boxOrder of
+setBoxOrder :: BoxOrder -> Bool -> AppState -> AppState
+setBoxOrder boxOrder rev_ state@AppState{..} = AppState{asCurrentRunPropValues=sorted, asBoxOrder=(boxOrder, rev_),..} where
+  sorted = (if rev_
+           then reverse
+           else id
+           )case boxOrder of
               BOByName -> sortOn fst asCurrentRunPropValues
               BOByVolume -> sortOn (Down . suVolume . snd) asCurrentRunPropValues
               BOByCount -> sortOn (Down . suCount . snd) asCurrentRunPropValues
@@ -920,6 +933,7 @@ setBoxOrder boxOrder state@AppState{..} = AppState{asCurrentRunPropValues=sorted
                                              , box <- sortOn boxOffset $ map zCurrentEx $ sDetailsList shelfSum
                                              ]
                   in sortOn (flip lookup style'shelf . fst) asCurrentRunPropValues
+  -- ^ reverse order when set the same boxordre twice
 -- * Find next shelf
 -- | Find next shelf containing the given style
 -- or highlighted run
@@ -979,8 +993,10 @@ findNextBox direction good state =
 -- * Post update
 -- | update the list of current styles
 runUpdated :: AppState -> AppState
-runUpdated state@AppState{..} = setBoxOrder asBoxOrder $ AppState{asCurrentRunPropValues=styles,..} where
-    styles = fromList $ Map.toList $ sPropValues (currentRun state)
+runUpdated state@AppState{..} = setBoxOrder (fst asBoxOrder) (snd asBoxOrder) $ AppState{asCurrentRunPropValues=styles,..} where
+    styles = if asPropertyGlobal
+             then fromList $ Map.toList $ sPropValues asShelvesSummary
+             else fromList $ Map.toList $ sPropValues (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
 runsSideBar state@AppState{..} = B.renderTable $ runsToTable (currentPropValue state) (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
@@ -998,7 +1014,8 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                            , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
                            , B.center $ B.str (show asAdjustedShelvesMode)
-                           , B.center $ B.str (show asBoxOrder)
+                           , B.center $ B.str $ (if snd asBoxOrder then "-" else "") <> show (fst asBoxOrder)
+                           , B.center $ B.str $ if asPropertyGlobal then "G" else ""
                            , B.center mode
                            , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
                            , if asNavigateWithPrevious then B.str "~" else B.emptyWidget
