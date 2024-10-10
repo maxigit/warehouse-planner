@@ -11,18 +11,20 @@ import Text.Printf (printf)
 
 data StickoutStatus = InShelf -- ^ box totally in shelf, no problem
                     | InMaxShelf -- ^ box within max dimension but stick out of min Dimension 
-                    | OutOfMaxShelf
+                    | OutOfMaxShelf Double -- ^ how much is sticking out
      deriving (Eq, Ord, Show)
      
      
      
 isBoxStickingOut :: Box s -> Shelf s -> StickoutStatus
 isBoxStickingOut box shelf =
-    if | affDimensionContains (fromShelf minDim) boxAff -> InShelf
-       | affDimensionContains (fromShelf maxDim) boxAff -> InMaxShelf
-       | otherwise -> OutOfMaxShelf 
+    if | stickout > 0 -> OutOfMaxShelf stickout
+       | hangout > 0 -> InMaxShelf
+       | otherwise -> InShelf
     where boxAff = boxAffDimension box
-          fromShelf d = AffDimension mempty (d shelf)
+          rightBox = aTopRight boxAff
+          stickout = maximumEx $ dimensionToList (rightBox <> invert (maxDim shelf))
+          hangout = maximumEx $ dimensionToList (rightBox <> invert (minDim shelf))
           
 -- | Computes the list of boxes overlapping with the given one
 boxOverlappWith :: Box s -> [Box s] -> [Box s]
@@ -47,7 +49,7 @@ tagBoxesStatus shelf = do
 tagBoxStatus :: Box s -> (StickoutStatus, [Box s]) -> WH () s
 tagBoxStatus box (status, overlappings) = do
   let tagOps = [ ("@stickout",  case status of
-                                     OutOfMaxShelf -> SetValues []
+                                     OutOfMaxShelf stickout -> SetValues [ pack $ printf "%03.0fcm" stickout]
                                      _ -> RemoveTag
                  )
                , ("@overhang", case status of
