@@ -477,7 +477,7 @@ keyBindingGroups =  groups
                                                                , mk 'o' (ESetProperty "${orientation}") "orientation"
                                                                , mk 'v' (ESetProperty "${volume}") "volume"
                                                                , mk 'O' (ESetProperty "$[@check]$[@overlap? O]") "Stickout check"
-                                                               , mK "C-o" (ESetProperty "$[@ovolume]") "overlapping volume"
+                                                               , mK "C-o" (ESetProperty "$[@ovol]") "overlapping volume"
                                                                , mk 'g' (ESetProperty "$[@ogroup]") "overlapping group"
                                                                ])
                                              ]

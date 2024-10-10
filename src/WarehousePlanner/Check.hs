@@ -59,7 +59,7 @@ tagBoxStatus box (status, overlappings) = do
                     , "@ogroup-" `isPrefixOf` tag
                     ]
                <> case overlappings of 
-                       [] -> map (,RemoveTag) ["@overlap", "@ogroup", "@ogroup-leader", "@overlapping", "@ovolume"]
+                       [] -> map (,RemoveTag) ["@overlap", "@ogroup", "@ogroup-leader", "@overlapping", "@ovolume", "@ovol"]
                        _ -> let ids@(base:_) = map (tshow . boxId) allboxes
                                 allboxes = sort (box : overlappings)
                                 box'dims = [ (b, dimM )
@@ -76,6 +76,7 @@ tagBoxStatus box (status, overlappings) = do
                                -- includes current box so that the group is the same for all boxes in the same group
                                : ("@overlapping", SetValues $ map (\b -> tshow b <> boxPositionSpec  b) overlappings)
                                : ("@ovolume", SetValues [pack $ printf "%09f" vol ])
+                               : ("@ovol", SetValues [pack $ printf "%02.0f%%" (100 * (vol / boxVolume box)) ])
                                : [ ("@ogroup-" <> drop 1 (tshow bid)
                                    , SetValues $ maybe [] (pure . printDim) dimM
                                    )
