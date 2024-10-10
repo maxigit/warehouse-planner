@@ -13,6 +13,7 @@ import WarehousePlanner.Brick.Types
 import Graphics.Vty.Input.Events qualified as V
 import Data.Text.Zipper (gotoEOL, insertMany, clearZipper)
 import Data.List qualified as List
+import WarehousePlanner.Brick.Util(bold_)
 
                    
                    
@@ -21,7 +22,7 @@ selectInput imode initial = Input ed imode initial where
   ed = applyEdit gotoEOL $ editorText "input" (Just 1) (idInitial initial)
 
 renderInput :: Input -> Widget Resource
-renderInput Input{..} = mode <+> ed where
+renderInput Input{..} = help <=> (mode <+> ed) where
   mode = case iMode of
           ISelectBoxes -> str "/"
           ISelectShelves -> str "?"
@@ -29,6 +30,14 @@ renderInput Input{..} = mode <+> ed where
           ISelectTag -> str "#"
   ed = renderEditor renderLines True iEditor
   renderLines  = hBox . map txt 
+  help = vBox $ [ str "bo" <+> hl "X" <+> str "sel. "
+                , str "c" <+> hl "O" <+> str "ntent "
+                , str "p" <+> hl "R" <+> str "op value "
+                , str "" <+> hl "S" <+> str "helf "
+                , str "she" <+> hl "L" <+> str "f sel "
+                , str "st" <+> hl "Y" <+> str "le "
+                ]
+  hl = withAttr bold_ . str
 
 
 handleInputEvent ::  BrickEvent Resource e -> EventM Resource Input (Either (Maybe Text) Input)
