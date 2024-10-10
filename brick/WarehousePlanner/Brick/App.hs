@@ -335,7 +335,7 @@ whApp extraAttrs =
                   , vBoxB [ mainRun
                            , let chunk = if asDisplayDetails
                                          then 40
-                                         else 13
+                                         else 16
                              in B.vLimit chunk $ hBoxB (debugShelf s :  (pure . boxDetail (\_ _ -> chunk) asWarehouse (asHistoryRange s)) (currentBoxHistory s))
                            , main
                            , maybe (renderStatus s) renderInput asInput
@@ -1029,28 +1029,45 @@ renderStatus state@AppState{..} = let
 debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
   ssum = currentShelf state
+  sumTable =  B.alignRight 3
+           $  B.alignRight 4
+           $  B.alignRight 5
+           $ B.rowBorders False
+           -- $ B.columnBorders False
+           $ B.surroundingBorder False
+           $ B.table [  [  B.str (show m)
+                        , B.txt ( sName ssum) B.<+> B.str " " B.<+> renderS m ssum
+                        , B.str $ printf "%02.0f%%" (r  * 100)
+                        -- , B.str $ show ( fromSummary m $ sBoxSummary ssum) <> "/"
+                        --         <> show ( fromSummary m $ sShelvesSummary ssum)
+                        , attrR . B.str . format m $ fromSummary m $ sBoxSummary ssum
+                        , B.str . format m $ fromSummary m $ sShelvesSummary ssum
+                        -- , B.str "diff"
+                        , attrR . B.str . format m $ fromSummary m (sShelvesSummary ssum) - fromSummary m (sBoxSummary ssum)
+                        ]
+                     | m <- [minBound .. maxBound ]
+                     , let r = ratio (fromSummary m) ssum
+                     , let attrR = B.withDefAttr $ percToAttrName r 0
+                     ]
+  cm r = printf "%.1fcm" r
+  m2 r = printf "%.2fm2" (r * 1e-4)
+  m3 r = printf "%.2fm3" (r * 1e-6)
+  format m = case m of 
+                 SVVolume -> m3
+                 SVMaxLength -> cm
+                 SVMaxWidth -> cm
+                 SVMaxHeight -> cm
+                 _ -> m2
   in B.vBox $
      if -- | ViewSummary SVSurfaceLH <- asViewMode state 
         -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
         | ViewSummary sview <- asViewMode state 
         , not (asDisplayHistory state || asDisplayDetails state)
         -> renderHorizontalSummary (B.padTop B.Max . bayToBars sview) (currentRun state)  :
-           [  B.hBox $ intersperse (B.str " ") 
-                     $ [  B.str (show m)
-                       , B.txt $ sName ssum
-                       , renderS m ssum
-                       , B.str $ printf "%02.0f%%" (ratio(fromSummary m) ssum * 100)
-                       , B.txt "shelf" 
-                       , B.str . show $ suCount $ sShelvesSummary ssum
-                       , B.str . show $ fromSummary m $ sShelvesSummary ssum
-                       , B.txt "box" 
-                       , B.str . show $ suCount $ sBoxSummary ssum
-                       , B.str . show $ fromSummary m $ sBoxSummary ssum
-                       , B.str "diff"
-                       , B.str . show $ fromSummary m (sShelvesSummary ssum) - fromSummary m (sBoxSummary ssum)
-                       ]
-          | m <- [minBound .. maxBound ]
-          ]
+           ( B.str $ "Boxes: " <> show ( suCount $ sBoxSummary ssum) <> " Shelves:"
+                                   <> show ( suCount $ sShelvesSummary ssum)
+           ) :
+           [ B.renderTable sumTable ]
         | otherwise 
         -> let boxMap = computeBoxDiffHistoryFrom  $ currentBoxHistory state
            in if asDebugShowDiffs  state
