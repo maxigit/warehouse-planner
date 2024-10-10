@@ -1040,15 +1040,24 @@ debugShelf state = let
                         , B.str $ printf "%02.0f%%" (r  * 100)
                         -- , B.str $ show ( fromSummary m $ sBoxSummary ssum) <> "/"
                         --         <> show ( fromSummary m $ sShelvesSummary ssum)
-                        , attrR . B.str . show $ fromSummary m $ sBoxSummary ssum
-                        , B.str . show $ fromSummary m $ sShelvesSummary ssum
+                        , attrR . B.str . format m $ fromSummary m $ sBoxSummary ssum
+                        , B.str . format m $ fromSummary m $ sShelvesSummary ssum
                         -- , B.str "diff"
-                        , attrR . B.str . show $ fromSummary m (sShelvesSummary ssum) - fromSummary m (sBoxSummary ssum)
+                        , attrR . B.str . format m $ fromSummary m (sShelvesSummary ssum) - fromSummary m (sBoxSummary ssum)
                         ]
                      | m <- [minBound .. maxBound ]
                      , let r = ratio (fromSummary m) ssum
                      , let attrR = B.withDefAttr $ percToAttrName r 0
                      ]
+  cm r = printf "%.1fcm" r
+  m2 r = printf "%.2fm2" (r * 1e-4)
+  m3 r = printf "%.2fm3" (r * 1e-6)
+  format m = case m of 
+                 SVVolume -> m3
+                 SVMaxLength -> cm
+                 SVMaxWidth -> cm
+                 SVMaxHeight -> cm
+                 _ -> m2
   in B.vBox $
      if -- | ViewSummary SVSurfaceLH <- asViewMode state 
         -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
