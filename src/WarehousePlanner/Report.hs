@@ -288,27 +288,41 @@ _unused_seqFilterM test s = fmap Seq.fromList (filterM test (toList s))
 shelvesReport :: WH [Text] s
 shelvesReport = do
   ss <- toList <$> gets shelves >>= mapM findShelf
+  shelvesReportFor ss
+  
+shelvesReportFor :: [Shelf s] -> WH [Text] s
+shelvesReportFor ss = do
   let sorted = sortOn shelfRank ss
       shelfRank shelf = fromMaybe (shelfName shelf) $ getTagValuem shelf "@key"
   ls <- mapM  report_ sorted
 
-  return $ ("name,comment,length,width,height,depthLeft,usedRatio,bottom,top") : ls
+  return $ ("name,tags,comment,length,width,height,usedLenght,usedWidth,usedHeight,usedRatio,packingEff,bottom,top") : ls
 
   where report_ :: Shelf s -> WH Text s
         report_ shelf = do
           let (Dimension l w h) = minDim shelf
-          (name, depth) <- usedDepth shelf
-          let left = w - depth
-
-          -- find max depth
-          return $ pack $ printf "%s,%s,%0.2f,%0.2f,%0.2f,%0.2f,%.0f%%,%0.2f,%0.2f\n"
-                    (shelfNameTag shelf)
-                    (pack $ printf "%s (%0.2f)" name depth :: Text)
-                    l w h
-                    left
-                    (depth/w*100)
-                    (bottomOffset shelf)
-                    (bottomOffset shelf + dHeight (maxDim shelf))
+          boxes <- findBoxByShelf shelf
+          let Summary{..} = makeBoxesSummary boxes
+          let ratio x y = pack $ printf "%0.2f%%" $ x / y * 100
+              shelfVolume = l * w * h
+              used = ratio suVolume shelfVolume 
+              vefficiency = ratio suVolume (suMaxLength * suMaxWidth * suMaxHeight)
+              styles = Set.fromList $ map boxStyle boxes
+          return $ intercalate "," $
+                 [ (shelfName shelf)
+                 , intercalate "#" (flattenTags (shelfTag shelf))
+                 , intercalate ";" (toList styles)
+                 ] <> map tshow
+                 [ l,  w,  h
+                 , suMaxLength, suMaxWidth, suMaxHeight
+                 , (l - suMaxLength), (w - suMaxWidth), (h - suMaxHeight)
+                 , (bottomOffset shelf)
+                 , (bottomOffset shelf + dHeight (maxDim shelf))
+                 ] <>
+                 [ (ratio l suMaxLength), (ratio w suMaxWidth), (ratio h suMaxHeight)
+                 , used
+                 , vefficiency
+                 ]
 
 
 -- returns the lis
