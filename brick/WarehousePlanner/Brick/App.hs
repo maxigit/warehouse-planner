@@ -82,6 +82,7 @@ data WHEvent = ENextMode
              | EPrevHLRun
              -- 
              | ERenderRun
+             | ERenderAllRuns
              --
              | EHistoryEvent HistoryEvent
              | EToggleHistoryNavigation
@@ -399,6 +400,7 @@ keyBindingGroups =  groups
   where  groups = [ (Nothing , [("Main",                       [ mk 'm' ENextMode "next summary view mode"
                                                                , mk 'M' EPrevMode "previous summary view mode"
                                                                , mk 'V' ERenderRun "visualize current run (jpg)"
+                                                               , mK "c-v" ERenderAllRuns "visualize current run (jpg)"
                                                                , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
                                                                , mK "q C-c" (EQuit) "Quit"
                                                                , mK "C-r" (EReload) "Reload"
@@ -679,6 +681,7 @@ handleWH ev =
                                             Nothing -> s
                                             Just style -> findPrevHLRun style s
          ERenderRun -> get >>= liftIO . drawCurrentRun
+         ERenderAllRuns -> get >>= liftIO . drawAllRuns
          EHistoryEvent ev -> navigateHistory ev >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
@@ -987,6 +990,22 @@ drawCurrentRun app  = do
               (mkSizeSpec2D Nothing (Just 800))
               diag
   void $ rawSystem "xdg-open" [filePath]
+  
+drawAllRuns :: AppState -> IO ()
+drawAllRuns app = do
+  let wh = asWarehouse app
+  diags <- execWH wh do
+       runs <- gets shelfGroup 
+       mapM (D.renderRun (shelfStyling wh) (boxStyling wh)) runs
+  files <- forM (zip (toList diags) [0..]) \(diag, i) -> do
+       let filePath = "/tmp/whp-" <> asTitle app <> "-" <> show i <> ".png"
+       renderCairo filePath
+                   (mkSizeSpec2D Nothing (Just 800))
+                   diag
+       return filePath
+  void $ rawSystem "xdg-open" files
+
+
   
 -- * Find  nex Box
 findNextBox :: SearchDirection -> (Box RealWorld  -> Bool) -> AppState -> (AppState, Maybe (Box RealWorld))
