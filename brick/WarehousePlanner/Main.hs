@@ -265,7 +265,7 @@ extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM
     tamM = flip fmap oTagsAndMoves \tam -> [ ":Tags and Moves:" , "stock_id,tam" , tam , ":END:" ]
     checkM = if oNoCheck
              then Nothing
-             else Just [ ":CHECK_SHELVES:", "shelves", "*", ":END:" ]
+             else Just [ ":CHECK_SHELVES:", "shelves", "#@check=-skip", ":END:" ]
                                  
 
 
