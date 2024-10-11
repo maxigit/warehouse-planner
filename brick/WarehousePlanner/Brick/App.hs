@@ -10,7 +10,7 @@ import WarehousePlanner.Type
 import WarehousePlanner.Move
 import WarehousePlanner.Summary as S
 import WarehousePlanner.History
-import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector)
+import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, matchName)
 import WarehousePlanner.Base
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
@@ -109,6 +109,7 @@ data WHEvent = ENextMode
              | EYankBestAvailableShelfFor EditMode
              | EYankBestShelfFor EditMode
              | EYankBestBoxesFor EditMode
+             | EYankSelectedShelves EditMode
 
      deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
@@ -526,6 +527,7 @@ keyBindingGroups =  groups
                  ,('a', EYankBestAvailableShelfFor, "best available shelf")
                  ,('S', EYankBestShelfFor, "best available shelf")
                  ,('B', EYankBestBoxesFor, "best available boxes")
+                 ,('?', EYankSelectedShelves, "Shelf selection")
                  ]
 flattenSections :: [(Text, [a])] -> [a]
 flattenSections = concatMap snd
@@ -758,6 +760,21 @@ handleWH ev =
                  Just box -> do
                       text <- execute $ Report.bestShelvesFor ("!" <> boxStyle box)
                       yankOrEdit mode (Just ".txt") (unlines text)
+         EYankSelectedShelves mode -> do
+            state <- get
+            text <- execute do
+                shelves <- case asShelfSelection state of
+                              Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
+                              Nothing ->  do
+                                 let run = currentRun state
+                                     selectors = [  Selector (matchName (sName shelf)) []
+                                                 | bay <- sDetailsList run
+                                                 , shelf <- sDetailsList bay
+                                                 ]
+                                 ids <- concat <$> mapM  findShelfBySelector selectors
+                                 mapM findShelf ids
+                Report.shelvesReportFor shelves
+            yankOrEdit mode (Just ".csv") (unlines text)
 
 
                     

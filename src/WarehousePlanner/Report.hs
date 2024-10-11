@@ -11,6 +11,7 @@ module WarehousePlanner.Report
 , bestAvailableShelvesFor
 , bestHeightForShelf
 , shelvesReport
+, shelvesReportFor
 , shelfTagsReport
 , boxesReport
 , groupShelvesReport
@@ -296,20 +297,23 @@ shelvesReportFor ss = do
       shelfRank shelf = fromMaybe (shelfName shelf) $ getTagValuem shelf "@key"
   ls <- mapM  report_ sorted
 
-  return $ ("name,tags,comment,length,width,height,usedLenght,usedWidth,usedHeight,usedRatio,packingEff,bottom,top") : ls
+  return $ ("name,tags,comment,length,width,height,usedLenght,usedWidth,usedHeight,leftLength,leftWidt,leftHeight,bottom,top" <>
+            ",lengthRatio,widthRatio,heightRatio,boxVolume,usedVolume,packingEfficiency"
+           ) : ls
 
   where report_ :: Shelf s -> WH Text s
         report_ shelf = do
           let (Dimension l w h) = minDim shelf
           boxes <- findBoxByShelf shelf
           let Summary{..} = makeBoxesSummary boxes
-          let ratio x y = pack $ printf "%0.2f%%" $ x / y * 100
+          let ratio 0 0 = pack $ "100.00%"
+              ratio x y = pack $ printf "%0.2f%%" $ x / y * 100
               shelfVolume = l * w * h
               used = ratio suVolume shelfVolume 
               vefficiency = ratio suVolume (suMaxLength * suMaxWidth * suMaxHeight)
               styles = Set.fromList $ map boxStyle boxes
           return $ intercalate "," $
-                 [ (shelfName shelf)
+                 [ (shelfName shelf) -- name
                  , intercalate "#" (flattenTags (shelfTag shelf))
                  , intercalate ";" (toList styles)
                  ] <> map tshow
@@ -319,7 +323,8 @@ shelvesReportFor ss = do
                  , (bottomOffset shelf)
                  , (bottomOffset shelf + dHeight (maxDim shelf))
                  ] <>
-                 [ (ratio l suMaxLength), (ratio w suMaxWidth), (ratio h suMaxHeight)
+                 [ (ratio suMaxLength l), (ratio suMaxWidth w), (ratio suMaxHeight h)
+                 , tshow suVolume
                  , used
                  , vefficiency
                  ]
