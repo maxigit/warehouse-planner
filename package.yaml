@@ -92,7 +92,9 @@ library:
 tests:
   test:
     main: Spec.hs
-    source-dirs: test
+    source-dirs:
+    - test
+    - src
     ghc-options:
     - -w
     - -threaded
@@ -100,7 +102,6 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hspec >=2.0.0
-    - warehouse-planner
  
 executables:
   whp:

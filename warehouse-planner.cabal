@@ -203,9 +203,40 @@ test-suite test
       Planner.WarehouseSpec
       Planner.WPL.ExecSpec
       Planner.WPL.ParserSpec
+      WarehousePlanner.Affine
+      WarehousePlanner.Base
+      WarehousePlanner.Check
+      WarehousePlanner.Csv
+      WarehousePlanner.Display
+      WarehousePlanner.Exec
+      WarehousePlanner.Expr
+      WarehousePlanner.History
+      WarehousePlanner.History.Types
+      WarehousePlanner.Move
+      WarehousePlanner.Optimum
+      WarehousePlanner.Org
+      WarehousePlanner.Org.Exec
+      WarehousePlanner.Org.Internal
+      WarehousePlanner.Org.Types
+      WarehousePlanner.Rearrange
+      WarehousePlanner.Repl
+      WarehousePlanner.Report
+      WarehousePlanner.Selector
+      WarehousePlanner.ShelfOp
+      WarehousePlanner.SimilarBy
+      WarehousePlanner.Slices
+      WarehousePlanner.Styling
+      WarehousePlanner.Summary
+      WarehousePlanner.Tiling
+      WarehousePlanner.Type
+      WarehousePlanner.WPL.ExContext
+      WarehousePlanner.WPL.Exec
+      WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.Types
       Paths_warehouse_planner
   hs-source-dirs:
       test
+      src
   default-extensions:
       BlockArguments
       FlexibleInstances
@@ -252,7 +283,6 @@ test-suite test
     , text
     , time
     , vector
-    , warehouse-planner
   default-language: GHC2021
   if flag(brick)
     build-depends:

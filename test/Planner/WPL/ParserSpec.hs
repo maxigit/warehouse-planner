@@ -8,6 +8,7 @@ import WarehousePlanner.WPL.Types
 import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, parseSelector)
 import WarehousePlanner.Type
 import Text.Megaparsec qualified as P
+import Text.Megaparsec.Debug qualified as P
 import GHC.Exts -- to write maybe as list
 import Data.Char (isUpper)
 import Data.Either (isLeft, isRight)
@@ -35,10 +36,15 @@ parseAs :: Text -> Statement -> IO ()
 -- parseAs txt result = P.parse wplParser "test" txt `shouldBe` Right [result]
 parseAs txt result = do
         -- P.parseTest wplParser ("\n" <> txt)
-        parse txt `shouldBe` Right [result]
+        parse txt `shouldParse` [result]
 
 parseAs' :: [Text] -> Statement -> IO ()
-parseAs' txts stmt = parse' txts `shouldBe` Right [stmt]
+parseAs' txts stmt = parse' txts `shouldParse` [stmt]
+
+shouldParse actual expected = case actual of
+           Right act | act == expected -> return ()
+           Right act -> act `shouldBe` expected
+           Left e -> expectationFailure $ P.errorBundlePretty e
 
 sameAs' :: [Text ] -> [Text] -> IO ()
 sameAs' xs ys = do
@@ -49,7 +55,9 @@ sameAs' xs ys = do
   where parse desc ts = P.parse wplParser desc (intercalate "\n" ts) 
 
 parse :: Text -> Either _ [Statement]
+-- parse = P.parse (P.dbg "WPL" wplParser) "test"
 parse = P.parse wplParser "test"
+
 parse' :: [Text] -> Either _ [Statement]
 parse' = parse . unlines
 -- * shortcut
@@ -60,7 +68,7 @@ sb = SelectBoxes
 
 -- * Spec
 pureSpec :: Spec
-pureSpec = fdescribe "Parsing" do
+pureSpec = describe "Parsing" do
    it "parses boxes selections" do
       "BOXES" `parseAs` "BOXES"
    it "parses shelves sections" do
@@ -71,12 +79,13 @@ pureSpec = fdescribe "Parsing" do
       "with BOXES" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "BOXES")
    it "parses simple move" do
       "BOXES to SHELF" `parseAs` ("BOXES" `Then` (m "SHELF"))
-   xit "parses oneliner case" do
-      "BOXES | A | B" `parseAs` ("BOXES" `Then` (Cases [ Case "A" []
-                                                                            , Case "B" []
-                                                                            ]))
-   it "parses cases with initial break" do
-      --  123456789
+   it "parses oneliner case" do
+      "BOXES | A | B" `parseAs` ("BOXES" `Then`
+                                          (Cases [ Case "A" [Cases [Case "B" []]]]
+                                          )
+                                )
+   it "parses cases with initial break (bigger)" do
+      --  12345678901234
       [  "BOXES"
        , "      | A to S1"
        , "      | B to S2"
@@ -85,7 +94,7 @@ pureSpec = fdescribe "Parsing" do
                                  , "B" `Case` [m "S2"]
                                  ]
                    )
-   it "parses cases with initial break" do
+   it "parses cases with initial break (smaller)" do
       --  123456789
       [  "BOXES"
        , "  | A to S1"
@@ -105,6 +114,7 @@ pureSpec = fdescribe "Parsing" do
                    )
 
    it "parses cases with nested indentation" do
+      --  12345678901234
       [  "BOXES | A | to S1"
        , "          | to S2"
        , "      | B to S2"
@@ -113,8 +123,7 @@ pureSpec = fdescribe "Parsing" do
                                       [Cases [ m "S1" `Case` []
                                              , m "S2" `Case` []
                                              ]
-                                      ]
-                                 , "B" `Case` [m "S2"]
+                                      ] , "B" `Case` [m "S2"]
                                  ]
                    )
    it "parses with more nested cases " do
@@ -136,17 +145,89 @@ pureSpec = fdescribe "Parsing" do
                                  ]
                    )
    it "parses ors with nested indentation" do
+      -- ((BOXES  (A to S1)
+      --            to S2)
+      --          B to S2)
       [  "BOXES  A to S1"
        , "         to S2"
        , "       B to S2"
-       ] `parseAs'` ("BOXES" `Then`
-                           Ors [ "A" `Then`
-                                      Ors [ m "S1"
-                                          , m "S2"
-                                          ]
-                               , "B" `Then` m "S2"
-                               ]
-                   )
+       ] `parseAs'`  Then (Then ("BOXES" `Then` ("A" `Then`  m "S1")) -- first line
+                                ( m "S2" )                                  -- second block
+                          )
+                          ("B" `Then` m "S2")
+       --                     Ors [ "A" `Then`
+       --                                Ors [ m "S1"
+       --                                    , m "S2"
+       --                                    ]
+       --                         , "B" `Then` m "S2"
+       --                         ]
+   context "new" do
+            it "atom" do
+               ["A" ] `parseAs'` "A"
+            it "atom" do
+               "A" `parseAs` "A"
+               "A  " `parseAs` "A"
+            it "parses naked cases" do
+               [ "| A"
+                ,"| B"
+                ] `parseAs'` Cases [ Case "A" []
+                                   , Case "B" []
+                                   ]
+            it "parses cases without spaces" do
+               [ "|A"
+                ] `parseAs'` Cases [ Case "A" []
+                                   ]
+            it "parse mix of cases" do
+               parse' [ "A"
+                ,"|B"
+                ,"|C"
+                ,"D"
+                ] `shouldParse` [ "A"
+                                 , Cases [ Case "B" []
+                                         , Case "C" []
+                                         ]
+                                 , "D"
+                                 ]
+            context "then" do
+               it "single line" do
+                 "A B" `parseAs`  Then "A" "B"
+               it "broke line" do
+                 [ "A "
+                  ," B"
+                  ] `parseAs'` Then "A" "B"
+               context "with ors" do
+                       it "1" do
+                         [ "A B C"
+                          ," D"
+                          ] `parseAs'` Then ("A" `Then` ("B" `Then` "C"))
+                                            "D"
+                       it "2" do
+                         [ "A"
+                          ,"    B"
+                          ,"    C"
+                          ] `parseAs'` Then "A" ( Ors [ "B"
+                                                      , "C"
+                                                      ]
+                                                )
+                       it "3" do
+                         [ "A"
+                          ,"  B"
+                          ,"    C"
+                          ,"  D"
+                          ] `parseAs'` Then (Then (Then "A"
+                                                        "B")
+                                                  "C")
+                                            "D"
+                       it "4" do
+                         [ "Axxxxx "
+                          ,"     B"
+                          ,"  C"
+                          ,"  D"
+                           ] `parseAs'` Then (Then "Axxxxx"
+                                                   "B")
+                                             (Ors ["C", "D"])
+                 
+
    it "parses TAM with location" $ do
       "tam loc" `parseAs` Action (TagAndMove "loc" [])
    it "parses TAM with tag" do
