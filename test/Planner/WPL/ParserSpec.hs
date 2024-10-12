@@ -9,6 +9,7 @@ import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, parseSel
 import WarehousePlanner.Type
 import Text.Megaparsec qualified as P
 import GHC.Exts -- to write maybe as list
+import Data.Char (isUpper)
 
 instance IsString BoxSelector where fromString = parseBoxSelector . pack 
 -- instance IsString ShelfSelector where fromString = ShelfSelector SelectAnything . parseSelector . pack
@@ -16,6 +17,10 @@ instance IsString ShelfSelector where fromString = parseShelfSelector . pack . (
 
 instance IsString (CSelector ShelfSelector) where fromString = CSelector . fromString
 instance IsString (CSelector BoxSelector) where fromString = CSelector . fromString
+
+instance IsString Statement where
+   fromString s@(c:_) | isUpper c || c `elem` ("/#*" :: String) = Action . SelectBoxes $ fromString s
+   fromString s = error $ s <> " should start with an uppercase"
 
 instance IsList (Maybe a) where
      type Item (Maybe a) = a
@@ -34,39 +39,46 @@ parseAs txt result = do
 parseAs' :: [Text] -> Statement -> IO ()
 parseAs' txts stmt = parseAs (intercalate "\n" txts) stmt
 
+-- * shortcut
+a = Action
+m = Action . Move Nothing Nothing []
+ss = SelectShelves . CSelector . parseShelfSelector
+sb = SelectBoxes
+
+-- * Spec
 pureSpec :: Spec
 pureSpec = describe "Parsing" do
    it "parses boxes selections" do
-      "BOXES" `parseAs` Action (SelectBoxes "BOXES")
+      "BOXES" `parseAs` "BOXES"
    it "parses shelves sections" do
       "/SHELF" `parseAs` Action (SelectShelves "SHELF")
    it "parses boxes in shelves sections" do
-      "in SHELF" `parseAs` Action (SelectBoxes "/SHELF")
+      "in SHELF" `parseAs` "/SHELF"
    it "parses shelves containing boxes sections" do
       "with BOXES" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "BOXES")
    it "parses simple move" do
-      "BOXES to SHELF" `parseAs` (Action (SelectBoxes "BOXES") `Then` (Action (Move Nothing Nothing [] "SHELF")))
+      "BOXES to SHELF" `parseAs` ("BOXES" `Then` (m "SHELF"))
    xit "parses oneliner case" do
-      "BOXES | A | B" `parseAs` (Action (SelectBoxes "BOXES") `Then` (Cases [ Case (Action (SelectBoxes "A")) []
-                                                                            , Case (Action (SelectBoxes "B")) []
+      "BOXES | A | B" `parseAs` ("BOXES" `Then` (Cases [ Case "A" []
+                                                                            , Case "B" []
                                                                             ]))
    it "parses cases with initial break" do
       --  123456789
       [  "BOXES"
-       ,  "      | A to S1"
+       , "      | A to S1"
        , "      | B to S2"
-       ] `parseAs'` (Action (SelectBoxes "BOXES") `Then`
-                           Cases [ Action (SelectBoxes "A") `Case` [Action (Move Nothing Nothing [] "S1")]
-                                 , Action (SelectBoxes "B") `Case` [Action (Move Nothing Nothing [] "S2")]
+       ] `parseAs'` ("BOXES" `Then`
+                           Cases [ "A" `Case` [m "S1"]
+                                 , "B" `Case` [m "S2"]
                                  ]
                    )
    it "parses cases with basic indentation" do
       --  123456789
       [  "BOXES | A to S1"
        , "      | B to S2"
-       ] `parseAs'` (Action (SelectBoxes "BOXES") `Then`
-                           Cases [ Action (SelectBoxes "A") `Case` [Action (Move Nothing Nothing [] "S1")]
-                                 , Action (SelectBoxes "B") `Case` [Action (Move Nothing Nothing [] "S2")]
+       ] `parseAs'` ("BOXES" `Then`
+                           Cases [ "A" `Case` [m "S1"]
+                                 , "B" `Case` [m "S2"]
                                  ]
                    )
 
@@ -74,13 +86,13 @@ pureSpec = describe "Parsing" do
       [  "BOXES | A | to S1"
        , "          | to S2"
        , "      | B to S2"
-       ] `parseAs'` (Action (SelectBoxes "BOXES") `Then`
-                           Cases [ Action (SelectBoxes "A") `Case`
-                                      [Cases [ Action (Move Nothing Nothing [] "S1") `Case` []
-                                             , Action (Move Nothing Nothing [] "S2") `Case` []
+       ] `parseAs'` ("BOXES" `Then`
+                           Cases [ "A" `Case`
+                                      [Cases [ m "S1" `Case` []
+                                             , m "S2" `Case` []
                                              ]
                                       ]
-                                 , Action (SelectBoxes "B") `Case` [Action (Move Nothing Nothing [] "S2")]
+                                 , "B" `Case` [m "S2"]
                                  ]
                    )
    it "parses with more nested cases " do
@@ -88,29 +100,29 @@ pureSpec = describe "Parsing" do
        , "                  | Y    "
        , "          | to S2    "
        , "      | B to S2"
-       ] `parseAs'` (Action (SelectBoxes "BOXES") `Then`
-                           Cases [ Action (SelectBoxes "A") `Case`
-                                      [ Cases [ Action (Move Nothing Nothing [] "S1") `Case`
-                                                                             [ Cases [ Action (Move Nothing Nothing [] "X") `Case` []
-                                                                                     , Action (SelectBoxes "Y") `Case` [] 
+       ] `parseAs'` ("BOXES" `Then`
+                           Cases [ "A" `Case`
+                                      [ Cases [ m "S1" `Case`
+                                                                             [ Cases [ m "X" `Case` []
+                                                                                     , "Y" `Case` [] 
                                                                                      ]
                                                                              ]
-                                              , Action (Move Nothing Nothing [] "S2") `Case` []
+                                              , m "S2" `Case` []
                                               ]
                                       ]
-                                 , Action (SelectBoxes "B") `Case` [ Action (Move Nothing Nothing [] "S2")]
+                                 , "B" `Case` [ m "S2"]
                                  ]
                    )
    it "parses ors with nested indentation" do
       [  "BOXES  A to S1"
        , "         to S2"
        , "       B to S2"
-       ] `parseAs'` (Action (SelectBoxes "BOXES") `Then`
-                           Ors [ Action (SelectBoxes "A") `Then`
-                                      Ors [ Action (Move Nothing Nothing [] "S1")
-                                             , Action (Move Nothing Nothing [] "S2")
+       ] `parseAs'` ("BOXES" `Then`
+                           Ors [ "A" `Then`
+                                      Ors [ m "S1"
+                                          , m "S2"
                                           ]
-                               , Action (SelectBoxes "B") `Then` Action (Move Nothing Nothing [] "S2")
+                               , "B" `Then` m "S2"
                                ]
                    )
    it "parses TAM with location" $ do
