@@ -10,6 +10,7 @@ module WarehousePlanner.SimilarBy
 , dropSimilar
 , splitSimilar
 , unsplitSimilar
+, mapSimilarKey
 )
 where
 import Prelude
@@ -70,3 +71,6 @@ groupSimilars key =
   . Map.fromListWith (<>)
   . map (\s -> (similarKey s, [s]))
   . groupSimilar key 
+  
+mapSimilarKey :: (k -> l) -> SimilarBy k a -> SimilarBy l a
+mapSimilarKey f (SimilarByPrivate k x xs) = SimilarByPrivate (f k) x xs

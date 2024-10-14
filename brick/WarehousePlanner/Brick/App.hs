@@ -39,6 +39,9 @@ import Diagrams (mkSizeSpec2D)
 import System.Process (rawSystem)
 import Data.Set qualified as Set
 import Text.Printf
+import Data.Text(splitOn)
+import Data.Csv qualified as Csv
+import Data.ByteString.Lazy qualified as BL
 -- import System.Clipboard(setClipboardString)
 
 type WHApp = B.App AppState WHEvent Resource
@@ -747,23 +750,38 @@ handleWH ev =
             yankOrEdit mode (Just "-content.csv") (unlines text)
          EYankBestAvailableShelfFor mode -> do
             boxm <- gets currentBox
-            shelfs <- gets asShelfSelection
+            AppState{..} <- get
             case boxm of 
                  Nothing -> return ()
-                 Just box -> do
-                      text <- execute $ Report.bestAvailableShelvesFor PBestEffort ("!" <> boxStyle box <> maybe "" (("/" <>) . sText) shelfs)
-                      yankOrEdit mode (Just "best-available-shelf.txt") (unlines text)
+                 Just boxId -> do
+                      records <- execute $ do
+                          boxes <- do 
+                              box <- findBox boxId 
+                              findBoxByNameSelector (matchName $ boxStyle box)
+                          shelves_ <- case asShelfSelection of
+                                       Nothing ->  toList <$> gets shelves  >>= mapM findShelf
+                                       Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
+                          Report.bestFitReport  True boxes shelves_
+                      yankOrEditCsv mode (Just "-best-avail-shelf.csv") records
          EYankBestBoxesFor mode -> do
             shelf <- gets currentShelf
             text <- execute $ Report.bestBoxesFor ("!" <> sName shelf)
             yankOrEdit mode (Just "-best-boxes.txt") (unlines text)
          EYankBestShelfFor mode -> do
             boxm <- gets currentBox
+            AppState{..} <- get
             case boxm of 
                  Nothing -> return ()
-                 Just box -> do
-                      text <- execute $ Report.bestShelvesFor ("!" <> boxStyle box)
-                      yankOrEdit mode (Just "-best-shelf.txt") (unlines text)
+                 Just boxId -> do
+                      records <- execute $ do
+                          boxes <- do 
+                              box <- findBox boxId 
+                              findBoxByNameSelector (matchName $ boxStyle box)
+                          shelves_ <- case asShelfSelection of
+                                       Nothing ->  toList <$> gets shelves  >>= mapM findShelf
+                                       Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
+                          Report.bestFitReport  False boxes shelves_
+                      yankOrEditCsv mode (Just "-best-shelf.csv") records
          EYankSelectedShelves mode -> do
             state <- get
             text <- execute do
@@ -1244,8 +1262,9 @@ data EditMode = UseVim
 yankOrEdit :: EditMode -> (Maybe Text) -> Text -> B.EventM Resource AppState ()
 yankOrEdit mode extm text = do
    let filePath = "/tmp/whp-text" <> (unpack @Text $ fromMaybe "" extm)
-       console cmd args = B.suspendAndResume' $ rawSystem cmd args
    writeFileUtf8 filePath text
+   yankOrEditCommand mode filePath
+yankOrEditCommand mode filePath  =
    void $ case mode of 
              Yank -> liftIO $ rawSystem  "xclip" ["-i", "-selection", "clipboard", filePath]
              UseVd -> console  "vd" [filePath]
@@ -1253,3 +1272,29 @@ yankOrEdit mode extm text = do
              UseOpen -> liftIO $ rawSystem  "xdg-open" [filePath]
              UseVim -> console "vim" [filePath]
              UseGvim -> liftIO $ rawSystem "gvim" [filePath]
+   where console cmd args = B.suspendAndResume' $ rawSystem cmd args
+
+yankOrEditCsv ::  EditMode -> (Maybe Text) -> [Map Text Text] -> B.EventM Resource AppState ()
+yankOrEditCsv mode extm records = do
+   let filePath = "/tmp/whp-text" <> (unpack @Text $ fromMaybe "" extm)
+       bs = case records of
+                [] -> ""
+                (r:_) -> let 
+                     keys = Map.keys r
+                     toLists r = [ findWithDefault "" k r
+                                 | k <- keys
+                                 ]
+                     header = map (\key -> case splitOn ":" key of
+                                           [key] -> key
+                                           (_:key:_) -> key
+                                           [] -> ""
+                                  ) keys
+                     in Csv.encode $ header : map toLists records
+                                    
+   liftIO $ BL.writeFile filePath bs
+   yankOrEditCommand mode filePath
+   
+   
+   
+instance Csv.DefaultOrdered (Map Text a) where
+   headerOrder _ = fromList ["shelf", "style", "blip"]

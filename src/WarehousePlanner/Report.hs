@@ -7,6 +7,7 @@ module WarehousePlanner.Report
 , generateMOPLocations
 , generateGenericReport
 , bestBoxesFor
+, bestFitReport
 , bestShelvesFor
 , bestAvailableShelvesFor
 , bestHeightForShelf
@@ -26,6 +27,7 @@ module WarehousePlanner.Report
 ) where
 
 import WarehousePlanner.Base
+import WarehousePlanner.Affine (boxAffDimension, AffDimension(..), positionToAffine)
 import WarehousePlanner.Optimum
 import WarehousePlanner.Summary
 import WarehousePlanner.History
@@ -38,6 +40,7 @@ import System.IO.Unsafe(unsafePerformIO)
 import Control.Monad.State(get, gets, evalStateT)
 import Text.Printf(printf)
 import Data.Map.Strict qualified as Map'
+import Data.Map qualified as Map
 import Data.Set qualified as Set
 import Data.Sequence qualified as Seq
 import Data.List qualified as List
@@ -46,6 +49,8 @@ import Text.Tabular as Tabul
 import Data.Text(replace)
 import Data.Semigroup(Arg(..))
 import Data.List.NonEmpty (NonEmpty(..))
+import WarehousePlanner.SimilarBy
+import Data.Foldable qualified as F
 
 -- pattern (:<) :: Text -> Maybe (Char, Text)
 pattern x :< xs <- (uncons -> Just (x, xs))
@@ -194,6 +199,75 @@ bestAvailableShelvesFor pmode (extractRanking -> (ranking, style'shelf)) = do
                    )
 
 
+bestFitReport :: forall s . Bool -> [Box s] -> [Shelf s] -> WH [Map Text Text] s
+bestFitReport limitToBoxNb boxes shelves = do
+   getOrs <- gets boxOrientations
+   let groups  = groupSimilar (\b -> (_boxDim b, boxStyle b)) boxes
+   let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
+       go (SimilarBy (bdim,_) box bxs) shelf = do
+           boxesInShelf <- findBoxByShelf shelf
+           let ors = getOrs box shelf
+               -- for empty shelf
+               Dimension lused _wused hused = maxDimension $ map (aTopRight . boxAffDimension) boxesInShelf
+               tries = [ ("full" , (minDim shelf, maxDim shelf))
+                       , ("right", remaining shelf (Dimension lused 0 0))
+                       , ("above", remaining shelf (Dimension 0 0 hused))
+                       ]
+           return . map (Map.fromList . addRank) $
+                    [ [ ("shelf" :: Text, shelfName shelf)
+                      , ("content", unwords [ t <> "x" <> tshow q | (t,q) <- Map.toList contents ])
+                      , ("part", name)
+                      , ("style", boxStyle box)
+                      , ("box", printDim  bdim)
+                      , ("fit",  tshow $ fitted)
+                      , ("orientation", showOrientationWithDiag or tilingMode)
+                      , ("to_fit", tshow toFit)
+                      
+                      , ("l%", percent usedl sl) 
+                      , ("w%", percent usedw sw)
+                      , ("h%", percent usedh sh)
+                      , ("wh%", percent (usedw*usedh) (sw*sh))
+                      , ("lh%", percent (usedl*usedh) (sl*sh))
+                      , ("lw%", percent (usedl*usedw) (sl*sw))
+                      , ("fit%", percent (fi fitted) (fi toFit))
+                      , ("shelves_needed", pack $ printf "%.1f" (fi toFit / fi fitted))
+                      , ("volume%", percent  (usedl*usedw*usedh) (sl*sw*sh))
+                      , ("how", unwords [ pack $ printf "%dx%dx%d" (perLength hmany) (perDepth hmany) (perHeight hmany)
+                                        | hmany <- toList $ tmHowManys tilingMode
+                                        ]
+                        )
+                      , ("used", printDim used)
+                      , ("leftover", printDim (shelfMin <> invert used))
+                      , ("minShelf", printDim shelfMin)
+                      , ("maxShelf", printDim shelfMax)
+                      , ("debug-strategy", tshow ors)
+                      , ("debug-tiling", tshow tilingMode)
+                      ]
+                    | (name, (shelfMin@(Dimension sl sw sh), shelfMax)) <- tries
+                    , let (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
+                    , let toFit = 1 + length bxs
+                    , let fitted = tmTotal tilingMode
+                    , let used@(Dimension usedl usedw usedh) =
+                                maxDimension $ map (aTopRight . positionToAffine bdim )
+                                             $ (if limitToBoxNb then (take toFit) else id)
+                                             $ F.toList 
+                                             $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
+                    , fitted > 0
+                    , let contents = Map.fromListWith (+) $ map (,1) $ map boxStyle boxesInShelf
+                    ]
+   concat <$> sequence [ go simBoxes shelf
+                          | simBoxes <- groups
+                          , shelf <- shelves
+                          ]
+  where addRank kvs = [ (pack (printf "%0.3d:" i) <> k, v)
+                      | ((k, v), i) <- zip kvs  [1 :: Int ..]
+                      ]
+        remaining shelf used = let nused = invert used 
+                               in (minDim shelf <> nused, maxDim shelf <> nused )
+        percent a b = pack $ printf "%.0f" (a*100/b)
+        fi = fromIntegral @_ @Double
+                     
+  
 
 
 -- * Summary 

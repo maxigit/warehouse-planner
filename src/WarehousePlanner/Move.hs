@@ -5,6 +5,7 @@ module WarehousePlanner.Move
 , bestPositions, bestPositions'
 , cornerHull
 , stairsFromCorners
+, generatePositions
 , moveBoxes
 -- , moveSimilarBoxes
 , moveAndTag
