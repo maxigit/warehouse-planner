@@ -719,7 +719,7 @@ handleWH ev =
          EYankBoxDetails mode -> do
                          s@AppState{..} <- get
                          let text = boxDetailsTextTable  asWarehouse (asHistoryRange s) (currentBoxHistory s)
-                         void $ yankOrEdit mode (Just ".txt") text
+                         void $ yankOrEdit mode (Just "-detail.txt") text
          EYankBoxHistory mode -> do
                          boxm <- gets currentBox
                          case boxm of 
@@ -727,7 +727,7 @@ handleWH ev =
                            Just box -> do
                                 boxHistory <- execute $ getBoxHistory box
                                 let text = Report.boxHistory boxHistory
-                                void $ yankOrEdit mode (Just ".txt") (unlines text)
+                                void $ yankOrEdit mode (Just "-history.txt") (unlines text)
          EYankSelectedBoxes mode' -> do
             selection <- gets asBoxSelection
             text0 <- execute $ Report.generateStockTakes (fmap sSelector selection)
@@ -735,7 +735,7 @@ handleWH ev =
                          UseVd -> UseVdNoHeader
                          _ -> mode'
             let text = drop 2 . dropEnd 1 $ text0
-            yankOrEdit mode (Just ".csv") (unlines text)
+            yankOrEdit mode (Just "-boxes.csv") (unlines text)
          EYankShelfContent mode' -> do
             let mode = case mode' of
                          UseVd -> UseVdNoHeader
@@ -744,25 +744,26 @@ handleWH ev =
             let boxSelector = parseBoxSelector $ "/" <> sName shelf
             text0 <- execute $ Report.generateStockTakes (Just boxSelector)
             let text = drop 2 . dropEnd 1 $ text0
-            yankOrEdit mode (Just ".csv") (unlines text)
+            yankOrEdit mode (Just "-content.csv") (unlines text)
          EYankBestAvailableShelfFor mode -> do
             boxm <- gets currentBox
+            shelfs <- gets asShelfSelection
             case boxm of 
                  Nothing -> return ()
                  Just box -> do
-                      text <- execute $ Report.bestAvailableShelvesFor PBestEffort ("!" <> boxStyle box)
-                      yankOrEdit mode (Just ".txt") (unlines text)
+                      text <- execute $ Report.bestAvailableShelvesFor PBestEffort ("!" <> boxStyle box <> maybe "" (("/" <>) . sText) shelfs)
+                      yankOrEdit mode (Just "best-available-shelf.txt") (unlines text)
          EYankBestBoxesFor mode -> do
             shelf <- gets currentShelf
             text <- execute $ Report.bestBoxesFor ("!" <> sName shelf)
-            yankOrEdit mode (Just ".txt") (unlines text)
+            yankOrEdit mode (Just "-best-boxes.txt") (unlines text)
          EYankBestShelfFor mode -> do
             boxm <- gets currentBox
             case boxm of 
                  Nothing -> return ()
                  Just box -> do
                       text <- execute $ Report.bestShelvesFor ("!" <> boxStyle box)
-                      yankOrEdit mode (Just ".txt") (unlines text)
+                      yankOrEdit mode (Just "-best-shelf.txt") (unlines text)
          EYankSelectedShelves mode -> do
             state <- get
             text <- execute do
