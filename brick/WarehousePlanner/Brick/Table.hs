@@ -16,7 +16,7 @@ import Data.Map qualified as Map
 import WarehousePlanner.Brick.RenderBar 
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
-import WarehousePlanner.Summary
+import WarehousePlanner.Summary as Summary
 import WarehousePlanner.Type
 import WarehousePlanner.Base(boxShortContent)
 import Data.Vector qualified as V
@@ -98,8 +98,7 @@ renderBoxOrientation box = withStyleAttr (boxPropValue box)
 baySummaryToTable :: (Dimension -> Dimension) -> ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
 baySummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
   shelves = sDetailsList ssum
-  tableCellsWithGap = map (map (renderTable . surroundingBorder False)
-                    . shelfSummaryToTable project renderBoxes
+  tableCellsWithGap = map (\s -> map (\t -> (renderTable . rowBorders False $ surroundingBorder False $ t) <=> shelfBar s ) . shelfSummaryToTable project renderBoxes $ s
                     ) $ reverse shelves
   -- in case the depths is not the same for all shelves
   -- we need fill create empty cell if necessary
@@ -113,6 +112,8 @@ baySummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
   in case maxDepth of 
           0 -> table [[emptyWidget]]
           _ -> table tableCells
+  -- where shelfBar s = {- txt (Summary.sName s) <=> -} hBox [renderS m s | m <- [minBound .. maxBound] ] -- [ SVMaxLength .. SVMaxHeight] ]
+  where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
 
 
 -- * Runs
