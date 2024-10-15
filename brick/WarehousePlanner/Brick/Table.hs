@@ -113,7 +113,9 @@ baySummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
           0 -> table [[emptyWidget]]
           _ -> table tableCells
   -- where shelfBar s = {- txt (Summary.sName s) <=> -} hBox [renderS m s | m <- [minBound .. maxBound] ] -- [ SVMaxLength .. SVMaxHeight] ]
-  where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
+  -- where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
+  where shelfBar s = txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
+  -- where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  renderBestBarDef s
 
 
 -- * Runs
