@@ -35,7 +35,9 @@ shelfSummaryToTable project renderBoxes ssum@ShelvesSummary{..} = let
    boxesByOffset = Map.fromListWith (<>) [ (project . boxOffset $ zCurrentEx box , [box])
                                          | box <- boxes
                                          ]
-   offsets = keys boxesByOffset
+   offsets = case keys boxesByOffset of
+                   [] -> [Dimension 0 0 0]
+                   ks -> ks
    xs = nub $ sort $ map dLength offsets
    ys = nub $ sort $ map dWidth offsets
    zs = nub $ sort $ map dHeight offsets
