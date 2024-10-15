@@ -74,10 +74,15 @@ bayToBars sview bay =  let
                       -- then withAttr  ("current" <> "cursor") w
                       then withAttr (percToAttrName 2 0 ) w
                       else w
-  render ssum = forCurrent ssum (str (eigthV 1 : [])) <=> ((
-              if ratio (fromSummary SVMaxLength) ssum < ratio (fromSummary SVMaxHeight) ssum
-              then shelfSummaryToBar HorizontalBar SVMaxLength sview ssum
-              else shelfSummaryToBar VerticalBar SVMaxHeight sview ssum
+  render ssum = let 
+      hratio = ratio (fromSummary SVMaxLength) ssum
+      vratio  = ratio (fromSummary SVMaxHeight) ssum
+      in forCurrent ssum (str (eigthV 1 : [])) <=> ((
+              if | hratio < 0.5 && vratio < 0.5 && hratio * vratio > 0.1 -> 
+                          let r = min hratio vratio
+                          in withDefAttr (percToAttrName r 0) $ str "▖"
+                 | hratio <  vratio -> shelfSummaryToBar HorizontalBar SVMaxLength sview ssum
+                 | otherwise -> shelfSummaryToBar VerticalBar SVMaxHeight sview ssum
               ) <+> forCurrent ssum (str (eigthH 1 : []))
               )
   _render = renderBestBarDef
