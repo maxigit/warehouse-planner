@@ -1065,7 +1065,8 @@ stylesSideBar state@AppState{..} =
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..9] , let r = fromIntegral i / 8 ]
-  in B.vLimit 1 $ B.hBox $ [ B.txt (sName $ currentShelf state)  -- current shelf
+  in B.vLimit 1 $ B.hBox $ [ B.withAttr specialTagName_ $ B.str $ show asCurrentRun 
+                           , B.txt (sName $ currentShelf state)  -- current shelf
                            , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                            , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
