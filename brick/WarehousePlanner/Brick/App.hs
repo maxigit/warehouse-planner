@@ -114,6 +114,7 @@ data WHEvent = ENextMode
              | EYankBestShelfFor EditMode
              | EYankBestBoxesFor EditMode
              | EYankSelectedShelves EditMode
+             | EYankBestForSelected Bool EditMode
 
      deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
@@ -533,6 +534,8 @@ keyBindingGroups =  groups
                  ,('S', EYankBestShelfFor, "best available shelf")
                  ,('B', EYankBestBoxesFor, "best available boxes")
                  ,('?', EYankSelectedShelves, "Shelf selection")
+                 ,('f' ,EYankBestForSelected False, "Best fit for selected boxes and shelves")
+                 ,('F' ,EYankBestForSelected True,  "Best (available) fit for selected boxes and shelves")
                  ]
 flattenSections :: [(Text, [a])] -> [a]
 flattenSections = concatMap snd
@@ -748,7 +751,26 @@ handleWH ev =
             text0 <- execute $ Report.generateStockTakes (Just boxSelector)
             let text = drop 2 . dropEnd 1 $ text0
             yankOrEdit mode (Just "-content.csv") (unlines text)
+         EYankBestForSelected limit mode -> do
+            -- use selection if definied or current box/shelf
+            AppState{..} <- get
+            shelf <- gets currentShelf
+            boxm <- gets currentBox
+            records <- execute do
+                          shelves_ <- case asShelfSelection of
+                                       Nothing -> findShelfBySelector (Selector (matchName $ sName shelf) []) >>= mapM findShelf
+                                       Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
+                          boxes_ <- case asBoxSelection of
+                                     Nothing -> case boxm of 
+                                                  Nothing -> toList <$> gets boxes >>= mapM findBox
+                                                  Just boxId -> do
+                                                               box <- findBox boxId 
+                                                               findBoxByNameSelector (matchName $ boxStyle box)
+                                     Just selection -> findBoxByNameAndShelfNames (sSelector selection)
+                          Report.bestFitReport  limit boxes_ shelves_
+            yankOrEditCsv mode (Just "-best-fit-for.csv") records
          EYankBestAvailableShelfFor mode -> do
+            -- current box or selection
             boxm <- gets currentBox
             AppState{..} <- get
             case boxm of 
@@ -762,11 +784,17 @@ handleWH ev =
                                        Nothing ->  toList <$> gets shelves  >>= mapM findShelf
                                        Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
                           Report.bestFitReport  True boxes shelves_
-                      yankOrEditCsv mode (Just "-best-avail-shelf.csv") records
+                      yankOrEditCsv mode (Just "-best-available-shelves-for.csv") records
          EYankBestBoxesFor mode -> do
+            AppState{..} <- get
             shelf <- gets currentShelf
-            text <- execute $ Report.bestBoxesFor ("!" <> sName shelf)
-            yankOrEdit mode (Just "-best-boxes.txt") (unlines text)
+            records <- execute do
+                  shelves_ <- findShelfBySelector (Selector (matchName $ sName shelf) []) >>= mapM findShelf
+                  boxes_ <- case asBoxSelection of
+                             Nothing -> toList <$> gets boxes >>= mapM findBox
+                             Just selection -> findBoxByNameAndShelfNames (sSelector selection)
+                  Report.bestFitReport  False boxes_ shelves_
+            yankOrEditCsv mode (Just "-best-shelves-for.csv") records
          EYankBestShelfFor mode -> do
             boxm <- gets currentBox
             AppState{..} <- get
@@ -781,7 +809,7 @@ handleWH ev =
                                        Nothing ->  toList <$> gets shelves  >>= mapM findShelf
                                        Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
                           Report.bestFitReport  False boxes shelves_
-                      yankOrEditCsv mode (Just "-best-shelf.csv") records
+                      yankOrEditCsv mode (Just "-best-shelves-for.csv") records
          EYankSelectedShelves mode -> do
             state <- get
             text <- execute do
