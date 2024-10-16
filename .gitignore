@@ -6,3 +6,5 @@ TAGS
 data/scramble.vim
 *.prof
 results/*.html
+# worktree
+wt-*
