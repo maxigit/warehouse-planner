@@ -2,6 +2,8 @@
 module WarehousePlanner.Brick.App
 (
 whMain
+, makeBoxSelection
+, makeShelfSelection
 )
 where
 
@@ -264,13 +266,13 @@ adjustedShelfGroup state = do
 
   
   
-initState :: (AppState -> AppState) -> IO (Either Text (Warehouse RealWorld)) -> String -> WH (AppState) RealWorld
+initState :: (AppState -> WH AppState RealWorld) -> IO (Either Text (Warehouse RealWorld)) -> String -> WH (AppState) RealWorld
 initState adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
       asDisplayDetails = False
       asAdjustedShelvesMode = AllShelves
-      state = adjust $ AppState
+  state <- adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
                   , asPropertyAsGradient = Nothing
@@ -362,7 +364,7 @@ submapHelp cm = let
    --           | (section, handlers) <- section'handlers
    --           ]
   
-whMain :: (AppState -> AppState) -> String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
+whMain :: (AppState -> WH AppState RealWorld ) -> String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
 whMain adjust title reload = do
   -- error $ unpack
   --       $ unlines 

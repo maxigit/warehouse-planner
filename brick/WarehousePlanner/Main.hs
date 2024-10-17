@@ -34,6 +34,8 @@ data Options = Options
             , oNoHistory :: Bool
             , oProperty :: Maybe Text
             , oCurrentRun :: Maybe Int
+            , oBoxSearch :: Maybe Text
+            , oShelfSearch :: Maybe Text
             , oNoCheck :: Bool
             }
      deriving (Show, Generic)
@@ -92,7 +94,10 @@ optionsParser = do
                                         <> help "Number of the run to start with (0 based)"
   oNoCheck <- switch $ long "no-check"
                      <> help "Disable automatic checks"
-
+  oBoxSearch <- optional $ strOption $ long "box-search"
+                       <> help "box selector"
+  oShelfSearch <- optional $ strOption $ long "shelf-search"
+                        <> help "shelf selector"
   return Options{..}
   
 commandArg = flag' Stocktake (long "stocktake"
@@ -205,14 +210,19 @@ defaultMainWith expandSection = do
                case execE of
                  Left e -> error $ unpack e
                  Right (exec, _) -> exec summary >>= outputText . pack . show
-       Display -> let
-               setParam state = state { asProperty = oProperty 
-                                      , asInputHistory = case oProperty of
-                                                           Nothing -> id
-                                                           Just prop -> \m ->  Map.singleton ISelectProperty [prop] <> m
-                                                         $ asInputHistory state
-                                      , asCurrentRun = fromMaybe 0 oCurrentRun
-                                      }
+       Display -> let 
+               setParam state = do
+                        (join -> asBoxSelection) <- mapM makeBoxSelection oBoxSearch
+                        (join -> asShelfSelection) <- mapM makeShelfSelection oShelfSearch
+                        return state { asProperty = oProperty 
+                                               , asInputHistory = case oProperty of
+                                                                    Nothing -> id
+                                                                    Just prop -> \m ->  Map.singleton ISelectProperty [prop] <> m
+                                                                  $ asInputHistory state
+                                               , asCurrentRun = fromMaybe 0 oCurrentRun
+                                               , asBoxSelection
+                                               , asShelfSelection
+                                               }
                in whMain setParam title do
                       execE <- getExec
                       case execE of
