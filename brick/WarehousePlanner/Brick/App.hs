@@ -1266,7 +1266,8 @@ makeInputData imode state = let
                   ISelectProperty -> "$"
                   ISelectTag -> "ctitle=$"
                   ISelectShelves -> "/"
-                  _ -> ""
+                  ISelectBoxes -> "*"
+                  -- _ -> ""
     idShelf =  sName $ currentShelf state
     idPropertyValue = fromMaybe "" $ selectedPropValue state
     idStyle = maybe "" boxStyle $ currentBox state
