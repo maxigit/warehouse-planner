@@ -231,8 +231,10 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("lw100", percent (usedl*usedw) (sl*sw))
                       , ("fit100", percent (fi fitted) (fi toFit))
                       , ("shelves_needed", pack $ printf "%.1f" (fi toFit / fi fitted))
-                      , ("volume100", percent  (usedl*usedw*usedh) (sl*sw*sh))
-                      , ("volmax100", percent  (boxVolume box * fi fitted) (sl*sw*sh))
+                      , ("uvolmin100", percent  (usedl*usedw*usedh) (volume shelfMin))
+                      , ("uvolmax100", percent  (usedl*usedw*usedh) (volume shelfMax))
+                      , ("fvolmin100", percent  (boxVolume box * fi fitted) (volume shelfMin))
+                      , ("fvolmax100", percent  (boxVolume box * fi fitted) (volume shelfMax))
                       , ("how", unwords [ pack $ printf "%dx%dx%d" (perLength hmany) (perDepth hmany) (perHeight hmany)
                                         | hmany <- toList $ tmHowManys tilingMode
                                         ]
