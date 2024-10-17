@@ -246,7 +246,7 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("debug-strategy", tshow ors)
                       , ("debug-tiling", tshow tilingMode)
                       ]
-                    | (name, (shelfMin@(Dimension sl sw sh), shelfMax)) <- tries
+                    | (name, (shelfMin, shelfMax@(Dimension sl sw sh))) <- tries
                     , let (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
                     , let toFit = 1 + length bxs
                     , let fitted = tmTotal tilingMode
