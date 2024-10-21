@@ -19,9 +19,16 @@ pureSpec = describe "WPL" do
       ?boxes = ["S1 B-2 B-1#id=1 A-3 A-1 A-2 B-1#id=2"]
   context "sorting" do
      it "sort everything by default *" do
+        -- by style then by content then creating order
         select "*" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
-     it "sort everything by default" do
-        select "^^^" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
+     it "sort everything by default (empty)" do
+        select "" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
+     it "sort by style only default ^^^" do
+        -- mainly because boxes are map by style see boxMap
+        select "^^^" `shouldReturn` "A-3 A-1 A-2 B-2 B-1#1 B-1#2"
+     fit "sort everything by default ^" do
+        -- by style then by content then creating order
+        select "^" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
      it "sort by style (only) by default" do
         select "^=^=^=" `shouldReturn` "A-3 A-1 A-2 B-2 B-1#1 B-1#2"
      it "can be sort by original id" do
@@ -68,7 +75,7 @@ select wpl = do
 runWith wpl action = execWH (emptyWarehouse $ fromGregorian 2024 07 22) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let Right statements = parseWPL "<source>" wpl
+   let Right statements = traceShowId $ parseWPL "<source>" wpl
    runWPLWith action statements
    
 

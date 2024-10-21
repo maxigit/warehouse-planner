@@ -150,14 +150,17 @@ parseMatchPattern pat = MatchFull pat
 
 parseBoxSelector :: Text -> BoxSelector
 parseBoxSelector = parseBoxSelectorWithDef True
+-- | "...^" is synomym for ...^@^@^@
 parseBoxSelectorWithDef :: Bool -> Text -> BoxSelector
 parseBoxSelectorWithDef defUseBase "*" = BoxSelector SelectAnything SelectAnything (parseBoxNumberSelector defUseBase "")
 parseBoxSelectorWithDef defUseBase selector = let
-  (box'location, drop 1 ->numbers) = break (=='^') selector
+  (box'location, numbers) = break (=='^') selector
   (box, drop 1 -> location) = break (=='/') box'location
   in BoxSelector (parseSelector box)
-              (parseSelector location)
-              (parseBoxNumberSelector defUseBase numbers)
+                 (parseSelector location)
+                 $ case numbers of 
+                    "^" -> parseBoxNumberSelector True "^^"
+                    _ -> parseBoxNumberSelector defUseBase $ drop 1 numbers
 
 parseShelfSelector :: Text -> ShelfSelector
 parseShelfSelector selector = let
