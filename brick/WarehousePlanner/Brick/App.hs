@@ -117,6 +117,8 @@ data WHEvent = ENextMode
              | EYankBestBoxesFor EditMode
              | EYankSelectedShelves EditMode
              | EYankBestForSelected Bool EditMode
+             -- Select shelf Level
+             | ESelectShelfLevel (Maybe Text)
 
      deriving (Show, Eq, Ord)
 data HistoryEvent = HPrevious
@@ -453,6 +455,19 @@ keyBindingGroups =  groups
                                                                -- , mK "backspace" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                , mK "c-o" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                ])
+                               , ("Shelf selection",           ( mk '0' (ESelectShelfLevel Nothing) "Select all sheves"
+                                                               : mk '9' (ESelectShelfLevel (Just "/#-top")) "Hide top shelves"
+                                                               : [mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
+                                                                 | i <- [1..5]
+                                                                 , let c = tshow i
+                                                                 , let sel = "/*/" <> c
+                                                                 ]
+                                                               <>[mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
+                                                                 | i <- [6..8]
+                                                                 , let sel = "/*/[1-" <> tshow (i - 4) <> "]"
+                                                                 , let c = tshow i
+                                                                 ]
+                                                               ))
                                ] <> [("Submaps", submaps)]
                   ),(Just ("Order", 'o') , [("Property order", [ mk 'n' (ESetBoxOrder BOByName) "sort by box name"
                                                                , mk 's' (ESetBoxOrder BOByShelve) "sort by position in shelf"
@@ -827,6 +842,21 @@ handleWH ev =
                                  mapM findShelf ids
                 Report.shelvesReportFor shelves
             yankOrEdit mode (Just ".csv") (unlines text)
+         ESelectShelfLevel (Just selector) -> do
+            oldMode <- gets asAdjustedShelvesMode
+            let mode  = case oldMode of
+                          SelectedShelvesFirst -> SelectedShelvesFirst
+                          UnselectedShelves -> UnselectedShelves
+                          _ -> SelectedShelves
+            modify \s -> s { asAdjustedShelvesMode = mode }
+            setShelfSelection selector
+         ESelectShelfLevel Nothing -> do
+            oldMode <- gets asAdjustedShelvesMode
+            let mode  = case oldMode of
+                          SelectedBoxes -> SelectedBoxes
+                          _ -> AllShelves
+            modify \s -> s { asAdjustedShelvesMode = mode }
+            setShelfSelection $ ""
 
 
                     
