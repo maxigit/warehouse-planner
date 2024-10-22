@@ -206,12 +206,13 @@ bestFitReport limitToBoxNb boxes shelves = do
    let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
        go (SimilarBy (bdim,_) box bxs) shelf = do
            boxesInShelf <- findBoxByShelf shelf
+           let toPick = length $ filter (flip tagIsPresent "@topick") boxes
            let ors = getOrs box shelf
                -- for empty shelf
-               Dimension lused _wused hused = maxDimension $ map (aTopRight . boxAffDimension) boxesInShelf
+               current@(Dimension lrequired _wrequired hrequired) = maxDimension $ map (aTopRight . boxAffDimension) boxesInShelf
                tries = [ ("full" , (minDim shelf, maxDim shelf))
-                       , ("right", remaining shelf (Dimension lused 0 0))
-                       , ("above", remaining shelf (Dimension 0 0 hused))
+                       , ("right", remaining shelf (Dimension lrequired 0 0))
+                       , ("above", remaining shelf (Dimension 0 0 hrequired))
                        ]
            return . map (Map.fromList . addRank) $
                     [ [ ("shelf" :: Text, shelfName shelf)
@@ -220,37 +221,47 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("style", boxStyle box)
                       , ("box", printDim  bdim)
                       , ("fit",  tshow $ fitted)
-                      , ("orientation", showOrientationWithDiag or tilingMode)
                       , ("to_fit", tshow toFit)
-                      
-                      , ("l100", percent usedl sl) 
-                      , ("w100", percent usedw sw)
-                      , ("h100", percent usedh sh)
-                      , ("wh100", percent (usedw*usedh) (sw*sh))
-                      , ("lh100", percent (usedl*usedh) (sl*sh))
-                      , ("lw100", percent (usedl*usedw) (sl*sw))
+                      , ("to_pick", tshow toPick)
+                      , ("pickable", tshow pickable)
+                      , ("l100", percent requiredl sl) 
+                      , ("w100", percent requiredw sw)
+                      , ("h100", percent requiredh sh)
+                      , ("wh100", percent (requiredw*requiredh) (sw*sh))
+                      , ("lh100", percent (requiredl*requiredh) (sl*sh))
+                      , ("lw100", percent (requiredl*requiredw) (sl*sw))
                       , ("fit100", percent (fi fitted) (fi toFit))
                       , ("shelves_needed", pack $ printf "%.1f" (fi toFit / fi fitted))
-                      , ("uvolmin100", percent  (usedl*usedw*usedh) (volume shelfMin))
-                      , ("uvolmax100", percent  (usedl*usedw*usedh) (volume shelfMax))
+                      , ("picking_shelves", pack $ printf "%.1f" (fi toPick / fi pickable))
+                      , ("rvolmin100", percent  (requiredl*requiredw*requiredh) (volume shelfMin))
+                      , ("rvolmax100", percent  (requiredl*requiredw*requiredh) (volume shelfMax))
                       , ("fvolmin100", percent  (boxVolume box * fi fitted) (volume shelfMin))
                       , ("fvolmax100", percent  (boxVolume box * fi fitted) (volume shelfMax))
+                      , ("orientation", showOrientationWithDiag or tilingMode)
                       , ("how", unwords [ pack $ printf "%dx%dx%d" (perLength hmany) (perDepth hmany) (perHeight hmany)
                                         | hmany <- toList $ tmHowManys tilingMode
                                         ]
                         )
-                      , ("used", printDim used)
-                      , ("leftover", printDim (shelfMin <> invert used))
+                      , ("fVSused", case boxesInShelf of
+                                          [] -> percent (1.0 :: Double) 1.0
+                                          _ -> percent (boxVolume box * fi fitted) (volume current))
+                      , ("required", printDim required)
+                      , ("used", printDim current)
+                      , ("leftover", printDim (shelfMin <> invert required))
                       , ("minShelf", printDim shelfMin)
                       , ("maxShelf", printDim shelfMax)
-                      , ("debug-strategy", tshow ors)
-                      , ("debug-tiling", tshow tilingMode)
+                      , ("debug_strategy", tshow ors)
+                      , ("debug_tiling", tshow tilingMode)
+                      , ("debug_volume", pack $ printf "{\"required_volume\":%f, \"current\":%f, \"box_volume\":%f}"
+                                                     (volume required)      (volume current) (boxVolume box)
+                                                     )
                       ]
                     | (name, (shelfMin, shelfMax@(Dimension sl sw sh))) <- tries
                     , let (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
                     , let toFit = 1 + length bxs
                     , let fitted = tmTotal tilingMode
-                    , let used@(Dimension usedl usedw usedh) =
+                    , let pickable = tmPickable tilingMode
+                    , let required@(Dimension requiredl requiredw requiredh) =
                                 maxDimension $ map (aTopRight . positionToAffine bdim )
                                              $ (if limitToBoxNb then (take toFit) else id)
                                              $ F.toList 
@@ -265,13 +276,16 @@ bestFitReport limitToBoxNb boxes shelves = do
   where addRank kvs = [ (pack (printf "%0.3d:" i) <> k, v)
                       | ((k, v), i) <- zip kvs  [1 :: Int ..]
                       ]
-        remaining shelf used = let nused = invert used 
-                               in (minDim shelf <> nused, maxDim shelf <> nused )
+        remaining shelf required = let nrequired = invert required 
+                               in (minDim shelf <> nrequired, maxDim shelf <> nrequired )
         percent a b = pack $ printf "%.0f" (a*100/b)
         fi = fromIntegral @_ @Double
                      
   
 
+-- | How many with depth = 1
+
+tmPickable tm = sum [ perLength hm * perHeight hm |   hm <- toList $ tmHowManys tm ]
 
 -- * Summary 
 -- Display total volume shelf volume
