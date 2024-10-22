@@ -209,7 +209,7 @@ defaultMainWith expandSection = do
                execE <- getExec
                case execE of
                  Left e -> error $ unpack e
-                 Right (exec, _) -> exec summary >>= outputText . pack . show
+                 Right (exec, _) -> exec summary >>= \(ls, footer) -> mapM_ outputText (map (intercalate ",") $ ls ++ [footer])
        Display -> let 
                setParam state = do
                         (join -> asBoxSelection) <- mapM makeBoxSelection oBoxSearch
