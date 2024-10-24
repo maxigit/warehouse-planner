@@ -69,6 +69,7 @@ module WarehousePlanner.Base
 , newWHEvent
 , newBaseEvent
 , Priority, Keys
+, firstM
 )
 where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
@@ -101,6 +102,7 @@ import Text.Megaparsec.Char.Lexer qualified as P
 import GHC.Prim 
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import System.FilePath.Glob qualified as Glob
+import Data.Bitraversable (Bitraversable(..))
 -- import GHC.Exts (groupWith)
 
 
@@ -341,6 +343,8 @@ keyFromLimitM limit def box shelf =
         maxString = T.replicate 8 (singleton '~')
 
 
+firstM :: (Applicative f, Bitraversable t) => (a -> f a') -> t a b -> f (t a' b)
+firstM f = bitraverse f pure
 -- limitBy :: Ord k => (Box s -> k) -> Int -> [Box s] -> [a]
   
 data UseDefault = UseDefault | DontUseDefault

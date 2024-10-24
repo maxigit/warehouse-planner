@@ -73,14 +73,17 @@ narrowShelves selector ec = do
            return $ InExcluded (Just incs) (Just exs)
     return ec { ecShelves = fmap shelfId ecS }
 
+getBoxPs :: ExContext s -> WH [(Box s, Priority)] s
+getBoxPs ec = do
+     case included (ecBoxes ec) of
+         Nothing -> findBoxByNameAndShelfNamesWithPriority selectAllBoxes
+         Just incs -> mapM (firstM findBox)  incs
+  where firstM f (a,b) = (,b) <$> f a
+
 getBoxes :: ExContext s -> WH [Box s] s
-getBoxes ec = do
-   bIds <- case included (ecBoxes ec) of 
-                Nothing {- AllOff -} -> toList <$> gets boxes
-                Just bIds -> return $ map fst bIds
-   mapM findBox bIds
+getBoxes ec = map fst <$> getBoxPs ec 
 
-
+  
 getShelves :: ExContext s -> WH [Shelf s] s
 getShelves ec = do
     sIds <- case included (ecShelves ec) of 

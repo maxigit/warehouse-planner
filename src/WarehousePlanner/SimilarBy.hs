@@ -11,6 +11,8 @@ module WarehousePlanner.SimilarBy
 , splitSimilar
 , unsplitSimilar
 , mapSimilarKey
+, unzipSimilar
+, zipSimilar
 )
 where
 import Prelude
@@ -74,3 +76,14 @@ groupSimilars key =
   
 mapSimilarKey :: (k -> l) -> SimilarBy k a -> SimilarBy l a
 mapSimilarKey f (SimilarByPrivate k x xs) = SimilarByPrivate (f k) x xs
+
+unzipSimilar :: SimilarBy k (a,b) -> (SimilarBy k a , SimilarBy k b)
+unzipSimilar (SimilarByPrivate k x xs) = let
+  (a:as, b:bs) = unzip (x:xs)
+  in (SimilarByPrivate k a as, SimilarByPrivate k b bs)
+  
+zipSimilar :: Eq k => SimilarBy k a ->  SimilarBy k b -> Maybe (SimilarBy k (a, b))
+zipSimilar (SimilarByPrivate k a as) (SimilarByPrivate k' b bs) = 
+   if k == k'
+   then Just $ SimilarByPrivate k (a, b) (zip as bs)
+   else Nothing

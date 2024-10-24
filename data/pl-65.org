@@ -6269,7 +6269,8 @@ M02L04FO,E08.03/0
 M31L01FH/C*,W07.0[2-4]/[3]
 M22W09DX,E07.01/[12]
 M31L03FA/C*,W04.*/3#for-planner-location=W04.0[123]
-M22L03DY/C*^^{content},@W05.0[67]/2#for-planner-location=W05.0[67],2x3=
+M22L03DY/C*^^{content},@W05.0[67]/2,2x3=
+M22L03DY/W05.0[67]/2,#for-planner-location=W05.0[67],
 M22L08DG/C*,E07.06/3#for-planner-location=E07.06
 M22W07DV/C*,E07.02/[123]#for-planner-location=E07.02
 M02L04FK/C*^1,-E07.03/[23]

@@ -7,6 +7,7 @@ module WarehousePlanner.Move
 , stairsFromCorners
 , generatePositions
 , moveBoxes
+, moveSortedBoxes
 -- , moveSimilarBoxes
 , moveAndTag
 , moveToLocations
@@ -31,7 +32,7 @@ import WarehousePlanner.Tiling
 import WarehousePlanner.WPL.ExContext
 import Data.Text(splitOn, uncons)
 import Data.Foldable qualified as F
-import Data.Set qualified as Set
+import Data.Map qualified as Map
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -40,19 +41,28 @@ aroundArrangement :: (Shelf' shelf, Box' box, Box' box2)
                   => forall s . AddOldBoxes 
                   -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s)
                 -> [box s] -> [shelf s] -> WH (InExcluded (box2 s)) s
-aroundArrangement useOld arrangement newBoxishs shelves = do
-    newBoxes <- mapM findBox newBoxishs
-    let -- newSet :: Set (Box s)
-        newSet =  Set.fromList newBoxes 
+aroundArrangement useOld arrangement newBoxishs shelves =  do
+  inEx <- aroundArrangementWithP useOld arrangement (map (,()) newBoxishs) shelves
+  return $ fmap fst inEx
+
+aroundArrangementWithP :: (Shelf' shelf, Box' box, Box' box2) => forall s p . AddOldBoxes -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s) -> [(box s, p)] -> [shelf s] -> WH (InExcluded (box2 s, p)) s
+aroundArrangementWithP useOld arrangement newBoxishs shelves = do
+    newBox'Ps <- mapM (firstM findBox) newBoxishs
+    let -- priorityMap :: Map (BoxId s) p
+        priorityMap =  Map.fromList $ map (first boxId) newBox'Ps
+        newBoxes = map fst newBox'Ps
     boxesBefore <- case useOld of
               NewBoxesOnly -> return newBoxes
               AddOldBoxes -> do
                           allOldBoxes <- concatMap reverse `fmap` mapM findBoxByShelf shelves
                           -- make sure news and old boxes don't have boxes in commun
-                          let oldBoxes = filter (`notMember` newSet) allOldBoxes
+                          let oldBoxes = filter ((`notMember` priorityMap) . boxId) allOldBoxes
                           return $ oldBoxes ++ newBoxes
 
     let nothing = Nothing `asTypeOf` headMay shelves -- trick to typecheck
+        setPriority b = case lookup (boxId b) priorityMap of
+                         Nothing -> Nothing
+                         Just p -> Just (b, p)
     boxes <-  mapM (assignShelf nothing) boxesBefore
     -- rearrange what's left in each individual space
     -- so that there is as much space left as possible
@@ -60,7 +70,7 @@ aroundArrangement useOld arrangement newBoxishs shelves = do
     inEx <- arrangement boxes shelves
     s0 <- defaultShelf
     void $ mapM (assignShelf (Just s0)) $ excludedList inEx
-    return $ inEx
+    return $ inEx { included = mapMaybe setPriority <$> (included inEx), excluded = mapMaybe setPriority <$> (excluded inEx) }
 
 
 
@@ -394,28 +404,44 @@ forSortedOverlap positionsWithShelf boxes =
 -- Boxes are move in sequence and and try to fill shelve
 -- in sequence. If they are not enough space the left boxes
 -- are returned.
-moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [box s] -> [shelf s] -> WH (InExcluded (Box s)) s
+moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [(box s)] -> [shelf s] -> WH (InExcluded (Box s)) s
 moveBoxes exitMode partitionMode sortMode bs ss = do
   boxes <- mapM findBox bs
-  let layers = groupBy ((==)  `on` boxBreak)
-               $ (if sortMode == SortBoxes then sortOnIf boxGlobalRank else id)
+  let sorted = (if sortMode == SortBoxes then sortOnIf boxGlobalRank else id)
                $ boxes
       boxGlobalRank box = (boxGlobalPriority box, boxStyle box, boxStylePriority box,  _boxDim box, boxContent box, boxContentPriority box)
-      boxBreak box = (boxStyle box, _boxDim box)
       -- \^ we need to regroup box by style and size
       -- However we take into the account priority within the style before the dimension
       -- so that we can set the priority
-        
+  inEx <- moveSortedBoxes exitMode partitionMode (map (,()) sorted) ss
+  return $ fmap fst inEx
+
+
+moveSortedBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> [(box s, p)] -> [shelf s] -> WH (InExcluded (Box s, p)) s
+moveSortedBoxes exitMode partitionMode bs ss = do
+  boxes <- mapM (firstM findBox) bs
+  let layers = groupBy ((==)  `on` boxBreak . fst ) boxes
+      boxBreak box = (boxStyle box, _boxDim box)
   (unzip -> (ins, exs))  <- forM layers $ \layer -> do
-    let groups = groupSimilar _boxDim layer
-    -- forM groups $ \(SimilarBy dim _ boxes) -> traceShowM ("  GROUP", dim, 1 + length boxes)
-    -- traceShowM ("GRoups", length groups, map (\(SimilarBy dim g1 g ) -> (show $ length g + 1, show . _roundDim $ dim )) groups)
-    moved'lefts <- mapM (\g -> moveSimilarBoxes exitMode partitionMode g ss) groups
+    let groups = groupSimilar (_boxDim . fst) layer
+    moved'lefts <- mapM (\g -> do
+                            let (boxes, priorities) = unzipSimilar g
+                            moved'lefts <- moveSimilarBoxes exitMode partitionMode boxes ss
+                            return case moved'lefts of
+                                     (Nothing, Just _) -> (Nothing, Just g)
+                                     (Just _ , Nothing)  -> (Just g, Nothing)
+                                     (Just moved, Just lefts) ->
+                                         -- boxes have been moved in order, moved + left == boxes
+                                         -- we can reassign the priorities in order
+                                         let (Just pmoved, Just pleft) = splitSimilar (length $ unSimilar moved) priorities
+                                         in (zipSimilar moved pmoved, zipSimilar lefts pleft)
+                                     (Nothing, Nothing) -> (Nothing, Nothing)
+                        ) groups
     let (moveds, lefts) = unzip moved'lefts
     return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
   return $ InExcluded (Just $ concat ins) (Just $ concat exs)
 
-moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s))  s
+moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s, Priority))  s
 moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
   newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
                                  , intercalate "#" tags_
@@ -432,15 +458,14 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
                       BoxNumberSelector NoLimit NoLimit NoLimit -> SortBoxes
                       _ -> DontSortBoxes
       tagOps = parseTagAndPatterns tagsAndPatterns tags
-  boxes0 <- narrowBoxes style ec >>= getBoxes-- findBoxByNameAndShelfNames style
-  case (boxes0, noEmpty) of
+  box'prioritys <- narrowBoxes style ec >>= getBoxPs-- findBoxByNameAndShelfNames style
+  case (box'prioritys, noEmpty) of
        ([], True) -> error $ show style ++ " returns an empty set"
        _         -> return ()
-  boxes <- mapM findBox boxes0
   inEx <- case locationM of
               Just location' -> do
                    -- reuse leftover of previous locations between " " same syntax as Layout
-                   moveToLocations ec sortMode boxes location'
+                   moveToLocations ec sortMode box'prioritys location'
                    -- foldM (\boxInEx locations -> do
                    --            let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
                    --            let locationss = splitOn "|" location
@@ -448,17 +473,18 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
                    --            ie <- aroundArrangement addOldBoxes (moveBoxes exitMode partitionMode $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
                    --            return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
                    --       ) (mempty { excluded = Just boxes}) (splitOn " " location')
-              Nothing -> return $ mempty { included = Just boxes } 
+              Nothing -> return $ mempty { included = Just box'prioritys } 
   case tags of
     [] -> return inEx
     _  -> do
       let untagOps = negateTagOperations tagOps
-      newIn <- zipWithM (updateBoxTags tagOps) (includedList inEx) [1..]
-      newEx <- zipWithM (updateBoxTags untagOps) (excludedList inEx) [1..]
+      newIn <- zipWithM (\b i -> firstM (flip (updateBoxTags tagOps) i) b ) (includedList inEx) [1..]
+      newEx <- zipWithM (\b i -> firstM (flip (updateBoxTags untagOps) i) b) (excludedList inEx) [1..]
       return $ InExcluded (Just newIn) (Just newEx)
 
 -- with each group having "mode" and locations
 -- A|B ^C|D means try A or B, then C or D with exit on top mode
+moveToLocations :: Ord p => ExContext s -> SortBoxes -> [(Box s, p)] -> Text -> WH (InExcluded (Box s, p)) s
 moveToLocations ec sortMode boxes location = do
    foldM (\boxInEx locations -> do
              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
@@ -468,7 +494,12 @@ moveToLocations ec sortMode boxes location = do
                  inEC s = case included (ecShelves ec) of
                              Nothing -> True
                              Just sid ->  s `elem` sid
-             ie <- aroundArrangement addOldBoxes (moveBoxes exitMode (fromMaybe (ecPartitionMode ec) partitionMode) $ fromMaybe sortMode sortModeM) (excludedList boxInEx) shelves
+             ie <- aroundArrangementWithP addOldBoxes
+                                     ( moveBoxes exitMode
+                                                 (fromMaybe (ecPartitionMode ec) partitionMode)
+                                                 $ fromMaybe sortMode sortModeM
+                                     )
+                                     (excludedList boxInEx) shelves
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
         ) (mempty { excluded = Just boxes}) (splitOn " " location)
 

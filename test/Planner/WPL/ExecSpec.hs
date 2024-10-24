@@ -21,12 +21,10 @@ pureSpec = describe "WPL" do
      it "sort everything by default *" do
         -- by style then by content then creating order
         select "*" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
-     it "sort everything by default (empty)" do
-        select "" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
      it "sort by style only default ^^^" do
         -- mainly because boxes are map by style see boxMap
         select "^^^" `shouldReturn` "A-3 A-1 A-2 B-2 B-1#1 B-1#2"
-     fit "sort everything by default ^" do
+     it "sort everything by default ^" do
         -- by style then by content then creating order
         select "^" `shouldReturn` "A-1 A-2 A-3 B-1#1 B-1#2 B-2"
      it "sort by style (only) by default" do

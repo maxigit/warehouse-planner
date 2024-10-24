@@ -650,7 +650,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 processMovesAndTags :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
 processMovesAndTags tagsAndPatterns param = do
   inEx <- moveAndTag withAll tagsAndPatterns param 
-  return (includedList inEx)
+  return (includedList $ fmap fst inEx)
 
 -- | read a file assigning tags to styles
 -- returns left boxes
@@ -860,7 +860,7 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
                         let boxes = concat boxesS
                             -- pmode = POr PAboveOnly PRightOnly
                         leftOvers <- withBoxOrientations orStrategies do
-                                         excludedList <$> moveToLocations withAll SortBoxes boxes shelf
+                                         fmap fst . excludedList <$> moveToLocations withAll SortBoxes (map (,()) boxes) shelf
 
                         let errs = if not (null leftOvers)
                                       then map (\b -> unlines [ "ERROR: box " <> tshow b <> " doesn't fit in " <> shelf

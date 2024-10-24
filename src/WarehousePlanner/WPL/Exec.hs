@@ -56,7 +56,7 @@ executeCommand ec command = case command of
     --------
     Move boxm pmodem orules shelf -> do
       newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
-      boxes <- getBoxes =<< case boxm of 
+      boxes <- getBoxPs =<< case boxm of 
                  Nothing -> return ec
                  Just sel -> narrowBoxes sel ec
       -- traceShowM ("BOXOS", length boxes)
@@ -67,8 +67,8 @@ executeCommand ec command = case command of
                     [] -> ecOrientationStrategies ec
                     _ -> orules
                   
-      inEx <- withBoxOrientations rules $ moveBoxes ExitLeft (fromMaybe (ecPartitionMode ec) pmodem) DontSortBoxes boxes shelves
-      return ec { ecBoxes = fmap ((,error "boom") . boxId) inEx }
+      inEx <- withBoxOrientations rules $ moveSortedBoxes ExitLeft (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
+      return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Tag tagOps -> do
       newBaseEvent "TAG" (tshow tagOps)
@@ -96,7 +96,7 @@ executeCommand ec command = case command of
                      [] -> ecOrientationStrategies ec
                      _ -> ors0
       inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
-      return ec { ecBoxes = fmap ((,error "boom2") . boxId) inEx }
+      return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Delete -> do
        boxes <- getBoxes ec

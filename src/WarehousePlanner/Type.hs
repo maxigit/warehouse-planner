@@ -635,7 +635,7 @@ data InExcluded a = InExcluded
                   { included :: Maybe [a]
                   , excluded :: Maybe [a]
                   }
-     deriving (Eq, Show, Functor)
+     deriving (Eq, Show, Functor, Foldable, Traversable)
 pattern AllOf, NoneOf :: Maybe [a ]
 pattern AllOf = Nothing
 pattern NoneOf = Just []
