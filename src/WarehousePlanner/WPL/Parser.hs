@@ -88,7 +88,7 @@ blockOf p mk = do
 
 thenLine :: MParser Statement
 thenLine =do
-  a <- atom
+  a <- atom <?> "line:atom"
   thenm <- optional $ try $ asum [  caseBlock <?> "case in line"
                                  , thenLine <?> "next in line"
                                  ]
@@ -177,8 +177,8 @@ command = asum $ map lexeme [ toggleTag
        pmode <- lexeme1 partitionModeParser
        return $ SetPartitionMode pmode
    orientationStrategies = do
-      lexeme1 "orules"
-      os <- lexeme1 orientationRules
+      lexeme1 "orules" <?> "orules:keyword"
+      os <- orientationRules
       return $ SetOrientationStrategies os
 
 
