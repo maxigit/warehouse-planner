@@ -67,7 +67,7 @@ statement :: MParser Statement
 statement = asum
    [ caseBlock <?> "statement:case block"
    , thenMulti <?> "statement:then multi"
-   ] 
+   ]  <?> "statement:one"
 
 
 caseBlock :: MParser Statement
@@ -113,7 +113,7 @@ thenMulti = do
 orBlock = do
   blockOf ((caseBlock <?> "caseBlock")
           <|>
-          (thenLine <?> "line block")
+          (thenMulti <?> "line block")
           ) mkOrs
 
 mkOrs :: NonEmpty Statement -> Statement
@@ -126,7 +126,7 @@ mkOrs ors = case ors of
 caseLine :: MParser Case
 caseLine = do
     lexeme "|" <?> "start caseline"
-    c <- thenLine
+    c <- thenMulti
     return case c of
        Then a b -> Case a (Just b)
        _ -> Case c Nothing

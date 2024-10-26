@@ -214,10 +214,10 @@ pureSpec = describe "Parsing" do
                           ,"  B"
                           ,"    C"
                           ,"  D"
-                          ] `parseAs'` Then (Then (Then "A"
-                                                        "B")
-                                                  "C")
-                                            "D"
+                          ] `parseAs'` Then "A" ( Ors [ "B" `Then` "C"
+                                                      , "D"
+                                                      ]
+                                                )
                        it "4" do
                          [ "Axxxxx "
                           ,"     B"
@@ -226,6 +226,64 @@ pureSpec = describe "Parsing" do
                            ] `parseAs'` Then (Then "Axxxxx"
                                                    "B")
                                              (Ors ["C", "D"])
+                       it "5" do
+                         [ "A A2 A3"
+                          ,"  B"
+                          ,"    C"
+                          ,"  D"
+                          ] `parseAs'` Then ("A" `Then` ( "A2" `Then` "A3"))
+                                            ( Ors [ "B" `Then` "C"
+                                                  , "D"
+                                                  ]
+                                            )
+            context "multi" do
+               it "one per line" do
+                parse' [ "A"
+                 ,"B"
+                 ] `shouldParse` ["A"
+                                 , "B"
+                                 ]
+               it "with cases" do
+                parse' [ "A | A2"
+                       , "  | A3"
+                        ,"B B2"
+                 ] `shouldParse` ["A" `Then` (Cases [ Case "A2" []
+                                                    , Case "A3" []
+                                                    ]
+                                             )
+                                 , "B" `Then` "B2"
+                                 ]
+               it "with cases wi" do
+                --        123456789
+                parse' [ "X"
+                       , "    A | A2"
+                       , "      | A3"
+                       , "    B B2"
+                 ] `shouldParse` [Then "X" $ Ors ["A" `Then` (Cases [ Case "A2" []
+                                                    , Case "A3" []
+                                                    ]
+                                             )
+                                 , "B" `Then` "B2"
+                                 ]]
+               it "A B Z" do
+                parse' [ "A"
+                       , "  B"
+                       , "Z"
+                       ] `shouldParse` ["A" `Then` "B"
+                                       , "Z"
+                                       ]
+               it "A B C D" do
+                parse' [ "A"
+                       , "  B"
+                       , "    C"
+                       , "  D"
+                       ] `shouldParse` ["A" `Then` Ors ["B" `Then` "C"
+                                                       , "D"
+                                                       ]
+                                       ]
+
+
+               
                  
 
    it "parses TAM with location" $ do
@@ -256,6 +314,41 @@ pureSpec = describe "Parsing" do
         "`a" `parseAs` Action (SelectBoxes "a")
      it "accept  lower case selector as command argument" do
         "with boxes" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "boxes")
+   context "bugs strategsies" do
+     it "1" do
+        [ "A "
+         ,"  .~ B | C"
+         ,"       | D"
+         ,"  E | F"
+         ,"    | G"
+         ]`parseAs'` ("A" `Then` Ors [ (Action (SelectBoxes Root)) `Then` ("B" `Then` Cases [Case "C" [], Case "D" []])
+                                     , "E"  `Then` Cases [Case "F" [], Case "G" []]
+                                     ]
+                     )
+     it "2" do
+       let z = "Z" `Then` Cases [ Case (m "E07.06/1") []
+                                , Case (m "E07.06/3") []
+                                , Case (m "error") []
+                                ] 
+       let y = "Y" `Then` Cases [ Case (Action $ SelectBoxes "^=1")
+                                       [Cases [ Case (m "E07.06/2") [] ]
+                                       ]
+                                , Case (m "E07.06/3") []
+                                , Case (m "error") []
+                                ] 
+           c = (Action (SelectBoxes Root) `Then` "C") `Then` Ors [m "pending", y]
+       [ "A"
+         ,"       | B"
+         ,"          .~ C"
+         ,"                 to pending"
+         ,"                 Y | ^1 | to E07.06/2"
+         ,"                   | to E07.06/3"
+         ,"                   | to error"
+         ,"          Z | to E07.06/1"
+         ,"            | to E07.06/3"
+         ,"            | to error"
+        ]`parseAs'` ( "A"  `Then` (Cases [Case "B" [Ors [c, z]]])
+                    )
         
 
 
