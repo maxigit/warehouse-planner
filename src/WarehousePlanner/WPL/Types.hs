@@ -21,8 +21,10 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetPartitionMode PartitionMode
              | SetOrientationStrategies [OrientationStrategy]
              | TraceCount Text
+             | SetNoEmptyBoxes Bool
+             | SetNoEmptyShelves Bool
      deriving (Show, Eq)
-     -- deriving Eq
+     {- deriving Eq
 -- instance Show Command where show = showCommand
 showCommand = \case
       Move{..} -> "Move " <> maybe "∅" showBoxSelector cSource <> " " <>  showCSelector showShelfSelector cDest
@@ -35,6 +37,7 @@ showCommand = \case
       TraceCount descr -> "TraceCount " <> show descr
       SetPartitionMode pmode -> "Set PMode " <> show pmode
       SetOrientationStrategies os -> "Orientations " <> show os
+      -}
        
       
 showBoxSelector = unpack . printBoxSelector

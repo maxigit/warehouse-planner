@@ -117,6 +117,12 @@ executeCommand ec command = case command of
     ---------
     SetOrientationStrategies os -> do
        return ec { ecOrientationStrategies = os }
+    ---------
+    SetNoEmptyBoxes emptyBoxes -> do
+       return ec { ecNoEmptyBoxes = emptyBoxes }
+    ---------
+    SetNoEmptyShelves emptyShelves -> do
+       return ec { ecNoEmptyShelves = emptyShelves }
 
 
 

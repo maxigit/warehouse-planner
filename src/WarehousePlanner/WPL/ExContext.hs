@@ -5,6 +5,7 @@ where
 import ClassyPrelude hiding(empty, (\\), fromList, toList)
 import Data.Foldable (toList)
 import WarehousePlanner.Type
+import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import Control.Monad.State(gets)
 
@@ -18,6 +19,8 @@ data ExContext s = ExContext
                , ecSelector :: BoxNumberSelector
                , ecPartitionMode :: PartitionMode
                , ecOrientationStrategies :: [OrientationStrategy]
+               , ecNoEmptyBoxes :: Bool
+               , ecNoEmptyShelves :: Bool
                }
      deriving (Show, Eq)
      
@@ -29,10 +32,12 @@ instance Semigroup (ExContext s) where
                           (error "esSelector <> not IMPLEMENTED")
                           (min (ecPartitionMode ec1) (ecPartitionMode ec2))
                           (ecOrientationStrategies ec1 <> ecOrientationStrategies ec2)
+                          (ecNoEmptyBoxes ec1 || ecNoEmptyBoxes ec2)
+                          (ecNoEmptyShelves ec1 || ecNoEmptyShelves ec2)
 
                           
 instance Monoid (ExContext s) where
-   mempty = ExContext mempty mempty Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly []
+   mempty = ExContext mempty mempty Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly [] False False
    
 -- We don't update the parent in purpose
 inverseBoxes :: ExContext s -> ExContext s
@@ -43,7 +48,7 @@ inverseShelves ec = ec { ecShelves = inverseInEx $ ecShelves ec }
     
 -- * Impure
 withAll :: ExContext s
-withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly []
+withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit NoLimit NoLimit) PRightOnly [] False False
                      
 -- | Boxes of the current which satisfy the given selector.
 -- At the moment, it is implemented as the intersection of 
@@ -52,25 +57,28 @@ narrowBoxes :: BoxSelector -> ExContext s -> WH (ExContext s) s
 narrowBoxes selector ec = do
    let finalSelector = combineSelector (ecSelector ec) selector
    -- traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
-   ecB <- case included (ecBoxes ec) of 
+   (ecB, incs) <- case included (ecBoxes ec) of 
      Nothing {- AllOf -} -> do
            inc <- findBoxByNameAndShelfNamesWithPriority finalSelector
-           return allIncluded { included = Just inc } 
+           return (allIncluded { included = Just inc } , inc)
      Just inc -> do 
           (incs, exs) <- partitionBoxes finalSelector inc
-          return $ InExcluded (Just incs) (Just exs)
-
+          return (InExcluded (Just incs) (Just exs), incs)
+   when (ecNoEmptyBoxes ec && null incs) do
+      error $ "No boxes selected for " <> showBoxSelector selector
    return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector }
    
 narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
 narrowShelves selector ec = do
-    ecS <- case included (ecShelves ec) of 
+    (ecS, incs) <- case included (ecShelves ec) of 
       Nothing {- AllOf -} -> do
             inc  <- findShelvesByBoxNameAndNames selector
-            return allIncluded { included = Just inc }
+            return (allIncluded { included = Just inc }, inc)
       Just inc -> do
            (incs, exs) <- partitionShelves selector inc
-           return $ InExcluded (Just incs) (Just exs)
+           return (InExcluded (Just incs) (Just exs), incs)
+    when (ecNoEmptyShelves ec && null incs) do
+         error $ "No shelves selected for " <> showShelfSelector selector
     return ec { ecShelves = fmap shelfId ecS }
 
 getBoxPs :: ExContext s -> WH [(Box s, Priority)] s

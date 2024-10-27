@@ -146,6 +146,10 @@ command = asum $ map lexeme [ toggleTag
                             , traceCount
                             , partitionMode
                             , orientationStrategies
+                            , noEmptyBoxes
+                            , emptyBoxes
+                            , noEmptyShelves
+                            , emptyShelves
                             ] where
    move = do
             lexeme1 "to"
@@ -180,6 +184,18 @@ command = asum $ map lexeme [ toggleTag
       lexeme1 "orules" <?> "orules:keyword"
       os <- orientationRules
       return $ SetOrientationStrategies os
+   noEmptyBoxes = do
+      lexeme1 "empty-boxes:no"
+      return $ SetNoEmptyBoxes True
+   emptyBoxes = do
+      lexeme1 "empty-boxes:yes"
+      return $ SetNoEmptyBoxes False
+   noEmptyShelves = do
+      lexeme1 "empty-shelves:no"
+      return $ SetNoEmptyShelves True
+   emptyShelves = do
+      lexeme1 "empty-shelves:yes"
+      return $ SetNoEmptyShelves False
 
 
    boxSel = SelectBoxes <$> boxSelector 
