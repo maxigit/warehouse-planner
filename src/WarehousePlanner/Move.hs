@@ -51,10 +51,12 @@ aroundArrangementWithP useOld arrangement newBoxishs shelves = do
     let -- priorityMap :: Map (BoxId s) p
         priorityMap =  Map.fromList $ map (first boxId) newBox'Ps
         newBoxes = map fst newBox'Ps
+        boxOrder b = let Dimension l w h = boxOffset b
+                     in (l,h,w)
     boxesBefore <- case useOld of
               NewBoxesOnly -> return newBoxes
               AddOldBoxes -> do
-                          allOldBoxes <- concatMap reverse `fmap` mapM findBoxByShelf shelves
+                          allOldBoxes <- concatMap (sortOn boxOrder) `fmap` mapM findBoxByShelf shelves
                           -- make sure news and old boxes don't have boxes in commun
                           let oldBoxes = filter ((`notMember` priorityMap) . boxId) allOldBoxes
                           return $ oldBoxes ++ newBoxes
