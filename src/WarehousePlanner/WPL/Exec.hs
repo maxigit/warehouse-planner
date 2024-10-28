@@ -51,6 +51,15 @@ executeStatement ec command =
         PassThrought statement -> do
            executeStatement ec statement
            return ec
+        ForeachShelf statement -> do
+           -- set the context to each individial shelf and 
+           -- Maybe we should use the parent content
+           let shelves = includedList $ ecShelves ec
+           forM_ shelves \shelf -> 
+                void $ executeStatement (ec { ecShelves = (ecShelves ec) {included = Just [shelf] }}) statement
+           return ec
+
+           
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)

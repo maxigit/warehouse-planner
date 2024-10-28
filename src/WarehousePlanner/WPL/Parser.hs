@@ -144,6 +144,7 @@ caseLine = do
 
 atom :: MParser Statement
 atom = (PassThrought <$> (lexeme ";" *> statement ))
+       <|> (ForeachShelf <$> (lexeme "foreach:shelf" *> statement))
        <|> ("("  *> statement <* ")")
        <|> (notFollowedBy "|" >> Action <$> command )
 

@@ -50,6 +50,7 @@ data Statement = Action Command
                | Ors (NonEmpty Statement)
                | Then Statement Statement
                | PassThrought Statement
+               | ForeachShelf Statement
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)
