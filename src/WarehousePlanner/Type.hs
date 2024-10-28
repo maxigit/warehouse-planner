@@ -625,6 +625,8 @@ selectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
                              (BoxNumberSelector NoLimit NoLimit NoLimit)
 
+selectAllShelves :: ShelfSelector
+selectAllShelves = ShelfSelector SelectAnything SelectAnything
 -- ** For moves
 data SortBoxes = SortBoxes | DontSortBoxes
      deriving (Eq, Ord, Show)

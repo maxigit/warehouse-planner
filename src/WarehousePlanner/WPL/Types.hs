@@ -65,6 +65,7 @@ data CSelector  s = CSelector s
                   | Parent 
                   | Root
                   | CStatement Statement
+                  | CUseContext
      deriving (Eq, Show)
      
 showCSelector shows sel = case sel of
@@ -73,6 +74,7 @@ showCSelector shows sel = case sel of
     Parent -> "<Parent>"
     Root -> "<Root>"
     CStatement stmt -> "<" <> show stmt <> ">"
+    CUseContext -> "<ctxt>"
 
      
 

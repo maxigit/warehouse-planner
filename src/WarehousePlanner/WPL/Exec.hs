@@ -16,6 +16,7 @@ import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
 import Control.Monad(zipWithM_)
+import Data.Set qualified as Set
 
 
 runWPL :: [Statement] -> WH () s
@@ -86,7 +87,7 @@ executeCommand ec command = case command of
                  Just sel -> narrowBoxes sel ec
       -- traceShowM ("BOXOS", length boxes)
       shelves <-  do
-         getShelves =<< narrowCSelector narrowShelves shelf ec
+         getShelves =<< narrowCSelector shelf ec
       -- traceShowM ("SHELVES", shelf, length shelves)
       let rules = case orules of
                     [] -> ecOrientationStrategies ec
@@ -110,10 +111,10 @@ executeCommand ec command = case command of
       return ec
     ---------
     SelectBoxes selector -> do
-      narrowCSelector narrowBoxes selector ec
+      narrowCSelector selector ec
     ---------
     SelectShelves selector -> do
-      narrowCSelector narrowShelves selector ec
+      narrowCSelector selector ec
     ---------
     TagAndMove txt ors0 -> do
       let (tags, locm) = splitTagsAndLocation txt
@@ -177,13 +178,42 @@ parseWPL source content =
        Left bundle -> Left $ pack $ P.errorBundlePretty bundle
        Right statements -> return statements
 
+class Narrowing selector where
+  narrow :: selector -> ExContext s -> WH (ExContext s) s
+  useContext :: ExContext s -> WH selector s
+  
+instance Narrowing BoxSelector where
+  narrow = narrowBoxes
+  useContext ec = do
+    -- narrow using context shelves
+    case included (ecShelves ec) of 
+      Nothing -> return selectAllBoxes
+      Just _ -> do
+         shelves <- getShelves ec
+         let shelfSelectors = Selector (NameMatches $ map (MatchFull . shelfName) shelves) []
+         return selectAllBoxes { shelfSelectors }
+  
+instance Narrowing ShelfSelector where
+  narrow = narrowShelves
+  useContext ec = do
+     case included (ecBoxes ec) of 
+         Nothing -> return $ selectAllShelves
+         Just _ -> do
+           boxes <- getBoxes ec
+           shelves <- mapM findShelf $ mapMaybe boxShelf boxes
+           let shelfList = Set.fromList shelves
+               sShelfSelectors = Selector (NameMatches $ map (MatchFull . shelfName) $ toList shelfList) []
+           return selectAllShelves {sShelfSelectors}
 
-narrowCSelector :: (selector -> ExContext s -> WH (ExContext s) s) -> CSelector selector -> ExContext s -> WH (ExContext s) s
-narrowCSelector narrow cselector ec = 
+narrowCSelector :: forall selector s . Narrowing selector => CSelector selector -> ExContext s -> WH (ExContext s) s
+narrowCSelector cselector ec = 
    case cselector of
        CSelector selector -> narrow selector ec
        Parent -> return $ fromMaybe withAll (ecParent ec)
        Root -> return $ withAll --  . show $  up $ error $ show ec
        SwapContext -> return $ inverseBoxes ec 
        CStatement stmt -> executeStatement ec stmt
+       CUseContext ->  do
+          selector :: selector <- useContext ec
+          narrow selector ec
    -- where up e = maybe e up (ecParent e)

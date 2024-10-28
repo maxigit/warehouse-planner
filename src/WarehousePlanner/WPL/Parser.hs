@@ -223,13 +223,15 @@ command = asum $ map lexeme [ toggleTag
 
 boxSelector :: MParser (CSelector BoxSelector)
 boxSelector =  label "box selector" $ asum
-    [  lexeme1 "in" >> cselector ((\sel -> selectAllBoxes { shelfSelectors = sel} ) . parseSelector)
+    [  lexeme1 "in:shelves" >> return CUseContext
+    ,  lexeme1 "in" >> cselector ((\sel -> selectAllBoxes { shelfSelectors = sel} ) . parseSelector)
     , guardLower >> cselector (parseBoxSelectorWithDef False)
     ]
 
 shelfSelector :: MParser (CSelector ShelfSelector)
 shelfSelector = label "shelf selector" $ asum
-     [ lexeme1 "with" >> cselector parseShelfSelector
+     [ lexeme1 "with" >> cselector parseShelfSelector 
+     , lexeme1 "with:boxes" >> return CUseContext
      , cselector (ShelfSelector SelectAnything . parseSelector)
      ]
 isSelector :: Char -> Bool
@@ -245,6 +247,8 @@ cselector mk = try $ asum [swapContext, root, parent, stmt, sel ] where
      parent = (lexeme $ char '~') >> return Parent
      root = (lexeme $ string ".~") >> return Root
      stmt = CStatement <$> (lexeme "(" *> statement <* lexeme ")")
+     -- use = lexeme "ctxt"  >> return CUseContext
+         
 
 orientationRules :: MParser [OrientationStrategy]
 orientationRules = do
