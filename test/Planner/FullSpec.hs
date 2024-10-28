@@ -176,6 +176,12 @@ spec = describe "Full scenario" do
       rows <- loadAndExec "data" "pl-65" (generateStockTakes Nothing)
       expected <- readFileUtf8 ("data" </> "pl-65" <.> "stocktake")
       rows `shouldBe'` lines expected
+   it "reads C1 with WPL" do
+      -- full example with WPL
+      rows <- loadAndExec "data"  "c1" (generateStockTakes Nothing)
+      expected <- readFileUtf8 ("data" </> "c1" <.> "stocktake")
+      rows `shouldBe` lines expected
+
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
 -- to a given result.
