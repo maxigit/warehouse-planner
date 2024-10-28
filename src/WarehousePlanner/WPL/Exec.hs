@@ -127,6 +127,14 @@ executeCommand ec command = case command of
        traceM $ "     included shelves" <> show( fmap length $ included ecShelves)
        traceM $ "     excluded shelves" <> show( fmap length $ excluded ecShelves)
        return ec
+    TraceBoxes desc -> do
+       let ExContext{..} = ec
+       traceM $ "Trace Count " <> unpack desc -- <> " "  <> show ecSelector
+       incs <- mapM (findBox . fst) (includedList ecBoxes)
+       exs <- mapM (findBox . fst) (excludedList ecBoxes)
+       traceM $ "     included boxes" <> show(  map boxStyleAndContent incs)
+       traceM $ "     excluded boxes" <> show(  map boxStyleAndContent exs)
+       return ec
     ---------
     SetPartitionMode pmode -> do
        return ec { ecPartitionMode = pmode }

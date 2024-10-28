@@ -155,6 +155,7 @@ command = asum $ map lexeme [ toggleTag
                             , tam
                             , delete
                             , traceCount
+                            , traceBoxes
                             , partitionMode
                             , orientationStrategies
                             , noEmptyBoxes
@@ -187,6 +188,10 @@ command = asum $ map lexeme [ toggleTag
        lexeme1 "trace:count"
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceCount desc
+   traceBoxes = do
+       lexeme1 "trace:boxes"
+       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
+       return $ TraceBoxes desc
    partitionMode = do
        lexeme1  "place"
        pmode <- lexeme1 partitionModeParser

@@ -21,6 +21,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetPartitionMode PartitionMode
              | SetOrientationStrategies [OrientationStrategy]
              | TraceCount Text
+             | TraceBoxes Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
      deriving (Show, Eq)
