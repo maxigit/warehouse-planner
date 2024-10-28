@@ -65,7 +65,7 @@ wplParser = (some $ L.nonIndented spaces $ statement) <*  spaces <* eof
 
 statement :: MParser Statement
 statement = asum
-   [ caseBlock <?> "statement:case block"
+   [ indentedBlock <?> "statement:case block"
    , thenMulti <?> "statement:then multi"
    ]  <?> "statement:one"
 
@@ -73,6 +73,17 @@ statement = asum
 caseBlock :: MParser Statement
 caseBlock = do
   blockOf caseLine Cases
+
+thenBlock :: MParser Statement
+thenBlock = do
+  blockOf line mkThen 
+  where line = do
+          lexeme "&" <?> "& line"
+          thenMulti
+        mkThen = F.foldr1 Then 
+        --       ^^^^^^^^
+        --       [a, b, c] -> a Then (b Then c)
+indentedBlock = caseBlock <|> thenBlock
 
 -- | Statements with same indentation
 blockOf :: MParser a -> (NonEmpty a -> b) -> MParser b
@@ -89,7 +100,7 @@ blockOf p mk = do
 thenLine :: MParser Statement
 thenLine =do
   a <- atom <?> "line:atom"
-  thenm <- optional $ try $ asum [  caseBlock <?> "case in line"
+  thenm <- optional $ try $ asum [  indentedBlock <?> "case in line"
                                  , thenLine <?> "next in line"
                                  ]
   case thenm of
@@ -111,7 +122,7 @@ thenMulti = do
          --       [a, b, c] ->  (a Then b) Then c
 
 orBlock = do
-  blockOf ((caseBlock <?> "caseBlock")
+  blockOf ((indentedBlock <?> "indentedBlock")
           <|>
           (thenMulti <?> "line block")
           ) mkOrs

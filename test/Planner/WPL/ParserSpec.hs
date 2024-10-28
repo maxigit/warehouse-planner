@@ -236,6 +236,14 @@ pureSpec = describe "Parsing" do
                                                   , "D"
                                                   ]
                                             )
+               it "with &" do
+                   "A & B & C" `parseAs` Then "A" (Then "B" "C")
+               it "with indented &" do
+                   [ "A & B"
+                    ,"  & C"
+                    ,"  & D"
+                    ] `parseAs'` Then "A" ("B" `Then` ("C" `Then` "D"))
+
             context "multi" do
                it "one per line" do
                 parse' [ "A"

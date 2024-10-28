@@ -37,14 +37,30 @@ executeStatement ec command =
             mapM (void . executeStatement ec) coms
             return ec
         Cases cs -> do
-           foldM execCase ec cs
+           -- "select" each option and pass the leftover to the next option
+           -- (so that already selected boxes are excluded for the other cases)
+           -- However, the selected option are collected in order and passed at the end
+           -- ex
+           -- if we have A B C D E
+           --   & | A                 select A leftover B C D E -> included: B C D E  excluded: A
+           --     | C                 select C leftover B D E   -> included: B D E    excluded: A C
+           --     | A                 select 0 leftover B D E   -> included: B D E    excluded: A C
+           --     | D                 select D leftover B E     -> included: B E      excluded A C D
+           --   &                    included A C D    excluded B E
+           inverseBoxes <$> foldM execCase ec cs
         PassThrought statement -> do
            executeStatement ec statement
            return ec
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)
-             return $ inverseBoxes newEc
+             let newBoxes = ecBoxes $ inverseBoxes newEc
+             -- reinject previously selected boxes to exclude so that in effect, all selections
+             -- are collected in the excluded
+             return newEc { ecBoxes = newBoxes { excluded = excluded (ecBoxes ec) `merge` excluded newBoxes } }
+             -- return $ inverseBoxes newEc
+          merge (Just as) (Just bs) = Just (as <> bs)
+          merge am bm = am <|> bm
 
          
 
