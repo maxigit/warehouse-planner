@@ -266,15 +266,22 @@ isSelector c = not $ isSpace c || c == ')'
 
 
 cselector :: (Text -> s) -> MParser (CSelector s)
-cselector mk = try $ asum [swapContext, root, parent, stmt, sel ] where
-     swapContext = do
-         (string "-~")
-         return SwapContext
-     sel = CSelector . mk <$> lexeme1 (takeWhile1P (Just "selector") isSelector)
-     parent = (lexeme $ char '~') >> return Parent
-     root = (lexeme $ string ".~") >> return Root
-     stmt = CStatement <$> (lexeme "(" *> statement <* lexeme ")")
-     -- use = lexeme "ctxt"  >> return CUseContext
+cselector mk = try $  do
+        gs <- many go
+        selectorm <- case gs of
+          [] -> Just <$> sel
+          _ -> optional sel
+        case gs <> toList selectorm of 
+           [] -> fail "some returning []"
+           [one] -> return one
+           cs -> return $ F.foldr1 CSelectorAnd cs
+  where go = asum [swapContext, root, parent] where
+        swapContext = do
+            (string "-~")
+            return SwapContext
+        sel = CSelector . mk <$> lexeme1 (takeWhile1P (Just "selector") isSelector)
+        parent = (char '~') >> return Parent
+        root = (string ".~") >> return Root
          
 
 orientationRules :: MParser [OrientationStrategy]

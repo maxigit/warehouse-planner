@@ -224,6 +224,7 @@ narrowCSelector cselector ec = do
        CUseContext ->  do
           selector :: selector <- useContext ec
           narrow selector ec
+       CSelectorAnd s1 s2 -> narrowCSelector s1 ec >>= narrowCSelector s2
    return ec' { ecNoEmptyBoxes = ecNoEmptyBoxes ec, ecNoEmptyShelves = ecNoEmptyShelves ec }
 
    -- where up e = maybe e up (ecParent e)

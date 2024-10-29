@@ -372,6 +372,15 @@ pureSpec = describe "Parsing" do
         "`a" `parseAs` Action (SelectBoxes "a")
      it "accept  lower case selector as command argument" do
         "with boxes" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "boxes")
+   context "selectors" do
+      it "1" do
+         ".~" `parseAs` (Action (SelectBoxes Root))
+      it "2" do
+         ".~~" `parseAs` (Action (SelectBoxes $ CSelectorAnd Root Parent) )
+      it "3" do
+         ".~~A" `parseAs` (Action (SelectBoxes $ CSelectorAnd Root $ CSelectorAnd  Parent "A") )
+      it "4" do
+         ".~  A" `parseAs` Then (Action (SelectBoxes Root)) "A"
    context "bugs strategsies" do
      it "1" do
         [ "A "
