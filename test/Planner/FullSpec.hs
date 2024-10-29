@@ -180,7 +180,7 @@ spec = describe "Full scenario" do
       -- full example with WPL
       rows <- loadAndExec "data"  "c1" (generateStockTakes Nothing)
       expected <- readFileUtf8 ("data" </> "c1" <.> "stocktake")
-      rows `shouldBe` lines expected
+      rows `shouldBe'` lines expected
 
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)

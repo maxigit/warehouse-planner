@@ -7731,9 +7731,3 @@ M61L01DP
        | M52L01PG
              to W00.02/1
 :END:
-
-:CheckShelves:
-shelves
-#@check=-skip
-:END:
-
