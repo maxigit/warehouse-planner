@@ -1,3 +1,34 @@
+# 2.0.0
+- Rewrite WPL parser to allow case blocks
+to start a block without extra indentation.
+  
+-  Misc WPL commands
+  foreach:shelf execute given action for each shelf
+  in:shelves with:boxes, select shelves/boxes in "context"
+  ex /A in:shelves is equivalent to /A in A
+  trace:count/boxes
+  & can start a then blck
+     & A
+     & B
+     & C
+    is equivalent to A B C
+    
+- Add WPL guards
+   empty-(boxes/shelves):(yes/no) activate/deactiavte checking for empty boxes/shelves.
+   When active narrowing resulting in an empty set raises an error.
+- Brick
+  Add keybinding helps
+  yank report to clipboard or set to vim/vd
+  add bestFitReport
+  add overlap checking :CHECKING:
+
+- Base
+  add ?? expand operator. value??default
+
+- Rearrange
+  add debug tag. If present (@debug=prefix) add debug information (starting with prefix)
+  add option to change "dead" tag boxes (@dead=tag)
+   
 # 1.4.1
 - change how limit works
   ^= in limit don't use the default sort order but only the given one
