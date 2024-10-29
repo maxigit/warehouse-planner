@@ -22,10 +22,10 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetOrientationStrategies [OrientationStrategy]
              | TraceCount Text
              | TraceBoxes Text
+             | TraceShelves Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
-     deriving (Show, Eq)
-     {-
+     -- deriving (Show, Eq)
        deriving Eq
 instance Show Command where show = showCommand
 showCommand = \case
@@ -39,6 +39,8 @@ showCommand = \case
       TraceCount descr -> "TraceCount " <> show descr
       SetPartitionMode pmode -> "Set PMode " <> show pmode
       SetOrientationStrategies os -> "Orientations " <> show os
+      _ -> "????"
+     {-
       -}
        
       

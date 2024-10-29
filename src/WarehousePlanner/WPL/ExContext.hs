@@ -65,7 +65,10 @@ narrowBoxes selector ec = do
           (incs, exs) <- partitionBoxes finalSelector inc
           return (InExcluded (Just incs) (Just exs), incs)
    when (ecNoEmptyBoxes ec && null incs) do
-      error $ "No boxes selected for " <> showBoxSelector selector
+      error $ "No boxes selected for '"
+            <> showBoxSelector selector
+            <> "' included: " <> show (fmap length $ included $ ecBoxes ec)
+            <> "' excluded: " <> show (fmap length $ excluded $ ecBoxes ec)
    return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector }
    
 narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
@@ -78,7 +81,10 @@ narrowShelves selector ec = do
            (incs, exs) <- partitionShelves selector inc
            return (InExcluded (Just incs) (Just exs), incs)
     when (ecNoEmptyShelves ec && null incs) do
-         error $ "No shelves selected for " <> showShelfSelector selector
+         error $ "No shelves selected for '"
+               <> showShelfSelector selector
+               <> "' included: " <> show (fmap length $ included $ ecShelves ec)
+               <> "' excluded: " <> show (fmap length $ excluded $ ecShelves ec)
     return ec { ecShelves = fmap shelfId ecS }
 
 getBoxPs :: ExContext s -> WH [(Box s, Priority)] s

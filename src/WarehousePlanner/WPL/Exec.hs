@@ -132,18 +132,26 @@ executeCommand ec command = case command of
     TraceCount desc-> do
        let ExContext{..} = ec
        traceM $ "Trace Count " <> unpack desc -- <> " "  <> show ecSelector
-       traceM $ "     included boxes" <> show(  fmap length $ included ecBoxes )
-       traceM $ "     excluded boxes" <> show(  fmap length $ excluded ecBoxes)
-       traceM $ "     included shelves" <> show( fmap length $ included ecShelves)
-       traceM $ "     excluded shelves" <> show( fmap length $ excluded ecShelves)
+       traceM $ "     included boxes " <> show(  fmap length $ included ecBoxes )
+       traceM $ "     excluded boxes " <> show(  fmap length $ excluded ecBoxes)
+       traceM $ "     included shelves " <> show( fmap length $ included ecShelves)
+       traceM $ "     excluded shelves " <> show( fmap length $ excluded ecShelves)
        return ec
     TraceBoxes desc -> do
        let ExContext{..} = ec
-       traceM $ "Trace Count " <> unpack desc -- <> " "  <> show ecSelector
-       incs <- mapM (findBox . fst) (includedList ecBoxes)
-       exs <- mapM (findBox . fst) (excludedList ecBoxes)
-       traceM $ "     included boxes" <> show(  map boxStyleAndContent incs)
-       traceM $ "     excluded boxes" <> show(  map boxStyleAndContent exs)
+       traceM $ "Trace Boxes " <> unpack desc -- <> " "  <> show ecSelector
+       incs <- mapM (findBox . fst) `traverse` (included ecBoxes)
+       exs <- mapM (findBox . fst) `traverse` (excluded ecBoxes)
+       traceM $ "     included boxes " <> show(  map boxStyleAndContent <$> incs)
+       traceM $ "     excluded boxes " <> show(  map boxStyleAndContent <$> exs)
+       return ec
+    TraceShelves desc -> do
+       let ExContext{..} = ec
+       traceM $ "Trace Shelves " <> unpack desc -- <> " "  <> show ecSelector
+       incs <- mapM findShelf `traverse` included ecShelves
+       exs <- mapM findShelf `traverse` excluded ecShelves
+       traceM $ "     included shelves " <> show(  map shelfName <$> incs)
+       traceM $ "     excluded shelves " <> show(  map shelfName <$> exs)
        return ec
     ---------
     SetPartitionMode pmode -> do
