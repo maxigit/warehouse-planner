@@ -83,7 +83,14 @@ thenBlock = do
         mkThen = F.foldr1 Then 
         --       ^^^^^^^^
         --       [a, b, c] -> a Then (b Then c)
-indentedBlock = caseBlock <|> thenBlock
+        --       
+passThrougBlock = do
+   blockOf "passthrough" line (PassThrought . mkOrs)
+   where line = do
+          lexeme ";" <?> "passthrough"
+          thenMulti
+
+indentedBlock = caseBlock <|> thenBlock <|> passThrougBlock
 
 -- | Statements with same indentation
 blockOf :: String -> MParser a -> (NonEmpty a -> b) -> MParser b
@@ -158,9 +165,9 @@ caseLine = do
        _ -> Case c Nothing
 
 atom :: MParser Statement
-atom = (PassThrought <$> (lexeme ";" *> statement ))
-       <|> ("("  *> statement <* ")")
-       <|> foreachS
+atom = -- (PassThrought <$> (lexeme ";" *> statement ))
+       -- ("("  *> statement <* ")")
+       foreachS
        <|> (notFollowedBy "|" >> Action <$> command )
 
 command = asum $ map lexeme [ toggleTag
