@@ -206,8 +206,8 @@ instance Narrowing ShelfSelector where
            return selectAllShelves {sShelfSelectors}
 
 narrowCSelector :: forall selector s . Narrowing selector => CSelector selector -> ExContext s -> WH (ExContext s) s
-narrowCSelector cselector ec = 
-   case cselector of
+narrowCSelector cselector ec = do
+   ec' <- case cselector of
        CSelector selector -> narrow selector ec
        Parent -> return $ fromMaybe withAll (ecParent ec)
        Root -> return $ withAll --  . show $  up $ error $ show ec
@@ -216,4 +216,6 @@ narrowCSelector cselector ec =
        CUseContext ->  do
           selector :: selector <- useContext ec
           narrow selector ec
+   return ec' { ecNoEmptyBoxes = ecNoEmptyBoxes ec, ecNoEmptyShelves = ecNoEmptyShelves ec }
+
    -- where up e = maybe e up (ecParent e)
