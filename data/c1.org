@@ -5137,18 +5137,20 @@ in W05.04/1
 in W05.08/1 tam @W05.08/1
 in E05.04/2 place overlap orules 2* tam @E05.04/2#-unstick
 orules 2|=
-       in W03.05/1 tam @W03.05/1
-       in W03.05/2 tam @W03.05/2
+       /W03.05/[12] foreach:shelf trace:count "BEFORE" in:shelves trace:count TO_TAM tam @ trace:count "AFTER"
+       trace:count "==========" -- in W03.05/2 tam @W03.05/2
 M51W01CE
   to pending*
   to best W03.05/1
 orules xx2|= -- 3FA
-       in W04.01/2 tam @W04.01/2
-       in W04.01/3 tam @W04.01/3
-       in W04.03/1 tam @W04.03/1
-       in W04.03/2 tam @W04.03/2
-       in W04.04/1 tam @W04.04/1
-       in W04.04/2 tam @W04.04/2
+       /W04.01/[23]|W04.0[34]/[12] foreach:shelf in:shelves tam @
+       -- ^^^^^^^^^^^ this is equivalent to below
+       -- in W04.01/2 tam @W04.01/2
+       -- in W04.01/3 tam @W04.01/3
+       -- in W04.03/1 tam @W04.03/1
+       -- in W04.03/2 tam @W04.03/2
+       -- in W04.04/1 tam @W04.04/1
+       -- in W04.04/2 tam @W04.04/2
 M51W07BG/W01*/* tag @check=skip
 :END:
 *** Import 
@@ -7731,3 +7733,4 @@ M61L01DP
        | M52L01PG
              to W00.02/1
 :END:
+

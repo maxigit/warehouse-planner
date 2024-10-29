@@ -289,6 +289,56 @@ pureSpec = describe "Parsing" do
                                                        , "D"
                                                        ]
                                        ]
+   context "foreach" do
+      it "one line" do
+         ["/A foreach:shelf B C"
+          ] `parseAs'` (Then (Action $ SelectShelves "A")
+                             $ ForeachShelf ("B" `Then` "C")
+                       )
+      it "uses full line only" do
+         [ "/A"
+          ,"   foreach:shelf B"
+          ,"        C"
+          ] `parseAs'` (Then (Action $ SelectShelves "A")
+                             $ Then (ForeachShelf "B") 
+                                    "C"
+                       )
+      it "return two statements" do
+         -- foreach should not consume the C
+         parse' [ "/A"
+                , "   foreach:shelf B"
+                , "C"
+                ] `shouldParse` [Then (Action $ SelectShelves "A")
+                             $ ForeachShelf "B"
+                             , "C"
+                             ]
+      it "uses indented block after newline" do
+         parse' [ "/A"
+                , "   foreach:shelf"
+                , "      B"
+                , "      C"
+                ] `shouldParse` [Then (Action $ SelectShelves "A")
+                                $ ForeachShelf $ Ors ["B" , "C" ]
+                                ]
+      it "uses indented block same line" do
+         parse' [ "/A"
+                , "   foreach:shelf B"
+                , "                 C"
+                ] `shouldParse` [Then (Action $ SelectShelves "A")
+                             $ ForeachShelf $ Ors ["B" , "C" ]
+                              ]
+      it "don't use next line" do
+         parse' ["/A foreach:shelf trace:count before in:shelves tam @"
+          , "B"]
+            `shouldParse` [ Then (Action $ SelectShelves "A")
+                                 ( ForeachShelf (Then (Action $ TraceCount "before" )
+                                                      (Action (SelectBoxes  CUseContext) `Then` (Action $ TagAndMove "@" []))
+                                                )
+                                 )
+
+                          , "B"
+                          ]
+
 
 
                

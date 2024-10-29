@@ -72,11 +72,11 @@ statement = asum
 
 caseBlock :: MParser Statement
 caseBlock = do
-  blockOf caseLine Cases
+  blockOf "case" caseLine Cases
 
 thenBlock :: MParser Statement
 thenBlock = do
-  blockOf line mkThen 
+  blockOf "thens" line mkThen 
   where line = do
           lexeme "&" <?> "& line"
           thenMulti
@@ -86,12 +86,12 @@ thenBlock = do
 indentedBlock = caseBlock <|> thenBlock
 
 -- | Statements with same indentation
-blockOf :: MParser a -> (NonEmpty a -> b) -> MParser b
-blockOf p mk = do
+blockOf :: String -> MParser a -> (NonEmpty a -> b) -> MParser b
+blockOf name p mk = do
   -- consume possible space to be sure to start at the beginning of
   -- block to get the indentation correct
   iLvl <- L.indentLevel
-  let iguard = try $ L.indentGuard hspaces EQ iLvl <?> ("blockGuard " <> show iLvl)
+  let iguard = try $ L.indentGuard hspaces EQ iLvl <?> (name <> ":blockGuard " <> show iLvl)
   cs <- some $ iguard >> p
   case cs of
      [] -> fail "some returning []"
@@ -100,12 +100,18 @@ blockOf p mk = do
 thenLine :: MParser Statement
 thenLine =do
   a <- atom <?> "line:atom"
-  thenm <- optional $ try $ asum [  indentedBlock <?> "case in line"
-                                 , thenLine <?> "next in line"
-                                 ]
-  case thenm of
-     Nothing -> return a <* (newLine <?> "end of thenLine")
-     Just then_ -> return $ a `Then` then_
+  -- if the atom consume a new line, then there is nothing else to to parse
+  afterLvl <- L.indentLevel
+  -- if iLvl >= afterLvl
+  if afterLvl == P.mkPos 1
+  then return a
+  else do 
+     thenm <- optional $ try $ asum [  indentedBlock <?> "case in line"
+                             , thenLine <?> "next in line"
+                             ]
+     case thenm of
+        Nothing -> return a <* (newLine <?> "end of thenLine")
+        Just then_ -> return $ a `Then` then_
 
 thenMulti :: MParser Statement
 thenMulti = do
@@ -114,15 +120,24 @@ thenMulti = do
   spaces
   -- get different blocks of decreasing indentation
   childrenm <- many $ (L.indentGuard spaces GT iLvl <?> ("thenMulti:guard " <> show iLvl))
-                        >> (orBlock <?> "thenMulti:children")
+                        >> (orBlock ("thenMulti" <> show iLvl)  <?> "thenMulti:children")
   return case childrenm of
          [] -> line
          ors -> F.foldl1 Then (line :| ors)
          --     ^^^^^^^^
          --       [a, b, c] ->  (a Then b) Then c
 
-orBlock = do
-  blockOf ((indentedBlock <?> "indentedBlock")
+foreachS :: MParser Statement
+foreachS = do
+  iLvl <- L.indentLevel
+  lexeme "foreach:shelf"
+  spaces
+  block <-  (L.indentGuard spaces GT iLvl <?> ("foreach:guard" <> show iLvl))
+                     >> (orBlock "foreach" <?> "foreach:children")
+  return $ ForeachShelf block
+
+orBlock name = do
+  blockOf (name <> ":or") ((indentedBlock <?> "indentedBlock")
           <|>
           (thenMulti <?> "line block")
           ) mkOrs
@@ -144,8 +159,8 @@ caseLine = do
 
 atom :: MParser Statement
 atom = (PassThrought <$> (lexeme ";" *> statement ))
-       <|> (ForeachShelf <$> (lexeme "foreach:shelf" *> statement))
        <|> ("("  *> statement <* ")")
+       <|> foreachS
        <|> (notFollowedBy "|" >> Action <$> command )
 
 command = asum $ map lexeme [ toggleTag
