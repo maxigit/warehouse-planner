@@ -9,7 +9,7 @@ import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, parseSel
 import WarehousePlanner.Type
 import Text.Megaparsec qualified as P
 import Text.Megaparsec.Debug qualified as P
-import GHC.Exts -- to write maybe as list
+import GHC.Exts -- to^ write maybe as list
 import Data.Char (isUpper)
 import Data.Either (isLeft, isRight)
 
@@ -62,7 +62,7 @@ parse' :: [Text] -> Either _ [Statement]
 parse' = parse . unlines
 -- * shortcut
 a = Action
-m = Action . Move Nothing Nothing []
+m = Action . flip (Move Nothing Nothing []) ExitOnTop
 ss = SelectShelves . CSelector . parseShelfSelector
 sb = SelectBoxes
 
@@ -78,7 +78,7 @@ pureSpec = describe "Parsing" do
    it "parses shelves containing boxes sections" do
       "with BOXES" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "BOXES")
    it "parses simple move" do
-      "BOXES to SHELF" `parseAs` ("BOXES" `Then` (m "SHELF"))
+      "BOXES to^ SHELF" `parseAs` ("BOXES" `Then` (m "SHELF"))
    it "parses oneliner case" do
       "BOXES | A | B" `parseAs` ("BOXES" `Then`
                                           (Cases [ Case "A" [Cases [Case "B" []]]]
@@ -87,8 +87,8 @@ pureSpec = describe "Parsing" do
    it "parses cases with initial break (bigger)" do
       --  12345678901234
       [  "BOXES"
-       , "      | A to S1"
-       , "      | B to S2"
+       , "      | A to^ S1"
+       , "      | B to^ S2"
        ] `parseAs'` ("BOXES" `Then`
                            Cases [ "A" `Case` [m "S1"]
                                  , "B" `Case` [m "S2"]
@@ -97,16 +97,16 @@ pureSpec = describe "Parsing" do
    it "parses cases with initial break (smaller)" do
       --  123456789
       [  "BOXES"
-       , "  | A to S1"
-       , "  | B to S2"
+       , "  | A to^ S1"
+       , "  | B to^ S2"
        ] `sameAs'` [  "BOXES"
-                   , "      | A to S1"
-                   , "      | B to S2"
+                   , "      | A to^ S1"
+                   , "      | B to^ S2"
                    ]
    it "parses cases with basic indentation" do
       --  123456789
-      [  "BOXES | A to S1"
-       , "      | B to S2"
+      [  "BOXES | A to^ S1"
+       , "      | B to^ S2"
        ] `parseAs'` ("BOXES" `Then`
                            Cases [ "A" `Case` [m "S1"]
                                  , "B" `Case` [m "S2"]
@@ -115,9 +115,9 @@ pureSpec = describe "Parsing" do
 
    it "parses cases with nested indentation" do
       --  12345678901234
-      [  "BOXES | A | to S1"
-       , "          | to S2"
-       , "      | B to S2"
+      [  "BOXES | A | to^ S1"
+       , "          | to^ S2"
+       , "      | B to^ S2"
        ] `parseAs'` ("BOXES" `Then`
                            Cases [ "A" `Case`
                                       [Cases [ m "S1" `Case` []
@@ -127,10 +127,10 @@ pureSpec = describe "Parsing" do
                                  ]
                    )
    it "parses with more nested cases " do
-      [  "BOXES | A | to S1 | to X"
-       , "                  | Y    "
-       , "          | to S2    "
-       , "      | B to S2"
+      [  "BOXES | A | to^ S1 | to^ X"
+       , "                   | Y    "
+       , "          | to^ S2    "
+       , "      | B to^ S2"
        ] `parseAs'` ("BOXES" `Then`
                            Cases [ "A" `Case`
                                       [ Cases [ m "S1" `Case`
@@ -145,12 +145,12 @@ pureSpec = describe "Parsing" do
                                  ]
                    )
    it "parses ors with nested indentation" do
-      -- ((BOXES  (A to S1)
-      --            to S2)
-      --          B to S2)
-      [  "BOXES  A to S1"
-       , "         to S2"
-       , "       B to S2"
+      -- ((BOXES  (A to^ S1)
+      --            to^ S2)
+      --          B to^ S2)
+      [  "BOXES  A to^ S1"
+       , "         to^ S2"
+       , "       B to^ S2"
        ] `parseAs'`  Then (Then ("BOXES" `Then` ("A" `Then`  m "S1")) -- first line
                                 ( m "S2" )                                  -- second block
                           )
@@ -417,13 +417,13 @@ pureSpec = describe "Parsing" do
        [ "A"
          ,"       | B"
          ,"          .~ C"
-         ,"                 to pending"
-         ,"                 Y | ^1 | to E07.06/2"
-         ,"                   | to E07.06/3"
-         ,"                   | to error"
-         ,"          Z | to E07.06/1"
-         ,"            | to E07.06/3"
-         ,"            | to error"
+         ,"                 to^ pending"
+         ,"                 Y | ^1 | to^ E07.06/2"
+         ,"                   | to^ E07.06/3"
+         ,"                   | to^ error"
+         ,"          Z | to^ E07.06/1"
+         ,"            | to^ E07.06/3"
+         ,"            | to^ error"
         ]`parseAs'` ( "A"  `Then` (Cases [Case "B" [Ors [c, z]]])
                     )
         

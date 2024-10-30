@@ -5103,13 +5103,13 @@ XXX
 :WPL:
 in W01.11/0 tam @W01.11/0
 M22W01DX
-  to pending*
-  to overlap orules 2% E01.07/1
+  to> pending*
+  to> overlap orules 2% E01.07/1
 in E06.03/1
-   to pending*
-   /E06.03/1 | M41L02DK to *
-             | M61W03BE to *
-             | to *
+   to> pending*
+   /E06.03/1 | M41L02DK to> *
+             | M61W03BE to> *
+             | to> *
 /E06.01/*
   in E06.01/1 tam @*/1
   in E06.01/2 tam @*/2
@@ -5140,14 +5140,14 @@ orules 2|=
        /W03.05/[12] foreach:shelf trace:count "BEFORE" in:shelves trace:count TO_TAM tam @ trace:count "AFTER"
        trace:count "==========" -- in W03.05/2 tam @W03.05/2
 M51W01CE
-  to pending*
-  to best W03.05/1
+  to> pending*
+  to> best W03.05/1
 orules xx2|= -- 3FA
        & /W04.*/*
        & / W04.01/[23]
          / W04.0[34]/[12]
        & foreach:shelf in:shelves tam @
-       -- ^^^^^^^^^^^ this is equivalent to below
+       -- ^^^^^^^^^^^ this is equivalent to> below
        -- in W04.01/2 tam @W04.01/2
        -- in W04.01/3 tam @W04.01/3
        -- in W04.03/1 tam @W04.03/1
@@ -7542,26 +7542,26 @@ M61E05DW#dead/pending
 ** Compacted
 
 :WPL:
-*1DT/error to pending6
+*1DT/error to> pending6
 #compacted
   | #dead delete
   | #ghost delete
-  | to pending*
+  | to> pending*
 M31L01FH
   #ghost delete
 M31L01FH
   *
-    | #location=*'1 to pending
-    | #location=*'2 to pending2
-    | to pending3
-  .~ *2FO to orules xx1= W07.0[234]/1
+    | #location=*'1 to> pending
+    | #location=*'2 to> pending2
+    | to> pending3
+  .~ *2FO to> orules xx1= W07.0[234]/1
   /W07.0[23]/*
     orules xx1= place above
-                      | in pending  | #-batch to */1
-                                    | #batch=*[B-E]* to  */1
-                                    | #batch=*[F-Z]* to   */1
-                      | in pending2 | #batch=*[F-Z]* to  */2
-                                    | to  orules xx1| */2
+                      | in pending  | #-batch to> */1
+                                    | #batch=*[B-E]* to>  */1
+                                    | #batch=*[F-Z]* to>   */1
+                      | in pending2 | #batch=*[F-Z]* to>  */2
+                                    | to>  orules xx1| */2
 :END:
 * New styles
 ** Import 
@@ -7646,94 +7646,94 @@ M52L04FC,20,65,37,57
 M61L03DE
   place overlap
    orules x9|=
-          to pending3
-          ^1 | #'l=<-7000> to N02.02/[12]
-             | to N02.0[23]/[12]
-          in pending3 | to N01.*
-                      | to N02.*/3
-                      | to N02.0[23]/*
+          to> pending3
+          ^1 | #'l=<-7000> to> N02.02/[12]
+             | to> N02.0[23]/[12]
+          in pending3 | to> N01.*
+                      | to> N02.*/3
+                      | to> N02.0[23]/*
 M61L01DP
-  to pending4
-  | to - W03.04/[12]
-  | to error
+  to> pending4
+  | to> - W03.04/[12]
+  | to> error
 #batch=M 
-   | #-first to C2
+   | #-first to> C2
    | #first tam @C1
   ------------------------------------------------
    | #first
        | M52L04FC
           .~ M22L08DG
-                 to pending
-                 # | ^1 | to E07.06/2
-                   | to E07.06/3
-                   | to error
-          | to E07.06/1
-          | to E07.06/3
-          | to error
+                 to> pending
+                 # | ^1 | to> E07.06/2
+                   | to> E07.06/3
+                   | to> error
+          | to> E07.06/1
+          | to> E07.06/3
+          | to> error
        | M52L03DO
            .~ M02E03DF
-                to pending*
+                to> pending*
               M32L01DT 
                   in N03.03/[12] | tam ^@N03.03/[12] with x2x|=
-                                 | to error
-           | to N03.03/[12]
+                                 | to> error
+           | to> N03.03/[12]
        | M52L01DJ
-           .~ M22W09DX to N02.01/[12]
-           to E07.01/[12]
+           .~ M22W09DX to> N02.01/[12]
+           to> E07.01/[12]
        | M52L02DO
-           .~ in W06.04/* to pending3 
-           to W06.04/1
+           .~ in W06.04/* to> pending3 
+           to> W06.04/1
        | M52L01DG
-           to above W07.04/[12]
+           to> above W07.04/[12]
        | M52L04HB
-           .~ in W03.01/[12] to pending 3
-           to W03.01/1
+           .~ in W03.01/[12] to> pending 3
+           to> W03.01/1
        | M52L02DL
-           to W03.01/2
+           to> W03.01/2
        | M52L04PB
            tam ^W07.01/[12]
-              .~ M02L05DK to right W07.01/[12]
+              .~ M02L05DK to> right W07.01/[12]
        | M52L01HG
-           .~ in W03.06/2 to pending 3
-           to W03.06/2
+           .~ in W03.06/2 to> pending 3
+           to> W03.06/2
        | M52L01HM
-           to E01.01/1
+           to> E01.01/1
        | M52L01PP
-           to E07.01/2
+           to> E07.01/2
        | M52L04FB
-           to orules x2x|= E01.07/1
+           to> orules x2x|= E01.07/1
        | M52L04DB
-           .~ in E30.01/1 to pending3
-           to E30.01/1
+           .~ in E30.01/1 to> pending3
+           to> E30.01/1
        | M52L03HK
-           to E01.07/2
+           to> E01.07/2
        | M52L01PM
-           to E30.01/2
+           to> E30.01/2
        | M71L07PF
-           to W03.01/1
+           to> W03.01/1
        | M52L02HH
-           to W03.04/2
+           to> W03.04/2
        | M52L01PJ
-           to W05.04/1
+           to> W05.04/1
        | M52L02XH
-            to W07.04/2
+            to> W07.04/2
        | M52L02DH
-            to W08.02/1
+            to> W08.02/1
        | M52L02DP
             .~ in W04.05/1 tam @W04.05/1
-            to W04.05/1
+            to> W04.05/1
        | M52L03DK
             .~ in W00.01/1 tam @W00.01/1
-            to W00.01/1
+            to> W00.01/1
        | M52L01FP
-            to E30.01/1
+            to> E30.01/1
        | M52L01HS
-            to E01.06/1
+            to> E01.06/1
        | M52L01DM
-            to W06.01/1
+            to> W06.01/1
        | M52L04DK
-           to -| W00.02/1
+           to> -| W00.02/1
        | M52L01PG
-             to W00.02/1
+             to> W00.02/1
 :END:
 

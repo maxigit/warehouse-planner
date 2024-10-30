@@ -11,6 +11,7 @@ data Command = Move { cSource :: Maybe BoxSelector
                     , cPartitionMode :: Maybe PartitionMode
                     , cOrientationStrategies :: [OrientationStrategy]
                    , cDest   :: CSelector ShelfSelector
+                   , cExitMode  :: ExitMode 
                    }
              | Tag { cTagOps :: [Tag'Operation] }
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
@@ -25,7 +26,8 @@ data Command = Move { cSource :: Maybe BoxSelector
              | TraceShelves Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
-             | AssertNull Bool Text
+             | AssertBoxes Bool Text
+             | AssertShelves Bool Text
      deriving (Show, Eq)
      {-
        deriving Eq

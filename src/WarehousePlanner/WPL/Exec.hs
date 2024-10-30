@@ -87,7 +87,7 @@ executeStatement ec command =
 executeCommand :: ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
-    Move boxm pmodem orules shelf -> do
+    Move boxm pmodem orules shelf exitMode -> do
       newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
       boxes <- getBoxPs =<< case boxm of 
                  Nothing -> return ec
@@ -100,7 +100,7 @@ executeCommand ec command = case command of
                     [] -> ecOrientationStrategies ec
                     _ -> orules
                   
-      inEx <- withBoxOrientations rules $ moveSortedBoxes ExitLeft (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
+      inEx <- withBoxOrientations rules $ moveSortedBoxes exitMode (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
       return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Tag tagOps -> do
@@ -161,15 +161,25 @@ executeCommand ec command = case command of
        traceM $ "     excluded shelves " <> show(  map shelfName <$> exs)
        return ec
     ---------
-    AssertNull assertNull desc -> do
-       let ExContext{..} = ec
-       case included ecBoxes == Just [] || included ecShelves == Just [] of
+    AssertBoxes assertNull desc -> do
+       case included (ecBoxes ec) == Just [] of
            True | assertNull == False  -> do
-                executeCommand ec (TraceCount $ "ASSERT " <> desc)
-                error $ "context null " <> show desc
+                executeCommand ec (TraceCount $ "ASSERT BOXES " <> desc)
+                error $ "no boxes null " <> show desc
            False | assertNull -> do
-                executeCommand ec (TraceCount $ "ASSERT " <> desc)
-                error $ "context not null " <> show desc
+                executeCommand ec (TraceCount $ "ASSERT NO BOXES " <> desc)
+                error $ "boxes present " <> show desc
+           _  -> return ()
+       return ec
+    ---------
+    AssertShelves assertNull desc -> do
+       case included (ecShelves ec) == Just [] of
+           True | assertNull == False  -> do
+                executeCommand ec (TraceCount $ "ASSERT SHELVES " <> desc)
+                error $ "no shelves null " <> show desc
+           False | assertNull -> do
+                executeCommand ec (TraceCount $ "ASSERT NO SHELVES " <> desc)
+                error $ "shelves present " <> show desc
            _  -> return ()
        return ec
     ---------

@@ -212,11 +212,11 @@ command = asum $ map lexeme [ toggleTag
                             , assert
                             ] where
    move = do
-            lexeme1 "to"
+            exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
             pmode <- optional $ lexeme1 partitionModeParser
             orules <- (lexeme1 "orules"  >> orientationRules) <|> return []
             shelf <-  shelfSelector
-            return $ Move Nothing pmode orules shelf
+            return $ Move Nothing pmode orules shelf exitMode
    tag = do
            lexeme1 "tag"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
@@ -236,18 +236,29 @@ command = asum $ map lexeme [ toggleTag
        lexeme1 "trace:count"
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceCount desc
+       <|> lexeme1 "t:c" $> (TraceCount "T:C")
    traceBoxes = do
        lexeme1 "trace:boxes"
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceBoxes desc
+       <|> lexeme1 "t:b" $> (TraceBoxes "T:B")
    traceShelves = do
        lexeme1 "trace:shelves"
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceShelves desc
+       <|> lexeme1 "t:s" $> (TraceShelves "T:S")
    assert = do
-       b <- (lexeme "assert:null"  >> return True) <|> (lexeme "assert:notnull" >> return False)  
+       b <- (lexeme "assert:noboxes"  $> True) <|> (lexeme "assert:boxes" $> False)  
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ AssertNull b desc
+       return $ AssertBoxes b desc
+       <|> lexeme1 "a:nob" $> AssertBoxes True "A:NOBoxes"
+       <|> lexeme1 "a:b" $> AssertBoxes False "A:Boxes"
+       <|> do 
+       b <- (lexeme "assert:noshelves"  $> True) <|> (lexeme "assert:shelves" $> False)  
+       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
+       return $ AssertBoxes b desc
+       <|> lexeme1 "a:nos" $> AssertShelves True "A:NOBoxes"
+       <|> lexeme1 "a:s" $> AssertShelves False "A:Boxes"
    partitionMode = do
        lexeme1  "place"
        pmode <- lexeme1 partitionModeParser
