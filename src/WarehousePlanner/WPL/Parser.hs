@@ -209,6 +209,7 @@ command = asum $ map lexeme [ toggleTag
                             , emptyBoxes
                             , noEmptyShelves
                             , emptyShelves
+                            , assert
                             ] where
    move = do
             lexeme1 "to"
@@ -243,6 +244,10 @@ command = asum $ map lexeme [ toggleTag
        lexeme1 "trace:shelves"
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceShelves desc
+   assert = do
+       b <- (lexeme "assert:null"  >> return True) <|> (lexeme "assert:notnull" >> return False)  
+       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
+       return $ AssertNull b desc
    partitionMode = do
        lexeme1  "place"
        pmode <- lexeme1 partitionModeParser

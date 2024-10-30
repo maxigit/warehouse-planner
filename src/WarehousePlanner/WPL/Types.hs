@@ -25,6 +25,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | TraceShelves Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
+             | AssertNull Bool Text
      deriving (Show, Eq)
      {-
        deriving Eq

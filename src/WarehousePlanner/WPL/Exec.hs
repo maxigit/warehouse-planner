@@ -161,6 +161,18 @@ executeCommand ec command = case command of
        traceM $ "     excluded shelves " <> show(  map shelfName <$> exs)
        return ec
     ---------
+    AssertNull assertNull desc -> do
+       let ExContext{..} = ec
+       case included ecBoxes == Just [] || included ecShelves == Just [] of
+           True | assertNull == False  -> do
+                executeCommand ec (TraceCount $ "ASSERT " <> desc)
+                error $ "context null " <> show desc
+           False | assertNull -> do
+                executeCommand ec (TraceCount $ "ASSERT " <> desc)
+                error $ "context not null " <> show desc
+           _  -> return ()
+       return ec
+    ---------
     SetPartitionMode pmode -> do
        return ec { ecPartitionMode = pmode }
     ---------
