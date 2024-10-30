@@ -267,6 +267,7 @@ command = asum $ map lexeme [ toggleTag
 
    boxSel = SelectBoxes <$> boxSelector 
    shelfSel = SelectShelves <$> asum [ lexeme "/"  >> shelfSelector
+                                     , lexeme1 "with:boxes" >> return CUseContext
                                      , lexeme1 "with" >> cselector parseShelfSelector
                                      ]
 
@@ -280,8 +281,8 @@ boxSelector =  label "box selector" $ asum
 
 shelfSelector :: MParser (CSelector ShelfSelector)
 shelfSelector = label "shelf selector" $ asum
-     [ lexeme1 "with" >> cselector parseShelfSelector 
-     , lexeme1 "with:boxes" >> return CUseContext
+     [ lexeme1 "with:boxes" >> return CUseContext
+     , lexeme1 "with" >> cselector parseShelfSelector 
      , cselector (ShelfSelector SelectAnything . parseSelector)
      ]
 isSelector :: Char -> Bool
