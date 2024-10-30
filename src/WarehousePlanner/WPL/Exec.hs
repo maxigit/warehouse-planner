@@ -48,7 +48,10 @@ executeStatement ec command =
            --     | A                 select 0 leftover B D E   -> included: B D E    excluded: A C
            --     | D                 select D leftover B E     -> included: B E      excluded A C D
            --   &                    included A C D    excluded B E
-           inverseBoxes <$> foldM execCase ec cs
+           new <- inverseBoxes <$> foldM execCase ec cs
+           return new
+        ShelfCases cs -> do
+           inverseShelves <$> foldM execShelfCase ec cs
         PassThrought statement -> do
            executeStatement ec statement
            return ec
@@ -64,13 +67,17 @@ executeStatement ec command =
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)
-             let newBoxes = ecBoxes $ inverseBoxes newEc
              -- reinject previously selected boxes to exclude so that in effect, all selections
              -- are collected in the excluded
-             return newEc { ecBoxes = newBoxes { excluded = excluded (ecBoxes ec) `merge` excluded newBoxes } }
-             -- return $ inverseBoxes newEc
-          merge (Just as) (Just bs) = Just (as <> bs)
-          merge am bm = am <|> bm
+             let toExclude = (`notMember` (Set.fromList $ includedList $ ecBoxes newEc))
+             return  ec { ecBoxes = narrowIncluded   toExclude (ecBoxes ec) }
+          execShelfCase ec (ShelfCase com comm) = do
+             newEc <- executeStatement ec com
+             forM comm (executeStatement newEc)
+             let toExclude = (`notMember` (Set.fromList $ includedList $ ecShelves newEc))
+             -- reinject previously selected shelves to exclude so that in effect, all selections
+             -- are collected in the excluded
+             return ec { ecShelves = narrowIncluded toExclude (ecShelves ec) }
 
          
 

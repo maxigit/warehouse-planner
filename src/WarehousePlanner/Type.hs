@@ -656,9 +656,9 @@ instance Ord a => Semigroup (InExcluded a) where
                 exs = case (excluded a, excluded b) of
                           (AllOf, es) -> es
                           (es, AllOf) -> es
-                          (NoneOf, _) -> NoneOf
-                          (_, NoneOf) -> NoneOf
-                          (Just as, Just bs) -> Just $ filter (flip Set.notMember (Set.fromList bs)) as
+                          -- (NoneOf, _) -> NoneOf -- covered by Just []
+                          -- (_, NoneOf) -> NoneOf
+                          (Just as, Just bs) -> Just $ as <> filter (flip Set.notMember (Set.fromList as)) bs
                           _ -> error "should be exhaustive"
             in InExcluded ins exs
                           
@@ -674,6 +674,26 @@ includedList :: InExcluded a -> [a]
 includedList = fromMaybe [] . included
 excludedList :: InExcluded a -> [a]
 excludedList = fromMaybe [] . excluded
+
+
+narrowIncluded :: Show a => Ord a => (a -> Bool) -> InExcluded a -> InExcluded a
+narrowIncluded keep inEx = let
+   (ins, outs) = partition keep (includedList inEx)
+   toExclude = inEx <> (InExcluded Nothing (Just outs))
+   in -- traceShow ("NARROW", as) 
+      -- $ traceShow ("IN", included inEx) 
+      -- $ traceShow ("EX", excluded inEx) 
+      -- $ traceShow ("ins", ins)
+      -- $ traceShow ("out", outs)
+      -- $ traceShow ("<>", toExclude ) 
+      -- $ traceShowId
+     --  $
+      InExcluded (Just ins) (excluded toExclude)
+
+
+
+  
+   
 -- as well as the number of boxes which can be used for the depth (min and max)
 -- setting min to 1, allow forcing boxes stick out
 --

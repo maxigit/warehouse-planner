@@ -381,6 +381,16 @@ pureSpec = describe "Parsing" do
          ".~~A" `parseAs` (Action (SelectBoxes $ CSelectorAnd Root $ CSelectorAnd  Parent "A") )
       it "4" do
          ".~  A" `parseAs` Then (Action (SelectBoxes Root)) "A"
+      context "shelf case" do
+         it "" do
+            [ "& // A B"
+             ,"  /  C"
+             ,"& GO"
+             ] `parseAs'` Then (ShelfCases [ ShelfCase (Action (SelectShelves "A") `Then` Action (SelectShelves "B")) []
+                                           , ShelfCase (Action (SelectShelves "C")) []
+                                           ]
+                               )
+                               ( "GO")
    context "bugs strategsies" do
      it "1" do
         [ "A "

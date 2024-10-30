@@ -63,8 +63,8 @@ pureSpec = describe "WPL" do
                       ]
              ) `shouldReturn` "A-2 A-3"
     it "collects A3 then A2" do
-      select (unlines [ "& A   | A#'3"
-                      , "      | A#'2"
+      select (unlines [ "& A   || A#'3"
+                      , "      || A#'2"
                       , "& /#"
                       ]
              ) `shouldReturn` "A-3 A-2"
@@ -96,7 +96,7 @@ select wpl = do
 runWith wpl action = execWH (emptyWarehouse $ fromGregorian 2024 07 22) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let Right statements = traceShowId $
+   let Right statements = -- traceShowId $
                           parseWPL "<source>" wpl
    runWPLWith action statements
    

@@ -5143,7 +5143,10 @@ M51W01CE
   to pending*
   to best W03.05/1
 orules xx2|= -- 3FA
-       /W04.01/[23]|W04.0[34]/[12] foreach:shelf in:shelves tam @
+       & /W04.*/*
+       & / W04.01/[23]
+         / W04.0[34]/[12]
+       & foreach:shelf in:shelves tam @
        -- ^^^^^^^^^^^ this is equivalent to below
        -- in W04.01/2 tam @W04.01/2
        -- in W04.01/3 tam @W04.01/3

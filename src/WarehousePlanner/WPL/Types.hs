@@ -25,7 +25,8 @@ data Command = Move { cSource :: Maybe BoxSelector
              | TraceShelves Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
-     -- deriving (Show, Eq)
+     deriving (Show, Eq)
+     {-
        deriving Eq
 instance Show Command where show = showCommand
 showCommand = \case
@@ -40,7 +41,6 @@ showCommand = \case
       SetPartitionMode pmode -> "Set PMode " <> show pmode
       SetOrientationStrategies os -> "Orientations " <> show os
       _ -> "????"
-     {-
       -}
        
       
@@ -53,11 +53,14 @@ data Statement = Action Command
                | Then Statement Statement
                | PassThrought Statement
                | ForeachShelf Statement
+               | ShelfCases (NonEmpty ShelfCase)
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)
     deriving (Show, Eq)
 
+data ShelfCase = ShelfCase Statement (Maybe Statement)
+    deriving (Show, Eq)
 
 
 -- | Context selector, a bit more than a selector

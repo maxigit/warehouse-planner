@@ -74,12 +74,16 @@ caseBlock :: MParser Statement
 caseBlock = do
   blockOf "case" caseLine Cases
 
+shelfCaseBlock :: MParser Statement
+shelfCaseBlock = do
+  blockOf "shelfCase" shelfCaseLine ShelfCases
+
 thenBlock :: MParser Statement
 thenBlock = do
   blockOf "thens" line mkThen 
   where line = do
           lexeme "&" <?> "& line"
-          thenMulti
+          indentedBlock <|> thenMulti
         mkThen = F.foldr1 Then 
         --       ^^^^^^^^
         --       [a, b, c] -> a Then (b Then c)
@@ -90,7 +94,7 @@ passThrougBlock = do
           lexeme ";" <?> "passthrough"
           thenMulti
 
-indentedBlock = caseBlock <|> thenBlock <|> passThrougBlock
+indentedBlock = caseBlock <|> shelfCaseBlock <|> thenBlock <|> passThrougBlock
 
 -- | Statements with same indentation
 blockOf :: String -> MParser a -> (NonEmpty a -> b) -> MParser b
@@ -158,11 +162,30 @@ mkOrs ors = case ors of
 
 caseLine :: MParser Case
 caseLine = do
-    lexeme "|" <?> "start caseline"
+    passthrough <- (lexeme "||" >> return False) <|> (lexeme "|" >> return True) <?> "start caseline"
     c <- thenMulti
     return case c of
-       Then a b -> Case a (Just b)
+       Then a b | passthrough  -> Case a (Just b)
        _ -> Case c Nothing
+
+shelfCaseLine :: MParser ShelfCase
+shelfCaseLine = double <|> simple 
+    where double = do
+                 lexeme "//" <?> "double shelfcase"
+                 shelves <- some $ lexeme shelfSelector
+                 newLine
+                 flip ShelfCase Nothing <$> case shelves of
+                    [] -> fail "some returning []"
+                    [one] -> return $ select one
+                    (c:cs) -> return . F.foldr1 Then $ fmap select (c :| cs)
+          select = Action . SelectShelves 
+          simple = do 
+                try $ lexeme "/ " <?> "simple shelfcase"
+                shelf <- shelfSelector
+                thenm <- (Just <$> thenMulti) <|> (newLine  >> return Nothing)
+                return $ ShelfCase (select shelf) thenm
+
+ 
 
 atom :: MParser Statement
 atom = -- (PassThrought <$> (lexeme ";" *> statement ))
