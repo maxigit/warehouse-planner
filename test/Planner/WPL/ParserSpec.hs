@@ -366,11 +366,23 @@ pureSpec = describe "Parsing" do
                                                 ]
                                           ]
                             ]
-
-
-
-               
-                 
+      it "|| & || (2)" do
+       [  "* |  & | A#'3" -- collect A-2
+        , "       | B#'1" -- and B-1
+        , "     & #id=1"  -- only B-1#1
+        , "  || A#'2"     -- add A-3
+        ] `parseAs'` Then "*"
+                         (Cases [ Case  (Then (Cases [ (Case "A#'3" [])
+                                                     , (Case "B#'1" [])
+                                                     ]
+                                              )
+                                              "#id=1"
+                                        ) 
+                                        []
+                                -- "  || A#'3"     -- add A-3
+                                , Case "A#'2" []
+                                ]
+                         )
 
    it "parses TAM with location" $ do
       "tam loc" `parseAs` Action (TagAndMove "loc" [])

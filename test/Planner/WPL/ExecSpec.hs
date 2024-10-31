@@ -78,6 +78,21 @@ pureSpec = describe "WPL" do
                       , "      | ^^^1" -- another one
                       ]
              ) `shouldReturn` "A-3 A-1"
+  context "nested  cases" do
+    it "" do
+      select (unlines [ "* || A | #'2" -- collect A-2
+                      , "  || B | #'1" -- and B-1
+                      ]
+             ) `shouldReturn` "A-2 B-1#1 B-1#2"
+    it "" do
+      select (unlines [ "* |  & | A#'3" -- collect A-2
+                      , "       | B#'1" -- and B-1
+                      , "     & #id=1"  -- only B-1#1
+                      , "  |  A#'3"     -- add A-3
+                      ]
+             ) `shouldReturn` "B-1#1 A-3"
+
+
        
 
      

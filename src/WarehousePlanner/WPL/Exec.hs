@@ -49,7 +49,7 @@ executeStatement ec command =
            --     | D                 select D leftover B E     -> included: B E      excluded A C D
            --   &                    included A C D    excluded B E
            let subEc = ec { ecParent = Just ec
-                          , ecBoxes = (ecBoxes ec) { excluded = Just [] }  -- clear exclud so that we don't get back boxes from the original context
+                          , ecBoxes = (ecBoxes ec) { excluded = Just [] }  -- clear exclude so that we don't get back boxes from the original context
                           } 
            new <- inverseBoxes <$> foldM execCase  subEc cs
            return new

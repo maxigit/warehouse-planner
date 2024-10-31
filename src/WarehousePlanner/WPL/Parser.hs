@@ -163,10 +163,10 @@ mkOrs ors = case ors of
 caseLine :: MParser Case
 caseLine = do
     passthrough <- (lexeme "||" >> return False) <|> (lexeme "|" >> return True) <?> "start caseline"
-    c <- indentedBlock <|> thenMulti
-    return case c of
-       Then a b | passthrough  -> Case a (Just b)
-       _ -> Case c Nothing
+    let withMulti = \case  
+                             Then a b | passthrough  -> Case a (Just b)
+                             c -> Case c Nothing
+    fmap (flip Case Nothing) indentedBlock <|> fmap withMulti thenMulti
 
 shelfCaseLine :: MParser ShelfCase
 shelfCaseLine = double <|> simple 
