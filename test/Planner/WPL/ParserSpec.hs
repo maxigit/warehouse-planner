@@ -338,6 +338,15 @@ pureSpec = describe "Parsing" do
 
                           , "B"
                           ]
+      it "don't use next line in block" do
+         parse' ["/A || foreach:shelf GO"
+                ,"   || B"]
+            `shouldParse` [ Then (Action $ SelectShelves "A")
+                                 (Cases [ Case ( ForeachShelf "GO") []
+                                        , Case "B" []
+                                        ]
+                                 )
+                          ]
 
 
 

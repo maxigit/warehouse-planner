@@ -110,11 +110,11 @@ blockOf name p mk = do
 
 thenLine :: MParser Statement
 thenLine =do
+  beforeLvl <- L.indentLevel
   a <- atom <?> "line:atom"
   -- if the atom consume a new line, then there is nothing else to to parse
   afterLvl <- L.indentLevel
-  -- if iLvl >= afterLvl
-  if afterLvl == P.mkPos 1
+  if afterLvl <= beforeLvl
   then return a
   else do 
      thenm <- optional $ try $ asum [  indentedBlock <?> "case in line"
@@ -141,7 +141,7 @@ thenMulti = do
 foreachS :: MParser Statement
 foreachS = do
   iLvl <- L.indentLevel
-  lexeme "foreach:shelf"
+  "foreach:shelf"
   spaces
   block <-  (L.indentGuard spaces GT iLvl <?> ("foreach:guard" <> show iLvl))
                      >> (orBlock "foreach" <?> "foreach:children")
