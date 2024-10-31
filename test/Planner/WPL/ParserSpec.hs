@@ -347,6 +347,25 @@ pureSpec = describe "Parsing" do
                                         ]
                                  )
                           ]
+      it "|| & ||" do
+        let sub =       Cases [Case (Then (Cases [ Case "A" []
+                                                 , Case "B" []
+                                                 ]
+                                           )
+                                           "C"
+                                   ) [] 
+                              ]
+
+        [ "| Main "
+         ,"   Root "
+         ,"   || & || A"
+         ,"        || B"
+         ,"      & C"
+         ] `parseAs'` Cases [Case "Main"  [ Ors [ "Root"
+                                                , sub
+                                                ]
+                                          ]
+                            ]
 
 
 

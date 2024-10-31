@@ -48,7 +48,10 @@ executeStatement ec command =
            --     | A                 select 0 leftover B D E   -> included: B D E    excluded: A C
            --     | D                 select D leftover B E     -> included: B E      excluded A C D
            --   &                    included A C D    excluded B E
-           new <- inverseBoxes <$> foldM execCase ec cs
+           let subEc = ec { ecParent = Just ec
+                          , ecBoxes = (ecBoxes ec) { excluded = Just [] }  -- clear exclud so that we don't get back boxes from the original context
+                          } 
+           new <- inverseBoxes <$> foldM execCase  subEc cs
            return new
         ShelfCases cs -> do
            inverseShelves <$> foldM execShelfCase ec cs
