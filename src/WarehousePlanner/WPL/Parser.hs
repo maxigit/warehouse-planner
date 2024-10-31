@@ -92,7 +92,7 @@ passThrougBlock = do
    blockOf "passthrough" line (PassThrought . mkOrs)
    where line = do
           lexeme ";" <?> "passthrough"
-          thenMulti
+          indentedBlock <|> thenMulti
 
 indentedBlock = caseBlock <|> shelfCaseBlock <|> thenBlock <|> passThrougBlock
 
@@ -163,7 +163,7 @@ mkOrs ors = case ors of
 caseLine :: MParser Case
 caseLine = do
     passthrough <- (lexeme "||" >> return False) <|> (lexeme "|" >> return True) <?> "start caseline"
-    c <- thenMulti
+    c <- indentedBlock <|> thenMulti
     return case c of
        Then a b | passthrough  -> Case a (Just b)
        _ -> Case c Nothing
