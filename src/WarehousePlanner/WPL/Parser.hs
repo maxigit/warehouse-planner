@@ -264,9 +264,15 @@ command = asum $ map lexeme [ toggleTag
        pmode <- lexeme1 partitionModeParser
        return $ SetPartitionMode pmode
    orientationStrategies = do
-      lexeme1 "orules" <?> "orules:keyword"
+      cons <- (SetOrientationStrategies <$ lexeme1 "orules")
+         <|> (AddOrientationStrategies <$ lexeme1 "orules+")
       os <- orientationRules
-      return $ SetOrientationStrategies os
+      cselectorm <- optional $ (lexeme "for" >> shelfSelector) <?> "orules:selector"
+      selectorm <- case cselectorm of
+                        Nothing -> return Nothing
+                        Just (CSelector sel) -> return $ Just sel
+                        Just sel -> fail $ show sel <> " must be a contextless selector"
+      return $ cons selectorm os
    noEmptyBoxes = do
       lexeme1 "empty-boxes:no"
       return $ SetNoEmptyBoxes True

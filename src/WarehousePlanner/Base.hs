@@ -66,6 +66,7 @@ module WarehousePlanner.Base
 , usedDepth
 , sortOnIf
 , withBoxOrientations
+, withBoxOrientations'
 , newWHEvent
 , newBaseEvent
 , Priority, Keys
@@ -1340,14 +1341,23 @@ extractTags name = (style, maybe [] (splitOn "#") tagM) where
 
 
 withBoxOrientations :: [OrientationStrategy] -> WH a s -> WH a s
-withBoxOrientations [] action =  action
-withBoxOrientations strategies action =  do
-  oldStrategy <- gets boxOrientations
-  let newStrategy _ _ = strategies
-  modify (\wh -> wh { boxOrientations = newStrategy })
-  result <- action
-  modify (\wh -> wh { boxOrientations = oldStrategy })
-  return result
+withBoxOrientations strats = withBoxOrientations' [(Nothing, strats)]
+  
+withBoxOrientations' :: [(Maybe ShelfSelector, [OrientationStrategy])] -> WH a s -> WH a s
+withBoxOrientations' [] action = action
+withBoxOrientations' (r:rs) action = withBoxOrientations' rs $ go r action where
+  go (_, []) action =  action
+  go (selectorm, strats) action = do
+     oldStrategy <- gets boxOrientations
+     let newStrategy = case selectorm of
+                         Nothing -> \_ _ -> strats
+                         Just  ShelfSelector{..} ->
+                            \box shelf -> if applySelector sBoxSelectors box
+                                             && applySelector sShelfSelectors shelf
+                                          then strats
+                                          else oldStrategy box shelf
+     modify \wh -> wh { boxOrientations = newStrategy }
+     action <* modify \wh -> wh { boxOrientations = oldStrategy }
 
 
 -- * Position Specications

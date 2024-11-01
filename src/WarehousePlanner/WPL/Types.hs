@@ -20,7 +20,8 @@ data Command = Move { cSource :: Maybe BoxSelector
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
              | Delete 
              | SetPartitionMode PartitionMode
-             | SetOrientationStrategies [OrientationStrategy]
+             | SetOrientationStrategies (Maybe ShelfSelector) [OrientationStrategy]
+             | AddOrientationStrategies (Maybe ShelfSelector) [OrientationStrategy]
              | TraceCount Text
              | TraceBoxes Text
              | TraceShelves Text

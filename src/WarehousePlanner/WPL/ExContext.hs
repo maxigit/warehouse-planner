@@ -18,7 +18,7 @@ data ExContext s = ExContext
                , ecParent :: Maybe (ExContext s)
                , ecSelector :: BoxNumberSelector
                , ecPartitionMode :: PartitionMode
-               , ecOrientationStrategies :: [OrientationStrategy]
+               , ecOrientationStrategies :: [(Maybe ShelfSelector, [OrientationStrategy])]
                , ecNoEmptyBoxes :: Bool
                , ecNoEmptyShelves :: Bool
                }

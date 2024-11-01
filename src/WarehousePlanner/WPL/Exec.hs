@@ -99,11 +99,11 @@ executeCommand ec command = case command of
       shelves <-  do
          getShelves =<< narrowCSelector shelf ec
       -- traceShowM ("SHELVES", shelf, length shelves)
+
       let rules = case orules of
-                    [] -> ecOrientationStrategies ec
-                    _ -> orules
-                  
-      inEx <- withBoxOrientations rules $ moveSortedBoxes exitMode (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
+                       _ -> (Nothing, orules) : ecOrientationStrategies ec
+
+      inEx <- withBoxOrientations' rules $ moveSortedBoxes exitMode (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
       return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Tag tagOps -> do
@@ -126,12 +126,9 @@ executeCommand ec command = case command of
     SelectShelves selector -> do
       narrowCSelector selector ec
     ---------
-    TagAndMove txt ors0 -> do
+    TagAndMove txt ors -> do
       let (tags, locm) = splitTagsAndLocation txt
-          ors = case ors0 of
-                     [] -> ecOrientationStrategies ec
-                     _ -> ors0
-      inEx <- moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
+      inEx <- withBoxOrientations' (ecOrientationStrategies ec) $ moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)
       return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Delete -> do
@@ -189,20 +186,17 @@ executeCommand ec command = case command of
     SetPartitionMode pmode -> do
        return ec { ecPartitionMode = pmode }
     ---------
-    SetOrientationStrategies os -> do
-       return ec { ecOrientationStrategies = os }
+    SetOrientationStrategies selector os -> do
+       return ec { ecOrientationStrategies = [(selector, os)] }
+    ---------
+    AddOrientationStrategies selector os -> do
+       return ec { ecOrientationStrategies = (selector, os) : ecOrientationStrategies ec }
     ---------
     SetNoEmptyBoxes emptyBoxes -> do
        return ec { ecNoEmptyBoxes = emptyBoxes }
     ---------
     SetNoEmptyShelves emptyShelves -> do
        return ec { ecNoEmptyShelves = emptyShelves }
-
-
-
-      
-       
-  
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]
 readWPL filename = do 
