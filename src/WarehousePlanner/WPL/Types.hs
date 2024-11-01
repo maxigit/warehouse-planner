@@ -29,7 +29,9 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetNoEmptyShelves Bool
              | AssertBoxes Bool Text
              | AssertShelves Bool Text
-     -- deriving (Show, Eq)
+             | ResizeShelf (CSelector ShelfSelector) Statement
+     deriving (Show, Eq)
+     {-
        deriving Eq
 instance Show Command where show = showCommand
 showCommand = \case
@@ -44,7 +46,6 @@ showCommand = \case
       SetPartitionMode pmode -> "Set PMode " <> show pmode
       SetOrientationStrategies os -> "Orientations " <> show os
       _ -> "????"
-     {-
       -}
        
       

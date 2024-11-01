@@ -197,6 +197,15 @@ executeCommand ec command = case command of
     ---------
     SetNoEmptyShelves emptyShelves -> do
        return ec { ecNoEmptyShelves = emptyShelves }
+    ---------
+    ResizeShelf selector statement -> do -- full
+        let full s = s { minDim = maxDim s }
+        shelves <- narrowCSelector selector ec >>= getShelves
+        forM shelves $ updateShelf full
+        executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig }) orig )
+
+
+      
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]
 readWPL filename = do 

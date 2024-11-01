@@ -210,6 +210,7 @@ command = asum $ map lexeme [ toggleTag
                             , noEmptyShelves
                             , emptyShelves
                             , assert
+                            , resizeShelf
                             ] where
    move = do
             exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
@@ -285,6 +286,14 @@ command = asum $ map lexeme [ toggleTag
    emptyShelves = do
       lexeme1 "empty-shelves:yes"
       return $ SetNoEmptyShelves False
+   resizeShelf = do
+     iLvl <- L.indentLevel
+     lexeme1 "shelf:full"
+     selector <- shelfSelector
+     spaces
+     stmt <- (L.indentGuard spaces GT iLvl <?> ("shelf:full" <> show iLvl))
+                >> orBlock  "shelf:full"
+     return $ ResizeShelf selector stmt
 
 
    boxSel = SelectBoxes <$> boxSelector 
