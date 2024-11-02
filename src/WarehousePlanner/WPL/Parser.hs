@@ -291,7 +291,7 @@ command = asum $ map lexeme [ toggleTag
    splitShelf = withStatement "split" do
      lexeme1 "split"
      selector <- shelfSelector
-     bselectm <- optional $ lexeme "for" *> boxSelector
+     bselectm <- optional (lexeme "for" *> boxSelector)
      l <- splitExpr
      w <- splitExpr
      h <- splitExpr
@@ -305,7 +305,7 @@ command = asum $ map lexeme [ toggleTag
 
 withStatement name parser = do
      iLvl <- L.indentLevel
-     cons <- parser
+     cons <- lexeme parser
      spaces
      stmt <- (L.indentGuard spaces GT iLvl <?> (name<> show iLvl))
                 >> orBlock name
@@ -364,7 +364,7 @@ guardLower = label "Escape lower case with `" $ void (char '`') <|> notFollowedB
 
 splitExpr :: MParser [ Expr Text ]
 splitExpr = do
-  exprParser `P.sepBy` lexeme ":"
+  lexeme $ exprParser `P.sepBy1` lexeme ":"
   
   
    

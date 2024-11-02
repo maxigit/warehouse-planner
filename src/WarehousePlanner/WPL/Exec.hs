@@ -212,7 +212,7 @@ executeCommand ec command = case command of
                 Just sel -> do
                    boxes <- narrowCSelector sel ec >>= getBoxes
                    return $ headMay boxes
-      forM shelves \shelf -> do
+      newss <- forM shelves \shelf -> do
            [ls, ws, hs] <-
              zipWithM (\exprs defAcc -> do
                 forM exprs \exp -> do
@@ -229,7 +229,7 @@ executeCommand ec command = case command of
              [les, wes, hes]
              ds
            splitShelf shelf ls ws hs
-      executeStatement ec statement <* forM shelves unSplitShelf
+      executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
 
       
 
