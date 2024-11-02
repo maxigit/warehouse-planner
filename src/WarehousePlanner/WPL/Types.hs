@@ -4,6 +4,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Selector(printBoxSelector, printShelfSelector)
+import WarehousePlanner.Expr (Expr)
 import Data.List.NonEmpty as NE
 
 
@@ -30,6 +31,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | AssertBoxes Bool Text
              | AssertShelves Bool Text
              | ResizeShelf (CSelector ShelfSelector) Statement
+             | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
      deriving (Show, Eq)
      {-
        deriving Eq

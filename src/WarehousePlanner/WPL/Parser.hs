@@ -8,6 +8,7 @@ import WarehousePlanner.WPL.Types
 import WarehousePlanner.Selector
 import WarehousePlanner.Type
 import WarehousePlanner.Base
+import WarehousePlanner.Expr
 -- import WarehousePlanner.Type
 import Text.Megaparsec as P hiding((<?>))
 import Text.Megaparsec.Debug qualified as P
@@ -139,13 +140,9 @@ thenMulti = do
          --       [a, b, c] ->  (a Then b) Then c
 
 foreachS :: MParser Statement
-foreachS = do
-  iLvl <- L.indentLevel
+foreachS = withStatement "foreach:shelf" do
   "foreach:shelf"
-  spaces
-  block <-  (L.indentGuard spaces GT iLvl <?> ("foreach:guard" <> show iLvl))
-                     >> (orBlock "foreach" <?> "foreach:children")
-  return $ ForeachShelf block
+  return $ ForeachShelf 
 
 orBlock name = do
   blockOf (name <> ":or") ((indentedBlock <?> "indentedBlock")
@@ -211,6 +208,7 @@ command = asum $ map lexeme [ toggleTag
                             , emptyShelves
                             , assert
                             , resizeShelf
+                            , splitShelf
                             ] where
    move = do
             exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
@@ -286,21 +284,32 @@ command = asum $ map lexeme [ toggleTag
    emptyShelves = do
       lexeme1 "empty-shelves:yes"
       return $ SetNoEmptyShelves False
-   resizeShelf = do
-     iLvl <- L.indentLevel
+   resizeShelf = withStatement  "shelf:full" do
      lexeme1 "shelf:full"
      selector <- shelfSelector
-     spaces
-     stmt <- (L.indentGuard spaces GT iLvl <?> ("shelf:full" <> show iLvl))
-                >> orBlock  "shelf:full"
-     return $ ResizeShelf selector stmt
-
+     return $ ResizeShelf selector 
+   splitShelf = withStatement "split" do
+     lexeme1 "split"
+     selector <- shelfSelector
+     bselectm <- optional $ lexeme "for" *> boxSelector
+     l <- splitExpr
+     w <- splitExpr
+     h <- splitExpr
+     return $ SplitShelf selector bselectm l w h
 
    boxSel = SelectBoxes <$> boxSelector 
    shelfSel = SelectShelves <$> asum [ lexeme "/"  >> shelfSelector
                                      , lexeme1 "with:boxes" >> return CUseContext
                                      , lexeme1 "with" >> cselector parseShelfSelector
                                      ]
+
+withStatement name parser = do
+     iLvl <- L.indentLevel
+     cons <- parser
+     spaces
+     stmt <- (L.indentGuard spaces GT iLvl <?> (name<> show iLvl))
+                >> orBlock name
+     return $ cons stmt
 
 
 boxSelector :: MParser (CSelector BoxSelector)
@@ -351,3 +360,12 @@ orientationRules = do
 -- or escape with `
 guardLower :: MParser ()
 guardLower = label "Escape lower case with `" $ void (char '`') <|> notFollowedBy lowerChar
+
+
+splitExpr :: MParser [ Expr Text ]
+splitExpr = do
+  exprParser `P.sepBy` lexeme ":"
+  
+  
+   
+  

@@ -4,6 +4,7 @@ module WarehousePlanner.Expr
 , parseExpr
 , parseExprE
 , evalExpr
+, exprParser
 ) where
 import ClassyPrelude hiding(readFile)
 import Text.Megaparsec qualified as P
@@ -21,7 +22,7 @@ data Expr extra = AddE (Expr extra) (Expr extra)
           | MaxE (Expr extra) (Expr extra)
           | ValE Double
           | ExtraE extra --
-     deriving (Show, Functor, Foldable, Traversable)
+     deriving (Show, Eq, Functor, Foldable, Traversable)
           
           
 -- * Parsing

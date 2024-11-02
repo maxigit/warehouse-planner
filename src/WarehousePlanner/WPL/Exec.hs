@@ -15,7 +15,8 @@ import WarehousePlanner.Selector (printBoxSelector, parseBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
-import Control.Monad(zipWithM_)
+import WarehousePlanner.ShelfOp
+import Control.Monad(zipWithM_, zipWithM)
 import Data.Set qualified as Set
 
 
@@ -203,7 +204,32 @@ executeCommand ec command = case command of
         shelves <- narrowCSelector selector ec >>= getShelves
         forM shelves $ updateShelf full
         executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig }) orig )
-
+    ---------
+    SplitShelf selector bselm les wes hes statement -> do
+      shelves <- narrowCSelector selector ec >>= getShelves
+      boxm <- case bselm of
+                Nothing -> return $ Nothing 
+                Just sel -> do
+                   boxes <- narrowCSelector sel ec >>= getBoxes
+                   return $ headMay boxes
+      forM shelves \shelf -> do
+           [ls, ws, hs] <-
+             zipWithM (\exprs defAcc -> do
+                forM exprs \exp -> do
+                   let exWithRef = replaceRef <$> exp
+                       replaceRef ref = case P.parse (parseRef $ defAcc . sMinD) (unpack ref) ref of
+                                             Left err -> error $ "Split shelf parameter invalid: "
+                                                      <> show exp
+                                                      <> " "
+                                                      <> show err
+                                             Right v -> v
+                   evalExpr (dimForSplit boxm shelf)
+                            exWithRef
+             )
+             [les, wes, hes]
+             ds
+           splitShelf shelf ls ws hs
+      executeStatement ec statement <* forM shelves unSplitShelf
 
       
 
