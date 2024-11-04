@@ -26,6 +26,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | TraceCount Text
              | TraceBoxes Text
              | TraceShelves Text
+             | TraceOrientations Text
              | SetNoEmptyBoxes Bool
              | SetNoEmptyShelves Bool
              | AssertBoxes Bool Text

@@ -200,6 +200,7 @@ command = asum $ map lexeme [ toggleTag
                             , traceCount
                             , traceBoxes
                             , traceShelves
+                            , traceOrientations
                             , partitionMode
                             , orientationStrategies
                             , noEmptyBoxes
@@ -246,6 +247,11 @@ command = asum $ map lexeme [ toggleTag
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
        return $ TraceShelves desc
        <|> lexeme1 "t:s" $> (TraceShelves "T:S")
+   traceOrientations = do
+       lexeme1 "trace:orules"
+       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
+       return $ TraceOrientations desc
+       <|> lexeme1 "t:o" $> (TraceOrientations "T:O")
    assert = do
        b <- (lexeme "assert:noboxes"  $> True) <|> (lexeme "assert:boxes" $> False)  
        desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)

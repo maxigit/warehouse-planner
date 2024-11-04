@@ -18,6 +18,9 @@ import WarehousePlanner.WPL.ExContext
 import WarehousePlanner.ShelfOp
 import Control.Monad(zipWithM_, zipWithM)
 import Data.Set qualified as Set
+import Data.Map qualified as Map
+import Control.Monad.State(gets)
+import Data.List (nub)
 
 
 runWPL :: [Statement] -> WH () s
@@ -88,7 +91,7 @@ executeStatement ec command =
 
 
 
-executeCommand :: ExContext s -> Command -> WH (ExContext s) s
+executeCommand :: forall s . ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
     Move boxm pmodem orules shelf exitMode -> do
@@ -161,6 +164,29 @@ executeCommand ec command = case command of
        traceM $ "     included shelves " <> show(  map shelfName <$> incs)
        traceM $ "     excluded shelves " <> show(  map shelfName <$> exs)
        return ec
+    TraceOrientations desc -> do
+       traceM $ "Trace orientation rules" <> unpack desc
+       boxes <- getBoxes ec
+       shelfves <- getShelves ec
+       boxo <- gets boxOrientations
+       -- try all box/shelf combination and group them by rules
+       let withRules :: Map OrientationStrategy [(Box s, Shelf s)]
+           withRules = Map.fromListWith (<>)
+                               [(rule, [(box, shelf)])
+                               | box <- boxes
+                               , shelf <- shelfves
+                               , rule <- boxo box shelf
+                               ]
+           displayM (rule, box'shelfs) = do
+               let (bs,ss) = unzip box'shelfs
+                   boxInfos = nub $ sort $ map (\b -> (boxStyle b, printDim $ boxDim b)) bs
+                   shelfInfos = nub $ sort $ map shelfName ss
+               traceM $ "---------- RULE: " <> unpack (showOrientationStratety rule)
+               traceM $ "      BOXES: " <> show boxInfos
+               traceM $ "      SHELVES: " <> show shelfInfos
+       mapM_ displayM $ Map.toList withRules
+       return ec
+        
     ---------
     AssertBoxes assertNull desc -> do
        case included (ecBoxes ec) == Just [] of
