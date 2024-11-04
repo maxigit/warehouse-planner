@@ -61,6 +61,7 @@ data Statement = Action Command
                | Then Statement Statement
                | PassThrought Statement
                | ForeachShelf Statement
+               | ForeachBox (CSelector BoxSelector) Statement
                | ShelfCases (NonEmpty ShelfCase)
      deriving (Show, Eq)
      

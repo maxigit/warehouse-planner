@@ -69,6 +69,19 @@ executeStatement ec command =
            forM_ shelves \shelf -> 
                 void $ executeStatement (ec { ecShelves = (ecShelves ec) {included = Just [shelf] }}) statement
            return ec
+        ForeachBox selector statement -> do
+           boxes <- narrowCSelector selector ec >>= getBoxPs
+           -- group by "global", no sorting
+           let groups = groupBy (\a b -> key a == key b) boxes
+               key (_, (global,_)) = global
+           forM_ groups \box'ps -> do
+                let idSet = Set.fromList $ map (boxId . fst) box'ps
+                void $ executeStatement ec { ecBoxes = narrowIncluded (\(bId, _) -> bId `member` idSet)
+                                                                      (ecBoxes ec)
+                                           }
+                                        statement
+           return ec
+
 
            
     where execCase ec (Case com comm) = do
