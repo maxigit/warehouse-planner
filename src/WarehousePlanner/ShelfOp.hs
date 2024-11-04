@@ -152,6 +152,9 @@ unSplitShelf shelf = do
   let oMaps = [offsetsFromIndex (minDim shelf) i f children
                              | (i, f) <- zip [1..] ds
                              ]
+  -- traceShow("SHELF", shelf)
+  -- traceShow("children", children)
+  -- traceShowM ("OMAPS", oMaps)
   lwhS <- forM children $ \child -> do
     let [ol,ow, oh] = [findWithDefault 0 (childIndex child i) m 
                   | (i,m) <- zip [1..3] oMaps
@@ -166,8 +169,13 @@ unSplitShelf shelf = do
     return (ml, mw, mh)
   -- compute new shelf size
   let  (mls, mws, mhs) = unzip3 lwhS
+       [ldiff, wdiff, hdiff] = map (\f -> maximumEx [ f (maxDim s) - f (minDim s) 
+                                                 | s <- shelf : children
+                                                 ]
+                                   )
+                                   ds
        newMin = Dimension (maximumEx mls) (maximumEx mws) (maximumEx mhs)
-       newMax = newMin <> maxDim shelf <> invert (minDim shelf)
+       newMax = newMin <> Dimension ldiff wdiff hdiff
   updateShelf (\s -> s {minDim = newMin, maxDim = newMax }) shelf
   return shelf
 
