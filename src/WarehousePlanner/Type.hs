@@ -135,6 +135,15 @@ data OrientationStrategy  = OrientationStrategy
   , osUseDiagonal :: Bool -- ^ see `howManyWithDiagonal`
   } deriving (Show, Eq, Ord)
 
+showOrientationStratety OrientationStrategy{..} =
+     showOrientation' osOrientations
+     <> mshow osMaxLenght
+     <> "x"
+     <> tshow osMinDepth <> ":" <> tshow osMaxDepth
+     <> "x"
+     <> mshow osMaxHeight
+     <> (if osUseDiagonal then "!" else "")
+     where mshow = maybe "" tshow
 -- | Every box belongs to a shelf.
 -- Non placed boxes belongs to the special default shelf
 newtype BoxId s = BoxId_ (Arg Int (HiSTRef Box s)) deriving (Eq, Ord)

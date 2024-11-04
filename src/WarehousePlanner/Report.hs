@@ -250,7 +250,7 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("leftover", printDim (shelfMin <> invert required))
                       , ("minShelf", printDim shelfMin)
                       , ("maxShelf", printDim shelfMax)
-                      , ("debug_strategy", tshow ors)
+                      , ("debug_strategy", unwords $ map showOrientationStratety ors)
                       , ("debug_tiling", tshow tilingMode)
                       , ("debug_volume", pack $ printf "{\"required_volume\":%f, \"current\":%f, \"box_volume\":%f}"
                                                      (volume required)      (volume current) (boxVolume box)
