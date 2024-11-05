@@ -64,7 +64,7 @@ parseMulOp  = P.try p <|> parseTerminalExpr  where
     spaces
     op <- oneOf "*/"
     spaces
-    e2 <- parseTerminalExpr 
+    e2 <- parseMulOp
     let c = case op of
             '*' -> MulE
             '/' -> DivE
@@ -78,7 +78,7 @@ parseMMOp  = P.try p <|> parseAddOp  where
     spaces
     op <- oneOf "|&"
     spaces
-    e2 <- parseAddOp 
+    e2 <- parseMMOp 
     let c = case op of
             '&' -> MinE
             '|' -> MaxE
@@ -92,7 +92,7 @@ parseAddOp = P.try p <|> parseMulOp where
     spaces
     op <- oneOf "+-"
     spaces
-    e2 <- parseMulOp 
+    e2 <- parseAddOp
     let c = case op of
             '+' -> AddE
             '-' -> SubE
