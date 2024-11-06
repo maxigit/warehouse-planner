@@ -21,6 +21,7 @@ import Data.Set qualified as Set
 import Data.Map qualified as Map
 import Control.Monad.State(gets)
 import Data.List (nub)
+import Data.Proxy
 
 
 runWPL :: [Statement] -> WH () s
@@ -289,7 +290,10 @@ parseWPL source content =
 class Narrowing selector where
   narrow :: selector -> ExContext s -> WH (ExContext s) s
   useContext :: ExContext s -> WH selector s
+  narrowFor :: Proxy selector -> ExContext s -> ExContext s -> ExContext s
+  -- ^            new context , original
   
+
 instance Narrowing BoxSelector where
   narrow = narrowBoxes
   useContext ec = do
@@ -300,6 +304,7 @@ instance Narrowing BoxSelector where
          shelves <- getShelves ec
          let shelfSelectors = Selector (NameMatches $ map (MatchFull . shelfName) shelves) []
          return selectAllBoxes { shelfSelectors }
+  narrowFor _ new ec =  ec { ecBoxes = ecBoxes new }
   
 instance Narrowing ShelfSelector where
   narrow = narrowShelves
@@ -312,13 +317,15 @@ instance Narrowing ShelfSelector where
            let shelfList = Set.fromList shelves
                sShelfSelectors = Selector (NameMatches $ map (MatchFull . shelfName) $ toList shelfList) []
            return selectAllShelves {sShelfSelectors}
+  narrowFor _ new ec = ec { ecShelves = ecShelves new }
 
 narrowCSelector :: forall selector s . Narrowing selector => CSelector selector -> ExContext s -> WH (ExContext s) s
 narrowCSelector cselector ec = do
+   let sel = Proxy :: Proxy selector
    ec' <- case cselector of
        CSelector selector -> narrow selector ec
-       Parent -> return $ fromMaybe withAll (ecParent ec)
-       Root -> return $ withAll --  . show $  up $ error $ show ec
+       Parent -> return $ narrowFor sel (fromMaybe withAll (ecParent ec)) ec
+       Root -> return $ narrowFor sel withAll ec --  . show $  up $ error $ show ec
        SwapContext -> return $ inverseBoxes ec 
        CStatement stmt -> executeStatement ec stmt
        CUseContext ->  do
