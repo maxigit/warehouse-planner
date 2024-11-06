@@ -206,7 +206,7 @@ bestFitReport limitToBoxNb boxes shelves = do
    let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
        go (SimilarBy (bdim,_) box bxs) shelf = do
            boxesInShelf <- findBoxByShelf shelf
-           let toPick = length $ filter (flip tagIsPresent "@topick") boxes
+           let toPick = length $ filter (flip tagIsPresent "@topick") bxs
            let ors = getOrs box shelf
                -- for empty shelf
                current@(Dimension lrequired _wrequired hrequired) = maxDimension $ map (aTopRight . boxAffDimension) boxesInShelf
