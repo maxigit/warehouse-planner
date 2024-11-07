@@ -162,13 +162,16 @@ executeCommand ec command = case command of
        traceM $ "     included shelves " <> show( fmap length $ included ecShelves)
        traceM $ "     excluded shelves " <> show( fmap length $ excluded ecShelves)
        return ec
-    TraceBoxes desc -> do
+    TraceBoxes withId desc -> do
        let ExContext{..} = ec
+           boxTitle = if withId
+                      then show
+                      else unpack . boxStyleAndContent
        traceM $ "Trace Boxes " <> unpack desc -- <> " "  <> show ecSelector
        incs <- mapM (findBox . fst) `traverse` (included ecBoxes)
        exs <- mapM (findBox . fst) `traverse` (excluded ecBoxes)
-       traceM $ "     included boxes " <> show(  map boxStyleAndContent <$> incs)
-       traceM $ "     excluded boxes " <> show(  map boxStyleAndContent <$> exs)
+       traceM $ "     included boxes " <> show (  map boxTitle <$> incs)
+       traceM $ "     excluded boxes " <> show (  map boxTitle <$> exs)
        return ec
     TraceShelves desc -> do
        let ExContext{..} = ec
