@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TransformListComp #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.Base
 ( assignShelf
 , boxCoordinate
@@ -398,7 +399,8 @@ partitionBoxes BoxSelector{..} bid'ps = do
   box'shelves <-  flip zip priorities <$> findBoxesWithShelf bids
   let (goods, bads) = partition isSelected box'shelves
       sorted = limitByNumber DontUseDefault numberSelector $ map (fmap Just) goods
-      truncated = filter (flip notMember (Set.fromList sorted)) goods
+      getBoxId = boxId . fst . fst
+      truncated = filter (flip (notMember . getBoxId) (Set.fromList $ fmap getBoxId sorted)) goods
   return (map (first fst) sorted, map (first fst) $ truncated <> bads)
   where isSelected ((box, shelf),_p) = applySelector boxSelectors  box && applySelector shelfSelectors shelf
    

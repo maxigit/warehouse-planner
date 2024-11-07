@@ -90,7 +90,7 @@ executeStatement ec command =
              forM comm (executeStatement newEc)
              -- reinject previously selected boxes to exclude so that in effect, all selections
              -- are collected in the excluded
-             let toExclude = (`notMember` (Set.fromList $ includedList $ ecBoxes newEc))
+             let toExclude = (`notMember` (Set.fromList $ map fst $ includedList $ ecBoxes newEc)) . fst
              return  ec { ecBoxes = narrowIncluded   toExclude (ecBoxes ec) }
           execShelfCase ec (ShelfCase com comm) = do
              newEc <- executeStatement ec com
