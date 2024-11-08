@@ -455,7 +455,7 @@ keyBindingGroups =  groups
                                                                -- , mK "backspace" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                , mK "c-o" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                ])
-                               , ("Shelf selection",           ( mk '0' (ESelectShelfLevel Nothing) "Select all sheves"
+                               , ("Shelf selection",           ( mk '0' (ESelectShelfLevel (Just "!")) "Select empty shelves"
                                                                : mk '9' (ESelectShelfLevel (Just "/#-top")) "Hide top shelves"
                                                                : [mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
                                                                  | i <- [1..5]
@@ -843,13 +843,20 @@ handleWH ev =
                 Report.shelvesReportFor shelves
             yankOrEdit mode (Just ".csv") (unlines text)
          ESelectShelfLevel (Just selector) -> do
-            oldMode <- gets asAdjustedShelvesMode
-            let mode  = case oldMode of
-                          SelectedShelvesFirst -> SelectedShelvesFirst
-                          UnselectedShelves -> UnselectedShelves
-                          _ -> SelectedShelves
-            modify \s -> s { asAdjustedShelvesMode = mode }
-            setShelfSelection selector
+            -- selecting twice the same cancels it
+            oldShelfSelection <- gets asShelfSelection 
+            if fmap sText oldShelfSelection  == Just selector
+            then  do
+                  modify \s -> s { asAdjustedShelvesMode = AllShelves}
+                  setShelfSelection $ ""
+            else  do
+                  oldMode <- gets asAdjustedShelvesMode
+                  let mode  = case oldMode of
+                                SelectedShelvesFirst -> SelectedShelvesFirst
+                                UnselectedShelves -> UnselectedShelves
+                                _ -> SelectedShelves
+                  modify \s -> s { asAdjustedShelvesMode = mode }
+                  setShelfSelection selector
          ESelectShelfLevel Nothing -> do
             oldMode <- gets asAdjustedShelvesMode
             let mode  = case oldMode of

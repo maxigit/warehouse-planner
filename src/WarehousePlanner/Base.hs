@@ -379,6 +379,11 @@ boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- re
 -- | Use similar syntax to boxes but returns shelves instead
 findShelvesByBoxNameAndNames :: ShelfSelector -> WH [Shelf s] s
 findShelvesByBoxNameAndNames (ShelfSelector SelectAnything shelfSel) = findShelfBySelector shelfSel >>= mapM findShelf
+findShelvesByBoxNameAndNames (ShelfSelector (Selector (NameDoesNotMatch [MatchAnything]) []) shelfSel)= do
+    -- only get empty shelves
+    shelves <- findShelfBySelector shelfSel >>= mapM findShelf
+    let hasBoxes = null .  _shelfBoxes 
+    return $ filter hasBoxes shelves
 findShelvesByBoxNameAndNames (ShelfSelector (Selector boxNameSel boxTagSel) shelfSel) = do
   shelves0 <- findShelfBySelector shelfSel >>= mapM findShelf
   -- only keep shelf for which boxes are ok
