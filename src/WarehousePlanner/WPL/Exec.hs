@@ -138,6 +138,11 @@ executeCommand ec command = case command of
       zipWithM_ (updateBoxTags $ negateTagOperations tagOps) excluded [1..]
       return ec
     ---------
+    TagShelves tagOps -> do
+       shelves <- getShelves ec
+       forM shelves $ updateShelfTags tagOps
+       return ec
+    ---------
     SelectBoxes selector -> do
       narrowCSelector selector ec
     ---------

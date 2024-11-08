@@ -198,6 +198,7 @@ atom = -- (PassThrought <$> (lexeme ";" *> statement ))
        <|> (notFollowedBy "|" >> Action <$> command )
 
 command = asum $ map lexeme [ toggleTag
+                            , tagShelves
                             , tag
                             , move
                             , shelfSel
@@ -232,6 +233,10 @@ command = asum $ map lexeme [ toggleTag
            lexeme1 "tog"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
            return $ ToggleTags (parseTagOperations tagOps)
+   tagShelves = do
+           lexeme1 ("tag:shelves" <|> "tag/")
+           tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
+           return $ TagShelves (parseTagOperations tagOps)
    tam = do
           lexeme1 "tam"
           tagloc <- lexeme1 $ takeWhile1P (Just "loc#tag") (not . isSpace)

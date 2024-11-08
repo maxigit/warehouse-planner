@@ -16,6 +16,7 @@ data Command = Move { cSource :: Maybe BoxSelector
                    }
              | Tag { cTagOps :: [Tag'Operation] }
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
+             | TagShelves { cTagOps :: [Tag'Operation] }
              | SelectBoxes (CSelector BoxSelector)
              | SelectShelves (CSelector ShelfSelector)
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
