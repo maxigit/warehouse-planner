@@ -52,28 +52,33 @@ applyTagSelector (TagIsKey pat) tags = case pat of
     [__one] -> True
     _ -> False
 applyTagSelector (TagIsKeyAndValues pat valuePats) tags = case pat of
-  MatchFull key | Just values <- lookup key tags -> matchesAllAndAll valuePats  values
+  MatchFull key | Just values <- lookup key tags -> matchesAllAndAll (unRefTag tags valuePats)  values
   MatchAnything -> True
   MatchGlob glob ->  case filter (Glob.match glob . unpack) (keys tags) of
-    [key] | Just values <- lookup key tags -> matchesAllAndAll valuePats values
+    [key] | Just values <- lookup key tags -> matchesAllAndAll (unRefTag tags valuePats) values
     _ -> False
   _ -> False
 applyTagSelector (TagHasKeyAndValues pat valuePats) tags = case pat of
-  MatchFull key | Just values <- lookup key tags -> matchesAllAndSome valuePats  values
+  MatchFull key | Just values <- lookup key tags -> matchesAllAndSome (unRefTag tags valuePats)  values
   MatchAnything -> True
   MatchGlob glob ->  case filter (Glob.match glob . unpack) (keys tags) of
-    [key] | Just values <- lookup key tags -> matchesAllAndSome valuePats values
+    [key] | Just values <- lookup key tags -> matchesAllAndSome (unRefTag tags valuePats) values
     _ -> False
   _ -> False
 applyTagSelector (TagHasValues valuePat) tags = let
   tagValues = mconcat (Map.elems tags)
-  in matchesAllAndSome valuePat tagValues
+  in matchesAllAndSome (unRefTag tags valuePat) tagValues
 applyTagSelector (TagHasNotValues valuePat) tags = not $ applyTagSelector (TagHasValues valuePat) tags
 applyTagSelector (TagHasKeyAndNotValues key valuePat) tags = not (applyTagSelector (TagHasKeyAndValues key valuePat) tags)
 
 applyTagSelectors :: Show (a s) => [TagSelector a] -> (a s -> Tags) -> a s -> Bool
 applyTagSelectors [] _ _ = True
 applyTagSelectors selectors tags o =  all (flip applyTagSelector (tags o)) selectors
+
+unRefTag :: Tags -> [ValuePattern] -> [MatchPattern]
+unRefTag tags = concatMap \case 
+         VMatch m -> [m]
+         VTag tag -> maybe [] (map MatchFull . setToList) $ lookup tag tags
 
 -- | Check all pattern are matched and matches all values
 matchesAllAndAll :: [MatchPattern] -> Set Text -> Bool
@@ -139,7 +144,7 @@ parseTagSelector tag = Just $ case break ('='  ==) tag of
   (key, stripPrefix "=!" -> Just values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
   (key, stripPrefix "=" -> Just values) -> TagIsKeyAndValues (parseMatchPattern key) (mkValues values)
   _ -> error "Bug. Result of break = should start with = or being captured earlier"
-  where mkValues = map parseMatchPattern . fromList . splitOn ";"
+  where mkValues = map parseVPattern . fromList . splitOn ";"
   
 parseMatchPattern :: Text -> MatchPattern
 parseMatchPattern "" = MatchAnything
@@ -147,6 +152,10 @@ parseMatchPattern "*" = MatchAnything
 parseMatchPattern pat | isGlob pat= MatchGlob (Glob.compile $ unpack pat)
 parseMatchPattern pat = MatchFull pat
   
+parseVPattern :: Text -> ValuePattern
+parseVPattern (stripPrefix "$[" -> Just pat)   | Just tag <- stripSuffix "]" pat = VTag tag
+parseVPattern pat = VMatch $ parseMatchPattern pat
+
 
 parseBoxSelector :: Text -> BoxSelector
 parseBoxSelector = parseBoxSelectorWithDef True
@@ -244,7 +253,7 @@ printTagSelector = \case
   TagHasValues vals -> "=" <> printVals vals
   TagHasNotValues vals -> "=-" <> printVals vals
   TagHasKeyAndNotValues key vals -> printPattern key <> "=-" <> printVals vals
-  where printVals = intercalate ";" . map printPattern
+  where printVals = intercalate ";" . map printVPattern
 
 
 printPattern :: MatchPattern -> Text
@@ -252,6 +261,9 @@ printPattern (MatchFull pat) = pat
 printPattern (MatchAnything) = ""
 printPattern (MatchGlob pat) = pack $ Glob.decompile pat
 
+printVPattern :: ValuePattern -> Text
+printVPattern (VMatch pat) = printPattern pat
+printVPattern (VTag tag) = "$[" <> tag <> "]"
 
 printNumberSelector :: BoxNumberSelector -> Text
 printNumberSelector (BoxNumberSelector NoLimit NoLimit NoLimit) = ""

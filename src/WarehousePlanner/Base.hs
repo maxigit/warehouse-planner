@@ -246,7 +246,7 @@ findBoxByNameAndShelfNames selector = map fst <$> findBoxByNameAndShelfNamesWith
 findBoxByNameAndShelfNamesWithPriority :: BoxSelector -> WH [(Box s, Priority)] s
 findBoxByNameAndShelfNamesWithPriority ( BoxSelector ( Selector (NameMatches [])
                                                     [ TagIsKeyAndValues (MatchFull prop)
-                                                                        [MatchFull value]
+                                                                        [VMatch (MatchFull value)]
                                                     ]
                                          ) shelfSel numSel
                            ) = do

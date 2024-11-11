@@ -578,11 +578,11 @@ data TagSelector  a
           | TagIsKey !MatchPattern --  ^ present with no value
           -- -| TagHasNotKey !MatchPattern --  ^ not present  (in all values)
           -- -| TagIsKeyAndValue Text Text --  ^ check key and value
-          | TagIsKeyAndValues !MatchPattern ![MatchPattern] --  ^ check key and all values are exact
-          | TagHasKeyAndValues !MatchPattern ![MatchPattern] --  ^ check key and at least all values are present
-          | TagHasValues ![MatchPattern]
-          | TagHasNotValues ![MatchPattern]
-          | TagHasKeyAndNotValues !MatchPattern ![MatchPattern] --  ^ check key and at least all values are present
+          | TagIsKeyAndValues !MatchPattern ![ValuePattern] --  ^ check key and all values are exact
+          | TagHasKeyAndValues !MatchPattern ![ValuePattern] --  ^ check key and at least all values are present
+          | TagHasValues ![ValuePattern]
+          | TagHasNotValues ![ValuePattern]
+          | TagHasKeyAndNotValues !MatchPattern ![ValuePattern] --  ^ check key and at least all values are present
           deriving (Show, Eq)
           -- deriving (Eq,Show,Ord)
 
@@ -592,6 +592,15 @@ data MatchPattern
    | MatchGlob !Glob.Pattern
    deriving (Eq, Show)
    -- -| MatchRegext Text
+
+-- | Pattern or tag reference
+data ValuePattern 
+   = VMatch MatchPattern
+   | VTag Text
+   deriving (Eq, Show)
+   
+
+ 
 
 data NameSelector a = NameMatches [MatchPattern] -- matches one of
                     | NameDoesNotMatch [MatchPattern] -- matche none of
