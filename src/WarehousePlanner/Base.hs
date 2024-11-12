@@ -875,7 +875,7 @@ expandAttribute box index toExpand = maybe (return toExpand) (\f -> f box index)
 -- to know if it needs expansion or not
 -- If an attribute is found, we can safely call expandAttribute (recursively), as we are
 -- only interested in doest in need expansion or not
-expandAttributeMaybe :: Text -> Maybe (Box s -> Int -> WH Text s)
+expandAttributeMaybe :: forall s . Text -> Maybe (Box s -> Int -> WH Text s)
 expandAttributeMaybe text = let
   wrap :: Box s -> Int -> (Text -> Box s -> Int -> WH Text s) -> Text -> WH Text s
   wrap box index f subtext =
@@ -883,10 +883,25 @@ expandAttributeMaybe text = let
       -- (_, "") -> f subtext box
       (Just ('{', _) , (key, leftOver)) -> (<> drop 1 leftOver) <$> f key box index
       _ -> f subtext box index
+      
   in case splitOn "$" text of
      prefix:segments -> Just $ \box i -> do
-      expandeds <- mapM (wrap box i expandAttribute') segments
-      return $ concat (prefix : expandeds)
+         -- expand (vs a simple mapM is necessarry to catche the $$ case)
+         -- $${comma}..$... is split to "", "{comma}..", "..."
+         -- "" indicate a $$ but we need to skip the expansion of {hello} 
+         -- We want $${comma}  to be parsed as $$ {comma} 
+         -- not as $ ${comma}
+          let expand :: [Text] -> WH [Text] s
+              expand [] = return []
+              expand ("":x:xs) = do
+                expanded <- expand xs
+                return $ "$" : x : expanded
+              expand (x:xs) = do
+                 exp <- wrap box i expandAttribute' x
+                 expanded <- expand xs
+                 return $ exp : expanded
+          expandeds <- expand segments  -- mapM (wrap box i expandAttribute') segments
+          return $ concat (prefix : expandeds)
      _ -> Nothing
 expandAttribute' :: Text -> Box s -> Int -> WH Text s
 expandAttribute' "" = \_ _ -> return "$"
