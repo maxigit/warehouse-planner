@@ -44,6 +44,7 @@ main = defaultMain
                     ]
   , bgroup "full" [ bench "with moves" $ nfIO $ benchLoad ["full-with-moves"]
                   , bench "with slots" $ nfIO $ benchLoad ["pl-65"]
+                  , bench "bare" $ nfIO $ benchLoad ["full"]
                   ]
   , bgroup "check" [bench "all" $ nfIO $ benchLoad ["full", "check" ]]
   , bgroup "wpl" [ bench base $ nfIO $ benchLoad [base, "wpl-move"]
