@@ -203,6 +203,7 @@ command = asum $ map lexeme [ toggleTag
                             , move
                             , shelfSel
                             , boxSel
+                            , boxRange
                             , tam
                             , delete
                             , traceCount
@@ -321,6 +322,14 @@ command = asum $ map lexeme [ toggleTag
                                      , lexeme1 "with:boxes" >> return CUseContext
                                      , lexeme1 "with" >> cselector parseShelfSelector
                                      ]
+   boxRange = do
+      boundary <- asum $ [ lexeme1 "from" $> From
+                         , lexeme1 "upto" $> Upto
+                         , lexeme1 "before" $> Before
+                         , lexeme1 "after" $> After
+                         ]
+      selector <- label "boundary selector" boxSelector
+      return $ SelectBoxRanges boundary selector
 
 withStatement name parser = do
      iLvl <- L.indentLevel

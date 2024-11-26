@@ -149,6 +149,35 @@ executeCommand ec command = case command of
     SelectShelves selector -> do
       narrowCSelector selector ec
     ---------
+    SelectBoxRanges boundary selector -> do
+      selection <- narrowCSelector selector ec >>= getBoxPs
+      boxId'Ps <- getBoxPs ec
+      let getIds = map (first boxId)
+      let ecB = case fromNullable selection of 
+                     Nothing ->
+                           let selectAll = InExcluded (Just $ getIds boxId'Ps) (Just [])
+                               selectNone = InExcluded (Just []) (Just $ getIds boxId'Ps)
+                           in case boundary of
+                                   From  -> selectNone
+                                   Before -> selectAll
+                                   After -> selectNone
+                                   Upto -> selectAll
+                     Just nsel ->
+                          let firstBox = fst $ head nsel
+                              lastBox'p = last nsel
+                              lastBox = fst $ lastBox'p
+                              (before, from) =  break (\(b,_) -> b==firstBox) boxId'Ps
+                              (upto', after') = break (\(b,_) -> b==lastBox) boxId'Ps
+                              upto = upto' <> [lastBox'p]
+                              after = drop 1 after'
+                              (ins, outs) = case boundary of
+                                               From -> (from, before)
+                                               Before -> (before, from)
+                                               Upto -> (upto, after)
+                                               After -> (after, upto)
+                          in InExcluded (Just $ getIds ins) (Just $ getIds outs)
+      return $ ec { ecBoxes = ecB, ecParent = Just ec }
+    ---------
     TagAndMove txt ors -> do
       let (tags, locm) = splitTagsAndLocation txt
       inEx <- withBoxOrientations' (ecOrientationStrategies ec) $ moveAndTag ec [] (parseBoxSelector "*" , tags, locm, ors)

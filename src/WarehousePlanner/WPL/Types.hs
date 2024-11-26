@@ -18,6 +18,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
              | TagShelves { cTagOps :: [Tag'Operation] }
              | SelectBoxes (CSelector BoxSelector)
+             | SelectBoxRanges RangeBoundary (CSelector BoxSelector)
              | SelectShelves (CSelector ShelfSelector)
              | TagAndMove Text [OrientationStrategy] -- as in :TAM:
              | Delete 
@@ -52,6 +53,8 @@ showCommand = \case
       _ -> "????"
       -}
        
+data RangeBoundary = Before | After | From | Upto
+  deriving (Eq, Show, Ord, Enum, Bounded)
       
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"

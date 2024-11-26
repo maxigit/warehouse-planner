@@ -91,6 +91,28 @@ pureSpec = describe "WPL" do
                       , "  |  A#'3"     -- add A-3
                       ]
              ) `shouldReturn` "B-1#1 A-3"
+  context "ranges" do
+     let ?boxes = ["S1 B-2 B-1#id=1 A-3 A-1 A-2 B-1#id=2"]
+     it "from" do
+       select "^^^={id} from A" `shouldReturn` "A-3 A-1 A-2 B-1#2"
+     it "before" do
+       select "^^^={id} before A" `shouldReturn` "B-2 B-1#1"
+     it "upto" do
+       select "^^^={id} upto A" `shouldReturn` "B-2 B-1#1 A-3 A-1 A-2"
+     it "upto first" do
+       select "^^^={id} upto A^^^1" `shouldReturn` "B-2 B-1#1 A-3"
+     it "after" do
+       select "^^^={id} after A" `shouldReturn` "B-1#2"
+     context "null boundaries" do
+             let all = "B-2 B-1#1 A-3 A-1 A-2 B-1#2"
+             it "from nothing -> nothing" do
+               select "^^^={id} from X" `shouldReturn` ""
+             it "before nothing -> all" do
+               select "^^^={id} before X" `shouldReturn` all
+             it "upto nothing -> all " do
+               select "^^^={id} upto X" `shouldReturn` all
+             it "after nothing -> nothing" do
+               select "^^^={id} after X" `shouldReturn` ""
 
 
        
