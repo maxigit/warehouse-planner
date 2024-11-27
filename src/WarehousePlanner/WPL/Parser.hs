@@ -150,6 +150,14 @@ foreachB = withStatement "foreach:box" do
     selector <- boxSelector
     return $ ForeachBox selector
 
+foreachDo :: MParser Statement
+foreachDo = withStatement "foreach:do" do
+    lexeme "foreach:do"
+    return \ors -> case ors of
+                          Ors (action :| (x:xs)) -> ForeachDo action (x :| xs)
+                          statement -> statement
+  
+
 orBlock name = do
   blockOf (name <> ":or") ((indentedBlock <?> "indentedBlock")
           <|>
@@ -195,6 +203,7 @@ atom = -- (PassThrought <$> (lexeme ";" *> statement ))
        -- ("("  *> statement <* ")")
        foreachS
        <|> foreachB
+       <|> foreachDo
        <|> (notFollowedBy "|" >> Action <$> command )
 
 command = asum $ map lexeme [ toggleTag

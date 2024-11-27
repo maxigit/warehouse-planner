@@ -67,6 +67,7 @@ data Statement = Action Command
                | ForeachShelf Statement
                | ForeachBox (CSelector BoxSelector) Statement
                | ShelfCases (NonEmpty ShelfCase)
+               | ForeachDo Statement (NonEmpty Statement)
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)

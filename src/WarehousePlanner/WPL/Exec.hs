@@ -82,7 +82,11 @@ executeStatement ec command =
                                            }
                                         statement
            return ec
-
+        ForeachDo action statements  -> do
+           -- execute action for all of the statment
+           -- collecting boxes as in a case 
+           let cases = fmap (\st -> Case st $ Just action) statements
+           executeStatement ec (Cases cases)
 
            
     where execCase ec (Case com comm) = do
