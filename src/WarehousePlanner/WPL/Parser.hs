@@ -227,6 +227,7 @@ command = asum $ map lexeme [ toggleTag
                             , emptyShelves
                             , assert
                             , resizeShelf
+                            , resizeBox
                             , splitShelf
                             ] where
    move = do
@@ -317,6 +318,14 @@ command = asum $ map lexeme [ toggleTag
      lexeme1 "shelf:full"
      selector <- shelfSelector
      return $ ResizeShelf selector 
+   resizeBox = withStatement "box:resize" do
+     mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
+                  , lexeme1 "bsize:min" $> MinDimension
+                  , lexeme1 "bsize:first" $> FirstDimension
+                  ]
+     selector <- boxSelector
+     return $ ResizeBox mode selector
+
    splitShelf = withStatement "split" do
      lexeme1 "split"
      selector <- shelfSelector

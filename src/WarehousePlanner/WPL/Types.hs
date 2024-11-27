@@ -34,6 +34,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | AssertBoxes Bool Text
              | AssertShelves Bool Text
              | ResizeShelf (CSelector ShelfSelector) Statement
+             | ResizeBox BoxMode (CSelector BoxSelector) Statement
              | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
      deriving (Show, Eq)
      {-
@@ -56,6 +57,9 @@ showCommand = \case
 data RangeBoundary = Before | After | From | Upto
   deriving (Eq, Show, Ord, Enum, Bounded)
       
+data BoxMode = MaxDimension | MinDimension | FirstDimension
+  deriving (Eq, Show, Ord, Enum, Bounded)
+
 showBoxSelector = unpack . printBoxSelector
 showShelfSelector s = "<" <> (unpack $ printShelfSelector s) <> ">"
             

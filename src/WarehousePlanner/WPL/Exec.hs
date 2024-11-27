@@ -87,7 +87,6 @@ executeStatement ec command =
            -- collecting boxes as in a case 
            let cases = fmap (\st -> Case st $ Just action) statements
            executeStatement ec (Cases cases)
-
            
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
@@ -285,6 +284,29 @@ executeCommand ec command = case command of
         shelves <- narrowCSelector selector ec >>= getShelves
         forM shelves $ updateShelf full
         executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig }) orig )
+    ResizeBox mode selector statement -> do 
+        boxes <- narrowCSelector selector ec >>= getBoxes
+        let around action = case fromNullable $ map _boxDim boxes of
+                                 Nothing -> action
+                                 Just dims -> do
+                                      let dim = case mode of 
+                                                     MaxDimension -> maxDimension $ toList dims
+                                                     MinDimension -> minDimension $ toList dims
+                                                     FirstDimension -> head dims
+                                          tagOps d = [ ("'l", mkValue d dLength)
+                                                   , ("'w", mkValue d dWidth)
+                                                   , ("'h", mkValue d dHeight)
+                                                   ]
+                                          mkValue d f = SetValues [ tshow $ floor $ 100 * f d ]
+                                      -- we can't update the dimension directly because it will
+                                      -- be overriden by the value of 'l ... set when creating thebox
+                                      forM boxes $ flip (updateBoxTags $ tagOps dim) 0
+                                      r <- executeStatement ec statement
+                                      forM boxes \box ->  updateBoxTags (tagOps $ _boxDim box) box 0
+                                      return r
+        around $ executeStatement ec statement
+
+
     ---------
     SplitShelf selector bselm les wes hes statement -> do
       shelves <- narrowCSelector selector ec >>= getShelves
