@@ -292,8 +292,8 @@ command = asum $ map lexeme [ toggleTag
        pmode <- lexeme1 partitionModeParser
        return $ SetPartitionMode pmode
    orientationStrategies = do
-      cons <- (SetOrientationStrategies <$ lexeme1 "orules")
-         <|> (AddOrientationStrategies <$ lexeme1 "orules+")
+      cons <- (AddOrientationStrategies <$ lexeme1 "orules+")
+         <|> (SetOrientationStrategies <$ lexeme1 "orules")
       os <- orientationRules
       cselectorm <- optional $ (lexeme "for" >> shelfSelector) <?> "orules:selector"
       selectorm <- case cselectorm of
