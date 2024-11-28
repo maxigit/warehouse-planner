@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.36.0.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 
@@ -105,6 +105,7 @@ library
   if flag(brick)
     build-depends:
         brick
+      , fsnotify
       , optparse-applicative
       , text-zipper
       , vty
@@ -121,6 +122,7 @@ library
         WarehousePlanner.Brick.Input
     hs-source-dirs:
         brick
+        fsnotify
   if flag(dev)
     ghc-options: -O0 -fno-omit-yields -debug -g
   else
@@ -182,6 +184,7 @@ executable whp
   if flag(brick)
     build-depends:
         brick
+      , fsnotify
       , optparse-applicative
       , text-zipper
       , vty
@@ -287,6 +290,7 @@ test-suite test
   if flag(brick)
     build-depends:
         brick
+      , fsnotify
       , optparse-applicative
       , text-zipper
       , vty
@@ -349,6 +353,7 @@ benchmark bench
   if flag(brick)
     build-depends:
         brick
+      , fsnotify
       , optparse-applicative
       , text-zipper
       , vty

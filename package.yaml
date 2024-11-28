@@ -57,6 +57,7 @@ library:
     source-dirs:
       # - src
       - brick
+      - fsnotify
     exposed-modules:
     - WarehousePlanner.Main
     - WarehousePlanner.Brick.App
@@ -132,6 +133,7 @@ when:
   - brick
   - vty
   - text-zipper
+  - fsnotify
   # for executable
   - optparse-applicative
     

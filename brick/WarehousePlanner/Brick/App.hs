@@ -46,6 +46,8 @@ import Text.Printf
 import Data.Text(splitOn)
 import Data.Csv qualified as Csv
 import Data.ByteString.Lazy qualified as BL
+import System.FSNotify as FS
+import Control.Concurrent (forkIO, threadDelay)
 -- import System.Clipboard(setClipboardString)
 
 type WHApp = B.App AppState WHEvent Resource
@@ -351,7 +353,7 @@ whApp extraAttrs =
                                 then B.centerLayer $ B.border $ B.withAttr virtualTagName_ $ B.str "RELOADING"
                                 else B.emptyWidget
               in  [ help
-                  , reloading, B.str (show asReloading)
+                  , reloading
                   , vBoxB [ mainRun
                            , let chunk = if asDisplayDetails
                                          then 40
@@ -376,8 +378,8 @@ submapHelp cm = let
    --           | (section, handlers) <- section'handlers
    --           ]
   
-whMain :: (AppState -> WH AppState RealWorld ) -> String -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
-whMain adjust title reload = do
+whMain :: (AppState -> WH AppState RealWorld ) -> String -> Maybe FilePath -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
+whMain adjust title watchM reload= do
   -- error $ unpack
   --       $ unlines 
   --       $ [ B.keybindingTextTable keyConfig handlers
@@ -414,8 +416,16 @@ whMain adjust title reload = do
   -- start a channel so we can send event
   let vtyBuilder = V.mkVty V.defaultConfig
   initialVty <- vtyBuilder
+  forM watchM \dir -> void $ forkIO $ startFileWatcher dir (B.writeBChan chan)
   void $ B.customMain initialVty vtyBuilder (Just chan) (whApp attrs) state0
 
+startFileWatcher dir enqueueEvent = FS.withManager \mgr -> do
+  void $ FS.watchTree mgr dir fileModified \_ -> enqueueEvent (EReload ReloadRequest)
+  forever $ threadDelay maxBound
+  where fileModified event = 
+           case event of 
+                FS.Modified _ _ _  | FS.eventIsDirectory event == False -> True
+                _ -> False
 
 
 keyBindingGroups :: [(Maybe (Text, Char),[ (Text,  [([B.Binding], WHEvent, Text, _)])])]

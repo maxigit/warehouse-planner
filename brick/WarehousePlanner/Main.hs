@@ -37,6 +37,7 @@ data Options = Options
             , oBoxSearch :: Maybe Text
             , oShelfSearch :: Maybe Text
             , oNoCheck :: Bool
+            , oNoWatch :: Bool
             }
      deriving (Show, Generic)
      
@@ -98,6 +99,8 @@ optionsParser = do
                        <> help "box selector"
   oShelfSearch <- optional $ strOption $ long "shelf-search"
                         <> help "shelf selector"
+  oNoWatch <- switch $ long "no-watch"
+                   <> help "Watch for files in datadir"
   return Options{..}
   
 commandArg = flag' Stocktake (long "stocktake"
@@ -223,7 +226,10 @@ defaultMainWith expandSection = do
                                                , asBoxSelection
                                                , asShelfSelection
                                                }
-               in whMain setParam title do
+               watchPath = if oNoWatch
+                           then Nothing
+                           else Just (fromMaybe "." oDir)
+               in whMain setParam title watchPath do
                       execE <- getExec
                       case execE of
                         Right (exec,_) -> fmap Right $  exec get
