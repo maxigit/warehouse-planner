@@ -22,8 +22,10 @@ import WarehousePlanner.Brick.Input
 import WarehousePlanner.Exec (execWH)
 import Brick qualified as B
 import Brick.Widgets.Border qualified as B
+import Brick.BChan qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
+import Graphics.Vty qualified as V
 import Control.Monad.State (gets, get, modify, put, zipWithM)
 import Data.List.NonEmpty(NonEmpty(..), (!!))
 import Data.Foldable qualified as F
@@ -103,7 +105,7 @@ data WHEvent = ENextMode
              --        thus a title.
              | EDisplayMainHelp
              -- Misc
-             | EReload
+             | EReload ReloadStage
              | EQuit
              -- Action
              | EMove
@@ -135,6 +137,9 @@ data HistoryEvent = HPrevious
                   | HLast
                   | HSwapCurrent
      deriving(Show, Eq, Ord, Enum, Bounded)
+
+data ReloadStage = ReloadRequest | ReloadStart
+  deriving (Eq, Show, Ord) -- , Enum, Bounded)
 
 makeAppShelvesSummary :: AppState -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
 makeAppShelvesSummary state = do
@@ -268,7 +273,7 @@ adjustedShelfGroup state = do
 
   
   
-initState :: (AppState -> WH AppState RealWorld) -> IO (Either Text (Warehouse RealWorld)) -> String -> WH (AppState) RealWorld
+initState :: (AppState -> WH AppState RealWorld) -> (IO (Either Text (Warehouse RealWorld)), IO ()) -> String -> WH (AppState) RealWorld
 initState adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
@@ -293,6 +298,7 @@ initState adjust asReload title = do
                   , asShelfSelection = Nothing
                   , asShelvesSummary = error "Shelves Summary not initialized"
                   , asCollapseDepth = True
+                  , asReloading = False
                   , ..
                   }
   asShelvesSummary <- makeAppShelvesSummary state
@@ -341,7 +347,11 @@ whApp extraAttrs =
                   help = case asSubmap of 
                            Nothing | asDisplayMainHelp == False  -> B.emptyWidget
                            _ -> B.centerLayer $ submapHelp asSubmap
+                  reloading = if asReloading 
+                                then B.centerLayer $ B.border $ B.withAttr virtualTagName_ $ B.str "RELOADING"
+                                else B.emptyWidget
               in  [ help
+                  , reloading, B.str (show asReloading)
                   , vBoxB [ mainRun
                            , let chunk = if asDisplayDetails
                                          then 40
@@ -352,7 +362,7 @@ whApp extraAttrs =
                            ]
                   ]
       appChooseCursor = B.neverShowCursor
-      appHandleEvent = whHandleEvent
+      appHandleEvent = whHandleEvent 
       appAttrMap state = B.attrMap V.defAttr $ generateLevelAttrs  <> extraAttrs state
       appStartEvent = return ()
   in app
@@ -379,7 +389,9 @@ whMain adjust title reload = do
   let wh = case whE of
             Left e -> error (unpack e)
             Right w -> w
-  state0 <- execWH wh $ initState adjust reload title 
+  chan <- B.newBChan 1000
+  let startingReload = B.writeBChan chan (EReload ReloadStart)
+  state0 <- execWH wh $ initState adjust (reload, startingReload) title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let attrs state =
@@ -399,7 +411,10 @@ whMain adjust title reload = do
                                             else map fst $ toList $ asCurrentRunPropValues state
                                 in (makeStyleAttrName "∅", grayAttr)
                                    : (gradientAttributes $ filter (/= "∅") props)
-  void $ B.defaultMain (whApp attrs) state0
+  -- start a channel so we can send event
+  let vtyBuilder = V.mkVty V.defaultConfig
+  initialVty <- vtyBuilder
+  void $ B.customMain initialVty vtyBuilder (Just chan) (whApp attrs) state0
 
 
 
@@ -411,7 +426,7 @@ keyBindingGroups =  groups
                                                                , mK "c-v" ERenderAllRuns "visualize current run (jpg)"
                                                                , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
                                                                , mK "q C-c" (EQuit) "Quit"
-                                                               , mK "C-r" (EReload) "Reload"
+                                                               , mK "C-r" (EReload ReloadRequest) "Reload"
                                                                ])
                                ,("Navigation",                 [ mk 'g' (EFirstRun) "first run"
                                                                , mk 'G' (ELastRun) "last run"
@@ -709,9 +724,16 @@ handleWH ev =
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
-         EReload -> do
-                  reload <- gets asReload
+         EReload stage ->  do
+            (reload, startingReload) <- gets asReload
+            case stage of
+               ReloadRequest  -> do
+                  -- display a message and send a even to start reloading
+                  liftIO startingReload
+                  modify \s -> s { asReloading = True }
+               ReloadStart -> do
                   newWHE <- liftIO reload
+                  modify \s -> s { asReloading = False }
                   case newWHE of
                        Left e -> error $ unpack e
                        Right newWH -> do

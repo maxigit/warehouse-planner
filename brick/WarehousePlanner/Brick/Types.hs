@@ -140,7 +140,10 @@ data AppState = AppState
      , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
      , asShelfSelection :: Maybe (Selection ShelfSelector Text)
      , asCollapseDepth :: Bool
-     , asReload :: IO (Either Text (Warehouse RealWorld))
+     , asReload :: (IO (Either Text (Warehouse RealWorld)) -- to reload
+                   , IO () -- how to send a event to start the reload
+                   )
+     , asReloading :: Bool
      }
      
 data Selection sel a = 
