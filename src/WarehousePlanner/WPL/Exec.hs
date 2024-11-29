@@ -199,16 +199,22 @@ executeCommand ec command = case command of
        traceM $ "     included shelves " <> show( fmap length $ included ecShelves)
        traceM $ "     excluded shelves " <> show( fmap length $ excluded ecShelves)
        return ec
-    TraceBoxes withId desc -> do
+    TraceBoxes desc propM -> do
        let ExContext{..} = ec
-           boxTitle = if withId
-                      then show
-                      else unpack . boxStyleAndContent
+       let boxTitleM :: Box s -> Int -> WH Text s
+           boxTitleM = case propM >>= expandAttributeMaybe of
+                      Nothing -> \box _ -> return $ boxStyleAndContent box
+                      Just exp -> exp
+
        traceM $ "Trace Boxes " <> unpack desc -- <> " "  <> show ecSelector
        incs <- mapM (findBox . fst) `traverse` (included ecBoxes)
        exs <- mapM (findBox . fst) `traverse` (excluded ecBoxes)
-       traceM $ "     included boxes " <> show (  map boxTitle <$> incs)
-       traceM $ "     excluded boxes " <> show (  map boxTitle <$> exs)
+       let traceBoxes title boxesM = do
+                      titles <- forM boxesM \boxes -> zipWithM boxTitleM boxes [1..]
+                      traceM $ "     " <> title <> " boxes: " <> maybe "Nothing" (unpack .intercalate ", ") titles
+
+       traceBoxes "included" incs
+       traceBoxes "excluded" exs
        return ec
     TraceShelves desc -> do
        let ExContext{..} = ec

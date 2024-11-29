@@ -26,7 +26,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetOrientationStrategies (Maybe ShelfSelector) [OrientationStrategy]
              | AddOrientationStrategies (Maybe ShelfSelector) [OrientationStrategy]
              | TraceCount Text
-             | TraceBoxes Bool Text
+             | TraceBoxes Text (Maybe Text)
              | TraceShelves Text
              | TraceOrientations Text
              | SetNoEmptyBoxes Bool
