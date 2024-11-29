@@ -92,19 +92,28 @@ executeStatement ec command =
 
            
     where execCase ec (Case com comm) = do
+             --- inital in: A B C D E
+             --         ex: 
+             --         
+             -- | B C => in A D E | B c
+             -- ec ^^^^^^^^^^^^^^^
+             -- A E ^^^-{style} E A
              newEc <- executeStatement ec com
+             -- E A | D
              forM comm (executeStatement newEc)
              -- reinject previously selected boxes to exclude so that in effect, all selections
              -- are collected in the excluded
-             let toExclude = (`notMember` (Set.fromList $ map fst $ includedList $ ecBoxes newEc)) . fst
-             return  ec { ecBoxes = narrowIncluded   toExclude (ecBoxes ec) }
+             -- ^^^^ not in A E
+             return  ec { ecBoxes = excludeIncluded fst   (includedList (ecBoxes newEc)) (ecBoxes ec) }
+                     -- A D E | B C --  exclude NOT in A E
+                     -- A E | B C D
+
           execShelfCase ec (ShelfCase com comm) = do
              newEc <- executeStatement ec com
              forM comm (executeStatement newEc)
-             let toExclude = (`notMember` (Set.fromList $ includedList $ ecShelves newEc))
              -- reinject previously selected shelves to exclude so that in effect, all selections
              -- are collected in the excluded
-             return ec { ecShelves = narrowIncluded toExclude (ecShelves ec) }
+             return ec { ecShelves = excludeIncluded id (includedList (ecShelves newEc)) (ecShelves ec) }
 
          
 

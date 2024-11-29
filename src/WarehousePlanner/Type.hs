@@ -707,6 +707,14 @@ narrowIncluded keep inEx = let
       -- $ traceShowId
      --  $
       InExcluded (Just ins) (excluded toExclude)
+excludeIncluded :: (Ord k, Ord a) => (a -> k) -> [a] -> InExcluded a -> InExcluded a
+excludeIncluded key outs inEx = let
+  excludeSet = Set.fromList $ map key outs
+  keep = (`notMember` excludeSet) . key
+  ins  = filter keep (includedList inEx)
+  toExclude = inEx <> (InExcluded Nothing (Just outs))
+  in InExcluded (Just ins) (excluded toExclude)
+   
 
 
 

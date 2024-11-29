@@ -73,11 +73,16 @@ pureSpec = describe "WPL" do
                       , "       | ^^^1" -- another one
                       ]
              ) `shouldReturn` "A-1 A-2"
-    it "collects using ^ using originag order" do
+    it "collects using ^ using original order" do
       select (unlines [ "A^^   | ^^^1" -- 1 box
                       , "      | ^^^1" -- another one
                       ]
              ) `shouldReturn` "A-3 A-1"
+    it "collects with each case order" do
+       select (unlines [ "* | A^^-{content}2"
+                       , "  | B^^1"
+                       ]
+              ) `shouldReturn` "A-3 A-2 B-1#1"
   context "nested  cases" do
     it "" do
       select (unlines [ "* || A | #'2" -- collect A-2
