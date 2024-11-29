@@ -29,7 +29,7 @@ runWPL = runWPLWith (const $ return ())
 
 runWPLWith :: (Maybe (ExContext s) -> WH r s) -> [Statement] -> WH r s
 runWPLWith action statements = do
-  ecs <- mapM (executeStatement withAll) statements
+  ecs <- mapM (executeStatement withAll {ecNoEmptyShelves = True }) statements
   action $ lastMay ecs
 
 executeStatement :: ExContext s -> Statement -> WH (ExContext s) s

@@ -7649,7 +7649,7 @@ M61L03DE
           to> pending3
           ^1 | #'l=<-7000> to> N02.02/[12]
              | to> N02.0[23]/[12]
-          in pending3 | to> N01.*
+          in pending3 -- | to> N01.*
                       | to> N02.*/3
                       | to> N02.0[23]/*
 M61L01DP
