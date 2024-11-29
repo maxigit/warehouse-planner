@@ -16,6 +16,7 @@ import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
 import WarehousePlanner.ShelfOp
+import WarehousePlanner.Rearrange
 import Control.Monad(zipWithM_, zipWithM)
 import Data.Set qualified as Set
 import Data.Map qualified as Map
@@ -87,6 +88,8 @@ executeStatement ec command =
            -- collecting boxes as in a case 
            let cases = fmap (\st -> Case st $ Just action) statements
            executeStatement ec (Cases cases)
+
+
            
     where execCase ec (Case com comm) = do
              newEc <- executeStatement ec com
@@ -339,6 +342,23 @@ executeCommand ec command = case command of
              ds
            splitShelf shelf ls ws hs
       executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
+    ---------
+    SwapBoxes boxSelector debugPrefix stickys -> do
+      -- swap selected boxes (in the selected order)
+      -- with the original order (in the given order)
+      original <- getBoxes ec
+      narrowed <- executeCommand ec (SelectBoxes boxSelector)
+      news <- getBoxes narrowed
+      -- check that all used in original and in are the same
+      let zipped = zip news original
+          (ns, os) = unzip zipped
+      when (sort os /= sort ns) do
+        error $ "Swap sources and destinations needs to be the same " <> show (boxSelector, stickys)
+        return ()
+
+      void $ mapM (halfSwap debugPrefix (`elem` stickys)) zipped
+      return narrowed
+
 
       
 

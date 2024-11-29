@@ -36,6 +36,7 @@ data Command = Move { cSource :: Maybe BoxSelector
              | ResizeShelf (CSelector ShelfSelector) Statement
              | ResizeBox BoxMode (CSelector BoxSelector) Statement
              | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
+             | SwapBoxes (CSelector BoxSelector) (Maybe Text) [Text]
      deriving (Show, Eq)
      {-
        deriving Eq

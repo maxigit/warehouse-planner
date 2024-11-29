@@ -18,6 +18,7 @@ import Data.Char
 import Data.List.NonEmpty (NonEmpty(..))
 import Control.Monad(fail)
 import Data.Foldable qualified as F
+import Data.Text (splitOn)
 
 -- dbg _ = id
 dbg :: Show a => String -> MParser a -> MParser a
@@ -213,6 +214,7 @@ command = asum $ map lexeme [ toggleTag
                             , shelfSel
                             , boxSel
                             , boxRange
+                            , swapBoxes
                             , tam
                             , delete
                             , traceCount
@@ -350,6 +352,18 @@ command = asum $ map lexeme [ toggleTag
                          ]
       selector <- label "boundary selector" boxSelector
       return $ SelectBoxRanges boundary selector
+   swapBoxes = do
+      lexeme1 "swap"
+      debugPrefix <- optional do 
+                              lexeme1 "debug"
+                              lexeme $ takeWhile1P (Just "debug") (not . isSpace)  
+      stickym <- optional do
+                    lexeme1 "sticky"
+                    lexeme $ takeWhile1P (Just "tags") (not . isSpace)
+      selector <- boxSelector
+      let stickies = maybe [] (splitOn "#") stickym
+      return $ SwapBoxes selector debugPrefix stickies
+                    
 
 withStatement name parser = do
      iLvl <- L.indentLevel

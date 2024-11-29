@@ -102,40 +102,46 @@ shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
   let swaps = shiftUsedInBucketsWithStrategy isUsed boxWithBuckets 
   newms <- mapM doSwap swaps
   return $ catMaybes newms
-  where doSwap :: (Box s, Box s) -> WH (Maybe (Box s)) s
-        doSwap (source, dest) | source == dest = return Nothing
-        doSwap (source_, dest) = do
-                 -- reload the source in case it has been modified before as dest
-                 -- without that, removing the sticky tag from the current dest
-                 -- would be cancel by the next swap, when dest becomes a new source.
-                 -- However we don't reload the dest to not see the new tags.
-                 -- If we swap A and B#T (with sticky tag T on B)
-                 -- This generate to swaps (and result)
-                 --  1) A -> B#T         : A#T, B
-                 --  2) B#T -> A         : A#T, B
-                 --   loading the source guarantee that 2.source = B (and not B#T)
-                 --   not loading the dest guarantee that 2.dest = A (and not A#T which will reset #T to B)
-                 source <- findBox source_
-                 -- remove sticky tags from dest and set them to the source, so in effect
-                 -- the sticky tags are attached to the location not the boxes.
-                 let (sticky, nonSticky) = Map.partitionWithKey (\k _ -> isSticky k) (boxTags dest)
-                 debugTag <- case debugPrefix of
-                                  Nothing -> return mempty
-                                  Just prefix -> do 
-                                          from <- expandAttribute source 1 "${shelfname}${position-spec}"
-                                          return $ mapFromList [(prefix <> "-from" , singleton from)]
-                 when (not $ null sticky) do
-                   void $ updateBox (\b -> b { boxTags = nonSticky} ) dest
-                      
-                 new <- updateBox (\s -> s { boxOffset = boxOffset  dest
-                                  , boxBoxOrientations = boxBoxOrientations dest
-                                  , orientation = orientation dest
-                                  , boxBreak = boxBreak dest
-                                  , boxTags = boxTags source <> sticky <> debugTag
-                                  }
-                                  ) source
-                                  >>= assignShelf (boxShelf dest)
-                 return $ Just new
+  where doSwap = halfSwap debugPrefix isSticky
+  
+-- | Do half a swap ie move the source to the destination.
+-- To work full a series of swap involving all boxes (exactly once as a source and
+-- once as a destination) shoud be called
+halfSwap :: Maybe Text -> (Text -> Bool) -> (Box s, Box s) -> WH (Maybe (Box s)) s
+halfSwap _ _ (source, dest) | source == dest = return Nothing
+halfSwap debugPrefix isSticky (source_, dest) = do
+        -- reload the source in case it has been modified before as dest
+        -- without that, removing the sticky tag from the current dest
+        -- would be cancel by the next swap, when dest becomes a new source.
+        -- However we don't reload the dest to not see the new tags.
+        -- If we swap A and B#T (with sticky tag T on B)
+        -- This generate to swaps (and result)
+        --  1) A -> B#T         : A#T, B
+        --  2) B#T -> A         : A#T, B
+        --   loading the source guarantee that 2.source = B (and not B#T)
+        --   not loading the dest guarantee that 2.dest = A (and not A#T which will reset #T to B)
+        source <- findBox source_
+        -- remove sticky tags from dest and set them to the source, so in effect
+        -- the sticky tags are attached to the location not the boxes.
+        let (sticky, nonSticky) = Map.partitionWithKey (\k _ -> isSticky k) (boxTags dest)
+        debugTag <- case debugPrefix of
+                         Nothing -> return mempty
+                         Just prefix -> do 
+                                 from <- expandAttribute source 1 "${shelfname}${position-spec}"
+                                 return $ mapFromList [(prefix <> "-from" , singleton from)]
+        when (not $ null sticky) do
+          void $ updateBox (\b -> b { boxTags = nonSticky} ) dest
+
+        new <- updateBox (\s -> s { boxOffset = boxOffset  dest
+                         , boxBoxOrientations = boxBoxOrientations dest
+                         , orientation = orientation dest
+                         , boxBreak = boxBreak dest
+                         , boxTags = boxTags source <> sticky <> debugTag
+                         }
+                         ) source
+                         >>= assignShelf (boxShelf dest)
+        return $ Just new
+
 boxStyleWithTags :: Box s -> Text
 boxStyleWithTags b = let
   tags =  (getTagList b)
