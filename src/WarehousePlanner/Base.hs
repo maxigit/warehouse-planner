@@ -837,14 +837,19 @@ boxStyleAndContent box = case boxContent box of
 -- | Box coordinate as if the shelf was full of this box
 -- give the offest divide by the dimension of the box + 1
 boxCoordinate :: Box s -> Dimension
-boxCoordinate = fst . boxPosition
+boxCoordinate = boxCoordinate' floor
+
+boxCoordinate' :: (Double -> Int) -> Box s -> Dimension
+boxCoordinate' rounding = fst . boxPosition' rounding
                      
 -- | Box coordinate + left over                   
-boxPosition :: Box s -> (Dimension, Dimension)
-boxPosition box  = let
+boxPosition ::  Box s -> (Dimension, Dimension)
+boxPosition = boxPosition' floor
+boxPosition' :: (Double -> Int) -> Box s -> (Dimension, Dimension)
+boxPosition' rounding box  = let
   (Dimension ol ow oh) = boxOffset box
   (Dimension l w h) = boxDim box
-  go o d = let q = fromIntegral $ floor (o / d)
+  go o d = let q = fromIntegral $ rounding (o / d)
                r = o - q * d
            in (q+1,r)
   (lq,lr) = go ol l
@@ -1058,9 +1063,12 @@ expandIntrinsic' "fit" box shelf =do
                       (True, False) -> "tight"
                       (False, False) -> "fit"
       in Right $ fit
-expandIntrinsic' "ol" box _shelf =let (Dimension ol _ _ ) = boxCoordinate box in  Left $ round ol
-expandIntrinsic' "ow" box _shelf =let (Dimension _ ow _ ) = boxCoordinate box in  Left $ round ow
-expandIntrinsic' "oh" box _shelf =let (Dimension _ _ oh ) = boxCoordinate box in  Left $ round oh
+expandIntrinsic' "cl" box _shelf =let (Dimension ol _ _ ) = boxCoordinate box in  Left $ round ol
+expandIntrinsic' "cw" box _shelf =let (Dimension _ ow _ ) = boxCoordinate box in  Left $ round ow
+expandIntrinsic' "ch" box _shelf =let (Dimension _ _ oh ) = boxCoordinate box in  Left $ round oh
+expandIntrinsic' "ol" box _shelf =let (Dimension ol _ _ ) = boxCoordinate' round box in  Left $ round ol
+expandIntrinsic' "ow" box _shelf =let (Dimension _ ow _ ) = boxCoordinate' round box in  Left $ round ow
+expandIntrinsic' "oh" box _shelf =let (Dimension _ _ oh ) = boxCoordinate' round box in  Left $ round oh
 expandIntrinsic' "@" box _shelf =let (global, style, content) = boxPriorities box in  Right $ tshow content <> "@" <> tshow style <> "@" <> tshow global
 expandIntrinsic' "@content" box _shelf = Left $ boxContentPriority box
 expandIntrinsic' "@style" box _shelf = Left $ boxStylePriority box
@@ -1080,6 +1088,9 @@ expandIntrinsic' "vol" box _shelf = Right $ pack $ printf "%.2e" (boxVolume box)
 expandIntrinsic' "con" box _shelf = Right $ boxShortContent box
 expandIntrinsic' "id" box _shelf = let BoxId_ (Arg bId _)  = boxId box
                                    in Left bId
+expandIntrinsic' "ox" box _shelf = Right $ pack $ printf "%.f" (dLength $ boxOffset box)
+expandIntrinsic' "oy" box _shelf = Right $ pack $ printf "%.f" (dWidth $ boxOffset box)
+expandIntrinsic' "oz" box _shelf = Right $ pack $ printf "%.f" (dHeight $ boxOffset box)
 expandIntrinsic' prop _box _shelf = error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
 
 
