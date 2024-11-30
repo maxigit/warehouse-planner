@@ -145,6 +145,17 @@ executeCommand ec command = case command of
       zipWithM_ (updateBoxTags tagOps) boxes [1..]
       return ec
     ---------
+    -- Tag the given boxes  temporarily
+    TagFor selector tagOps statement -> do
+      newBaseEvent "TAG WITH" (tshow tagOps)
+      boxes <- getBoxes =<< narrowCSelector selector ec
+      zipWithM_ (updateBoxTags tagOps) boxes [1..]
+      r <- executeStatement ec statement
+      --
+      zipWithM_ (updateBoxTags $ negateTagOperations tagOps) boxes [1..]
+      return r
+      
+    ---------
     ToggleTags tagOps -> do
       newBaseEvent "TOGGLE" (tshow tagOps)
       boxes <- getBoxes ec

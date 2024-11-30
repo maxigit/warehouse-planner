@@ -209,6 +209,7 @@ atom = -- (PassThrought <$> (lexeme ";" *> statement ))
 
 command = asum $ map lexeme [ toggleTag
                             , tagShelves
+                            , tagFor
                             , tag
                             , move
                             , shelfSel
@@ -242,6 +243,11 @@ command = asum $ map lexeme [ toggleTag
            lexeme1 "tag"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
            return $ Tag (parseTagOperations tagOps)
+   tagFor = withStatement "tag_with" do
+       lexeme1 "tag:for"
+       selector <- boxSelector
+       tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
+       return $ TagFor selector (parseTagOperations tagOps)
    toggleTag = do
            lexeme1 "tog"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)

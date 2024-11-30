@@ -15,6 +15,7 @@ data Command = Move { cSource :: Maybe BoxSelector
                    , cExitMode  :: ExitMode 
                    }
              | Tag { cTagOps :: [Tag'Operation] }
+             | TagFor (CSelector BoxSelector) [Tag'Operation] Statement
              | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
              | TagShelves { cTagOps :: [Tag'Operation] }
              | SelectBoxes (CSelector BoxSelector)

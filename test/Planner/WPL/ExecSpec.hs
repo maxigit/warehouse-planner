@@ -118,6 +118,24 @@ pureSpec = describe "WPL" do
                select "^^^={id} upto X" `shouldReturn` all
              it "after nothing -> nothing" do
                select "^^^={id} after X" `shouldReturn` ""
+  context "tagFor" do
+    let ?boxes = ["S1 B-2 B-1#id=1 A-3 A-1 A-2 B-1#id=2"]
+    it "tags temporarily" do
+      -- tag with tempTag temporary
+      -- uses this tag to do something
+      -- at the end the tempTag should have disappeared
+      select ( unlines [ "tag:for A tempTag"
+                       , "   #tempTag^^^1 tag theTag "
+                       , "#theTag"
+                       ]
+             ) `shouldReturn` "A-3"
+    it "remove the temporary tags" do
+      select ( unlines [ "tag:for A tempTag"
+                       , "   #tempTag^^^1 tag theTag "
+                       , "#tempTag"
+                       ]
+             ) `shouldReturn` ""
+       
 
 
        
@@ -138,8 +156,9 @@ select wpl = do
 runWith wpl action = execWH (emptyWarehouse $ fromGregorian 2024 07 22) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let Right statements = -- traceShowId $
-                          parseWPL "<source>" wpl
+   let statements = case parseWPL "<source>" wpl of
+                         Right st -> st
+                         Left err -> error $ unpack err
    runWPLWith action statements
    
 
