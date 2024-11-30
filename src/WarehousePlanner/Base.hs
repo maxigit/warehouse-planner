@@ -593,6 +593,7 @@ negateTagOperations tags = do
     RemoveValue val -> [AddValue val]
     AddValue val -> [RemoveValue val]
   
+
 -- | Generates tag operation for dimensions. Used when creating a box
 -- to update the dimension tags. 
 dimensionTagOps :: Dimension  -> [Tag'Operation]
@@ -789,7 +790,11 @@ applyTagOperation RemoveTag _ = Nothing
 applyTagOperation SetTag olds = Just olds
 applyTagOperation (SetValues news) _ = Just $ Set.fromList news
 applyTagOperation (AddValue value) olds = Just $ Set.insert value olds 
-applyTagOperation (RemoveValue value) olds = Just $ Set.delete value olds
+applyTagOperation (RemoveValue value) olds = let
+    set = Set.delete value olds
+    in if null set
+       then Nothing
+       else Just set
 
 applyTagOperations :: [TagOperation] -> (Set Text) -> Maybe (Set Text)
 applyTagOperations tag'ops tags = foldM (flip applyTagOperation) tags tag'ops

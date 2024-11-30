@@ -152,7 +152,9 @@ executeCommand ec command = case command of
       zipWithM_ (updateBoxTags tagOps) boxes [1..]
       r <- executeStatement ec statement
       --
-      zipWithM_ (updateBoxTags $ negateTagOperations tagOps) boxes [1..]
+      let untag = negateTagOperations tagOps
+      newBaseEvent "TAG WITH" (tshow untag)
+      zipWithM_ (updateBoxTags untag ) boxes [1..]
       return r
       
     ---------
