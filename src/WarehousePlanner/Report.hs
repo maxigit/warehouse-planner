@@ -24,6 +24,7 @@ module WarehousePlanner.Report
 , generateFuzzyStockTakes
 , generateBoxesHistory
 , boxHistory
+, generateTags
 ) where
 
 import WarehousePlanner.Base
@@ -1056,6 +1057,19 @@ boxHistory e'boxs@((_,lastBox) :| _)
                                      <> " " <> tshow (boxShelf box) 
                                      <> " " <> tshow (boxPositionSpec box) ]
      
+
+generateTags :: Maybe BoxSelector -> WH [Text] s
+generateTags selectorm = do
+  boxes <- case selectorm of
+             Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
+             Just sel -> do
+                findBoxByNameAndShelfNames sel
+  return $ "tag,value,sku,box_id"
+         : [ intercalate "," [ tag, value, boxStyleAndContent box, tshow (boxId box)]
+           | box <- boxes
+           , (tag,values) <- Map.toList $ boxTags box
+           , value <- toList values
+           ]
 
 
 

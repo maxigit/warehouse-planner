@@ -56,6 +56,7 @@ data Command = Summary
              | BestShelvesFor
              | BoxGroupReport
              | BoxHistory
+             | TagReport
              | Report
              | Display 
              | Export
@@ -148,6 +149,9 @@ commandArg = flag' Stocktake (long "stocktake"
                           )
           <|> flag' BoxHistory (long "box-history" <> long "boxes-history-report"
                           <> help "Box History"
+                          )
+          <|> flag' TagReport (long "tag-values"  
+                          <> help "tags and their values"
                           )
           <|> flag' AllBoxes (long "all" <> long "all-boxes"
                              <> short 'a'
@@ -260,6 +264,7 @@ defaultMainWith expandSection = do
                                     boxes <- findBoxByNameAndShelfNames (fromMaybe (parseBoxSelector "") boxSelectorM)
                                     groupBoxesReport boxes
                   BoxHistory -> withLines (generateBoxesHistory boxSelectorM)
+                  TagReport -> withLines (generateTags boxSelectorM)
                   Export -> do
                               let bare = scenario { sInitialState = Nothing
                                                   , sSteps = filter (\case

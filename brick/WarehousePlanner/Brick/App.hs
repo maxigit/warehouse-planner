@@ -121,6 +121,7 @@ data WHEvent = ENextMode
              | EYankBestBoxesFor EditMode
              | EYankSelectedShelves EditMode
              | EYankBestForSelected Bool EditMode
+             | EYankTags EditMode -- ^ editor all tag values
              -- Select shelf Level
              | ESelectShelfLevel (Maybe Text)
 
@@ -578,6 +579,7 @@ keyBindingGroups =  groups
                  ,('?', EYankSelectedShelves, "Shelf selection")
                  ,('f' ,EYankBestForSelected False, "Best fit for selected boxes and shelves")
                  ,('F' ,EYankBestForSelected True,  "Best (available) fit for selected boxes and shelves")
+                 ,('t', EYankTags, "tags")
                  ]
 flattenSections :: [(Text, [a])] -> [a]
 flattenSections = concatMap snd
@@ -874,6 +876,10 @@ handleWH ev =
                                  mapM findShelf ids
                 Report.shelvesReportFor shelves
             yankOrEdit mode (Just ".csv") (unlines text)
+         EYankTags mode ->  do
+            selection <- gets asBoxSelection
+            text <- execute do Report.generateTags (fmap sSelector selection)
+            yankOrEdit mode (Just "-tags.csv") (unlines text)
          ESelectShelfLevel (Just selector) -> do
             -- selecting twice the same cancels it
             oldShelfSelection <- gets asShelfSelection 
