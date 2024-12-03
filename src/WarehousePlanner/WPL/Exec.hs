@@ -149,12 +149,27 @@ executeCommand ec command = case command of
     TagFor selector tagOps statement -> do
       newBaseEvent "TAG WITH" (tshow tagOps)
       boxes <- getBoxes =<< narrowCSelector selector ec
+      -- save the value of the involved tags for each box
       zipWithM_ (updateBoxTags tagOps) boxes [1..]
       r <- executeStatement ec statement
       --
+      let tags = map fst tagOps
+          box'tags :: [(Box s, [(Text, Maybe (Set Text))])]
+          box'tags = [( box
+                      , map (\tag -> (tag, Map.lookup tag (getTags box))) tags
+                      )
+                     | box <- boxes
+                     ]
       let untag = negateTagOperations tagOps
       newBaseEvent "TAG WITH" (tshow untag)
-      zipWithM_ (updateBoxTags untag ) boxes [1..]
+      forM box'tags \(box, tag'valuems) ->  do
+                    let untagOps = [(tag, tagOp) 
+                                 | (tag, valuem) <- tag'valuems
+                                 , let tagOp = case valuem of
+                                                 Nothing -> RemoveTag
+                                                 Just vs -> SetValues $ toList vs
+                                 ]
+                    updateBoxTags untagOps box 0
       return r
       
     ---------
