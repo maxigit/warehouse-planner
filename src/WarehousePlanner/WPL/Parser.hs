@@ -306,7 +306,7 @@ command = asum $ map lexeme [ toggleTag
       cons <- (AddOrientationStrategies <$ lexeme1 "orules+")
          <|> (SetOrientationStrategies <$ lexeme1 "orules")
       os <- orientationRules
-      cselectorm <- optional $ (lexeme "for" >> shelfSelector) <?> "orules:selector"
+      cselectorm <- optional $ (lexeme "for" >> cselector parseShelfSelector) <?> "orules:selector"
       selectorm <- case cselectorm of
                         Nothing -> return Nothing
                         Just (CSelector sel) -> return $ Just sel
