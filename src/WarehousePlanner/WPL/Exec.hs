@@ -325,11 +325,32 @@ executeCommand ec command = case command of
     SetNoEmptyShelves emptyShelves -> do
        return ec { ecNoEmptyShelves = emptyShelves }
     ---------
-    ResizeShelf selector statement -> do -- full
+    ResizeShelfFull selector statement -> do -- full
         let full s = s { minDim = maxDim s }
         shelves <- narrowCSelector selector ec >>= getShelves
         forM shelves $ updateShelf full
         executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig }) orig )
+    ResizeShelf selector le we he statement -> do -- full
+        shelves <- narrowCSelector selector ec >>= getShelves
+        forM shelves \shelf -> do
+           [l, w, h] <-
+             zipWithM (\exp defAcc -> do
+                             let exWithRef = replaceRef <$> exp
+                                 replaceRef ref = case P.parse (parseRef $ defAcc . sMinD) (unpack ref) ref of
+                                                       Left err -> error $ "Split shelf parameter invalid: "
+                                                                <> show exp
+                                                                <> " "
+                                                                <> show err
+                                                       Right v -> v
+                             evalExpr (dimForSplit Nothing shelf)
+                                      exWithRef
+                      )
+                      [le, we, he]
+                      ds
+           let newMin = Dimension l w h
+               newMax  = maxDimension [newMin, maxDim shelf]
+           updateShelf (\s  -> s { minDim = newMin, maxDim = newMax }) shelf
+        executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig, maxDim = maxDim orig }) orig )
     ResizeBox mode selector statement -> do 
         boxes <- narrowCSelector selector ec >>= getBoxes
         let around action = case fromNullable $ map _boxDim boxes of

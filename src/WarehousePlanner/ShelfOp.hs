@@ -218,7 +218,10 @@ parseExpr :: (ShelfDimension -> Double) -> Text -> Expr
 parseExpr defaultAccessor "" =  E.ExtraE $ RefE "%" defaultAccessor
 parseExpr defaultAccessor s =  fmap parse $ E.parseExpr s
    where parse t = case P.parse (parseRef defaultAccessor) (unpack t) t of
-                     Left err -> error (show err) 
+                     Left err -> error $ "Split shelf parameter invalid: "
+                              <> show s
+                              <> " "
+                              <> show err
                      Right v -> v
 
 parseRef :: (ShelfDimension -> Double) -> MParser RefE

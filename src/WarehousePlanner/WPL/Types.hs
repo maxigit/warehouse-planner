@@ -34,7 +34,8 @@ data Command = Move { cSource :: Maybe BoxSelector
              | SetNoEmptyShelves Bool
              | AssertBoxes Bool Text
              | AssertShelves Bool Text
-             | ResizeShelf (CSelector ShelfSelector) Statement
+             | ResizeShelfFull (CSelector ShelfSelector) Statement
+             | ResizeShelf (CSelector ShelfSelector) (Expr Text) (Expr Text) (Expr Text) Statement
              | ResizeBox BoxMode (CSelector BoxSelector) Statement
              | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
              | SwapBoxes (CSelector BoxSelector) (Maybe Text) [Text]
