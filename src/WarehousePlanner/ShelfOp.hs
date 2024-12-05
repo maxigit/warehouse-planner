@@ -339,6 +339,9 @@ dimForSplit boxm shelf ref =
     "content" -> do
       dim <- maxUsedOffset shelf
       return $ toSDim dim
+    "before" -> do
+      dim <- minUsedOffset shelf
+      return $ toSDim dim
     "*" | Just box <- boxm -> do -- use box/shelf orientation
       getOrientations <- gets boxOrientations
       let (o:_) = map osOrientations (getOrientations box shelf) ++ [tiltedForward] -- ^ default

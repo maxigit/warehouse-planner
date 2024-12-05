@@ -40,6 +40,7 @@ module WarehousePlanner.Base
 , incomingShelf
 , limitByNumber, UseDefault(..)
 , maxUsedOffset
+, minUsedOffset
 , modifyTags
 , module WarehousePlanner.Type
 , negateTagOperations
@@ -130,6 +131,10 @@ maxUsedOffset shelf = do
     boxes <- findBoxByShelf shelf
     return $ maxDimension $ map boxCorner boxes
 
+minUsedOffset ::  Shelf s -> WH Dimension s
+minUsedOffset shelf = do
+    boxes <- findBoxByShelf shelf
+    return $ minDimension $ map boxOffset boxes
 -- | Nested groups of shelves, used for display
 
 buildWarehouse :: NonEmpty (NonEmpty (NonEmpty Text)) -> WH (RunsWithId s) s
