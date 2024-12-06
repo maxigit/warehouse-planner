@@ -32,8 +32,11 @@ _dbg = P.dbg
 p <?> lbl = dbg lbl $ label lbl p
 
 -- * Whitespaces & Co
+-- starting with -- but we need a space so that --| is not a comment
 lineComment :: MParser ()
-lineComment = L.skipLineComment "--"
+lineComment = L.skipLineComment "---"
+            <|> L.skipLineComment "-- "
+            <|> try (void "--" <> lookAhead (void eol <|> eof)) -- finishinig a line
 
 
 blockComment :: MParser ()

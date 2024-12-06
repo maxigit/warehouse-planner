@@ -6366,7 +6366,7 @@ M02L09DA]&/W03.*/3,pending*
 :MovesAndTags:
 stock,loc,or
 M51W02HP,-W05.05/1,|=
-M51W05BG,-|W05.07/1,|=
+M51W05BG,--|W05.07/1,|=
 M22W01PX,pending
 M22W01PX,W05.06/1,|=
 #from=W05.06,#-from

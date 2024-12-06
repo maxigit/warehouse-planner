@@ -1524,9 +1524,9 @@ partitionModeParser = do
                           , (P.string "above", PAboveOnly)
                           , (P.string "best", PBestEffort)
                           , (P.string "overlap", POverlap OLeft)
-                          , (P.string "->", POverlap ORight)
-                          , (P.string "-|", POverlap OAligned)
-                          , (P.string "-^", PSortedOverlap)
+                          , (P.string "-->", POverlap ORight)
+                          , (P.string "--|", POverlap OAligned)
+                          , (P.string "--^", PSortedOverlap)
                           , (P.string "sorted", PSortedOverlap)
                           , (P.string "behind", PBehind)
                           ]
