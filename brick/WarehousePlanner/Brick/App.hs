@@ -782,9 +782,8 @@ handleWH ev =
                          case boxm of 
                            Nothing -> return ()
                            Just box -> do
-                                boxHistory <- execute $ getBoxHistory box
-                                let text = Report.boxHistory boxHistory
-                                void $ yankOrEdit mode (Just "-history.txt") (unlines text)
+                                text <- execute ( getBoxHistory box >>= Report.boxHistory)
+                                void $ yankOrEdit mode (Just "-history.tsv") (unlines $ drop 2 text)
          EYankSelectedBoxes mode' -> do
             selection <- gets asBoxSelection
             text0 <- execute $ Report.generateStockTakes (fmap sSelector selection)

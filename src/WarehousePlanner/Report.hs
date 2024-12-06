@@ -1043,19 +1043,26 @@ generateBoxesHistory selectorm = do
             Just sel -> do
               findBoxByNameAndShelfNames sel
     boxhistorys <- mapM getBoxHistory boxes_
+    boxReports <- mapM boxHistory boxhistorys
     return $ map displayEvent events
-           <> concatMap history boxhistorys
-    where history xs = replicate 50 '*' : boxHistory xs
+           <> concatMap history boxReports
+    where history xs = replicate 50 '*' : xs
            
-boxHistory :: History Box s -> [Text]
-boxHistory e'boxs@((_,lastBox) :| _)
-                      =  tshow lastBox
+boxHistory :: History Box s -> WH [Text] s
+boxHistory e'boxs@((_,lastBox) :| _) = do
+    history <- mapM go e'boxs
+    return $  tshow lastBox
                       : boxStyleWithTags lastBox <> " " <> tshow (boxShelf lastBox) <> " " <> boxPositionSpec lastBox
-                      : do
-                          (ev, box) <- toList e'boxs
-                          [ tshow ev , "\t" <> tshow (boxStyleWithTags box)
-                                     <> " " <> tshow (boxShelf box) 
-                                     <> " " <> tshow (boxPositionSpec box) ]
+                      : concatMap toList history
+    where go (ev,box) = do
+             shelfm <- forM (boxShelf box) findShelf
+             return [ tshow ev
+                    <> "\t" <> evDescription ev
+                    <> "\t" <> boxStyleWithTags box
+                    <> "\t" <> maybe "∅" shelfName shelfm
+                    <> "\t" <> boxPositionSpec box
+                    ]
+       
      
 
 generateTags :: Maybe BoxSelector -> WH [Text] s
