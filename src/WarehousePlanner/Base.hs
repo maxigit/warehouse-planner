@@ -1519,7 +1519,8 @@ partitionModeParser = do
            [] -> error "the unexpected happened" -- use of some
            p:ps -> foldr POr p ps
 
-  where partitionP = asum $ map go
+  where partitionP = asum $  parseCorner
+                          : map go
                           [ (P.string "right", PRightOnly)
                           , (P.string "above", PAboveOnly)
                           , (P.string "best", PBestEffort)
@@ -1538,11 +1539,10 @@ partitionModeParser = do
                           , (P.char '_', PBehind)
                           ]
         go (p, v) = const v <$> P.try p
-          
-                 
-
-          
-    
+        parseCorner = do
+          "corner"
+          n <- P.decimal
+          return $ PCorner n
   
 -- * Warehouse Cache 
 -- ** Property stats 

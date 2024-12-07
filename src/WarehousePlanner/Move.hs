@@ -181,6 +181,10 @@ bestPositions' getAff partitionMode orientations shelf start usedBoxes dim = let
                                                                             -- remove corners if more than 3 options
                                                                             xs@(_:_:_:_) -> drop 1 $ dropEnd 1 $ xs
                                                                             xs -> xs
+                                                            PCorner n -> let corners = map (\(x,y) -> (x,0,y)) $ bestEffort topRightCorners
+                                                                         in case drop (n-1) corners of
+                                                                                 (c:_) -> [c]
+                                                                                 _ -> take 1 corners
                                                             POr m1 m2 -> go m1 ++ go m2
                                                             POverlap _ -> error "POverlap not implemented"
                                                             PSortedOverlap -> error "PSortedOverlap not implemented"

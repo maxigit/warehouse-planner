@@ -250,6 +250,7 @@ data PartitionMode
   = PAboveOnly -- ^ max used height only
   | PRightOnly -- ^ max used weight only
   | PBestEffort -- ^ try to find all available rectangles
+  | PCorner Int -- ^ specify the exact corner in best effort
   | POverlap OJustify -- ^ partition as if shelf was empty then removed used slots.
   | PSortedOverlap -- ^ partition as if shelf was empty then removed used slots. but keep overall boxe in order
   | PBehind
