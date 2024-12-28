@@ -93,7 +93,7 @@ readShelves defaultOrientator filename = do
                               names <- shelvesFromSelector name
                               return ( map (,[]) names , updateShelfWithFormula')
                             else
-                              return ( expand =<< splitOn "|" name
+                              return ( expand =<< splitOnNonEscaped "|" name
                                      , newShelfWithFormula
                                      )
                         mapM (\(n, tags) ->
@@ -119,7 +119,7 @@ dimsToMinMax l w h =
     let dim = (,,) lmin wmin hmin
         dim' = (,,) lmax wmax hmax
         [(lmin, lmax), (wmin,wmax), (hmin,hmax)] = map toMinMax [l, w, h]
-        toMinMax d = case splitOn ";" d of
+        toMinMax d = case splitOnNonEscaped ";" d of
                          dmin: dmax: _ -> (dmin, dmax)
                          _ -> (d, d)
     in (dim, dim')
@@ -264,7 +264,7 @@ readShelfSplit = readFromRecordWith go where
                             mapM (\x -> do
                               evalExpr (dimForSplit boxm shelf)
                                        (parseExpr (f . sMinD)  $ withD x)
-                              ) (splitOn " " xtext)
+                              ) (splitOnNonEscaped " " xtext)
                             ) [l, w, h] ds
       splitShelf shelf ls ws hs
       ) shelves
@@ -274,7 +274,7 @@ readShelfSplit = readFromRecordWith go where
 readShelfJoin :: FilePath -> IO (WH [Shelf s] s)
 readShelfJoin = readFromRecordWith go where
   go (Csv.Only location) = do
-    let locations = splitOn "|" location
+    let locations = splitOnNonEscaped "|" location
     shelves <- findShelfBySelectors (map parseSelector locations) >>= mapM findShelf
     mapM unSplitShelf shelves
 
@@ -361,7 +361,7 @@ readLayout filename = do
     return $ fromRuns unsafeNonEmpty $  fmap (processLine) (filter (not . comment) $ lines content)
     where processLine (uncons -> Just ('<', line)) = reverse (processLine line)
           processLine (uncons -> Just ('>', line)) = processLine line
-          processLine line = map (splitOn "|")  (words line)
+          processLine line = map (splitOnNonEscaped "|")  (words line)
           comment (uncons -> Just ('#',_)) = True -- line starting with #
           comment "" = True -- or empty line
           comment _ = False
@@ -497,7 +497,7 @@ processMovesAndTags tagsAndPatterns param = do
 -- | read a file assigning tags to styles
 -- returns left boxes
 readTags :: [Text] -> FilePath -> IO ( WH [Box s] s)
-readTags tagOrPatterns = readFromRecordWithPreviousStyle (\style (Csv.Only tag) -> processMovesAndTags tagOrPatterns (style, splitOn "#" tag, Nothing, []))
+readTags tagOrPatterns = readFromRecordWithPreviousStyle (\style (Csv.Only tag) -> processMovesAndTags tagOrPatterns (style, splitOnNonEscaped "#" tag, Nothing, []))
 
 -- | Hack to allow different csv format
 data ForMovesAndTags s = ForMovesAndTags  Text [OrientationStrategy]
@@ -556,7 +556,7 @@ readFreezeOrder tags0 = readFromRecordWith go
 -- * Read Shelf Tags 
 readShelfTags :: FilePath -> IO (WH [Shelf s] s)
 readShelfTags = readFromRecordWith go where
-  go (selector, splitOn "#" -> tags) = do
+  go (selector, splitOnNonEscaped "#" -> tags) = do
     shelves <- findShelvesByBoxNameAndNames selector
     let tagOps = map parseTagOperation tags
     mapM (updateShelfTags tagOps) shelves
@@ -612,7 +612,7 @@ transformTagsFor tags tagPat' tagSub box index = do
                 _ -> transformTags (`elem` tags)
       transformTags keep =
           map parseTagOperation $
-               concatMap (splitOn "#" . (\t -> pack $ Rg.subRegex tagPat (unpack t) (unpack tagSub)))
+               concatMap (splitOnNonEscaped "#" . (\t -> pack $ Rg.subRegex tagPat (unpack t) (unpack tagSub)))
                (getTagList $ Map.filterWithKey (\k _ -> keep k)  $ boxTags box)
       transformTag tag = let
           values = getTagValues box tag

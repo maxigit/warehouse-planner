@@ -15,6 +15,7 @@ import Control.Monad.State (get, gets)
 benchLoad paths = do
   initRepl "data"
   loads paths
+  return ()
   -- summary
 
 main = defaultMain

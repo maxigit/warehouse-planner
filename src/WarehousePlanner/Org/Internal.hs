@@ -25,6 +25,7 @@ import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Csv
 import WarehousePlanner.Org.Types
+import WarehousePlanner.Selector (splitOnNonEscaped)
 import Control.Monad (zipWithM)
 import Control.Monad.Except (ExceptT(..), runExceptT)
 import Control.Monad.Writer (tell, execWriter)
@@ -519,8 +520,8 @@ scenarioLayoutSize Scenario{..} =
 importDispatch :: (Monad io, MonadIO io) => FilePath -> Int -> (Text -> [Text] -> io (Either Text [Section])) -> Section -> io (Either Text [Section])
 importDispatch plannerDir nestedLevel dispatch (Section ImportH (Right content) _) = runExceptT $ do
   sectionss <- forM content $ \uri ->  do
-    let (main:tags) = splitOn "#" $ strip uri
-        pieces = splitOn "/" main
+    let (main:tags) = splitOnNonEscaped "#" $ strip uri
+        pieces = splitOnNonEscaped "/" main
     ss <- case map unpack pieces of
                ("file": paths@(_:_) ) ->  do
                  sections <- ExceptT $ readLocalFile (intercalate "/" (plannerDir : paths)) tags

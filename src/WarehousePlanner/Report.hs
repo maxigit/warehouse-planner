@@ -45,7 +45,6 @@ import Data.Map qualified as Map
 import Data.Set qualified as Set
 import Data.Sequence qualified as Seq
 import Data.List qualified as List
-import Data.Text(splitOn)
 import Text.Tabular as Tabul
 import Data.Text(replace)
 import Data.List.NonEmpty (NonEmpty(..))
@@ -168,7 +167,7 @@ bestShelvesFor (extractRanking -> (ranking, style'shelf)) = do
 boxAndShelvesFor :: Text -> WH ([Box s], [Shelf s], Box s -> Shelf s -> [OrientationStrategy]) s
 boxAndShelvesFor style'shelf'ors = do
   ors0 <- gets boxOrientations
-  let (style, shelfSelector, ors) = case (splitOn "," style'shelf'ors) of
+  let (style, shelfSelector, ors) = case (splitOnNonEscaped "," style'shelf'ors) of
                                   [box, shelf] -> (box, shelf, ors0)
                                   [box, shelf, rules] -> (box, shelf, \_ _ -> parseOrientationRule [] rules)
                                   _ -> (style'shelf'ors, "", ors0)
@@ -474,7 +473,8 @@ boxStyleWithTags b = let
   isVirtual ('\'':<_) = True
   isVirtual _ = False
   tags = filter (not . isVirtual) (getTagList b)
-  in intercalate "#" (boxStyleAndContent b : tags)
+  escapedTags = map (replace "#" "\\#") tags
+  in intercalate "#" (boxStyleAndContent b : escapedTags)
  
 
 shelvesToNames :: [Shelf s ] -> [Text]

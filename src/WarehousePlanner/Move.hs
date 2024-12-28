@@ -30,7 +30,7 @@ import WarehousePlanner.Selector
 import WarehousePlanner.Affine
 import WarehousePlanner.Tiling
 import WarehousePlanner.WPL.ExContext
-import Data.Text(splitOn, uncons)
+import Data.Text(uncons)
 import Data.Foldable qualified as F
 import Data.Map qualified as Map
 
@@ -494,7 +494,7 @@ moveToLocations :: Ord p => ExContext s -> SortBoxes -> [(Box s, p)] -> Text -> 
 moveToLocations ec sortMode boxes location = do
    foldM (\boxInEx locations -> do
              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations
-             let locationss = splitOn "|" location
+             let locationss = splitOnNonEscaped "|" location
              shelves_ <- findShelfBySelectors (map parseSelector locationss)
              let shelves = filter inEC shelves_
                  inEC s = case included (ecShelves ec) of
@@ -507,12 +507,12 @@ moveToLocations ec sortMode boxes location = do
                                      )
                                      (excludedList boxInEx) shelves
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }
-        ) (mempty { excluded = Just boxes}) (splitOn " " location)
+        ) (mempty { excluded = Just boxes}) (splitOnNonEscaped " " location)
 
 splitTagsAndLocation :: Text -> ([Text], Maybe Text)
 splitTagsAndLocation tag'locations
    -- -| (tag, _:location@(_:_)) <- break (=='/') tag'locations = (just tag, just location)
-   | (location , uncons -> Just (_,tag@(uncons -> Just _))) <- break (=='#') tag'locations = (splitOn "#" tag, just location)
+   | (location , uncons -> Just (_,tag@(uncons -> Just _))) <- break (=='#') tag'locations = (splitOnNonEscaped "#" tag, just location)
    | otherwise = ([], Just tag'locations)
    where just "" = Nothing
          just s = Just s

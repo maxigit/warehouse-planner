@@ -93,7 +93,7 @@ import WarehousePlanner.Selector
 import WarehousePlanner.SimilarBy
 import WarehousePlanner.History
 import Diagrams.Prelude(white, black, darkorange, royalblue, steelblue)
-import Data.Text (splitOn, uncons, stripPrefix)
+import Data.Text (uncons, stripPrefix)
 import Data.Text qualified as T 
 import Data.Char (isLetter, isDigit, isAlphaNum)
 import Data.Time (diffDays)
@@ -537,7 +537,7 @@ newBox' boxM style content dim or_ shelf ors tagTexts = do
 -- |  create #content1=A, #content2=B from A&B
 makeContentTags :: Text -> [Tag'Operation]
 makeContentTags content = 
-  case splitOn "&" content of
+  case splitOnNonEscaped "&" content of
    [_] -> []
    contents -> ("mixed", SetTag) : [ ("content" <> tshow i, SetValues [c])
                                    | (c, i) <- zip contents [1..] 
@@ -577,11 +577,11 @@ parseTagOperation s =
     -- (tag, (stripPrefix "+=" -> Just val))      -> (tag, AddValue val)
     (tag, (uncons -> Just ('=', val)))          -> (tag, SetValues $ split val)
     (tag, val)              -> (tag <> val , SetTag)
-  where split = splitOn ";"
+  where split = splitOnNonEscaped ";"
  
 parseTagOperations :: Text -> [Tag'Operation]
 parseTagOperations tag =
- case splitOn "#" tag of
+ case splitOnNonEscaped "#" tag of
    [] -> []
    [""] -> []
    tags -> map parseTagOperation tags
@@ -899,7 +899,7 @@ expandAttributeMaybe text = let
       (Just ('{', _) , (key, leftOver)) -> (<> drop 1 leftOver) <$> f key box index
       _ -> f subtext box index
       
-  in case splitOn "$" text of
+  in case splitOnNonEscaped "$" text of
      prefix:segments -> Just $ \box i -> do
          -- expand (vs a simple mapM is necessarry to catche the $$ case)
          -- $${comma}..$... is split to "", "{comma}..", "..."
@@ -988,12 +988,12 @@ expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i ->
               format = if null propText  then "%d" else unpack propText
           return $ (pack $ printf format v) <> xs
     "select" -> do
-             let e = case splitOn "|" propText of
+             let e = case splitOnNonEscaped "|" propText of
                           [] -> tshow i
                           values -> values List.!! (min (length values) (evalArg arg i) - 1)
              return $ e <> xs
     "cycle" -> do
-                 let e = case splitOn "|" propText of
+                 let e = case splitOnNonEscaped "|" propText of
                        [] -> tshow i
                        values -> values List.!! mod (evalArg arg i - 1) (length values)
                  return $ e <> xs
@@ -1379,7 +1379,7 @@ extractTag name = let (prefix, suffix) = break (=='#') name
                   _ -> (prefix, Nothing)
 
 extractTags :: Text -> (Text, [Text])
-extractTags name = (style, maybe [] (splitOn "#") tagM) where
+extractTags name = (style, maybe [] (splitOnNonEscaped "#") tagM) where
   (style, tagM) = extractTag name
 
 
@@ -1420,7 +1420,7 @@ parsePositionSpec :: Text -> Maybe (Orientation, Dimension -> Dimension)
 parsePositionSpec spec =  do -- Maybe
   (orientationC, offsets) <-  uncons spec
   orientation <- readOrientationMaybe orientationC
-  case splitOn ("+") offsets of
+  case splitOnNonEscaped ("+") offsets of
     [] -> Nothing
     [""] -> Nothing
     (pos:_) | Just (' ', _) <- T.uncons pos -> Nothing
@@ -1431,7 +1431,7 @@ parsePositionSpec spec =  do -- Maybe
                      Just n -> d * fromIntegral (n -1)
       compute :: Double -> Maybe Int -> Int -> Double
       compute dim pos offset = mul dim pos + fromIntegral offset
-      (nl: nw: nh:_) = map readMay (splitOn ":" pos) ++ repeat Nothing
+      (nl: nw: nh:_) = map readMay (splitOnNonEscaped ":" pos) ++ repeat Nothing
       (x: y: z: _) = map (fromMaybe 0) (map readMay abs ++ repeat Nothing)
       toPos dim0 = let Dimension l w h = rotate orientation dim0
                    in Dimension (compute l nl x)
@@ -1458,7 +1458,7 @@ parseOrientationRule defOrs cs0 = let
                 Just ('!', s) -> (False, s)
                 _ -> (True, cs0)
   (limits, orsS) = span (\c -> c `elem`( "0123456789:x" :: String)) limitsOrs
-  (l, cs, h) = case splitOn "x" limits of
+  (l, cs, h) = case splitOnNonEscaped "x" limits of
             [w] -> ("", w, "")
             [w,h] -> ("", w, h)
             (l:w:h:_) -> (l, w , h)

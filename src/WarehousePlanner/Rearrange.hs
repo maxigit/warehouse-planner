@@ -155,7 +155,7 @@ parseActions :: Text -> (ForUnused, ForGrouping, [(Box s -> Maybe (Shelf s) -> B
 parseActions s0 = let
   (flags, s1) = span (`elem` t "/-%^") s0
   asLocation = '/' `elem` flags
-  ss = splitOn ">" s1
+  ss = splitOnNonEscaped ">" s1
   forUnused = if '-' `elem` flags
               then DeleteUnused
               else KeepUnused

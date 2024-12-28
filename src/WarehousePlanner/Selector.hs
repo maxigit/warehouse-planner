@@ -14,6 +14,7 @@ module WarehousePlanner.Selector
 , MParser
 , between
 , Selectable(..)
+, splitOnNonEscaped
 ) where
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
 import WarehousePlanner.Type
@@ -24,7 +25,7 @@ import Text.Megaparsec.Char.Lexer qualified as P
 import Data.List qualified as List
 import Data.Set qualified as Set
 import Data.Map.Lazy qualified as Map
-import Data.Text (splitOn, uncons, stripPrefix)
+import Data.Text (breakOn, uncons, stripPrefix)
 import Control.Monad.Fail 
 import Data.Void(Void)
 
@@ -117,7 +118,7 @@ instance Selectable Shelf where
 -- ** Parsing 
 -- | split on |
 parseSelector :: Text -> Selector a
-parseSelector s = case splitOn "#" s of
+parseSelector s = case splitOnNonEscaped "#" s of
   [] -> Selector(NameMatches []) []
   (name:tags) -> Selector (parseNameSelector name) (mapMaybe parseTagSelector tags)
 
@@ -126,7 +127,7 @@ parseNameSelector selector = let
   (constr, pat) = case uncons selector of
        Just ('!', sel) -> (,) NameDoesNotMatch sel
        _ ->  (,) NameMatches selector
-  in constr $ map parseMatchPattern (splitOn "|" pat)
+  in constr $ map parseMatchPattern (splitOnNonEscaped "|" pat)
 
 parseTagSelector :: Text -> Maybe (TagSelector s)
 parseTagSelector tag | null tag =  Nothing
@@ -144,7 +145,7 @@ parseTagSelector tag = Just $ case break ('='  ==) tag of
   (key, stripPrefix "=!" -> Just values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
   (key, stripPrefix "=" -> Just values) -> TagIsKeyAndValues (parseMatchPattern key) (mkValues values)
   _ -> error "Bug. Result of break = should start with = or being captured earlier"
-  where mkValues = map parseVPattern . fromList . splitOn ";"
+  where mkValues = map parseVPattern . fromList . splitOnNonEscaped ";"
   
 parseMatchPattern :: Text -> MatchPattern
 parseMatchPattern "" = MatchAnything
@@ -300,3 +301,21 @@ printShelfSelector ShelfSelector{..} =
        SelectAnything -> printSelector sShelfSelectors
        _ -> printSelector sBoxSelectors <> "/" <> printSelector sShelfSelectors
 
+-- * Util
+-- split on given char unless the char is escaped with \
+-- split on # a#b -> [a, b] a\#b a#b
+splitOnNonEscaped :: Text -> Text -> [Text]
+splitOnNonEscaped _ txt | null txt = [""]
+splitOnNonEscaped needle txt = go txt
+   where go txt | null txt = []
+         go txt =
+            case breakOn needle txt of
+              (before, rest) | null rest -> [before] -- no more separators
+                             | Just beforeWithoutEspace <- stripSuffix "\\" before ->
+                                  case go (drop 1 rest) of
+                                        [] -> [ beforeWithoutEspace <> needle ]
+                                        (x:xs) -> (beforeWithoutEspace <> needle <> x) : xs
+                             | otherwise -> before : splitOnNonEscaped needle (drop 1 rest)
+
+
+                          

@@ -98,6 +98,7 @@ library
     , split
     , tabular >=0.2.2.7 && <0.3
     , template-haskell ==2.18.*
+    , temporary ==1.3.*
     , text
     , time
     , vector
@@ -176,6 +177,7 @@ executable whp
     , split
     , tabular >=0.2.2.7 && <0.3
     , template-haskell ==2.18.*
+    , temporary ==1.3.*
     , text
     , time
     , vector
@@ -283,6 +285,7 @@ test-suite test
     , split
     , tabular >=0.2.2.7 && <0.3
     , template-haskell ==2.18.*
+    , temporary ==1.3.*
     , text
     , time
     , vector
@@ -345,6 +348,7 @@ benchmark bench
     , split
     , tabular >=0.2.2.7 && <0.3
     , template-haskell ==2.18.*
+    , temporary ==1.3.*
     , text
     , time
     , vector

@@ -7,6 +7,7 @@ import WarehousePlanner.Repl
 import WarehousePlanner.Report as Report
 import WarehousePlanner.Type
 import WarehousePlanner.Selector
+import WarehousePlanner.Org
 import Test.Hspec
 import ClassyPrelude
 import Here
@@ -181,6 +182,20 @@ spec = describe "Full scenario" do
       rows <- loadAndExec "data"  "c1" (generateStockTakes Nothing)
       expected <- readFileUtf8 ("data" </> "c1" <.> "stocktake")
       rows `shouldBe'` lines expected
+   context "export is idempotent" do
+     let checkIdem file extras = do 
+                   --  expand to full scenario
+                   rows <- loadAndExport "data" (file : extras)
+                   -- save it
+                   withSystemTempDirectory ("whp-spec" <> file) \tmpdir  -> do
+                       let path = "export"
+                       writeFileUtf8 (tmpdir </> path <.> "org") $ unlines rows
+                       rerows <- loadAndExport tmpdir [path]
+                       rerows `shouldBe'` rows
+     it "pl-65 with check " do
+        checkIdem "pl-65" ["check"]
+     it "full" do
+        checkIdem "full" []
 
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
@@ -193,6 +208,28 @@ loadAndExec ipath path action = do
   exec action
   
 
+loadAndExport :: FilePath -> [FilePath] -> IO [Text]
+loadAndExport ipath paths = do
+  initRepl ipath
+  scenario <- loads paths
+  let bare = scenario { sInitialState = Nothing
+                      , sSteps = filter (\case
+                                          (Step h _ _) -> h `elem` [LayoutH, ShelvesH, OrientationsH, ShelfTagsH, ShelfSplitH, ShelfJoinH]
+                                          _ -> False
+                                        )
+                                        $ sSteps scenario
+                      , sLayout = sLayout scenario
+                      , sColourMap = sColourMap scenario
+                      }
+  headers <- scenarioToFullText bare
+  stocks <- exec $ generateStockTakes Nothing
+  return $ lines headers <> stocks
+
+
+
+
+
+            
   
 keepDiff :: Eq a => Int -> [a] -> [a] -> ([a], [a])
 keepDiff n xs ys= unzip $ take n $ filter (not . same) $ zip xs ys

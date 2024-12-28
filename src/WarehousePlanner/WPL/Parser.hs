@@ -18,7 +18,6 @@ import Data.Char
 import Data.List.NonEmpty (NonEmpty(..))
 import Control.Monad(fail)
 import Data.Foldable qualified as F
-import Data.Text (splitOn)
 
 -- dbg _ = id
 dbg :: Show a => String -> MParser a -> MParser a
@@ -378,7 +377,7 @@ command = asum $ map lexeme [ toggleTag
                     lexeme1 "sticky"
                     lexeme $ takeWhile1P (Just "tags") (not . isSpace)
       selector <- boxSelector
-      let stickies = maybe [] (splitOn "#") stickym
+      let stickies = maybe [] (splitOnNonEscaped "#") stickym
       return $ SwapBoxes selector debugPrefix stickies
                     
 

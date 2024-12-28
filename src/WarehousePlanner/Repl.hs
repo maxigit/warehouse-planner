@@ -31,10 +31,10 @@ initRepl filepath = do
                       )
   
   
-load :: FilePath -> IO ()
+load :: FilePath -> IO Scenario
 load path = loads [path]
 
-loads :: [FilePath] -> IO ()
+loads :: [FilePath] -> IO Scenario
 loads paths = do
   state <- readIORef stateRef
   let ?cache = refCache
@@ -49,6 +49,7 @@ loads paths = do
           let scenario = mconcat scenarios
           wh <- execScenario scenario
           writeIORef stateRef state { warehouse = wh }
+          return scenario
           -- print wh
 
 summary :: IO ()
