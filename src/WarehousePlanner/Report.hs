@@ -48,7 +48,6 @@ import Data.List qualified as List
 import Data.Text(splitOn)
 import Text.Tabular as Tabul
 import Data.Text(replace)
-import Data.Semigroup(Arg(..))
 import Data.List.NonEmpty (NonEmpty(..))
 import WarehousePlanner.SimilarBy
 import Data.Foldable qualified as F
@@ -626,11 +625,10 @@ generateStockTakes selectorm= do
 printStockTake :: (Shelf s, Box s)  -> Text -> Text
 printStockTake (shelf, box) posititionSpec = 
      let Dimension l w h = _boxDim box
-         BoxId_ (Arg bId _) = boxId box
      in intercalate  ","
         [ shelfName shelf
         , posititionSpec
-        , (boxStyleWithTags box) <> "#box_id=" <> tshow bId 
+        , (boxStyleWithTags box)
         , (pack $ printf "%0.2f,%0.2f,%0.f" l w h)
         , (concat $ map showOrientation' $ boxBoxOrientations box)
         ]

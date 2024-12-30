@@ -1,0 +1,4 @@
+:TAGS:
+selector,tag
+,box_id=${id}
+:END:
