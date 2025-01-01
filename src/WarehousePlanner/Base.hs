@@ -4,6 +4,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TransformListComp #-}
+{-# LANGUAGE RecursiveDo #-}
 {-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.Base
 ( assignShelf
@@ -483,13 +484,13 @@ emptyWarehouse today = Warehouse mempty mempty (error "No shelves defined")
                                  NoHistory []
 
 newShelf :: Text -> Maybe Text -> Dimension -> Dimension -> Double -> BoxOrientator -> FillingStrategy -> WH (Shelf s) s
-newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
+newShelf name tagm minD maxD bottom boxOrientator fillStrat = mdo
         let -- tags = case splitOn "#" <$> tagm of
             --   Nothing -> mempty
             --   Just [""] -> mempty
             --   Just tags' -> fromMaybe mempty $ modifyTags (map parseTagOperation tags') mempty
             tags = fromMaybe mempty $ fmap parseTagOperations tagm >>= (flip modifyTags mempty)
-        uniqueRef@(Arg _i ref) <- newUniqueSTRef (error "should never been called. Base.hs:413")
+        uniqueRef@(Arg _i ref) <- newUniqueSTRef shelf
         let shelf = Shelf (ShelfId_ uniqueRef) mempty name tags minD maxD LeftToRight boxOrientator fillStrat bottom
         writeCurrentRef ref shelf
 
@@ -499,7 +500,7 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = do
 newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
 newBox = newBox' Nothing
 newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
-newBox' boxM style content dim or_ shelf ors tagTexts = do
+newBox' boxM style content dim or_ shelf ors tagTexts = mdo
     let tags' = map (parseTagOperation . omap replaceSlash) tagTexts
         dtags = dimensionTagOps dim
         -- create "'content" tag
@@ -508,7 +509,7 @@ newBox' boxM style content dim or_ shelf ors tagTexts = do
                                   --   ^ apply dimension tags after tags so dimension override tags
 
     uniqueRef <- case boxM of 
-                  Nothing -> newUniqueSTRef (error $ "should never been called. undefined. Base.hs:429")
+                  Nothing -> newUniqueSTRef box
                   Just box | (BoxId_ ref) <- _boxId box -> return ref
     let (Arg _ ref) = uniqueRef
     let box = Box (BoxId_ uniqueRef) (Just $ shelfId shelf) style content dim mempty or_ ors tags (extractPriorities tags defaultPriorities) (extractBoxBreak tags)
