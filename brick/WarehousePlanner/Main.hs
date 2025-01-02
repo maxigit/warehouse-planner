@@ -158,7 +158,6 @@ commandArg = flag' Stocktake (long "stocktake"
                              <> help "Number of boxes in all shelves"
                              )
           <|> flag' MopLocation (long "mop" <> long "mop-locations"
-                             <> short 'm'
                              <> help "Location files compatible with MOP"
                              )
           <|> flag' BestBoxesFor (long "best-boxes" <> long "best-boxes-for"
