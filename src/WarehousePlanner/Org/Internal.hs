@@ -112,9 +112,9 @@ extractDrawer s = do
   return $ fmap (\d -> HeaderL d "") drawerE
 
 parseDrawer :: Text -> Either Text HeaderType
-parseDrawer h = case splitOn "_" (toLower h) of
+parseDrawer h = case splitOn "_" h of
   [] -> Left $ "'' not a valid drawer."
-  xs -> let (header, tags) = pre xs 
+  x:xs -> let (header, tags) = pre (toLower x : xs )
         in parseHeader header tags
   where 
       pre :: [Text] -> (Text, [Text])
