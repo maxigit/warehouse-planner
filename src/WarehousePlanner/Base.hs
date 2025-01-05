@@ -43,6 +43,7 @@ module WarehousePlanner.Base
 , maxUsedOffset
 , minUsedOffset
 , modifyTags
+, multipleContentToSingles
 , module WarehousePlanner.Type
 , negateTagOperations
 , newBox, newBox'
@@ -107,6 +108,7 @@ import GHC.Prim
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import System.FilePath.Glob qualified as Glob
 import Data.Bitraversable (Bitraversable(..))
+import Data.Maybe (fromJust)
 -- import GHC.Exts (groupWith)
 
 
@@ -543,6 +545,21 @@ makeContentTags content =
    contents -> ("mixed", SetTag) : [ ("content" <> tshow i, SetValues [c])
                                    | (c, i) <- zip contents [1..] 
                                    ]
+                                   
+-- | replace box with multiple content to multiple box with unmixd content
+-- exa A&b ->  [A, B]
+multipleContentToSingles :: Box s -> NonEmpty (Box s)
+multipleContentToSingles box =
+  case splitOnNonEscaped "&" (boxContent box) of
+     contents@(_:_) -> fromJust
+                       $ nonEmpty [ box { boxContent = content
+                                        , boxTags =  (Map.singleton ("'" <> content) mempty) 
+                                                     <> Map.filterWithKey  toKeep (boxTags box)
+                                        }
+                                  | content <- contents
+                                  ]
+     _ -> box :| []
+  where toKeep t _ = not ("content" `isPrefixOf` t || t == ("'" <> boxContent box))
 
 newUniqueSTRef :: a s -> WH (Arg Int (HiSTRef a s)) s
 newUniqueSTRef object = do

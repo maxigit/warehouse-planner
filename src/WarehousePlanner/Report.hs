@@ -523,13 +523,23 @@ generateMovesFor sortMode header boxKey0 printGroup box'shelfs = do
 -- and doing a lookup to find the final location.
 generateMOPLocations :: Maybe BoxSelector -> WH [Text] s
 generateMOPLocations selectorm = do
-  locationMap <- Map'.fromList . concat <$> generateMoves' SortBoxes (Nothing) (boxName False)
+  shelf'boxSMulti <- case selectorm of
+                      Nothing -> shelfBoxes
+                      Just sel ->  do
+                           boxes <- findBoxByNameAndShelfNames sel
+                           shelf0 <- defaultShelf
+                           mapM (\b -> (,b) <$> findShelf (fromMaybe shelf0 $ boxShelf b )) boxes
+  let shelf'boxes = [ (shelf, single)
+                  | (shelf, mixed)  <- shelf'boxSMulti
+                  , single <- toList $ multipleContentToSingles mixed
+                  ]
+  locationMap <- Map'.fromList . concat <$> generateMovesFor SortBoxes (Nothing) (boxName False)
                                                   (\_ boxes shelves -> [ (boxStyleAndContent box, shelves)
                                                                        | box <- boxes
                                                                        ])
-                                                  selectorm
+                                                  shelf'boxes
 
-  generateMoves' SortBoxes (Just "stock_id,location") (boxName True) (printGroup locationMap) selectorm where
+  generateMovesFor SortBoxes (Just "stock_id,location") (boxName True) (printGroup locationMap) shelf'boxes where
   -- use box style unless the box is tagged as exception
   boxName checkComment box  = let comment = getTagValuem box "mop-comment"
                                   hasTag = tagIsPresent box
