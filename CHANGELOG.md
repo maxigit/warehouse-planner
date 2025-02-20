@@ -1,3 +1,64 @@
+# 2.1.0
+## Common
+- Allow $[tag]=$[tag2] in tag formula
+- Add round coordinate (ol, ow, ol)
+- Add tag-values report (--tag-values)
+- Add "before" in shelf split formula
+   find gap before (on the left) of the first box
+- Add cornerN partition mode
+    when there is a "stair" of available corner in as helf
+    N specify which one to use 
+    first corresponds to above
+    last to "right"
+- fix mixed boxes in mop report.
+# WPL
+- Add passthrough block (; ...)
+- Add trace:shelves
+- add trace:orules
+- add trace:boxes!, show box Id instead of title
+- add property to trace:boxes
+    trace:boxes with "style=${style} $[ghosh?]"
+- chain meta selector 
+   `~~~` is parsed as ~ then ~ then ~
+- improves case
+   || a b c equivalest to | (a b c)
+   / cases on shelves (insteaf of boxes)
+   // || for /
+- add assert:null
+Check that there is no boxes. Usefull to check if all boxes have been moved
+and there is nothing left
+- to becomes to> and to^
+- Add orientation strategy for different shelves.
+  orules take an optional shelf selector argument
+  orules+ add rules to the existing ones.
+- add shelf splitting and resizing 
+   shelf:full  set minDim to maxDim
+   shelf:rezise l w h
+   split selector l w h statement, split as in :SHELF_SPLIT: then recombine
+- add tag:shelves
+- add box ranges
+   instead of selecting boxes matching a selector
+   match boxes from/upto/before and after the given selector.
+- add foreach:do execute the given action foreach of the following statements.
+   foreach:do action
+         st1
+         st2
+- add foreach:box
+  process boxes by group "global" limit
+- add bsize resize all selected boxes to
+    bsize:max use for each dimension the max across boxes
+    bsize:min use for each dimension the min across boxes
+    bsize:first use the size of the first boxes
+- add swap  boxes (current order to given order)
+- tag:for tag boxes temporarily
+##  Brick
+- add reloading indicator
+- Brick: add reloading indicator
+   
+   
+
+
+
 # 2.0.0
 - Rewrite WPL parser to allow case blocks
 to start a block without extra indentation.
