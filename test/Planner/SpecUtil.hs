@@ -1,6 +1,7 @@
 module Planner.SpecUtil
 ( makeShelves
 , makeBoxes
+, makeBoxesWithPartition
 , boxesWithId
 ) where
 {-# LANGUAGE NOINLINE makeShelves, makeShelves #-}
@@ -9,7 +10,8 @@ import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Selector(parseSelector, parseBoxNumberSelector, parseBoxSelector)
 import WarehousePlanner.Report (boxStyleWithTags)
-import Data.Text (breakOn)
+import WarehousePlanner.Move(aroundArrangement, moveBoxes)
+import Data.Text (breakOn, splitOn)
 
 -- | Create shelves from a list on name.
 -- ex: "S1 S2" creates two shelves S1 and S2
@@ -37,13 +39,32 @@ makeBoxes shelfboxess = do
                  
    return $ concat boxess
    where go shelfname name = do
-            [shelfId] <- findShelfBySelector (parseSelector shelfname)
+            shelfId:_ <- findShelfBySelector (parseSelector shelfname)
             shelf <- findShelf shelfId
             let (style', tags) = extractTags name
                 (style, drop 1 -> content) = breakOn "-" style'
             box <- newBox style content dim  up shelf [up] tags
             return (box, shelf)
          dim = Dimension 50 30 40
+
+-- | Create boxes but moves them according to the partition mode
+makeBoxesWithPartition :: PartitionMode -> [Text] -> WH [(Box s, Shelf s)] s
+makeBoxesWithPartition mode shelfboxess = do
+   boxess <- forM shelfboxess \shelf'boxes -> do
+       def0 <- defaultShelf
+       let (shelfname:_) = words shelf'boxes
+       boxes <- makeBoxes [shelf'boxes]
+       shelves <- findShelfBySelector (parseSelector shelfname) 
+       inEx <- aroundArrangement NewBoxesOnly
+                                 (moveBoxes ExitOnTop mode DontSortBoxes)
+                                 (map fst boxes)
+                                 shelves
+       mapM (\b -> (,) <$> findBox b <*> findShelf (fromMaybe def0 (boxShelf b)))
+            (includedList inEx)
+
+   return $ concat boxess
+
+       
 
   -- *  Display with # value of tag #id.
   -- Example B-1#id=3#fg=black => B-1#3
