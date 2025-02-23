@@ -33,6 +33,7 @@ import WarehousePlanner.WPL.ExContext
 import Data.Text(uncons)
 import Data.Foldable qualified as F
 import Data.Map qualified as Map
+import Data.Semigroup (Arg(..))
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -114,6 +115,7 @@ type BoxesOrPos b = Either [b] Position
 -- | Find the  best box positions for similar boxes and a given shelf.
 -- This takes into account the boxes already present in the shelf and
 -- the possible orientation and shelf strategy.
+-- Returns a slices of either an available position or the list of boxes overlapping with the position.
 bestPositions :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double Position) s
 bestPositions partitionMode shelf simBoxes = do
   bOrPs <- bestPositionOrBoxes partitionMode shelf simBoxes
@@ -315,11 +317,35 @@ bestEffort boxes = let
   in stairsFromCorners $ cornerHull allCorners
   
 -- | Move boxes of similar size to the given shelf if possible
-moveSimilarBoxes :: (Shelf' shelf) => ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
+moveSimilarBoxes :: (Shelf' shelf) => forall s . ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
 moveSimilarBoxes exitMode partitionMode boxes shelves' = do
-  shelves <- mapM findShelf shelves'
-  pos'boxs <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
-  let positionsWithShelf = combineSlices exitMode $ zip shelves pos'boxs
+  shelves :: [Shelf s] <- mapM findShelf shelves'
+  pos'overlaps <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
+  -- ^ available positions not linked at the moment to any real boxes
+  -- this is a list whith one set of slice per shelf
+  let positionsWithShelf :: Slices SlotPriority (Shelf s, BoxesOrPos (Box s))
+      positionsWithShelf = combineSlices exitMode $ zip shelves pos'overlaps
+  --  ^^^^^^^^^^^^^^^^^                             ^^^^^^^^^^^^^^^^^^^^^
+  --       |                                              |
+  --       +-- one set of slices combining                |
+  --           the different shelves in the               |
+  --           appropriate order                          |
+  --                                                      |
+  --       pair each slices with its original shelf ------+
+  -------------------------------------------------------------
+  --  vvvvvvvvvvvvvv partition positions and boxes
+  --  in the case of sortedoverlap each group corresponds
+  --  to a consecutive set of slots and the boxes allowed to go with it depending
+  --  on the ordering constraints.
+  --  for example six box A B C D X Y Z  with 5 position might be split in 
+  --   (A B C , 1 2 ) and ( X Y Z , 3 4 5) because slot 3 needs box >= M
+  --   In that case C won't be moved (not enough slought) even though without ordering
+  --   constraints it would have been Z.
+  --  the normal behavior is to create one group.
+      posWithShelf'boxesz :: [ ( Slices SlotPriority (Shelf s, Position)
+                               , SimilarBoxes s
+                               )
+                             ]
       posWithShelf'boxesz = case partitionMode of
          PSortedOverlap -> forSortedOverlap positionsWithShelf boxes
          _              -> [(snd $ partitionEitherSlices $ fmap sequenceA positionsWithShelf, boxes)]
@@ -329,6 +355,29 @@ moveSimilarBoxes exitMode partitionMode boxes shelves' = do
                       [] -> Nothing 
                       (x:xs) -> foldM (\m s -> unsplitSimilar m s) x xs
   return (tomaybe lefts, tomaybe rights)
+
+-- | Allow anything to be sorted by the given index (argument).
+type ArgI = Arg Int
+
+argument :: ArgI a -> Int
+argument (Arg i _) = i
+
+argued :: ArgI a -> a 
+argued (Arg _ x) = x
+
+-- | Instead of just ordering slot and slices
+-- by their geometric position (a Double)
+-- the length for a slice, the height for a slot etc 
+-- we need to be able to force the order to take into account the partition mode.
+-- In ExitLeft for example , slices needs to be sorted by shelf first
+-- in that case master priority should be the shelf position.
+-- In ExitOnTop, the position should be used first (so all master priorites should be the same)
+-- then the shelf position as as tie breaker.
+type SlotPriority = ( Int    -- ^ master priority
+                    , Double -- ^ position
+                    , Int    -- ^ tie breaker
+                    )
+
   
 -- | Sort positions (box offsets), so that they are in order to be assigned
 -- according to the 'exitmode' and filling strategy.
@@ -365,23 +414,37 @@ moveSimilarBoxes exitMode partitionMode boxes shelves' = do
 -- consecutives shelves must be seen at one or not.
 -- The sorting can then be done by group of shelf with the same
 -- strategy.
-combineSlices :: ExitMode -> [(Shelf s, Slices Double p)] -> Slices (Int, Double, Int) (Shelf s, p)
+combineSlices :: forall s p . ExitMode -> [(Shelf s, Slices Double p)] -> Slices SlotPriority (Shelf s, p)
 combineSlices exitMode shelf'slicess = let
   -- assign a number for each shelf and then
   -- reuse the same number within a group if needed.
   -- This way 1 2 3 4 5 will become 1 2 3 4 5 
   -- if shelves 3 and 4 are need to be filled togother
-  withN = zipWith (\s i -> first (i,) s) shelf'slicess [(1::Int)..]
-  sameStrategy = groupSimilar (shelfFillingStrategy . snd . fst) withN
+  withN :: [ ( ArgI (Shelf s)
+             , Slices Double p
+             )
+           ]
+  withN = zipWith (\s i -> first (Arg i) s) shelf'slicess [(1::Int)..]
+  sameStrategy :: [ SimilarBy FillingStrategy
+                              ( ArgI (Shelf s)
+                              , Slices Double p
+                              )
+                  ]
+  sameStrategy = groupSimilar (shelfFillingStrategy . argued . fst) withN
   withGroupN = map adjustN sameStrategy
-  -- adjustN :: SimilarBy FillingStrategy (_Shelf, Slices Double Position) -> Slices (Int, Double) (_Shelf, Position)
+  adjustN :: SimilarBy FillingStrategy
+                       ( ArgI (Shelf s) -- shelf with initial position 
+                       , Slices Double p -- slices indexed by 
+                       )
+          -> [ Slices SlotPriority (Shelf s, p)
+             ]
   adjustN (SimilarBy strategy s'is1 s'i'slices) = 
-    let firstI = fst (fst s'is1)
+    let firstI = argument (fst s'is1)
         adjust i d = if (exitMode, strategy) `elem` [(ExitOnTop, ColumnFirst), (ExitLeft, RowFirst)]
                    then (firstI, d, i) -- sames "group" , within a group fill slice then go to the next shelf
                    else (i, d, i) -- fill shelf first, then go to the next one
     in [ bimap (adjust i) (shelf,) slices
-       | ((i, shelf), slices) <- s'is1 : s'i'slices
+       | (Arg i shelf, slices) <- s'is1 : s'i'slices
        ]
   in foldMap concat withGroupN
 -- | Assign boxes to positions in order (like a zip) but with respect to box breaks.
