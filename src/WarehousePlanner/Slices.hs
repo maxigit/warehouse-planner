@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveTraversable #-}
 module WarehousePlanner.Slices
 ( Slices(..)
+, breakSlices
 , partitionEitherSlices
 , filterSlices
 , filterSlicesWithKey
@@ -11,9 +12,11 @@ module WarehousePlanner.Slices
 , unconsSlices
 , buildSlices
 , numSlices
+, groupSlicesWithKey
 )where 
 import ClassyPrelude hiding (uncons, stripPrefix )
 import WarehousePlanner.Type (BoxBreak(..))
+import Data.Foldable qualified as F
 -- | An ordered list. Modifying it using fmap doesn't reorder it.
 -- It is so that we can work with infinite list.
 -- Therefore fmap should be used with caution and make sure
@@ -174,6 +177,54 @@ partitionEitherSlices (SlicesO xs) = let
                     , let (lefts, rights) = uncleanPartitionESlice slice
                     ] 
  in (cleanSlices $ SlicesO as, cleanSlices $ SlicesO bs)
+
+breakSlices :: (a -> Bool) -> Slices k a -> (Slices k a, Slices k a)
+breakSlices p s@(SlicesO xs) = case xs of
+   [] -> (s,s)
+   -- breaking a slice can give 3 results
+   -- ex > 3 [1..10]
+   --    a) ([1,2,3], [4..10]) break found in the middle
+   -- ex > 3 [1..2]
+   --    b) ([1,2], []) no break found
+   -- ex > 3 [5..10]
+   --    c) ([], [5..10]) break found straight away
+   (k, slice):slices -> case breakSlice p slice of
+                (_ , SliceO []) -> -- c) no break found, try harder
+                    let (SlicesO befores, after) = breakSlices p $ SlicesO slices
+                    in ( SlicesO $ (k, slice):befores
+                       , after
+                       ) 
+                (before, after) -> -- a,b ) we found the break no need break the neslicet one
+                     ( cleanSlices $ SlicesO [(k, before)]
+                     , SlicesO $ (k, after):slices
+                     )
+breakSlice :: (a -> Bool ) -> Slice  k a -> (Slice k a, Slice k a)
+breakSlice p s@(SliceO xs) = case xs of
+   [] -> (s,s)
+   (k,slot):slots -> case breakSlot p slot of
+                (_, SlotO []) ->  -- c) no break found, try harder
+                    let (SliceO befores, after) = breakSlice p$ SliceO  slots
+                    in ( SliceO $ (k,slot):befores
+                       , after
+                       ) 
+                (before, after) -> -- we found the break no need break the next one
+                     ( SliceO [(k,before)]
+                     , SliceO $ (k, after):slots
+                     )
+                     
+breakSlot :: (a -> Bool) -> Slot k a -> (Slot k a, Slot k a)
+breakSlot p (SlotO xs) = let
+ (before, after) = break (p .snd)  xs
+ in (SlotO before, SlotO after)
+
+ 
+-- | Break slices when function changes. Doesn't sort
+groupSlicesWithKey :: Eq r => (a -> r) -> Slices k a -> [(r, Slices k a)]
+groupSlicesWithKey f slices = case F.toList slices of
+     [] -> []
+     x:_ -> let r = f x
+                (before, after) = breakSlices (\a -> f a /= r) slices
+            in (r, before) : groupSlicesWithKey f after
 
 --  * Unclean functions, need to be cleaned afterward
 uncleanFilterSliceWithKey :: (k -> a -> Bool) -> Slice k a -> Slice k a

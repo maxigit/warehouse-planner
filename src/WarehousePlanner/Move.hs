@@ -14,13 +14,16 @@ module WarehousePlanner.Move
 , splitTagsAndLocation
 -- reexport
 , withAll
+-- internal
+, addSlotBounds
+, SlotBounds(..)
 )
 where 
 import ClassyPrelude hiding (uncons, stripPrefix, unzip)
-import qualified Prelude
 import Control.Monad.State(gets)
 import Control.Monad hiding(mapM_,foldM)
-import Data.List.NonEmpty(unzip)
+import Data.List.NonEmpty(unzip, NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty qualified as NE
 import Data.List qualified as List
 import WarehousePlanner.Type
 import WarehousePlanner.Slices
@@ -109,7 +112,8 @@ bestArrangement orientations shelves box = let
         snd $ minimumByEx (compare `on` fst) bests
 
 type SimilarBoxes s = SimilarBy Dimension (Box s)
-type BoxesOrPos b = Either [b] Position
+type BoxesOrPos s = OrPos (Box s)
+type OrPos b = Either (NonEmpty b) Position
 
 
 -- | Find the  best box positions for similar boxes and a given shelf.
@@ -121,7 +125,7 @@ bestPositions partitionMode shelf simBoxes = do
   bOrPs <- bestPositionOrBoxes partitionMode shelf simBoxes
   return . snd $ partitionEitherSlices bOrPs
 
-bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos (Box s))) s
+bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos s)) s
 bestPositionOrBoxes partitionMode shelf simBoxes = do
   let SimilarBy dim box _ = simBoxes
   boxesInShelf <- findBoxByShelf shelf
@@ -129,14 +133,14 @@ bestPositionOrBoxes partitionMode shelf simBoxes = do
   let orientations = boxo box shelf
   return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim 
 
-bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Slices Double (BoxesOrPos b)
+bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Slices Double (OrPos b)
 bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode = let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
   solutions = [ fmap isUsed $ justifyPositions $ bestPositions' getAff PRightOnly [strategy]  shelf start [] dim 
               | strategy <- orientations
               ]
-  sorted = sortOn (Down . Prelude.length . snd . partitionEitherSlices) solutions
+  sorted = sortOn (Down . F.length . snd . partitionEitherSlices) solutions
   in  case sorted of
      [] -> mempty
      (best:_) -> best
@@ -147,9 +151,9 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
          -- return the position if empty or the boxes overlapping it if any               isUsed :: Position -> BoxesOrPos s
         isUsed (Right pos) = let 
            overlappings = filter  (overlap pos) used
-           in case overlappings of
-                [] -> Right pos
-                _ -> Left overlappings
+           in case nonEmpty overlappings of
+                Nothing -> Right pos
+                Just ne -> Left ne
         isUsed left = left
         isOverlap = \case 
                      POverlap _ -> True
@@ -246,7 +250,7 @@ generatePositions base fillingStrategy ori boxDim (TilingCombo dir m1 m2) = let
   in positions1 <> positions2
 
 -- | Offset positions to align with the right of the given dimension
-justifyRight :: Dimension -> Dimension -> Slices Double (BoxesOrPos b) -> Slices Double (BoxesOrPos b)
+justifyRight :: Dimension -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
 justifyRight box shelf slices = let
    (_,poss) = partitionEitherSlices slices
    pos = F.toList poss
@@ -256,7 +260,7 @@ justifyRight box shelf slices = let
                     offset = Dimension (max 0 $ dLength shelf - maxL) 0 0 
                 in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
 -- | Offset positions to align with the most right start of a box
-justifyAlign :: [AffDimension] -> Dimension -> Slices Double (BoxesOrPos b) -> Slices Double (BoxesOrPos b)
+justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
 justifyAlign used shelf slices = let
    (_,poss) = partitionEitherSlices slices
    pos = F.toList poss
@@ -323,7 +327,7 @@ moveSimilarBoxes exitMode partitionMode boxes shelves' = do
   pos'overlaps <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
   -- ^ available positions not linked at the moment to any real boxes
   -- this is a list whith one set of slice per shelf
-  let positionsWithShelf :: Slices SlotPriority (Shelf s, BoxesOrPos (Box s))
+  let positionsWithShelf :: Slices SlotPriority (Shelf s, BoxesOrPos s)
       positionsWithShelf = combineSlices exitMode $ zip shelves pos'overlaps
   --  ^^^^^^^^^^^^^^^^^                             ^^^^^^^^^^^^^^^^^^^^^
   --       |                                              |
@@ -465,10 +469,73 @@ assignBoxesToPositions slices simBoxes = do
   leftOver <- go Nothing (numSlices slices) boxes 
   return $ splitSimilar (length boxes - length leftOver) simBoxes
 
+data SlotBounds = SlotBounds { lowerB, upperB :: Maybe Text }
+    deriving (Show, Eq, Ord)
+    
+inBound :: SlotBounds -> Text -> Bool
+inBound SlotBounds{..} x =
+     (maybe (const True) (<=) lowerB ) x && 
+     (maybe (const True) (>=) upperB) x
+
 -- | make group of pair slots boxes so that boxes are "authorized" to be in the correct slots
-forSortedOverlap :: Slices k (Shelf s, BoxesOrPos (Box s)) -> (SimilarBoxes s) -> [(Slices k (Shelf s, Position), (SimilarBoxes s))]
-forSortedOverlap positionsWithShelf boxes =
-         [(snd $ partitionEitherSlices $ fmap sequenceA positionsWithShelf, boxes)]
+   -- we assume slots are sorted "correctly".
+   -- Therefore, group of empty slots corresponds to
+   -- sequence of Positions, delimiter by overlap boxes.
+   -- Those boxes give the lower and upper bound of the group.
+   -- For  example given (number are empty slot/pos and letter are boxes
+   -- 
+   --  1 2 3 [A B] 5 6 [M] [P] 7
+   -- this will give 3 groups of avaible slots
+   --     1 2 3 : =< A
+   --     4 6 : >= B & =< M
+   --     7   : >= 7
+forSortedOverlap :: forall k s . Slices k (Shelf s, BoxesOrPos s) -> (SimilarBoxes s) -> [(Slices k (Shelf s, Position), (SimilarBoxes s))]
+forSortedOverlap positionsWithShelf allBoxes = let
+  bounded = addSlotBounds boxContent positionsWithShelf
+  groupedByBound :: [(SlotBounds, Slices k (Shelf s, Position))]
+  groupedByBound = [ (bound, slicesOfPos)
+                   | (bound, slicesWithBound) <- groupSlicesWithKey fst bounded
+                   , let slicesOfShelfAndBoxOrPos = fmap snd slicesWithBound
+                         (_,slicesOfPos) = partitionEitherSlices $ map (\(s, e) -> fmap (s,) e) slicesOfShelfAndBoxOrPos 
+                   ]
+
+  in  catMaybes . snd $ List.mapAccumL go (Just allBoxes) groupedByBound
+  where go Nothing _ = (Nothing, Nothing)
+        go (Just boxes) (bound, slices) = let
+           (inbound, boxesLeft) = partitionSimilar (inBound bound . boxContent) boxes
+           in case inbound of
+              Nothing -> (boxesLeft, Nothing)
+              Just ins -> (boxesLeft, Just (slices, ins))
+            
+addSlotBounds :: forall b s p slices_k . Traversable slices_k =>  (b -> Text) -> slices_k (s, Either (NonEmpty b) p) -> slices_k (SlotBounds , (s, Either (NonEmpty b) p))
+addSlotBounds f slices = let
+  startBound = SlotBounds Nothing Nothing
+  withLowerBound :: slices_k (SlotBounds, (s, Either (NonEmpty b) p))
+  withLowerBound = snd $ List.mapAccumL accLowerBound startBound slices
+  in snd $ List.mapAccumR accUpperBound startBound withLowerBound
+  where accLowerBound lastBound s@(_,posOrBoxes) =
+            let newBound = case posOrBoxes of
+                                       Left boxes -> let newLower = F.maximum  $ addPrevious contents
+                                                         contents :: NonEmpty Text
+                                                         contents = fmap f boxes 
+                                                         addPrevious = maybe id NE.cons (lowerB lastBound)
+                                                     in SlotBounds (Just newLower) Nothing
+                                       Right _ -> lastBound
+                in (newBound, (newBound, s))
+        accUpperBound lastBound (bound, s@(_,posOrBoxes)) =
+            let newBound = case posOrBoxes of
+                                       Left boxes -> let newUpper = F.minimum  $ addPrevious contents
+                                                         contents :: NonEmpty Text
+                                                         contents = fmap f boxes 
+                                                         addPrevious = maybe id NE.cons (upperB lastBound)
+                                                     in bound { upperB = Just newUpper}
+                                       Right _ -> bound { upperB = upperB lastBound }
+            in (newBound, (newBound, s))
+                                                  
+                                                    
+
+                                                       
+                          
 -- Try to Move a block of boxes  into a block of shelves.
 -- Boxes are move in sequence and and try to fill shelve
 -- in sequence. If they are not enough space the left boxes
