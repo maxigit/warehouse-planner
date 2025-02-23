@@ -7,6 +7,9 @@ import Planner.SpecUtil
 import WarehousePlanner.Base
 import WarehousePlanner.Move
 import WarehousePlanner.Exec
+import WarehousePlanner.Slices
+import Data.List.NonEmpty (NonEmpty(..))
+import Data.Char (isDigit)
 
 
 spec :: Spec
@@ -15,6 +18,7 @@ spec = parallel pureSpec
 pureSpec :: Spec
 pureSpec = do
   sortedSpec
+  utilSpec
   
 getBoxes = map fst . includedList
 
@@ -32,7 +36,7 @@ sortedSpec = describe "POverlapSorted" do
                              , "S A-5"
                              ] `addSorted` ["S A-6"]
                              )
-              action `shouldWH` ["A-6 S '2:1:1"]
+              action `shouldWH` ["A-6 S '2:1:2"]
    context "ExitOnTop" do
            it "uses T for the fith box" do -- test the test
               let action = [] `addSorted` ["S|T A-1 A-2 A-3 A-4 A-5 A-6 A-7"]
@@ -55,6 +59,25 @@ sortedSpec = describe "POverlapSorted" do
                              )
               action `shouldWH` ["A-6 T '1:1:2"]
 
+utilSpec = describe "utils" do
+     context "addSlotBounds" do
+        -- | create slots (number) or overlapping boxes (char)
+        let makeSlices = map ((),) . map (\s -> case s of 
+                                     [c] | isDigit c -> Right c
+                                     "" -> Right '0'
+                                     c:cs -> Left ( c :| cs)
+                             ) . words
+        let pretty = unwords . map \(bound, (_, x)) -> "<"
+                                            <> fromMaybe "" (lowerB bound)
+                                            <> ":"
+                                            <> fromMaybe "" (upperB bound)
+                                            <> ">"
+                                            <> pack (either toList pure x)
+            bound = pretty . addSlotBounds singleton .  makeSlices
+        it "add nothing" do
+           bound "1 2 3 4 5"  `shouldBe` "<:>1 <:>2 <:>3 <:>4 <:>5"
+        it "" do
+           bound "1 2 AB 3 4 M 5"  `shouldBe` "<:A>1 <:A>2 <B:A>AB <B:M>3 <B:M>4 <M:M>M <M:>5"
 
         
 -- * For simple shelf

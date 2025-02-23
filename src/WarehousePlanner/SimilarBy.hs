@@ -11,12 +11,13 @@ module WarehousePlanner.SimilarBy
 , splitSimilar
 , unsplitSimilar
 , mapSimilarKey
+, partitionSimilar
 , unzipSimilar
 , zipSimilar
 )
 where
 import Prelude
-import Data.List(groupBy, sortOn)
+import Data.List(groupBy, sortOn, partition)
 import Data.Function(on)
 import Data.Map qualified as Map
 import Data.Map (Map)
@@ -87,3 +88,12 @@ zipSimilar (SimilarByPrivate k a as) (SimilarByPrivate k' b bs) =
    if k == k'
    then Just $ SimilarByPrivate k (a, b) (zip as bs)
    else Nothing
+   
+   
+partitionSimilar :: (a -> Bool) -> SimilarBy k a -> (Maybe (SimilarBy  k a), Maybe (SimilarBy k a))
+partitionSimilar p (SimilarByPrivate k x xs) = let
+   (goods, bads) = partition p (x:xs)
+   in (mkSim goods, mkSim bads)
+   where mkSim = \case
+             [] -> Nothing
+             y:ys -> Just $ SimilarByPrivate k y ys
