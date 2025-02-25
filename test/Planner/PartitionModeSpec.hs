@@ -37,6 +37,61 @@ sortedSpec = describe "POverlapSorted" do
                              ] `addSorted` ["S A-6"]
                              )
               action `shouldWH` ["A-6 S '2:1:2"]
+           it "inserts before and afwer" do
+              -- we want to insert in X (A2)
+              -- X  X
+              -- A1 A2
+              -- A1 A2 A3
+              let action = [ "S A-1 A-1"
+                           , "S A-2 A-2"
+                           , "S A-3"
+                           ] `addSorted` [ "S A-2 A-2 A-2" ]
+              action `shouldWH` [ "A-2 S '1:1:3"
+                                , "A-2 S '2:1:3"
+                                ]
+           it "ignores other styles" do
+              -- we want to insert in X (A2)
+              --    X    
+              -- B4 A1   
+              -- B4 A1 A2
+              let action = [ "S B-4 B-4"
+                           , "S A-1 A-1"
+                           , "S A-2 A-2"
+                           ] `addSorted` [ "S A-2" ]
+              action `shouldWH` [ "A-2 S '2:1:3"
+                                ]
+
+   context "priorities" do
+        it "given order but keep content sorted" do
+              -- we get A-3 and A-2 but in content order
+              let action = [ "S A-1" -- A-2 A-3
+                           , "S A-4"
+                           ] `addSorted` ["S A-3 A-2 A-2"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-3 S '1:1:3"
+                                ]
+        it "given order A-2 " do
+              let action = [ "S A-1" -- A-2 A-3
+                           , "S A-4"
+                           ] `addSorted` ["S A-2 A-2 A-3"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-2 S '1:1:3"
+                                ]
+        it "content first" do
+              let action = [ "S A-1" -- A-2 A-3
+                           , "S A-4"
+                           ] `addSorted` ["S A-2 A-3 A-3"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-3 S '1:1:3"
+                                ]
+        it "given order A-3" do
+              -- we want all A-3s instead A-2
+              let action = [ "S A-1" -- A-3 A-3
+                           , "S A-4"
+                           ] `addSorted` ["S A-3 A-3 A-2"]
+              action `shouldWH` [ "A-3 S '1:1:2"
+                                , "A-3 S '1:1:3"
+                                ]
    context "ExitOnTop" do
            it "uses T for the fith box" do -- test the test
               let action = [] `addSorted` ["S|T A-1 A-2 A-3 A-4 A-5 A-6 A-7"]
@@ -58,6 +113,40 @@ sortedSpec = describe "POverlapSorted" do
                              ] `addSorted` ["S|T A-6"]
                              )
               action `shouldWH` ["A-6 T '1:1:2"]
+   context "use priorities" do
+        it "default priority" do
+              -- we want 2 A-3 instead of 2 A-2, for this we set a higher priority to A-3 content
+              let action = [ "S A-1" -- A-2 A-2 | T A-3 A-3 A-3-#
+                           , "S A-4"
+                           ] `addSorted` ["S|T A-2 A-2 A-3 A-3 A-3 A-3"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-2 S '1:1:3"
+                                , "A-3 T '1:1:1"
+                                , "A-3 T '1:1:2"
+                                , "A-3 T '1:1:3"
+                                ]
+        it "uses content priority across different content " do
+              -- we want 2 A-3 instead of 2 A-2, for this we set a higher priority to A-3 content
+              let action = [ "S A-1" -- A-2 A-3 | T A-3
+                           , "S A-4"
+                           ] `addSorted` ["S|T A-2 A-3 A-3 A-3 A-3 A-2"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-3 S '1:1:3"
+                                , "A-3 T '1:1:1"
+                                , "A-3 T '1:1:2"
+                                , "A-3 T '1:1:3"
+                                ]
+        it "uses content priority across different content " do
+              -- we want 2 A-3 instead of 2 A-2, for this we set a higher priority to A-3 content
+              let action = [ "S A-1" -- A-2 A-3 | T A-3
+                           , "S A-4"
+                           ] `addSorted` ["S|T A-2 A-3 A-2 A-3 A-3 A-3 A-3"]
+              action `shouldWH` [ "A-2 S '1:1:2"
+                                , "A-2 S '1:1:3"
+                                , "A-3 T '1:1:1"
+                                , "A-3 T '1:1:2"
+                                , "A-3 T '1:1:3"
+                                ]
 
 utilSpec = describe "utils" do
      context "addSlotBounds" do
@@ -73,7 +162,7 @@ utilSpec = describe "utils" do
                                             <> fromMaybe "" (upperB bound)
                                             <> ">"
                                             <> pack (either toList pure x)
-            bound = pretty . addSlotBounds singleton .  makeSlices
+            bound = pretty . addSlotBounds (Just . singleton) .  makeSlices
         it "add nothing" do
            bound "1 2 3 4 5"  `shouldBe` "<:>1 <:>2 <:>3 <:>4 <:>5"
         it "" do
@@ -89,8 +178,6 @@ addSorted boxes newBoxes =  do
         makeShelves $ words "S T pending"
         boxes <- makeBoxesWithPartition PRightOnly boxes
         newBoxes <- map fst <$> makeBoxesWithPartition PSortedOverlap newBoxes
-        mapM (\(box,i) -> expandAttribute box i "${boxname} ${shelfname} ${position-spec}" )
-             (zip newBoxes [1..])
         showBoxWithPosition newBoxes
              
 showBoxWithPosition :: [Box s] -> WH [Text] s
@@ -98,7 +185,7 @@ showBoxWithPosition boxes = mapM (\(box,i) -> expandAttribute box i "${boxname} 
                                  (zip boxes [1..])
 
 
-shouldWH :: Eq a => Show a => WH [a] RealWorld  -> [a] -> IO ()
-shouldWH action expected =  exec0 action `shouldReturn` expected
+shouldWH :: Ord a => Show a => WH [a] RealWorld  -> [a] -> IO ()
+shouldWH action expected =  fmap sort (exec0 action) `shouldReturn` sort expected
      
       

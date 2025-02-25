@@ -111,7 +111,7 @@ bestArrangement orientations shelves box = let
         -- trace ({-show shelves ++ show box ++-}  show bests) $
         snd $ minimumByEx (compare `on` fst) bests
 
-type SimilarBoxes s = SimilarBy Dimension (Box s)
+type SimilarBoxes s = SimilarBy (Dimension, Text) (Box s)
 type BoxesOrPos s = OrPos (Box s)
 type OrPos b = Either (NonEmpty b) Position
 
@@ -127,7 +127,7 @@ bestPositions partitionMode shelf simBoxes = do
 
 bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos s)) s
 bestPositionOrBoxes partitionMode shelf simBoxes = do
-  let SimilarBy dim box _ = simBoxes
+  let SimilarBy (dim,_) box _ = simBoxes
   boxesInShelf <- findBoxByShelf shelf
   boxo <- gets boxOrientations
   let orientations = boxo box shelf
@@ -489,9 +489,10 @@ inBound SlotBounds{..} x =
    --     1 2 3 : =< A
    --     4 6 : >= B & =< M
    --     7   : >= 7
-forSortedOverlap :: forall k s . Slices k (Shelf s, BoxesOrPos s) -> (SimilarBoxes s) -> [(Slices k (Shelf s, Position), (SimilarBoxes s))]
+forSortedOverlap :: forall k s . Ord k => Slices k (Shelf s, BoxesOrPos s) -> (SimilarBoxes s) -> [(Slices k (Shelf s, Position), (SimilarBoxes s))]
 forSortedOverlap positionsWithShelf allBoxes = let
-  bounded = addSlotBounds boxContent positionsWithShelf
+  style = snd $ similarKey allBoxes
+  bounded = addSlotBounds (boxContentFor style) positionsWithShelf
   groupedByBound :: [(SlotBounds, Slices k (Shelf s, Position))]
   groupedByBound = [ (bound, slicesOfPos)
                    | (bound, slicesWithBound) <- groupSlicesWithKey fst bounded
@@ -499,15 +500,36 @@ forSortedOverlap positionsWithShelf allBoxes = let
                          (_,slicesOfPos) = partitionEitherSlices $ map (\(s, e) -> fmap (s,) e) slicesOfShelfAndBoxOrPos 
                    ]
 
-  in  catMaybes . snd $ List.mapAccumL go (Just allBoxes) groupedByBound
+  (leftOverM, slicesWithBoxes) = List.mapAccumL go (Just allBoxes) groupedByBound
+  in catMaybes slicesWithBoxes <> case leftOverM of
+                                     Nothing -> []
+                                     Just leftOver -> [(mempty, leftOver)]
   where go Nothing _ = (Nothing, Nothing)
         go (Just boxes) (bound, slices) = let
-           (inbound, boxesLeft) = partitionSimilar (inBound bound . boxContent) boxes
+           (inbound, outofbound) = partitionSimilar (inBound bound . boxContent) boxes
            in case inbound of
-              Nothing -> (boxesLeft, Nothing)
-              Just ins -> (boxesLeft, Just (slices, ins))
+                     Nothing -> (Just boxes, Nothing)
+                     Just ins -> let availableNumber = F.length slices
+                                     -- boxes needs to be allocated in content order, but
+                                     -- to get the correct number for each content 
+                                     -- we need to find the boxes fitting in the group
+                                     -- and then sort them by content
+                                     (,) toFitM leftOverM  = splitSimilar availableNumber ins 
+                                     -- we need to add the unused boxes at the end so they are not "lost"
+                                     -- and get excluded if needed
+                                     toFitSorted = sortSimilarOn boxContent <$> toFitM
+                                     
+                                 in ( unsplitM leftOverM outofbound
+                                    , (slices,) <$> toFitSorted
+                                    )
+        unsplitM ma mb= case (ma, mb) of
+                   (Just a, Just b) -> unsplitSimilar a b
+                   _ -> ma <|> mb
+        boxContentFor style box = if style == boxStyle box
+                                  then Just $ boxContent box
+                                  else Nothing
             
-addSlotBounds :: forall b s p slices_k . Traversable slices_k =>  (b -> Text) -> slices_k (s, Either (NonEmpty b) p) -> slices_k (SlotBounds , (s, Either (NonEmpty b) p))
+addSlotBounds :: forall b s p slices_k . Traversable slices_k =>  (b -> Maybe Text) -> slices_k (s, Either (NonEmpty b) p) -> slices_k (SlotBounds , (s, Either (NonEmpty b) p))
 addSlotBounds f slices = let
   startBound = SlotBounds Nothing Nothing
   withLowerBound :: slices_k (SlotBounds, (s, Either (NonEmpty b) p))
@@ -515,22 +537,24 @@ addSlotBounds f slices = let
   in snd $ List.mapAccumR accUpperBound startBound withLowerBound
   where accLowerBound lastBound s@(_,posOrBoxes) =
             let newBound = case posOrBoxes of
-                                       Left boxes -> let newLower = F.maximum  $ addPrevious contents
-                                                         contents :: NonEmpty Text
-                                                         contents = fmap f boxes 
-                                                         addPrevious = maybe id NE.cons (lowerB lastBound)
-                                                     in SlotBounds (Just newLower) Nothing
+                                       Left boxes -> case getContents boxes of
+                                                       Nothing -> lastBound
+                                                       Just contents -> let newLower = F.maximum  $ addPrevious contents
+                                                                            addPrevious = maybe id NE.cons (lowerB lastBound)
+                                                                        in SlotBounds (Just newLower) Nothing
                                        Right _ -> lastBound
                 in (newBound, (newBound, s))
         accUpperBound lastBound (bound, s@(_,posOrBoxes)) =
             let newBound = case posOrBoxes of
-                                       Left boxes -> let newUpper = F.minimum  $ addPrevious contents
-                                                         contents :: NonEmpty Text
-                                                         contents = fmap f boxes 
-                                                         addPrevious = maybe id NE.cons (upperB lastBound)
-                                                     in bound { upperB = Just newUpper}
+                                       Left boxes -> case getContents boxes of
+                                                       Nothing -> lastBound
+                                                       Just contents -> let newUpper = F.minimum  $ addPrevious contents
+                                                                            addPrevious = maybe id NE.cons (upperB lastBound)
+                                                                        in bound { upperB = Just newUpper}
                                        Right _ -> bound { upperB = upperB lastBound }
             in (newBound, (newBound, s))
+        getContents :: NonEmpty b -> Maybe (NonEmpty Text)
+        getContents = NE.nonEmpty . mapMaybe f . toList
                                                   
                                                     
 
@@ -559,7 +583,7 @@ moveSortedBoxes exitMode partitionMode bs ss = do
   let layers = groupBy ((==)  `on` boxBreak . fst ) boxes
       boxBreak box = (boxStyle box, _boxDim box)
   (unzip -> (ins, exs))  <- forM layers $ \layer -> do
-    let groups = groupSimilar (_boxDim . fst) layer
+    let groups = groupSimilar (\(b,_) -> (_boxDim b, boxStyle b)) layer
     moved'lefts <- mapM (\g -> do
                             let (boxes, priorities) = unzipSimilar g
                             moved'lefts <- moveSimilarBoxes exitMode partitionMode boxes ss
