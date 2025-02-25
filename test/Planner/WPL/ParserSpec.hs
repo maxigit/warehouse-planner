@@ -12,6 +12,7 @@ import Text.Megaparsec.Debug qualified as P
 import GHC.Exts -- to^ write maybe as list
 import Data.Char (isUpper)
 import Data.Either (isLeft, isRight)
+import Data.List.NonEmpty as NE
 
 instance IsString BoxSelector where fromString = parseBoxSelector . pack 
 -- instance IsString ShelfSelector where fromString = ShelfSelector SelectAnything . parseSelector . pack
@@ -161,6 +162,63 @@ pureSpec = describe "Parsing" do
        --                                    ]
        --                         , "B" `Then` m "S2"
        --                         ]
+   it "parses ors and cases " do
+       [ "A"
+        ,"  B"
+        ,"  | X"
+        ,"  | Y"
+        ] `parseAs'` Then "A"  ( Ors [ "B"
+                                     , Cases [ Case "X" []
+                                             , Case "Y" []
+                                             ]
+                                     ]
+                               )
+   it "bug" do
+     let move s = Action $ Move Nothing Nothing [] s ExitLeft
+     [   "#batch=M "
+       , "     | #-first to> C2"
+       , "     | #first tam @C1"
+       , "    ------------------------------------------------"
+       , "     | #first"
+       , "         | M52L04FC"
+       , "            .~ M22L08DG"
+       , "                   to> pending"
+       , "                   # | #a | to> E07.06/2"
+       , "                     | to> E07.06/3"
+       , "                     | to> error"
+       , "            | to> E07.06/1"
+       , "            | to> E07.06/3"
+       , "            | to> error"
+       ] `parseAs'`
+          ( Then "#batch=M" 
+                ( Cases [ Case "#!first"[ move "C2" ]
+                        , Case "#first" [ Action (TagAndMove "@C1" []) ]
+                        , Case "#first"
+                            [ Cases [ Case "M52L04FC"
+                                             [ Ors [ Then ( Then (Action (SelectBoxes Root)) "M22L08DG")
+                                                          (Ors [ move "pending"
+                                                               , Then "#"
+                                                                      ( Cases [ Case "#a" [  Cases [ Case (move "E07.06/2") [] ] ]
+                                                                              , Case (move "E07.06/3") Nothing
+                                                                              , Case (move "error") Nothing
+                                                                              ]
+                                                                      )
+                                                               ]
+                                                          )
+                                                   , Cases [ Case (move "E07.06/1") Nothing
+                                                           , Case (move "E07.06/3") Nothing
+                                                           , Case (move "error") Nothing
+                                                           ]
+                                                   ]
+                                             ]
+                                    ]
+                            ]
+                       ]
+                )
+          )
+
+
+
    context "new" do
             it "atom" do
                ["A" ] `parseAs'` "A"

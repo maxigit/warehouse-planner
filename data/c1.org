@@ -5137,8 +5137,8 @@ in W05.04/1
 in W05.08/1 tam @W05.08/1
 in E05.04/2 place overlap orules 2* tam @E05.04/2#-unstick
 orules 2|=
-       /W03.05/[12] foreach:shelf trace:count "BEFORE" in:shelves trace:count TO_TAM tam @ trace:count "AFTER"
-       trace:count "==========" -- in W03.05/2 tam @W03.05/2
+       /W03.05/[12] foreach:shelf in:shelves tam @ 
+       -- in W03.05/2 tam @W03.05/2
 M51W01CE
   to> pending*
   to> best W03.05/1
@@ -7658,9 +7658,9 @@ M61L01DP
   | to> error
 #batch=M 
    | #-first to> C2
-   | #first tam @C1
   ------------------------------------------------
    | #first
+       tam @C1
        | M52L04FC
           .~ M22L08DG
                  to> pending
@@ -7692,7 +7692,7 @@ M61L01DP
            to> W03.01/2
        | M52L04PB
            tam ^W07.01/[12]
-              .~ M02L05DK to> right W07.01/[12]
+              .~ M02L05DK to> right W07.01/[123]
        | M52L01HG
            .~ in W03.06/2 to> pending 3
            to> W03.06/2
