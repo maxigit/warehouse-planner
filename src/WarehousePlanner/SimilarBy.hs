@@ -9,6 +9,7 @@ module WarehousePlanner.SimilarBy
 , sortSimilarOn
 , dropSimilar
 , splitSimilar
+, takeSimilar
 , unsplitSimilar
 , mapSimilarKey
 , partitionSimilar
@@ -58,6 +59,9 @@ splitSimilar n (SimilarByPrivate k x xs) = let
   where mkSimilar [] = Nothing
         mkSimilar (x:xs) = Just $ SimilarByPrivate k x xs
         
+takeSimilar :: Int -> SimilarBy k a -> Maybe (SimilarBy k a)
+takeSimilar n = fst . splitSimilar n
+
 unsplitSimilar :: Eq k => SimilarBy k a -> SimilarBy k a -> Maybe (SimilarBy k a)
 unsplitSimilar (SimilarByPrivate k x xs) (SimilarBy k' x' xs') = 
   if k == k'

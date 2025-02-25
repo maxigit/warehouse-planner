@@ -503,9 +503,26 @@ forSortedOverlap positionsWithShelf allBoxes = let
   where go Nothing _ = (Nothing, Nothing)
         go (Just boxes) (bound, slices) = let
            (inbound, boxesLeft) = partitionSimilar (inBound bound . boxContent) boxes
-           in case inbound of
-              Nothing -> (boxesLeft, Nothing)
-              Just ins -> (boxesLeft, Just (slices, ins))
+           in ( boxesLeft
+              , case inbound of
+                     Nothing -> Nothing
+                     Just ins -> let availableNumber = F.length slices
+                                     -- boxes needs to be allocated in content order, but
+                                     -- to get the correct number for each content 
+                                     -- we need to find the boxes fitting in the group
+                                     -- and then sort them by content
+                                     (,) toFitM leftOverM  = splitSimilar availableNumber ins 
+                                     -- we need to add the unused boxes at the end so they are not "lost"
+                                     -- and get excluded if needed
+                                     toFitSorted = sortSimilarOn boxContent <$> toFitM
+                                     
+                                 in (slices,) <$> case (toFitSorted, leftOverM) of
+                                                       (Nothing, Nothing) -> Nothing
+                                                       (Just fit, Nothing) -> Just fit
+                                                       (Nothing, Just left) -> Just left
+                                                       (Just fit , Just left) -> unsplitSimilar fit left
+
+              )
             
 addSlotBounds :: forall b s p slices_k . Traversable slices_k =>  (b -> Text) -> slices_k (s, Either (NonEmpty b) p) -> slices_k (SlotBounds , (s, Either (NonEmpty b) p))
 addSlotBounds f slices = let
