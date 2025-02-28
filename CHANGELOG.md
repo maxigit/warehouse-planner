@@ -1,3 +1,5 @@
+# 2.2.0
+Implement SortedOverlap
 # 2.1.0
 ## Common
 - Allow $[tag]=$[tag2] in tag formula
