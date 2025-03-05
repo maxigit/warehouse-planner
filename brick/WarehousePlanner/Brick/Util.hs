@@ -345,7 +345,7 @@ displayEventRange all current start end = let
   render ev = let w = withAttr (specialTagName_) (txt (take (level ev) ".   .    . |         ")) <+> txt (displayEvent ev)
               in if | ev == start && ev == end  -> forceAttr eventIOut$ str "* " <+> w
                     | ev == start && current  -> forceAttr eventIn $ str "W " <+> w
-                    | ev == start -> (forceAttr eventIn $ str "W ") <+> w
+                    | ev == start -> forceAttr eventIn $ str "W " <+> w
                     | ev == end && not current -> forceAttr eventOut $ str "D " <+> w
                     | ev == end            -> (forceAttr eventOut $ str "D ") <+> w
                     | otherwise -> str "  " <+> w
