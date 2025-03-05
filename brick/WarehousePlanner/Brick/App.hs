@@ -61,6 +61,7 @@ data WHEvent = ENextMode
              | EPrevAdjustShelvesMode
              | EToggleDebugShowDiff
              | EToggleCollapseDepth
+             | EToggleCollapseHeight
              | ETogglePropertyGradient
              | ETogglePropertyGlobal
              | EToggleShowSelected
@@ -302,6 +303,7 @@ initState adjust asReload title = do
                   , asShelvesSummary = error "Shelves Summary not initialized"
                   , asCollapseDepth = True
                   , asReloading = False
+                  , asCollapseHeight = False
                   , ..
                   }
   asShelvesSummary <- makeAppShelvesSummary state
@@ -325,7 +327,8 @@ whApp extraAttrs =
                                               : B.hLimit 30 (stylesSideBar s)
                                               : B.vBorder
                                               : [ B.vBox $ (map B.hBox)
-                                                         [ renderRun project
+                                                         [ renderRun asCollapseHeight 
+                                                                     project
                                                                      (\bhistory ->
                                                                          let box = zCurrentEx bhistory
                                                                              rendered =  withHLBoxAttr s renderBoxOrientation box
@@ -338,7 +341,8 @@ whApp extraAttrs =
                                                                      )
                                                                      (currentRun s)
                                                          , [B.hBorder]
-                                                         , renderRun project
+                                                         , renderRun asCollapseHeight
+                                                                     project
                                                                      (withHLBoxAttr s renderBoxContent .  zCurrentEx)
                                                                      (let run = currentRun s
                                                                       in run { sDetails = drop asCurrentBay $ sDetails run }
@@ -508,6 +512,7 @@ keyBindingGroups =  groups
                                            ,("Misc",           [ mk 'D' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
                                                                , mk 'd'(EToggleViewDetails) "view/hide box/history details"
                                                                , mk 'w' (EToggleCollapseDepth) "Display shelf depth as "
+                                                               , mk 'g' (EToggleCollapseHeight) "Use gravity"
                                                                , mk 'p' (ETogglePropertyGradient) "color properties: random/gradient/gradient (full)"
                                                                , mk 'P' (ETogglePropertyGlobal) "display properties for current run/all"
                                                                , mk 's' (EToggleShowSelected)     "highlight selected property"
@@ -661,6 +666,7 @@ handleWH ev =
                                      execute (return ())
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
          EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
+         EToggleCollapseHeight -> modify \s -> s { asCollapseHeight = not (asCollapseHeight s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
          ETogglePropertyGlobal -> do 
                                      modify \s -> s { asPropertyGlobal = not (asPropertyGlobal s) }
@@ -1249,15 +1255,15 @@ debugShelf state = let
 
   
  -- * Render 
-renderRun :: (Dimension -> Dimension) -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
-renderRun project renderBox run =  concat 
+renderRun :: Bool -> (Dimension -> Dimension) -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
+renderRun collapseHeight project renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )
                              $ B.vBox (map (withHLStatus (seBoxHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable
-            . baySummaryToTable project renderBoxes
+            . baySummaryToTable collapseHeight project renderBoxes
             $ bay
             ]
           | bay <- F.toList . sDetails $ run

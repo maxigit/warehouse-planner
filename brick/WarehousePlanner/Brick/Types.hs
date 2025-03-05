@@ -140,6 +140,7 @@ data AppState = AppState
      , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
      , asShelfSelection :: Maybe (Selection ShelfSelector Text)
      , asCollapseDepth :: Bool
+     , asCollapseHeight :: Bool -- ^ collapse boxes downward (as in with gravity)
      , asReload :: (IO (Either Text (Warehouse RealWorld)) -- to reload
                    , IO () -- how to send a event to start the reload
                    )
