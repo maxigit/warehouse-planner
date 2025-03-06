@@ -1965,39 +1965,39 @@ W05.03/1,|5:1:2,M31L01FC-GOR##@updated#_barcode=DL23NV00214M#_batch=K#_live-stat
 W05.03/2,|6:1:1,M31L01FC-RLS##@updated#_barcode=DL23NV00215T#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23NV00215T#batch=K#bg=wheat#circle=RLS#done#live-status=BoxUsed#old-stock#title=M31L01FC;|  RLS K,62.00,40.00,37,=|
 pending,|33:1:1+20+0+0,M02L04FO-KLB&YAC&DME##barcode=ST24SE00012U#batch=C&L#bg=wheat#circle=KLB#circle2=YAC#circle3=DME#compacted#content1=KLB#content2=YAC#content3=DME#live-status=BoxToActivate#location=E08.03'0#mixed#new2#rar#reorder#title=M02L04FO;|  B&C&E C&L,63.00,36.00,40,=|
 pending,|33:2:1+20+0+0,M02L04FO-KLB&YAC&LTW##@updated#_barcode=DL24JL01677F#_batch=L#_live-status=BoxUsed#_old-stock#barcode=DL24JL01677F#batch=L#bg=cyan#circle=KLB#circle2=YAC#circle3=LTW#compacted#content1=KLB#content2=YAC#content3=LTW#live-status=BoxUsed#mixed#new2#old-stock#rar#reorder#title==  B&C&W L;M02L04FO,63.00,36.00,40,=|
-error,|1:1:1,M31L05FA-RZA##@updated#_barcode=DL23SE01354Y#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01354Y#batch=J#bg=wheat#circle=RZA#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  RZA J,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-SEC##@updated#_barcode=DL23AP02354E#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02354E#batch=H#bg=wheat#circle=SEC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  SEC H,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-TLB##@updated#_barcode=DL23AP02352Q#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02352Q#batch=H#bg=wheat#circle=TLB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TLB H,64.00,37.00,30,|
+W02.01/2,|4:1:2,M31L05FA-RZA##@updated#_barcode=DL23SE01354Y#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01354Y#batch=J#bg=wheat#circle=RZA#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  RZA J,64.00,37.00,30,|
+W02.01/1,|5:1:1,M31L05FA-SEC##@updated#_barcode=DL23AP02354E#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02354E#batch=H#bg=wheat#circle=SEC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  SEC H,64.00,37.00,30,|
+W02.01/1,|5:1:2,M31L05FA-TLB##@updated#_barcode=DL23AP02352Q#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02352Q#batch=H#bg=wheat#circle=TLB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TLB H,64.00,37.00,30,|
 W02.04/3,|2:1:1+1+0+54,M31L05FA-MGB&MIL##@updated#_barcode=DL24JL01363R#_batch=L#_live-status=BoxUsed#_old-stock#barcode=DL24JL01363R#batch=L#bg=cyan#circle=MGB#circle2=MIL#content1=MGB#content2=MIL#leavenew#live-status=BoxUsed#mixed#old-stock#title==  B&L L;M31L05FA,63.00,36.00,40,=|
-error,|1:1:1,M31L05FA-YAN##@updated#_barcode=DL24JL01365F#_batch=L#_live-status=BoxUsed#_old-stock#barcode=DL24JL01365F#batch=L#bg=cyan#circle=YAN#done#leavenew#live-status=BoxUsed#old-stock#title==  YAN L;M31L05FA,63.00,36.00,40,|
+W02.03/2,|4:1:2+3+0+1,M31L05FA-YAN##@updated#_barcode=DL24JL01365F#_batch=L#_live-status=BoxUsed#_old-stock#barcode=DL24JL01365F#batch=L#bg=cyan#circle=YAN#done#leavenew#live-status=BoxUsed#old-stock#title==  YAN L;M31L05FA,63.00,36.00,40,|
 W02.04/3,|5:1:1+1+0+54,M31L05FA-YNM&KEP##@updated#_barcode=DL24JL01364Y#_batch=L#_live-status=BoxUsed#_old-stock#barcode=DL24JL01364Y#batch=L#bg=cyan#circle=YNM#circle2=KEP#content1=YNM#content2=KEP#leavenew#live-status=BoxUsed#mixed#old-stock#title==  M&P L;M31L05FA,63.00,36.00,40,=|
-W02.02/1,|6:1:1,M31L05FA-KUD##@updated#_barcode=DL23AP02356S#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02356S#batch=H#bg=wheat#circle=KUD#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KUD H,64.00,37.00,30,|
+W02.02/2,|3:1:1,M31L05FA-KUD##@updated#_barcode=DL23AP02356S#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02356S#batch=H#bg=wheat#circle=KUD#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KUD H,64.00,37.00,30,|
 W02.02/3,|6:1:2+5+0+38,M31L05FA-HLB*##barcode=DL23DE00072G#batch=K#bg=wheat#circle=HLB*#leavenew#live-status=BoxUsed#location=W02.01'3#title=M31L05FA;|  BL* K,63.00,36.00,40,=|
 W02.04/3,|2:1:2+1+0+54,M31L05FA-PRG*##barcode=DL23DE00078W#batch=K#bg=wheat#circle=PRG*#leavenew#live-status=BoxUsed#location=W02.01'3#title=M31L05FA;|  GR* K,63.00,36.00,40,=|
-W02.02/1,|4:1:1,M31L05FA-DME##@updated#_barcode=DL23DE00075B#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00075B#batch=K#bg=wheat#circle=DME#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DME K,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-YAC##@updated#_barcode=DL23DE00074U#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00074U#batch=K#bg=wheat#circle=YAC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAC K,64.00,37.00,30,|
+W02.02/2,|2:1:1,M31L05FA-DME##@updated#_barcode=DL23DE00075B#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00075B#batch=K#bg=wheat#circle=DME#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DME K,64.00,37.00,30,|
+W02.01/2,|5:1:2,M31L05FA-YAC##@updated#_barcode=DL23DE00074U#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00074U#batch=K#bg=wheat#circle=YAC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAC K,64.00,37.00,30,|
 W02.04/3,|3:1:2+1+0+54,M31L05FA-RSM*##barcode=DL23DE00080K#batch=K#bg=wheat#circle=RSM*#leavenew#live-status=BoxUsed#location=W02.01'3#title=M31L05FA;|  MS* K,63.00,36.00,40,=|
-W02.01/1,|6:1:2,M31L05FA-MLB##@updated#_barcode=DL23DE00073N#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00073N#batch=K#bg=wheat#circle=MLB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  MLB K,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-NHC##@updated#_barcode=DL23AP02355L#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02355L#batch=H#bg=wheat#circle=NHC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NHC H,64.00,37.00,30,|
+W02.01/2,|3:1:2,M31L05FA-MLB##@updated#_barcode=DL23DE00073N#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00073N#batch=K#bg=wheat#circle=MLB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  MLB K,64.00,37.00,30,|
+W02.01/1,|4:1:2,M31L05FA-NHC##@updated#_barcode=DL23AP02355L#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02355L#batch=H#bg=wheat#circle=NHC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NHC H,64.00,37.00,30,|
 W02.03/1,|1:1:2,M31L05FA-DNM##@updated#_barcode=DL23AP02359N#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02359N#batch=H#bg=wheat#circle=DNM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DNM H,64.00,37.00,30,|
 W02.04/3,|4:1:2+34+0+53,M31L05FA-VAM##@updated#_barcode=ST21DE00086C#_live-status=BoxUsed#_old-stock#barcode=ST21DE00086C#bg=wheat#circle=VAM#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  VAM ,64.00,37.00,30,=|
-error,|1:1:1,M31L05FA-YVI##@updated#_barcode=DL23AP02358G#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02358G#batch=H#bg=wheat#circle=YVI#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YVI H,64.00,37.00,30,|
-W02.02/1,|5:1:2,M31L05FA-KPG##@updated#_barcode=DL23SE01356M#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01356M#batch=J#bg=wheat#circle=KPG#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KPG J,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-NEF##@updated#_barcode=DL23SE01355F#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01355F#batch=J#bg=wheat#circle=NEF#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NEF J,64.00,37.00,30,|
-W02.02/1,|3:1:1,M31L05FA-DAJ##@updated#_barcode=DL23SE01357T#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01357T#batch=J#bg=wheat#circle=DAJ#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DAJ J,64.00,37.00,30,|
-W02.02/1,|6:1:2,M31L05FA-MIL##@updated#_barcode=DL23SE01358A#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01358A#batch=J#bg=wheat#circle=MIL#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  MIL J,64.00,37.00,30,|
+W02.02/2,|6:1:2,M31L05FA-YVI##@updated#_barcode=DL23AP02358G#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02358G#batch=H#bg=wheat#circle=YVI#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YVI H,64.00,37.00,30,|
+W02.02/1,|3:1:2,M31L05FA-KPG##@updated#_barcode=DL23SE01356M#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01356M#batch=J#bg=wheat#circle=KPG#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KPG J,64.00,37.00,30,|
+W02.02/1,|4:1:2,M31L05FA-NEF##@updated#_barcode=DL23SE01355F#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01355F#batch=J#bg=wheat#circle=NEF#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NEF J,64.00,37.00,30,|
+W02.02/1,|2:1:1,M31L05FA-DAJ##@updated#_barcode=DL23SE01357T#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01357T#batch=J#bg=wheat#circle=DAJ#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DAJ J,64.00,37.00,30,|
+W02.02/2,|3:1:2,M31L05FA-MIL##@updated#_barcode=DL23SE01358A#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01358A#batch=J#bg=wheat#circle=MIL#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  MIL J,64.00,37.00,30,|
 W02.03/1,|1:1:1,M31L05FA-DGP##@updated#_barcode=DL23AP02364W#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02364W#batch=H#bg=wheat#circle=DGP#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DGP H,64.00,37.00,30,|
 W02.04/1,|7:1:1,M31L05FA-TIV##@updated#_barcode=DL23DE00084M#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00084M#batch=K#bg=wheat#circle=TIV#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TIV K,64.00,37.00,30,|
 W02.04/3,|4:1:2+1+0+54,M31L05FA-YAN/YVI*##barcode=DL23DE00081R#batch=K#bg=wheat#circle=YAN'YVI*#leavenew#live-status=BoxUsed#location=W02.02'3#title=M31L05FA;|  N'I* K,63.00,36.00,40,=|
 W02.02/3,|6:1:1+5+0+38,M31L05FA-GRO*##barcode=DL23DE00082Y#batch=K#bg=wheat#circle=GRO*#leavenew#live-status=BoxUsed#location=W02.02'3#title=M31L05FA;|  OR* K,63.00,36.00,40,=|
-W02.03/1,|3:1:2,M31L05FA-GOR##@updated#_barcode=DL23DE00083F#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00083F#batch=K#bg=wheat#circle=GOR#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  GOR K,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-ZQM##@updated#_barcode=ST21DE00087J#_live-status=BoxUsed#_old-stock#barcode=ST21DE00087J#bg=wheat#circle=ZQM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZQM ,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-TWM##@updated#_barcode=DL23SE01359H#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01359H#batch=J#bg=wheat#circle=TWM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TWM J,64.00,37.00,30,|
+W02.03/1,|2:1:2,M31L05FA-GOR##@updated#_barcode=DL23DE00083F#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00083F#batch=K#bg=wheat#circle=GOR#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  GOR K,64.00,37.00,30,|
+W02.03/2,|6:1:1,M31L05FA-ZQM##@updated#_barcode=ST21DE00087J#_live-status=BoxUsed#_old-stock#barcode=ST21DE00087J#bg=wheat#circle=ZQM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZQM ,64.00,37.00,30,|
+W02.03/1,|4:1:2,M31L05FA-TWM##@updated#_barcode=DL23SE01359H#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01359H#batch=J#bg=wheat#circle=TWM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TWM J,64.00,37.00,30,|
 W02.04/3,|5:1:2+34+0+53,M31L05FA-ZQM##@updated#_barcode=DL23AP02360U#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02360U#batch=H#bg=wheat#circle=ZQM#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZQM H,64.00,37.00,30,|
-W02.03/1,|2:1:2,M31L05FA-DRO##@updated#_barcode=ST21DE00088Q#_live-status=BoxUsed#_old-stock#barcode=ST21DE00088Q#bg=wheat#circle=DRO#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DRO ,64.00,37.00,30,|
-W02.03/1,|5:1:2,M31L05FA-LUP##@updated#_barcode=DL23SE01360O#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01360O#batch=J#bg=wheat#circle=LUP#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  LUP J,64.00,37.00,30,|
+W02.03/2,|1:1:2,M31L05FA-DRO##@updated#_barcode=ST21DE00088Q#_live-status=BoxUsed#_old-stock#barcode=ST21DE00088Q#bg=wheat#circle=DRO#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  DRO ,64.00,37.00,30,|
+W02.03/1,|3:1:2,M31L05FA-LUP##@updated#_barcode=DL23SE01360O#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01360O#batch=J#bg=wheat#circle=LUP#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  LUP J,64.00,37.00,30,|
 W02.04/3,|4:1:1+1+0+54,M31L05FA-YAN&LTW##barcode=DL23AP02368Y#batch=H#bg=wheat#circle=YAN#circle2=LTW#content1=YAN#content2=LTW#leavenew#live-status=BoxUsed#location=W02.03'3#mixed#title=M31L05FA;|  N&W H,63.00,36.00,40,=|
-error,|1:1:1,M31L05FA-YAN##@updated#_barcode=DL23AP02361B#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02361B#batch=H#bg=wheat#circle=YAN#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAN H,64.00,37.00,30,|
+W02.03/1,|5:1:1,M31L05FA-YAN##@updated#_barcode=DL23AP02361B#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02361B#batch=H#bg=wheat#circle=YAN#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAN H,64.00,37.00,30,|
 W02.04/1,|7:1:2,M31L05FA-WEY##@updated#_barcode=DL23SE01362C#_batch=J#_live-status=BoxUsed#_old-stock#barcode=DL23SE01362C#batch=J#bg=wheat#circle=WEY#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  WEY J,64.00,37.00,30,|
 W02.04/3,|3:1:1+1+0+54,M31L05FA-RAS&TWT##barcode=DL23AP02366K#batch=H#bg=wheat#circle=RAS#circle2=TWT#content1=RAS#content2=TWT#leavenew#live-status=BoxUsed#location=W02.04'1#mixed#title=M31L05FA;|  S&T H,63.00,36.00,40,=|
 W02.04/1,|1:1:1,M31L05FA-AIW##@updated#_barcode=DL23AP02367R#_batch=H#_live-status=BoxUsed#_old-stock#barcode=DL23AP02367R#batch=H#bg=wheat#circle=AIW#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  AIW H,64.00,37.00,30,|
@@ -2846,14 +2846,14 @@ pending,=22:1:1+2+0+0,M02L07FF-DRO&RIS##barcode=ST24SE00003J#bg=wheat#circle=DRO
 pending,=22:2:1+2+0+0,M02L07FF-KPF&ZQM&YAN##barcode=ST24SE00002C#batch=?&C#bg=wheat#circle=KPF#circle2=ZQM#circle3=YAN#compacted#content1=KPF#content2=ZQM#content3=YAN#live-status=BoxToActivate#location=E00.01'1#mixed#new2#rar#reorder#title=M02L07FF;|  F&M&N ?&C,64.00,37.00,30,
 pending,=22:3:1+2+0+0,M02L07FF-OAC&LOC&KPF##barcode=ST24SE00001V#bg=wheat#circle=OAC#circle2=LOC#circle3=KPF#compacted#content1=OAC#content2=LOC#content3=KPF#live-status=BoxToActivate#location=E00.01'1#mixed#new2#rar#reorder#title=M02L07FF;|  C&C&F ,64.00,37.00,30,
 pending,=26:1:1+12+0+0,M31L07FA-DLA&ZRB&AAM&RTO##barcode=ST24SE00004Q#bg=wheat#circle=DLA#circle2=ZRB#circle3=AAM#circle4=RTO#compacted#content1=DLA#content2=ZRB#content3=AAM#content4=RTO#live-status=BoxToActivate#location=E01.06'1#mixed#new2#rar#reorder#title=M31L07FA;|  A&B&M&O ,64.00,37.00,30,
-error,|1:1:1,M31L05FA-ZBA##@updated#_barcode=ST21NV00125P#_live-status=BoxUsed#_old-stock#barcode=ST21NV00125P#bg=wheat#circle=ZBA#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZBA ,64.00,37.00,30,|
-W02.01/1,|4:1:2,M31L05FA-KLB/THW##@updated#_barcode=DL22JL00185D#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00185D#batch=C#bg=wheat#circle=KLB'THW#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  B'W C,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-YUB##@updated#_barcode=DL22JL00187R#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00187R#batch=C#bg=wheat#circle=YUB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YUB C,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-VOD##@updated#_barcode=DL22JL00188Y#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00188Y#batch=C#bg=wheat#circle=VOD#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  VOD C,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-YEM##@updated#_barcode=DL22AU01501F#_batch=E#_live-status=BoxUsed#_old-stock#barcode=DL22AU01501F#batch=E#bg=wheat#circle=YEM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YEM E,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-NAL##@updated#_barcode=DL22JL00192A#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00192A#batch=C#bg=wheat#circle=NAL#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NAL C,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-YAC##@updated#_barcode=DL22AU01495P#_batch=E#_live-status=BoxUsed#_old-stock#barcode=DL22AU01495P#batch=E#bg=wheat#circle=YAC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAC E,64.00,37.00,30,|
-W02.03/1,|6:1:2,M31L05FA-TIM##@updated#_barcode=ST21NV00139J#_live-status=BoxUsed#_old-stock#barcode=ST21NV00139J#bg=wheat#circle=TIM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TIM ,64.00,37.00,30,|
+W02.01/2,|6:1:1,M31L05FA-ZBA##@updated#_barcode=ST21NV00125P#_live-status=BoxUsed#_old-stock#barcode=ST21NV00125P#bg=wheat#circle=ZBA#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZBA ,64.00,37.00,30,|
+W02.01/2,|2:1:2,M31L05FA-KLB/THW##@updated#_barcode=DL22JL00185D#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00185D#batch=C#bg=wheat#circle=KLB'THW#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  B'W C,64.00,37.00,30,|
+W02.01/1,|6:1:2,M31L05FA-YUB##@updated#_barcode=DL22JL00187R#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00187R#batch=C#bg=wheat#circle=YUB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YUB C,64.00,37.00,30,|
+W02.01/2,|5:1:1,M31L05FA-VOD##@updated#_barcode=DL22JL00188Y#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00188Y#batch=C#bg=wheat#circle=VOD#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  VOD C,64.00,37.00,30,|
+W02.02/1,|6:1:2,M31L05FA-YEM##@updated#_barcode=DL22AU01501F#_batch=E#_live-status=BoxUsed#_old-stock#barcode=DL22AU01501F#batch=E#bg=wheat#circle=YEM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YEM E,64.00,37.00,30,|
+W02.02/1,|4:1:1,M31L05FA-NAL##@updated#_barcode=DL22JL00192A#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL00192A#batch=C#bg=wheat#circle=NAL#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  NAL C,64.00,37.00,30,|
+W02.01/1,|6:1:1,M31L05FA-YAC##@updated#_barcode=DL22AU01495P#_batch=E#_live-status=BoxUsed#_old-stock#barcode=DL22AU01495P#batch=E#bg=wheat#circle=YAC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  YAC E,64.00,37.00,30,|
+W02.03/2,|3:1:2,M31L05FA-TIM##@updated#_barcode=ST21NV00139J#_live-status=BoxUsed#_old-stock#barcode=ST21NV00139J#bg=wheat#circle=TIM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TIM ,64.00,37.00,30,|
 W02.04/1,|3:1:2,M31L05FA-PAT##@updated#_barcode=DL22AU01505H#_batch=E#_live-status=BoxUsed#_old-stock#barcode=DL22AU01505H#batch=E#bg=wheat#circle=PAT#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  PAT E,64.00,37.00,30,|
 W02.04/2,|5:1:1,M61L08FC-YAC##@updated#_barcode=DL22JL06873T#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL06873T#batch=C#bg=wheat#circle=YAC#live-status=BoxUsed#old-stock#title=M61L08FC;|  YAC C,64.00,37.00,30,=|
 W02.04/2,|2:1:1,M61L08FC-HLB##@updated#_barcode=DL22JL06871F#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL06871F#batch=C#bg=wheat#circle=HLB#live-status=BoxUsed#old-stock#title=M61L08FC;|  HLB C,64.00,37.00,30,=|
@@ -3014,11 +3014,11 @@ E27.02/1,=1:1:2,M51W04PF-KLB/XIM*##@updated#_barcode=ST19NV00111L#_live-status=B
 E27.02/2,=1:1:1,M51W04PF-YVI/XIM##@updated#_barcode=ST19NV00112S#_live-status=BoxUsed#_old-stock#barcode=ST19NV00112S#bg=wheat#circle=YVI'XIM#live-status=BoxUsed#old-stock#title==  I'M ;M51W04PF,42.00,40.00,41,=|
 E27.02/1,=2:1:1,M51W04PF-TIV/XIM##@updated#_barcode=ST19JL00461V#_live-status=BoxUsed#_old-stock#barcode=ST19JL00461V#bg=wheat#circle=TIV'XIM#live-status=BoxUsed#old-stock#title==  V'M ;M51W04PF,42.00,40.00,41,=|
 W02.01/1,|1:1:2,M31L05FA-FOC##@updated#_barcode=ST21NV00168E#_live-status=BoxUsed#_old-stock#barcode=ST21NV00168E#bg=wheat#circle=FOC#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  FOC ,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-ZRB##@updated#_barcode=ST21NV00165J#_live-status=BoxUsed#_old-stock#barcode=ST21NV00165J#bg=wheat#circle=ZRB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZRB ,64.00,37.00,30,|
-W02.02/1,|4:1:2,M31L05FA-KIM##@updated#_barcode=ST21NV00176I#_live-status=BoxUsed#_old-stock#barcode=ST21NV00176I#bg=wheat#circle=KIM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KIM ,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-OSE##@updated#_barcode=ST21NV00170S#_live-status=BoxUsed#_old-stock#barcode=ST21NV00170S#bg=wheat#circle=OSE#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  OSE ,64.00,37.00,30,|
+W02.01/2,|6:1:2,M31L05FA-ZRB##@updated#_barcode=ST21NV00165J#_live-status=BoxUsed#_old-stock#barcode=ST21NV00165J#bg=wheat#circle=ZRB#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZRB ,64.00,37.00,30,|
+W02.02/2,|2:1:2,M31L05FA-KIM##@updated#_barcode=ST21NV00176I#_live-status=BoxUsed#_old-stock#barcode=ST21NV00176I#bg=wheat#circle=KIM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KIM ,64.00,37.00,30,|
+W02.02/1,|5:1:2,M31L05FA-OSE##@updated#_barcode=ST21NV00170S#_live-status=BoxUsed#_old-stock#barcode=ST21NV00170S#bg=wheat#circle=OSE#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  OSE ,64.00,37.00,30,|
 W02.02/1,|1:1:2,M31L05FA-AAM##@updated#_barcode=ST21NV00174U#_live-status=BoxUsed#_old-stock#barcode=ST21NV00174U#bg=wheat#circle=AAM#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  AAM ,64.00,37.00,30,|
-error,|1:1:1,M31L05FA-ZUQ##@updated#_barcode=ST21NV00146G#_live-status=BoxUsed#_old-stock#barcode=ST21NV00146G#bg=wheat#circle=ZUQ#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZUQ ,64.00,37.00,30,|
+W02.03/2,|6:1:2,M31L05FA-ZUQ##@updated#_barcode=ST21NV00146G#_live-status=BoxUsed#_old-stock#barcode=ST21NV00146G#bg=wheat#circle=ZUQ#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  ZUQ ,64.00,37.00,30,|
 ignore,|7:1:4+5+0+0,M31L05FA-TLS##@updated#_barcode=ST21NV00153D#_live-status=BoxUsed#_old-stock#barcode=ST21NV00153D#bg=wheat#circle=TLS#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  TLS ,64.00,37.00,30,=|
 W08.01/1,=2:1:2,M31L02DA-YUM##@updated#_barcode=ST19JU00074I#_live-status=BoxUsed#_old-stock#barcode=ST19JU00074I#bg=wheat#circle=YUM#live-status=BoxUsed#old-stock#title==  YUM ;M31L02DA,52.00,30.00,44,=|
 W08.01/1,=5:1:1,M31L02DA-PAT##@updated#_barcode=ST19JU00103D#_live-status=BoxUsed#_old-stock#barcode=ST19JU00103D#bg=wheat#circle=PAT#live-status=BoxUsed#old-stock#title==  PAT ;M31L02DA,52.00,30.00,44,=|
@@ -3674,7 +3674,7 @@ E23.01/3,=3:1:1,M31L01XA-VOD##@updated#_barcode=DL22JL06729Z#_batch=C#_live-stat
 pending,|29:2:4+20+0+0,M31L01XA-YNM##@updated#_barcode=DL22JL06733B#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL06733B#batch=C#bg=wheat#circle=YNM#live-status=BoxUsed#old-stock#title=M31L01XA;|  YNM C,56.00,26.50,26,|
 E24.01/3,=2:1:2,M31L01XA-TIM##@updated#_barcode=DL22JL06732U#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL06732U#batch=C#bg=wheat#circle=TIM#done#live-status=BoxUsed#old-stock#title=M31L01XA;|  TIM C,56.00,26.50,26,|
 E26.01/3,=1:1:2,M31L01XA-PAT##@updated#_barcode=DL22JL06739R#_batch=C#_live-status=BoxUsed#_old-stock#barcode=DL22JL06739R#batch=C#bg=wheat#circle=PAT#done#live-status=BoxUsed#old-stock#title=M31L01XA;|  PAT C,56.00,26.50,26,|
-W02.02/1,|7:1:1+16+0+0,M31L05FA-KPF##@updated#_barcode=DL23DE00085T#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00085T#batch=K#bg=wheat#circle=KPF#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KPF K,57.00,22.00,40,|
+W02.02/1,|4:1:1+8+0+0,M31L05FA-KPF##@updated#_barcode=DL23DE00085T#_batch=K#_live-status=BoxUsed#_old-stock#barcode=DL23DE00085T#batch=K#bg=wheat#circle=KPF#done#leavenew#live-status=BoxUsed#old-stock#title=M31L05FA;|  KPF K,57.00,22.00,40,|
 W04.08/1,=3:1:3+48+0+0,M32L06DD-RSM##@updated#_barcode=DL23MR01611N#_batch=G#_live-status=BoxUsed#_old-stock#barcode=DL23MR01611N#batch=G#bg=wheat#circle=RSM#live-status=BoxUsed#old-stock#title==  RSM G;M32L06DD,50.00,31.00,32,
 W04.08/1,=3:1:1+48+0+0,M32L06DD-KLB##@updated#_barcode=DL23MR01602C#_batch=G#_live-status=BoxUsed#_old-stock#barcode=DL23MR01602C#bg=wheat#circle=KLB#live-status=BoxUsed#old-stock#title==  KLB ;M32L06DD,50.00,31.00,32,=|
 W04.08/1,|5:1:2+24+0+43,M32L06DD-DGR##barcode=DL23MR01619R#batch=G#bg=wheat#circle=DGR#live-status=BoxUsed#location=W04.08'1#new2#rar#title=M32L06DD;|  DGR G,50.00,31.00,32,
@@ -3907,24 +3907,40 @@ W02.04/1,|2:1:2,M31L05FA-LWT#dead#ghost#slotted,64.00,37.00,40,|
 W02.04/1,|6:1:2,M31L05FA-THW#dead#ghost#slotted,64.00,37.00,40,|
 W02.04/1,|2:1:1,M31L05FA-LTW#dead#ghost#slotted,64.00,37.00,40,|
 W02.01/1,|1:1:1,M31L05FA-AQA#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|6:1:1,M31L05FA-MGB#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|2:1:2,M31L05FA-HLB#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|4:1:1,M31L05FA-KLB#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|5:1:1,M31L05FA-LLB#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|3:1:1,M31L05FA-KHC#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|3:1:2,M31L05FA-KHC#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|5:1:2,M31L05FA-LOC#dead#ghost#slotted,64.00,37.00,40,|
-W02.01/1,|2:1:1,M31L05FA-GED#dead#ghost#slotted,64.00,37.00,40,|
-W02.02/1,|2:1:1,M31L05FA-AUF#dead#ghost#slotted,64.00,37.00,40,|
-W02.02/1,|2:1:2,M31L05FA-AUF#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/2,|3:1:1,M31L05FA-MGB#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/2,|1:1:2,M31L05FA-HLB#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/2,|2:1:1,M31L05FA-KLB#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/1,|3:1:1,M31L05FA-LLB#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/2,|4:1:1,M31L05FA-OAC#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/1,|2:1:1,M31L05FA-KHC#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/1,|2:1:2,M31L05FA-KHC#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/1,|3:1:2,M31L05FA-LOC#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/2,|1:1:1,M31L05FA-GED#dead#ghost#slotted,64.00,37.00,40,|
+W02.01/1,|4:1:1,M31L05FA-NAD#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|5:1:1,M31L05FA-PRG#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/1,|6:1:1,M31L05FA-TRG#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/1,|5:1:1,M31L05FA-ONI#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|4:1:2,M31L05FA-OLF#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|1:1:1,M31L05FA-AUF#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|1:1:2,M31L05FA-AUF#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|6:1:1,M31L05FA-YVI#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|5:1:2,M31L05FA-TAL#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/2,|4:1:1,M31L05FA-NEL#dead#ghost#slotted,64.00,37.00,40,|
 W02.02/1,|1:1:1,M31L05FA-AAM#dead#ghost#slotted,64.00,37.00,40,|
-W02.02/1,|3:1:2,M31L05FA-DGM#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|3:1:1,M31L05FA-DUN#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|4:1:1,M31L05FA-GRO#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|4:1:2,M31L05FA-KEP#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|5:1:1,M31L05FA-LEP#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|6:1:1,M31L05FA-TEP#dead#ghost#slotted,64.00,37.00,40,|
-W02.03/1,|2:1:1,M31L05FA-DOR#dead#ghost#slotted,64.00,37.00,40,|
+W02.02/1,|2:1:2,M31L05FA-DGM#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|5:1:1,M31L05FA-YNM#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|4:1:1,M31L05FA-TPM#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|6:1:2,M31L05FA-YUM#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|2:1:1,M31L05FA-DUN#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|2:1:1,M31L05FA-GRO#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|4:1:1,M31L05FA-UBP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|2:1:2,M31L05FA-KEP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|3:1:1,M31L05FA-LEP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|3:1:1,M31L05FA-TEP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|5:1:2,M31L05FA-YOP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|6:1:1,M31L05FA-YOP#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/1,|5:1:2,M31L05FA-YAR#dead#ghost#slotted,64.00,37.00,40,|
+W02.03/2,|1:1:1,M31L05FA-DOR#dead#ghost#slotted,64.00,37.00,40,|
 E22.01/3,=2:1:1,M31L01XA-OAC#dead#ghost,56.00,26.50,34,|
 E23.01/1,=2:1:2,M31L01XA-LOC*#dead#ghost,56.00,26.50,34,|
 E23.01/3,=2:1:1,M31L01XA-NOC#dead#ghost,56.00,26.50,34,|
