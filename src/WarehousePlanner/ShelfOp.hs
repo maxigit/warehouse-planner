@@ -316,7 +316,7 @@ dimToFormula sDim refToDim (ls, ws, hs) = do
 
 
 bottomToFormula :: Text -> Text -> WH Double s
-bottomToFormula name bs = evalExprFromShelf name  (parseExpr sTopOffset bs)
+bottomToFormula name bs = evalExprFromShelf name  (parseExpr sBottomOffset bs)
 -- | Create a new shelf using formula
 newShelfWithFormula :: (WH Dimension s) -> (WH Dimension s) -> (WH Double s) -> BoxOrientator -> FillingStrategy -> Text -> Maybe Text ->  WH (Shelf s) s
 newShelfWithFormula dimW dimW' bottomW boxo strategy name tags = do
