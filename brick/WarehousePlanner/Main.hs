@@ -170,7 +170,7 @@ commandArg = flag' Stocktake (long "stocktake"
                                    )
           <|> flag' Report (long "report" 
                                    <> short 'r'
-                                   <> help "Generic report. Can be selected with PARAM"
+                                   <> help "Generic report. Can be selected with PARAM. Doesn't add 'report-' prefix."
                                    )
   
 optionsPI :: ParserInfo Options
