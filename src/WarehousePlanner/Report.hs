@@ -3,6 +3,7 @@ module WarehousePlanner.Report
 ( reportAll
 , report
 , summary
+, expandReportValue
 , generateMoves
 , generateMOPLocations
 , generateGenericReport
