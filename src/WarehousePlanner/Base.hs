@@ -1060,7 +1060,7 @@ expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i ->
 
 
 
-expandAttribute' text = \_ _ -> return text
+expandAttribute' text = \_ _ -> return $ cons '$' text
 
 expandIntrinsic :: Text -> Box s -> Shelf s -> Either  Int Text
 expandIntrinsic prop0 box shelf = let
@@ -1119,7 +1119,13 @@ expandIntrinsic' "id" box _shelf = let BoxId_ (Arg bId _)  = boxId box
 expandIntrinsic' "ox" box _shelf = Right $ pack $ printf "%.f" (dLength $ boxOffset box)
 expandIntrinsic' "oy" box _shelf = Right $ pack $ printf "%.f" (dWidth $ boxOffset box)
 expandIntrinsic' "oz" box _shelf = Right $ pack $ printf "%.f" (dHeight $ boxOffset box)
-expandIntrinsic' prop _box _shelf = error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
+expandIntrinsic' prop _box _shelf = 
+    case prop of
+       "hash" -> Right "#" 
+       "comma" -> Right ","
+       "divide" -> Right "/"
+       "dollar" -> Right "$"
+       _ -> error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
 
 
 expandStatistic :: (PropertyStats -> Map Text Int) -> Maybe (Char, Int) -> Box s -> OrderingKey -> Text -> WH Text s
