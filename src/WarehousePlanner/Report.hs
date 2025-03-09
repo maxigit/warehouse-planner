@@ -697,25 +697,25 @@ generateFuzzyStockTakes selectorm= do
 -- e.g. boxes counts, shelves list etc ...
 expandReportValue :: Day -> [Box s] -> [Text] -> Text -> Text
 expandReportValue today boxes shelves s = let
-  updates = [ replace "${count}" (tshow $ length boxes)
-            , replace "${locations}" (intercalate "|" $ groupNames shelves)
-            , replace "${shelves}" (intercalate "|" shelves)
-            , replace "${total-volume}" $ pack $ printf "%0.1f" ((sum $ map boxVolume boxes) * 1E-6)
-            , replace "${style-count}" (tshow $ length styles)
-            , replace "${styles}" $ (intercalate "|" styles)
-            , replace "${content-count}" (tshow $ length contents)
-            , replace "${contents}" $ (intercalate "|" contents)
-            , replace "${sku-count}" (tshow $ length contents)
-            , replace "${skus}" $ (intercalate "|" skus)
-            , replace "${shelf-count}" $ (tshow $ length shelves)
-            , replace "${dimensions-count}" (tshow  $ lengthBy' boxes _boxDim)
-            , replace "${orientations}" orientations
-            , replace "${orientation-count}" (tshow  $ length orientations)
-            , replace "${hash}" "#"
-            , replace "${comma}" ","
-            , replace "${dollar}" "$"
-            , replace "${divide}" "/"
-            , replace "${today}" (pack $ formatTime defaultTimeLocale "%Y-%m-%d" today)
+  updates = [ replace "$<count>" (tshow $ length boxes)
+            , replace "$<locations>" (intercalate "|" $ groupNames shelves)
+            , replace "$<shelves>" (intercalate "|" shelves)
+            , replace "$<total-volume>" $ pack $ printf "%0.1f" ((sum $ map boxVolume boxes) * 1E-6)
+            , replace "$<style-count>" (tshow $ length styles)
+            , replace "$<styles>" $ (intercalate "|" styles)
+            , replace "$<content-count>" (tshow $ length contents)
+            , replace "$<contents>" $ (intercalate "|" contents)
+            , replace "$<sku-count>" (tshow $ length contents)
+            , replace "$<skus>" $ (intercalate "|" skus)
+            , replace "$<shelf-count>" $ (tshow $ length shelves)
+            , replace "$<dimensions-count>" (tshow  $ lengthBy' boxes _boxDim)
+            , replace "$<orientations>" orientations
+            , replace "$<orientation-count>" (tshow  $ length orientations)
+            , replace "$<hash>" "#"
+            , replace "$<comma>" ","
+            , replace "$<dollar>" "$"
+            , replace "$<divide>" "/"
+            , replace "$<today>" (pack $ formatTime defaultTimeLocale "%Y-%m-%d" today)
             ]
   orientations = concatMap showOrientation . List.nub . sort $ map orientation boxes
   styles = List.nub . sort $ map boxStyle boxes
