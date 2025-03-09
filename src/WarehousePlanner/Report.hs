@@ -605,7 +605,11 @@ generateGenericReport today prefix = do
         (shelves, boxes) = unzip s'bs
     items <- generateGenericReport' today prefix s'bs
     return (withTitle items)
-  return $ concat rs
+  case concat rs of
+    [] -> return ["Empty report for '" <> prefix <> "' . Make sure the tags #" <> prefix
+                 <> "-key and #" <> prefix <> "-value are defined"
+                 ]
+    texts -> return texts
         
   
 generateGenericReport':: Day -> Text -> [(Shelf s, Box s)] -> WH [Text] s
