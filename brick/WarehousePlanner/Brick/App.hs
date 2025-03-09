@@ -171,11 +171,16 @@ makeAppShelvesSummary state = do
         makeExtra shelf =  do
                         currentEvent <- gets whCurrentEvent
                         boxes <- mapM findBox (_shelfBoxes shelf)
-                        let getProp = case asProperty state of
+                        let getProp' = case asProperty state of
                                            Just prop -> case expandAttributeMaybe prop of
                                                              Nothing -> \_ _ -> return ""
                                                              Just expand -> expand
                                            Nothing -> \b _ -> return $ boxStyle b
+                            -- expand report attribute ($<...>) if needed
+                            getProp box = do
+                                prop <- getProp' box
+
+                                return $ fmap (Report.expandReportValue (asToday state) [box] [shelfName shelf]) prop
                         propValues <- zipWithM (\b i -> do
                                                         p' <- getProp b i
                                                         let p = if p' == ""
@@ -277,8 +282,8 @@ adjustedShelfGroup state = do
 
   
   
-initState :: (AppState -> WH AppState RealWorld) -> (IO (Either Text (Warehouse RealWorld)), IO ()) -> String -> WH (AppState) RealWorld
-initState adjust asReload title = do
+initState :: Day -> (AppState -> WH AppState RealWorld) -> (IO (Either Text (Warehouse RealWorld)), IO ()) -> String -> WH (AppState) RealWorld
+initState asToday adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
       asDisplayDetails = False
@@ -397,8 +402,9 @@ whMain adjust title watchM reload= do
             Left e -> error (unpack e)
             Right w -> w
   chan <- B.newBChan 1000
+  today <- utctDay <$> getCurrentTime
   let startingReload = B.writeBChan chan (EReload ReloadStart)
-  state0 <- execWH wh $ initState adjust (reload, startingReload) title 
+  state0 <- execWH wh $ initState today adjust (reload, startingReload) title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let attrs state =

@@ -145,6 +145,7 @@ data AppState = AppState
                    , IO () -- how to send a event to start the reload
                    )
      , asReloading :: Bool
+     , asToday :: Day
      }
      
 data Selection sel a = 
