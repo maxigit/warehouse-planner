@@ -273,7 +273,7 @@ command = asum $ map lexeme [ toggleTag
        <|> lexeme1 "t:c" $> (TraceCount "T:C")
    traceBoxes = do
        trace <- do
-                   lexeme1 "trace:boxe"
+                   lexeme1 "trace:boxes"
                    desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
                    return $ TraceBoxes desc
                 <|> lexeme1 "t:b" *> return (TraceBoxes "T:B")
