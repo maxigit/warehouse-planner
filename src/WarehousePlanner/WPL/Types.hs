@@ -75,6 +75,7 @@ data Statement = Action Command
                | ForeachBox (CSelector BoxSelector) Statement
                | ShelfCases (NonEmpty ShelfCase)
                | ForeachDo Statement (NonEmpty Statement)
+               | PrettyPrint Text Statement
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)

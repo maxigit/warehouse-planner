@@ -15,6 +15,7 @@ import WarehousePlanner.Selector (printBoxSelector, parseBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ExContext
+import WarehousePlanner.WPL.PrettyPrint
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
 import Control.Monad(zipWithM_, zipWithM)
@@ -88,6 +89,10 @@ executeStatement ec command =
            -- collecting boxes as in a case 
            let cases = fmap (\st -> Case st $ Just action) statements
            executeStatement ec (Cases cases)
+        PrettyPrint title statement -> do
+           traceM (unpack title)
+           traceM (unpack $ pretty statement) 
+           executeStatement ec statement 
 
 
            

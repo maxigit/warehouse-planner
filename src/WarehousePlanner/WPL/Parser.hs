@@ -159,6 +159,19 @@ foreachDo = withStatement "foreach:do" do
     return \ors -> case ors of
                           Ors (action :| (x:xs)) -> ForeachDo action (x :| xs)
                           statement -> statement
+                          
+prettyPrint :: MParser Statement
+prettyPrint =
+    withStatement "trace:pretty"
+                  do
+                    lexeme "trace:pretty"
+                    title <- lexeme1 $ takeWhile1P (Just "title") (not . isSpace)
+                    return $ PrettyPrint title
+    <|> withStatement "trace:pretty"
+                  do
+                    lexeme "t:p"
+                    return $ PrettyPrint "PRETTY"
+
   
 
 orBlock name = do
@@ -207,6 +220,7 @@ atom = -- (PassThrought <$> (lexeme ";" *> statement ))
        foreachS
        <|> foreachB
        <|> foreachDo
+       <|> prettyPrint
        <|> (notFollowedBy "|" >> Action <$> command )
 
 command = asum $ map lexeme [ toggleTag

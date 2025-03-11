@@ -50,6 +50,7 @@ library
       WarehousePlanner.WPL.ExContext
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.PrettyPrint
       WarehousePlanner.WPL.Types
   other-modules:
       Paths_warehouse_planner
@@ -238,6 +239,7 @@ test-suite test
       WarehousePlanner.WPL.ExContext
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.PrettyPrint
       WarehousePlanner.WPL.Types
       Paths_warehouse_planner
   hs-source-dirs:
