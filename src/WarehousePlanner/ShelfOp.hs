@@ -55,16 +55,16 @@ splitShelf shelf@Shelf{..} ls ws hs = do
           accessor gDim + accessor maxDim - accessor minDim
         else
           accessor gDim
-      go split@Split{..} =
+      go split@Split{..} = do
+        let newMax = Dimension (adjustMax ll dLength gDim)
+                               (adjustMax lw dWidth gDim)
+                               (adjustMax lh dHeight gDim)
         if (il, iw, ih) == (0,0,0)
         then -- original shelf
-          updateShelf (\s -> s {minDim =  gDim, maxDim = gDim}) shelf
+          updateShelf (\s -> s {minDim =  gDim, maxDim = newMax}) shelf
         else do -- new one
           -- create it
           let newMin = gDim
-              newMax = Dimension (adjustMax ll dLength gDim)
-                                 (adjustMax lw dWidth gDim)
-                                 (adjustMax lh dHeight gDim)
               suffix = pack $ "/" <> map (\i -> chr $ i + 97) ( hasSuffix il ll ++ hasSuffix iw lw ++ hasSuffix ih lh)
               -- hasSuffix 1 True = [] -- if there is no split to need to create a suffix
               hasSuffix i _ = [i]
