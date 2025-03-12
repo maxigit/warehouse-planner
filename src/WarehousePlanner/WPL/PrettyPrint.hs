@@ -64,6 +64,17 @@ prettyCommand indent command =
                                  ]
        TraceOrientations desc -> [ "trace:orules", desc ]
        SetPartitionMode mode -> ["place", tshow mode]
+       SplitShelf selector bselectm l w h stmt -> [ "split"
+                                             , prettyCSelector indent prettyShelfSelector selector
+                                             ]
+                                             <> case bselectm of
+                                                     Nothing -> []
+                                                     Just b ->  [ "for"
+                                                                , prettyCSelector indent prettyBoxSelector b
+                                                                ]
+                                             <> map tshow [l, w, h]
+                                             <> [prettyStatement True (addIndent indent) stmt]
+
        _ -> [ tshow command ]
     where join = unwords . filter (not . null)
     
