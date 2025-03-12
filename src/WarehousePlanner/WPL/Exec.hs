@@ -136,7 +136,6 @@ executeCommand ec command = case command of
       -- traceShowM ("BOXOS", length boxes)
       shelves <-  do
          getShelves =<< narrowCSelector shelf ec
-      -- traceShowM ("SHELVES", shelf, length shelves)
 
       let rules = case orules of
                        _ -> (Nothing, orules) : ecOrientationStrategies ec
@@ -267,6 +266,7 @@ executeCommand ec command = case command of
        incs <- mapM findShelf `traverse` included ecShelves
        exs <- mapM findShelf `traverse` excluded ecShelves
        traceM $ "     included shelves " <> show(  map shelfName <$> incs)
+       forM incs $ mapM (\s -> traceM . ("       "++) . unpack $ unwords  [shelfName s, printDim $ minDim s, printDim $ maxDim s])
        traceM $ "     excluded shelves " <> show(  map shelfName <$> exs)
        return ec
     TraceOrientations desc -> do
