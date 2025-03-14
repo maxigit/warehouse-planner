@@ -22,6 +22,8 @@ prettyStatement raw indent stmt =
        Cases stmts -> withPrefix prettyCase "" stmts
        Then a b -> withPrefix prettyStatement "&" (a :| [b])
        -- Then a b -> prettyStatement raw indent a <> "\n" <>  prettyStatement False nextIndent b
+       PassThrought stmt -> prettyStatement raw indent stmt
+       ForeachDo stmt stmts -> i <> "foreach:do " <> prettyStatement True (indent <> "         " ) stmt <> "\n" <> indent <>  withPrefix prettyStatement ("foreach:- ") stmts
        st -> i <> pack (show st)
     where nextIndent = addIndent indent
           withPrefix :: forall s . (Bool -> Text -> s -> Text) -> Text -> NonEmpty s -> Text
