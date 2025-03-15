@@ -29,8 +29,8 @@ import Text.Printf (printf)
 -- with row correspending to 8 and 10 
 -- and column to 1 and 3
 -- One table is returned for each depth 
-shelfSummaryToTable :: Bool -> (Dimension -> Dimension) ->  ([ZHistory1 Box RealWorld] ->  Widget n) -> SumVec (ZHistory1 Box RealWorld) -> [ Table n ]
-shelfSummaryToTable collapseHeight project renderBoxes ssum@ShelvesSummary{..} = let
+shelfSummaryToTable :: Bool -> DepthMode -> ([ZHistory1 Box RealWorld] ->  Widget n) -> SumVec (ZHistory1 Box RealWorld) -> [ Table n ]
+shelfSummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..} = let
    boxes = sDetailsList ssum
    boxesByOffset = Map.fromListWith (<>) [ (project . boxOffset $ zCurrentEx box , [box])
                                          | box <- boxes
@@ -55,12 +55,36 @@ shelfSummaryToTable collapseHeight project renderBoxes ssum@ShelvesSummary{..} =
                          boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ zCurrentEx box , [box])
                                                                | box <- boxes
                                                                ]
+                         boxesByName = Map.fromListWith (<>) [ ([ fromMaybe (boxStyle box) $ getTagValuem box "ctitle"
+                                                               , boxPropValue box
+                                                               ]
+                                                               , [zbox])
+                                                             | zbox <- boxes
+                                                             , let box = zCurrentEx zbox
+                                                             ]
                          in case toList boxesByOffset of
                               [] -> withAttr (percToAttrName 0 0) $ str "·" -- emptyWidget
                               [ones]  -> renderBoxes ones
-                              multi -> str "[" <+> hBox (map renderBoxes multi) <+> str "]"
+                              multi -> case depthMode of
+                                            DMDistinctAndCount ->  let  renderWithNumber [one] = renderBoxes [one]
+                                                                        renderWithNumber ms = (case length ms of
+                                                                                                 1 -> emptyWidget
+                                                                                                 l -> str (show l) <+> str "x"
+                                                                                              ) <+> renderBoxes (take 1 ms)
+                                                                   in str "[" <+> hBox (map renderWithNumber $ toList boxesByName) <+> str "]"
+                                            DMDistinct ->  let  render = renderBoxes . take 1
+                                                                   in str "[" <+> hBox (map render $ toList boxesByName) <+> str "]"
+                                            DMFirstAndCount -> let prefix = case length boxes of
+                                                                               1 -> emptyWidget
+                                                                               l -> str (show (l-1)) <+> str "+"
+                                                               in str "[" <+> prefix <+> renderBoxes (take 1 boxes)
+                                            DMFirst -> renderBoxes (take 1 boxes)
+                                            _ -> str "[" <+> hBox (map renderBoxes multi) <+> str "]"
          collapse xzy = let xyz = map transpose xzy
                         in map (transpose . map (sortOn (isJust)))  xyz
+         project d = case depthMode  of
+                       DMWide -> d
+                       _ -> d {dWidth = 0 }
 
 
                                          
@@ -99,10 +123,10 @@ renderBoxOrientation box = withStyleAttr (boxPropValue box)
   
 -- | Displays on bay as a table
 -- one row per shelf and one column per different depth
-baySummaryToTable :: Bool -> (Dimension -> Dimension) -> ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
-baySummaryToTable collapseHeight project renderBoxes ssum@ShelvesSummary{..} = let
+baySummaryToTable :: Bool -> DepthMode -> ([ZHistory1 Box RealWorld] -> Widget n) -> Bay SumVec (SumVec (ZHistory1 Box RealWorld)) -> Table n
+baySummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..} = let
   shelves = sDetailsList ssum
-  tableCellsWithGap = map (\s -> map (\t -> (renderTable . rowBorders False $ surroundingBorder False $ t) <=> shelfBar s ) . shelfSummaryToTable collapseHeight project renderBoxes $ s
+  tableCellsWithGap = map (\s -> map (\t -> (renderTable . rowBorders False $ surroundingBorder False $ t) <=> shelfBar s ) . shelfSummaryToTable collapseHeight depthMode renderBoxes $ s
                     ) $ reverse shelves
   -- in case the depths is not the same for all shelves
   -- we need fill create empty cell if necessary
