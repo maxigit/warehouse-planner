@@ -3,6 +3,7 @@ module WarehousePlanner.Brick.Types
 , ViewMode(..)
 , SummaryView(..)
 , AdjustShelveMode(..) 
+, DepthMode(..)
 , BoxOrder(..)
 , BarDirection(..)
 , SumVec, sDetailsList
@@ -55,6 +56,14 @@ data AdjustShelveMode = AllShelves
                       | SelectedShelvesFirst
                       | SelectedBoxes
             deriving (Show, Eq, Ord, Enum, Bounded)
+data DepthMode = DMSlot -- ^ Displays all boxes in the same slot
+               | DMWide -- ^ Displays each depth as a shelf
+               | DMDistinct -- ^ Displays distinct values 
+               | DMDistinctAndCount -- ^ Displays distinct values withcount
+               | DMFirstAndCount
+               | DMFirst
+     deriving (Show, Eq,Ord, Bounded, Enum)
+             
 
 data BoxOrder = BOByName
               | BOByShelve
@@ -139,7 +148,7 @@ data AppState = AppState
      , asInputHistory :: Map InputMode [Text]
      , asBoxSelection :: Maybe (Selection BoxSelector (BoxId RealWorld))
      , asShelfSelection :: Maybe (Selection ShelfSelector Text)
-     , asCollapseDepth :: Bool
+     , asDepthMode :: DepthMode -- ^ How to boxes in the same slot with different depth
      , asCollapseHeight :: Bool -- ^ collapse boxes downward (as in with gravity)
      , asReload :: (IO (Either Text (Warehouse RealWorld)) -- to reload
                    , IO () -- how to send a event to start the reload

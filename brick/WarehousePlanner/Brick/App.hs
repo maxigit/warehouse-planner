@@ -306,7 +306,7 @@ initState asToday adjust asReload title = do
                   , asBoxSelection = Nothing
                   , asShelfSelection = Nothing
                   , asShelvesSummary = error "Shelves Summary not initialized"
-                  , asCollapseDepth = True
+                  , asDepthMode = DMSlot
                   , asReloading = False
                   , asCollapseHeight = False
                   , ..
@@ -333,7 +333,13 @@ whApp extraAttrs =
                                               : B.vBorder
                                               : [ B.vBox $ (map B.hBox)
                                                          [ renderRun asCollapseHeight 
-                                                                     project
+                                                                     (case asDepthMode of
+                                                                        DMDistinct -> DMSlot 
+                                                                        DMDistinctAndCount -> DMSlot 
+                                                                        DMFirstAndCount -> DMSlot 
+                                                                        -- DMFirst -> DMSlot 
+                                                                        _ -> asDepthMode
+                                                                     )
                                                                      (\bhistory ->
                                                                          let box = zCurrentEx bhistory
                                                                              rendered =  withHLBoxAttr s renderBoxOrientation box
@@ -347,14 +353,13 @@ whApp extraAttrs =
                                                                      (currentRun s)
                                                          , [B.hBorder]
                                                          , renderRun asCollapseHeight
-                                                                     project
+                                                                     asDepthMode
                                                                      (withHLBoxAttr s renderBoxContent .  zCurrentEx)
                                                                      (let run = currentRun s
                                                                       in run { sDetails = drop asCurrentBay $ sDetails run }
                                                                      )
                                                          ]
                                               ]
-                  project d = if asCollapseDepth then d {dWidth = 0 } else d
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
                   help = case asSubmap of 
                            Nothing | asDisplayMainHelp == False  -> B.emptyWidget
@@ -671,7 +676,7 @@ handleWH ev =
                                      modify \s -> s { asAdjustedShelvesMode = pred' (asAdjustedShelvesMode s) }
                                      execute (return ())
          EToggleDebugShowDiff -> modify \s -> s { asDebugShowDiffs = not (asDebugShowDiffs s) }
-         EToggleCollapseDepth -> modify \s -> s { asCollapseDepth = not (asCollapseDepth s) }
+         EToggleCollapseDepth -> modify \s -> s { asDepthMode = succ' (asDepthMode s) }
          EToggleCollapseHeight -> modify \s -> s { asCollapseHeight = not (asCollapseHeight s) }
          ETogglePropertyGradient -> modify \s -> s { asPropertyAsGradient = nextPGradient (asPropertyAsGradient s ) }
          ETogglePropertyGlobal -> do 
@@ -1187,6 +1192,8 @@ renderStatus state@AppState{..} = let
                            , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                            , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
                            , B.center $ B.str (show asAdjustedShelvesMode)
+                           , B.center $ B.str (show asDepthMode)
+                           , B.center $ B.str $ if asCollapseHeight then "V" else ""
                            , B.center $ B.str $ (if snd asBoxOrder then "-" else "") <> show (fst asBoxOrder)
                            , B.center $ B.str $ if asPropertyGlobal then "G" else ""
                            , B.center mode
@@ -1261,15 +1268,15 @@ debugShelf state = let
 
   
  -- * Render 
-renderRun :: Bool -> (Dimension -> Dimension) -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
-renderRun collapseHeight project renderBox run =  concat 
+renderRun :: Bool -> DepthMode -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
+renderRun collapseHeight depthMode renderBox run =  concat 
           [ map (B.padTop B.Max)
             [ B.withAttr (fst bayNameAN )
                              $ B.vBox (map (withHLStatus (seBoxHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
             , B.renderTable
-            . baySummaryToTable collapseHeight project renderBoxes
+            . baySummaryToTable collapseHeight depthMode renderBoxes
             $ bay
             ]
           | bay <- F.toList . sDetails $ run
