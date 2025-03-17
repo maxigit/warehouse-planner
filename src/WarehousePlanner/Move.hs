@@ -137,8 +137,15 @@ bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [Orienta
 bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode = let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
-  solutions = [ fmap isUsed $ justifyPositions $ bestPositions' getAff PRightOnly [strategy]  shelf start [] dim 
+  solutions = [ 
+              justifyPositions
+              $ fmap isUsed
+              $ bestPositionsWithOffset offset strategy
               | strategy <- orientations
+              , let boxLength = dLength $ rotate (osOrientations strategy) dim
+              , offset <- case pmode of
+                           POverlap OAligned -> [0, boxLength / 3, boxLength/ 2]
+                           _ -> [0]
               ]
   sorted = sortOn (Down . F.length . snd . partitionEitherSlices) solutions
   in  case sorted of
@@ -161,8 +168,17 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
                      _ -> False
         justifyPositions = case pmode of
                              POverlap ORight -> justifyRight dim (minDim shelf)
-                             POverlap OAligned -> justifyAlign (map getAff used) (minDim shelf)
+                             POverlap OAligned -> \case 
+                                  slices -> justifyAlign (map getAff used) dim slices
                              _ -> id
+        bestPositionsWithOffset offset strategy = 
+            let newShelf = shelf { minDim = minDim shelf <> shrink
+                                 , maxDim = maxDim shelf <> shrink 
+                                 }
+                shrink = Dimension (-offset) 0 0
+                positions = bestPositions' getAff PRightOnly [strategy] newShelf start [] dim
+                offsetBack = fmap (\pos -> pos {pOffset = pOffset pos <> (Dimension offset 0 0)})
+            in fmap offsetBack positions
                              
                       
 
@@ -259,26 +275,41 @@ justifyRight box shelf slices = let
            _ -> let maxL = maximumEx (map (dLength . aTopRight . positionToAffine box) pos)
                     offset = Dimension (max 0 $ dLength shelf - maxL) 0 0 
                 in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
--- | Offset positions to align with the most right start of a box
+-- | Offset positions to align the first available slot
+-- with the right most corner
 justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
-justifyAlign used shelf slices = let
+justifyAlign used box slices = let
    (_,poss) = partitionEitherSlices slices
-   pos = F.toList poss
-   in case used of
-      [] -> slices
-      _ -> let maxL = maximumEx $ map (dLength . aBottomLeft) used
-               -- using maxL as offset doesn't allow to fit box on hole before maxL
-               -- to be able to use them we need to only offset  bit.
-               -- The whole grid can only be shifted by an amount lesser than the difference
-               -- between the used length and the shelf length (the extra space on the right).
-               -- We use that to do a module
-               spaceLeft = dLength shelf - maximumEx (map (dLength . pOffset) pos)
-               l = if maxL <= spaceLeft || spaceLeft == 0
-                   then maxL
-                   else let q = maxL / spaceLeft
-                        in maxL - (fromIntegral (floor q) * spaceLeft)
-               offset = Dimension l 0 0
-           in fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
+   in case F.toList poss of
+        [] -> slices
+        firstSlot:_ -> -- find all the used box which are left of the first slot
+                      {-
+                                
+                                
+                                +-----+-----+-----+
+                                |     |     |     |
+                                | YYYY|Y    |     |
+                                +-----+-----+-----+
+                                |.XXX.|.....|     |
+                                |.XXX.|.....|     |  . zone
+                                +-----+-----+-----+
+                                | XXX |     |     |
+                                | XXXA|AA   |     |
+                                +-----+-----+-----+
+                                     ^
+                                     +--- offset
+                                Only X overlap
+                       -}
+                       let leftOf = filter (affDimensionOverlap zone) used
+                           firstOffset = pOffset firstSlot
+                           zone = AffDimension (Dimension 0 0 (dHeight $ pOffset firstSlot)) (aTopRight $ positionToAffine box firstSlot)
+                           firstL = dLength firstOffset
+                           maxOffset = case fromNullable $ map (dLength . aTopRight) leftOf of
+                                            Nothing -> firstL
+                                            Just ls-> maximum ls
+                           offset = Dimension (maxOffset - firstL) 0 0 
+                       in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
+
            
    
  

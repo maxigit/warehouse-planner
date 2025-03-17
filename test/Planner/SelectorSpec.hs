@@ -17,6 +17,7 @@ pureSpec :: Spec
 pureSpec = describe "Selector" do
    let ?shelves = ["S1", "S2", "S3"]
        ?useDefault = UseDefault
+       ?dim = mempty
    context "sorting" do
       context "by default" do
               it "sorts by style and content" do

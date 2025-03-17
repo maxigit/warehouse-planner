@@ -1,4 +1,4 @@
-{-# Language BlockArguments #-}
+{-# Language BlockArguments, ImplicitParams #-}
 module Planner.PartitionModeSpec where
 
 import ClassyPrelude
@@ -18,12 +18,15 @@ spec = parallel pureSpec
 pureSpec :: Spec
 pureSpec = do
   sortedSpec
+  overlapSpec
   utilSpec
+
   
 getBoxes = map fst . includedList
 
 sortedSpec :: Spec
 sortedSpec = describe "POverlapSorted" do
+   let ?dim = mempty
    context "One shelf" do
            it "insert in between" do
               let action = ( [ "S A-1 A-2"
@@ -148,6 +151,79 @@ sortedSpec = describe "POverlapSorted" do
                                 , "A-3 T '1:1:3"
                                 ]
 
+overlapSpec = describe "overlap" do
+    context "Aligned" do
+        let ?dim = mapFromList [("X", Dimension 70 40 10)
+                               ,("Y", Dimension 70 30 20)
+                               ,("A", Dimension 70 50 40)
+                               ,("B", Dimension 70 50 20)
+                               ,("S", Dimension 100 70 40)
+                               ] 
+        it "aligns with X" do
+           {-
+             Before
+             +-----+-----+
+             |.....|.....|
+             |XXXX.|.....|
+             +-----+-----+
+             |YYY..|.....|
+             |YYY..|.....|
+             +-----+-----+
+             Overlap
+             +-----+-----+
+             |.....|AAAAA|
+             |XXXX.|AAAAA|
+             +-----+-----+
+             |YYY..|AAAAA|
+             |YYY..|AAAAA|
+             +-----+-----+
+             Aligned
+             +-----+-----+
+             |....A|AAAA.|
+             |XXXXA|AAAA.|
+             +-----+-----+
+             |YYY.A|AAAA.|
+             |YYY.A|AAAA.|
+             +-----+-----+
+           -}
+           -- empty
+           let action = ["S Y"] `addAligned` ["S X", "S A"]
+           action `shouldWH` ["A S '1:1:1+40+0+0"
+                             ,"X S '1:1:3"
+                             ]
+        it "aligns with Y" do
+           {-
+             Before
+             +-----+-----+
+             |.....|.....|
+             |XXXX.|.....|
+             +-----+-----+
+             |YYY..|.....|
+             |YYY..|.....|
+             +-----+-----+
+             Overlap
+             +-----+-----+
+             |.....|.....|
+             |XXXX.|.....|
+             +-----+-----+
+             |YYY..|BBBBB|
+             |YYY..|BBBBB|
+             +-----+-----+
+             Aligned
+             +-----+-----+
+             |.....|.....|
+             |XXXX.|.....|
+             +-----+-----+
+             |YYYBB|BBB..|
+             |YYYBB|BBB..|
+             +-----+-----+
+           -}
+           let action = ["S Y"] `addAligned` ["S X", "S B"]
+           action `shouldWH` ["B S '1:1:1+30+0+0"
+                             ,"X S '1:1:3"
+                             ]
+        
+
 utilSpec = describe "utils" do
      context "addSlotBounds" do
         -- | create slots (number) or overlapping boxes (char)
@@ -173,12 +249,21 @@ utilSpec = describe "utils" do
 exec0 = execWH (emptyWarehouse $ fromGregorian 2025 02 21) . (withBoxOrientations ors )
     where ors = parseOrientationRule [] "!'"
 
-addSorted :: [Text] -> [Text] -> WH [Text] s
-addSorted boxes newBoxes =  do
-        makeShelves $ words "S T pending"
-        boxes <- makeBoxesWithPartition PRightOnly boxes
-        newBoxes <- map fst <$> makeBoxesWithPartition PSortedOverlap newBoxes
+addSorted a b = addWithPartition PSortedOverlap a b
+addAligned a b= addWithPartition (POverlap OAligned) a b
+addWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> [Text] -> WH [Text] s
+addWithPartition pmode boxes newBoxes =  do
+        prepare PRightOnly boxes
+        newBoxes <- map fst <$> makeBoxesWithPartition pmode newBoxes
         showBoxWithPosition newBoxes
+        
+prepare :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH [Text] s
+prepare pmode boxes = do
+        makeShelves $ words "S T pending"
+        boxes <- map fst <$> makeBoxesWithPartition pmode boxes
+        return $ map (\b -> tshow(boxStyle b, boxOffset b, orientation b, _boxDim b, boxDim b))  boxes
+        -- showBoxWithPosition boxes
+        
              
 showBoxWithPosition :: [Box s] -> WH [Text] s
 showBoxWithPosition boxes = mapM (\(box,i) -> expandAttribute box i "${boxname} ${shelfname} ${position-spec}" ) 

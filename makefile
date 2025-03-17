@@ -16,3 +16,6 @@ prof_%:
 pview_%: results/$*.last.prof.html
 				 rifle $<
   
+# Update test
+data/%.stocktake: data/%.org
+	stack exec whp $< -- --no-check -k > $@

@@ -1,3 +1,4 @@
+{-# LANGUAGE ImplicitParams #-}
 module Planner.SpecUtil
 ( makeShelves
 , makeBoxes
@@ -15,14 +16,15 @@ import Data.Text (breakOn, splitOn)
 
 -- | Create shelves from a list on name.
 -- ex: "S1 S2" creates two shelves S1 and S2
-makeShelves :: [Text] -> WH [Shelf s] s
+makeShelves :: (?dim :: Map Text Dimension) => [Text] -> WH [Shelf s] s
 makeShelves = mapM go where
     go name0 = let (name, tags) = breakOn "#" name0
                    tagm = case tags of
                            "" -> Nothing
                            _ -> Just $ drop 1 tags
+                   shelfDim = findWithDefault (Dimension 300 80 150) name ?dim
+                   shelfMax = findWithDefault shelfDim (name <> "+") ?dim
               in newShelf name tagm shelfDim shelfDim 0 DefaultOrientation ColumnFirst
-    shelfDim = Dimension 300 80 150
     
     
 -- | Create boxes from a list of strings
@@ -31,7 +33,7 @@ makeShelves = mapM go where
 --       "S2 B#2"
 --       "S1 C-1"
 -- create boxes A-1 A-2 B & C1 in the corresponding shelves (S1 and S2)
-makeBoxes :: [Text] -> WH [(Box s, Shelf s)] s
+makeBoxes :: (?dim :: Map Text Dimension) => [Text] -> WH [(Box s, Shelf s)] s
 makeBoxes shelfboxess = do
    boxess <- forM shelfboxess  \shelf'boxes  -> do
                   let (shelf:boxes) = words shelf'boxes
@@ -43,12 +45,13 @@ makeBoxes shelfboxess = do
             shelf <- findShelf shelfId
             let (style', tags) = extractTags name
                 (style, drop 1 -> content) = breakOn "-" style'
-            box <- newBox style content dim  up shelf [up] tags
+            box <- newBox style content (dimFor style)  up shelf [up] tags
             return (box, shelf)
          dim = Dimension 50 30 40
+         dimFor style = findWithDefault dim style ?dim
 
 -- | Create boxes but moves them according to the partition mode
-makeBoxesWithPartition :: PartitionMode -> [Text] -> WH [(Box s, Shelf s)] s
+makeBoxesWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH [(Box s, Shelf s)] s
 makeBoxesWithPartition mode shelfboxess = do
    boxess <- forM shelfboxess \shelf'boxes -> do
        def0 <- defaultShelf

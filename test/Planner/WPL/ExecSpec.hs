@@ -17,6 +17,7 @@ pureSpec :: Spec
 pureSpec = describe "WPL" do
   let ?shelves = ["S1", "S2", "S3" ]
       ?boxes = ["S1 B-2 B-1#id=1 A-3 A-1 A-2 B-1#id=2"]
+      ?dim = mempty
   context "sorting" do
      it "sort everything by default *" do
         -- by style then by content then creating order
