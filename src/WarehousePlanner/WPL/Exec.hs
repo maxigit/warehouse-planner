@@ -404,7 +404,8 @@ executeCommand ec command = case command of
              [les, wes, hes]
              ds
            splitShelf shelf ls ws hs
-      executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
+      newEc <- executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
+      return newEc { ecShelves = ecShelves ec } -- ^ remove newly created shelves.
     ---------
     SwapBoxes boxSelector debugPrefix stickys -> do
       -- swap selected boxes (in the selected order)
