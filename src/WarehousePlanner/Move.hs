@@ -144,7 +144,12 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
               | strategy <- orientations
               , let boxLength = dLength $ rotate (osOrientations strategy) dim
               , offset <- case pmode of
-                           POverlap OAligned -> [0, boxLength / 3, boxLength/ 2]
+                           POverlap OAligned -> [ 0
+                                                , boxLength / 3
+                                                , boxLength/ 2
+                                                , -- align right
+                                                  dLength (minDim shelf) `modFload` boxLength
+                                                ]
                            _ -> [0]
               ]
   sorted = sortOn (Down . F.length . snd . partitionEitherSlices) solutions
@@ -179,6 +184,8 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
                 positions = bestPositions' getAff PRightOnly [strategy] newShelf start [] dim
                 offsetBack = fmap (\pos -> pos {pOffset = pOffset pos <> (Dimension offset 0 0)})
             in fmap offsetBack positions
+        modFload r q = let p = floor(r / q)
+                       in r - fromIntegral p * q
                              
                       
 
