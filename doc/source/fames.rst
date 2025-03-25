@@ -568,25 +568,9 @@ changed by setting an alternative prefix in the parameter field. This
 allows multiples report to be defined within the same plan. The
 following group attributes will be expanded :
 
--  ``${count}`` : number of boxes within the group
--  ``${shelf-count}`` : number of different shelves
--  ``${locations}`` list of shelves (compacted)
--  ``${shelves}`` list of shelves
--  ``${total-volume}`` : total volumes in m^3
--  ``${style-count}`` : number of different styles
--  ``${content-count}`` : number of different content
--  ``${dimensions-count}`` : number of different dimensions
--  ``${orientations}`` : different orientations
--  ``${count-orientations}`` : number of different dimensions
--  ``${today}`` : today's date with the following format ``YYYY-MM-DD``
-
-Symbols would can't be used without being interpreted by the parser can
-be expanded using
-
--  ``${hash}`` ``#``
--  ``${comma}`` ``,``
--  ``${divide}`` ``/``
--  ``${dollar}`` ``$``
+.. include:: ../../src/WarehousePlanner/Report.hs
+   :start-after: :REPORT EXPANSION:
+   :end-before: -}
 
 Example, to generate a valid TAG File tagging each box using its unique
 barcode tag with its location

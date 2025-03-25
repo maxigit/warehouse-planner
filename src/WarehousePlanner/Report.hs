@@ -728,6 +728,37 @@ expandReportValue today boxes shelves s = let
   skus = List.nub. sort $ map boxStyleAndContent boxes
   in foldl' (flip ($)) s updates
 
+{- :REPORT EXPANSION:
+
+-  ``$<count>`` : number of boxes within the group
+-  ``$<shelf-count>`` : number of different shelves
+-  ``$<locations>`` list of shelves (compacted)
+-  ``$<shelves>`` list of shelves
+-  ``$<total-volume>`` : total volumes in m\ :sup:`3`
+-  ``$<style-count>`` : number of different styles
+-  ``$<styles>`` : list of styles separated by a ``|``
+-  ``$<content-count>`` : number of different content
+-  ``$<contents>`` : list of contents separated by a ``|``
+-  ``$<sku-count>`` : number of different SKUs
+-  ``$<skus>`` : list of SKUs separated by a ``|``
+-  ``$<dimensions-count>`` : number of different dimensions
+-  ``$<orientations>`` : different orientations
+-  ``$<orientations-count>`` : number of different dimensions
+-  ``$<today>`` : today's date with the following format ``YYYY-MM-DD``
+
+Symbols would can't be used without being interpreted by the parser can
+be expanded using
+
+-  ``$<hash>`` ``#``
+-  ``$<comma>`` ``,``
+-  ``$<divide>`` ``/``
+-  ``$<dollar>`` ``$``
+
+.. note::
+   
+   group expansion are between ``$<...>`` to avoid double expansion problem.
+
+-}
 
 lengthBy' :: (Ord k, Eq k) => [a] -> (a -> k) -> Int
 lengthBy' boxes f = length . List.nub . sort $ (map f boxes)
