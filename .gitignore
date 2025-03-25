@@ -8,3 +8,4 @@ data/scramble.vim
 results/*.html
 # worktree
 wt-*
+doc/build
