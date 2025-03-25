@@ -1,3 +1,30 @@
+from sphinx.highlighting import lexers
+from pygments.lexer import RegexLexer
+from pygments.token import Comment, Text, Name, String, Number
+
+class CommentOnlyLexer(RegexLexer):
+    """A lexer that only highlights comments (starting with --) and leaves everything else plain."""
+    name = "CommentOnly"
+    aliases = ["commentonly"]
+    filenames = []
+    tokens = {
+           "root": [
+                       (r"--.*$", Comment),    # Match '--' and everything after it (comments)
+                       (r"#-?\w+", Name.Tag),    # Match '#' followed by word characters (tags)
+                       (r"\$\{[^}]+\}", String.Interpol),  # Match '${...}' (interpolated expressions)
+                       (r"\$\[[^\]]+\]", String.Interpol),  # Match '$[...]' (another interpolated expression)
+                       (r"\{[^}]+\}", Name.Namespace),  # Match '{...}' (expressions)
+                       (r"\[[^}]+\]", Name.Variable),  # Match '[...]' (range)
+                       (r".", Text),           # Everything else is plain text
+                   ]
+    }
+
+# Register the lexer
+lexers["commentonly"] = CommentOnlyLexer()
+
+# Set it as the default language for code blocks
+highlight_language = "commentonly"
+
 # Configuration file for the Sphinx documentation builder.
 #
 # For the full list of built-in configuration values, see the documentation:
@@ -19,8 +46,6 @@ extensions = ['sphinx.ext.todo']
 templates_path = ['_templates']
 exclude_patterns = []
 
-
-highlight_language = "none"
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
