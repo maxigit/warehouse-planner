@@ -598,10 +598,76 @@ addSlotBounds f slices = let
 
                                                        
                           
--- Try to Move a block of boxes  into a block of shelves.
+-- | Try to Move a block of boxes  into a block of shelves.
 -- Boxes are move in sequence and and try to fill shelve
 -- in sequence. If they are not enough space the left boxes
 -- are returned.
+{- rST::priority
+
+Boxes are selected in semi-arbitrary order which can be modified
+setting up priority. The order in which box are selected affect the
+way boxes are actually stacked on shelves but also which boxese are
+selected when using number restriction (see above). By default boxes
+are selected in order by
+
+-  global priority
+-  style name (ascending)
+-  style priority (priority within style)
+-  content name
+-  content priority (priority within content)
+
+By default, all priorities are set 100. Priorities can be modified by
+assigning the special tags, ``@global``, ``@style``, ``@content`` but
+also any other tag using the ``^[tag]`` notation (see number
+restriction).
+
+-  ``@global`` global priority. Can be used to move a box first.
+-  ``@style`` priority within the same style. Can be use to move a
+   box at the beginning of a style.
+-  ``@content`` priority within box of the same content (styles and
+   variations). Can be
+
+For example, given fox boxes, A-Black, A-Red, B-Black, B-Red. Boxes
+will be stacked in the following fs order
+
+-  B-Black
+-  B-Red
+-  A-Black
+-  A-Red
+
+or
+
+-  A-Black
+-  A-Red
+-  B-Black
+-  B-Red
+
+A and B having the same global priority, the system is free to start
+with A or B. However, content (Black and Red) are sorted
+alphabetically. To ensure that, A is processed before B. We need to
+assign it a priority < 100 to A (global priority) with
+
+::
+
+   A,@content=1
+
+To get B-Red boxes before B-Black boxes we can assign it a priority
+(style priority)
+
+::
+
+   B-Red,@style=1
+
+Settings those two priorities will result in the following order :
+
+-  A-Black # @style=100 @content=1
+-  A-Red # @style=100 @content=1
+-  B-Red # @style=1 @content=100
+-  B-Black # @style=100 @content=100
+
+The content priority could be used for example, to select which one
+of the B-Black boxes to get first.
+::rST -}
 moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [(box s)] -> [shelf s] -> WH (InExcluded (Box s)) s
 moveBoxes exitMode partitionMode sortMode bs ss = do
   boxes <- mapM findBox bs

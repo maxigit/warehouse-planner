@@ -19,3 +19,10 @@ pview_%: results/$*.last.prof.html
 # Update test
 data/%.stocktake: data/%.org
 	stack exec whp $< -- --no-check -k > $@
+	
+# Sphinx Documentation
+html:
+	cd doc; make html
+	
+gh-age: html
+		 ghp-import -n -p -r github -f doc/build/html

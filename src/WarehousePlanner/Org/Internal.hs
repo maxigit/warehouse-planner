@@ -521,7 +521,36 @@ scenarioLayoutSize Scenario{..} =
       return (maybe 0 (length . lines) l)
 
 
--- * Default expansion
+-- | Default expansion
+{- rST::import
+Allows to import whole planner files either from existing files or
+generated on the fly from an import dispatch provider (such as ``Fames``). Each line correspond to an
+import and will be replaced with the result of the import. Some
+imports accepts tags. Tags are given by "tagging" the import line
+using ``thing_to_import#tag1#tag#...``
+
+
+-  ``files/``\ pattern[``#``\ exclusive-pattern] Import all files
+   matching the glob pattern. Files are local to the planner template
+   directory.Tags can be used to filter out some file matched by the
+   original pattern. Example
+
+   ::
+
+      files/Base.org --  Base.org file
+      files/Base/* -- all file present in the Base folder
+      files/Base/*#moves.org -- all file present in the Base folder except Base/moves.org
+      files/Base/moves.org -- Base/moves.org only
+
+-  ``file/``\ pattern[``#``\ tags] Import one file matching the glob
+   pattern. Files are local to the planner template directory.Tags
+   are added to each sections of the corresponding file Example
+
+   ::
+
+      file/Base/container.org#C1 -- Call container and #C1 to all sections within it.
+
+::rST -}
 importDispatch :: (Monad io, MonadIO io) => FilePath -> Int -> (Text -> [Text] -> io (Either Text [Section])) -> Section -> io (Either Text [Section])
 importDispatch plannerDir nestedLevel dispatch (Section ImportH (Right content) _) = runExceptT $ do
   sectionss <- forM content $ \uri ->  do

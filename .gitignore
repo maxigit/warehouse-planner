@@ -2,9 +2,12 @@
 .stack-profile
 tags*
 .tags*
+!tags.rst
 TAGS*
 data/scramble.vim
 *.prof
 results/*.html
 # worktree
 wt-*
+doc/build
+__pycache__
