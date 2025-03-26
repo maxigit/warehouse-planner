@@ -1,0 +1,27 @@
+This is a orgmode file. Each orgmode drawer contains a csv.
+What is between drawer (as the present text is ignored)
+
+The first drawer describes three shelves named respectively S1 , S2 and T1
+:SHELVES:
+name,comment,length,width,height,type
+S1,,200,50,100,Shelf
+S2,,200,50,150,Shelf
+T1,,200,50,100,Shelf
+:END:
+
+The second drawer describes the boxes and in which shelf they are.
+We have three boxes (called A) in S1 and six Bs in S2.
+B have been tagged as `bg=blue` to set the background in blue.
+:STOCKTAKE:
+Bay No,Style,QTY,Length,Width,Height,Orientations
+S1,A,3,50,50,50,
+S2,B#bg=blue,6,50,50,50,
+:END:
+
+
+Finally, we need to describe the layout (how are shelves related to each other).
+We want S2 to be on top of S1 and T1 next to it
+
+:LAYOUT:
+S1|S2 T1
+:END:

@@ -1,0 +1,6 @@
+The move section allows to move all the B to S1 and T1.
+:MOVES:
+boxes,location
+B,S1|T1
+:END:
+
