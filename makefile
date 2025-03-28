@@ -19,3 +19,7 @@ pview_%: results/$*.last.prof.html
 # Update test
 data/%.stocktake: data/%.org
 	stack exec whp $< -- --no-check -k > $@
+	
+# Sphinx Documentation
+html:
+	cd doc; make html
