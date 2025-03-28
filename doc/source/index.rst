@@ -11,6 +11,7 @@
    :maxdepth: 1
    :caption: Contents:
 
+   usage
    sections
    fames
    
@@ -33,8 +34,13 @@
 
    - whp
 
+     how to invoke
+     differnet mode
+
    - brick
 
    - report
+   
+   - Reference: alphabetically sorted
    
 
