@@ -2,6 +2,7 @@
 .stack-profile
 tags*
 .tags*
+!tags.rst
 TAGS*
 data/scramble.vim
 *.prof

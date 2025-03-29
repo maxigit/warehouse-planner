@@ -1,21 +1,46 @@
-Sections
-~~~~~~~~
+Section Types
+~~~~~~~~~~~~~
 
-All sections follows the `org-mode
-drawer <http://orgmode.org/manual/Drawers.html>`__ syntax and are
-composed of a
+.. todo:: sort section alphab
 
--  a headline specify the section type and eventual parameters, for
-   example ``:Shelves:`` or ``<:moves_parameter1_paramter2:>``
--  a body, for example ``T-Shirt,shelf A``
--  and optional end marker ``:END:``.
+.. todo:: consistent casing in title
 
-Sections accepting parameters will have ``[_parametes]`` next to their
-names. Most sections body are a CSV (comma separated files) which expect
-a header (ie the name of each column). Forgetting the header might
-result in the first line be interpreted as the header and therefore
-skipped. Some sections accepts a list of tag or pattern as a parameter.
-For more details see `tag or patterns <#tag-or-patterns>`__.
+.. _tag or pattern:
+
+.. note:: Tag or Patterns
+
+   Some sections accepts a list of tags and patterns as parameters. Those
+   tags are usually applied on "success" and applied as well as the tags of
+   a specific line. Tag and patterns allows to filter the final tags using
+   thes special tags ``@exclude`` and ``@include``.
+
+   ``@exclude`` will exclude all the tags matching the (glob) patterns at
+   is right
+
+   ``@include`` will only include all tags matching the (glob) patterns at
+   is right.
+
+   This is particularly usefull when import an existing file when some
+   selected needs to be imported. Example, given the stock.org file
+
+   ::
+
+      :STOCKTAKE:
+      Bay No,Quantity,Style,Length,Width,Height,Orientations
+      shelf,1,A#status=active#bg=black,10,20,20,
+      :END:
+
+   This will create a box A with the two properties ``status`` and ``bg``.
+   Replace ``:STOCKTAKE:``, with ``:STOCKTAKE_@include#stat*``, will only
+   the ``status`` property (it is the only one matching the pattern
+   ``stat*``. This can be achieved without modifying the file but importing
+   it with extra tag
+
+   ::
+
+      :IMPORT:
+      file/stock.org#@include#stat*
+      :END:
 
 Shelves (Mandatory)
 -------------------
@@ -52,7 +77,7 @@ using the
 formula (10 there is the thickness of the shelf)
 
 Special shelves
----------------
+'''''''''''''''
 
 The two first declared shelves have a special meaning. The first one
 is the ``error`` shelf and the second one is the ``pending`` shelf.
@@ -64,7 +89,7 @@ command are created within the ``pending`` shelf. It is best practice
 to name those shelves ``error`` and ``pending`` (or equivalent).
 
 Name expansion
---------------
+''''''''''''''
 
 Groups of similar shelves can be created in one line using name
 expansion. Before creating a shelf, the name is expanded into one or
@@ -88,7 +113,7 @@ will be generated. Example
    [ABC][123] => A1 A2 A3 B1 B2 B3 C1 C2 C3
 
 dimension formula
------------------
+'''''''''''''''''
 
 Shelf dimension depending on the dimension on another shelf can be
 expressed using shelf dimension. This can be useful when shelf are
@@ -118,47 +143,47 @@ nextExample
 
 For A2, ``_`` refers to the first character of the current shelf,
 i.e, ``A`` and ``-`` refers to the second character (``2``) minus 1
--> ``1`` For B1, the ``_`` is in the second position and therefore
+'> ``1`` For B1, the ``_`` is in the second position and therefore
 correspond to the second character of ``B1`` : ``1``. For C1, the
 ``[AC]`` is transform into ``A`` (C->A, B->B, A->C) An accessor can
 be added to a reference to select a particular dimension of the
 refered object. This is done with ``{``\ ref\ ``:``\ accessor\ ``}``,
 where accessor can be
 
--  ``length`` min length
--  ``width`` min width
--  ``height`` min height
--  ``Length`` max length
--  ``Width`` max width
--  ``Height`` max height
--  ``bottom`` bottom (height from the ground)
--  ``top`` top (height from the ground)
--  ``usedLength`` used length (depends on boxes within)
--  ``usedWidth`` used width
--  ``usedHeight`` used heigth
--  ``availableLength`` (min length - used available)
--  ``availableWidth`` (min width - used available)
--  ``availableHeight`` (min height - used available)
--  ``AvailableLength`` (max length - used available)
--  ``AvailableWidth`` (max width - used available)
--  ``AvailableHeight`` (max height - used available)
+'  ``length`` min length
+'  ``width`` min width
+'  ``height`` min height
+'  ``Length`` max length
+'  ``Width`` max width
+'  ``Height`` max height
+'  ``bottom`` bottom (height from the ground)
+'  ``top`` top (height from the ground)
+'  ``usedLength`` used length (depends on boxes within)
+'  ``usedWidth`` used width
+'  ``usedHeight`` used heigth
+'  ``availableLength`` (min length ' used available)
+'  ``availableWidth`` (min width ' used available)
+'  ``availableHeight`` (min height ' used available)
+'  ``AvailableLength`` (max length ' used available)
+'  ``AvailableWidth`` (max width ' used available)
+'  ``AvailableHeight`` (max height ' used available)
 
 Please note, that ``l`` can be used for ``length``, ``al`` for
 ``availableLength``, ``AL`` for ``AvailableLength`` etc ...
 
 shelf types
------------
+'''''''''''
 
 The shelf type determines the default boxes orientation and filling
 strategy. The current shelf style are
 
--  Shelf (normal first) : tilted row first
--  deadzone : allow up column first
--  Update allows to update an existing shelf (tags will be ignored)
--  other, column first
+'  Shelf (normal first) : tilted row first
+'  deadzone : allow up column first
+'  Update allows to update an existing shelf (tags will be ignored)
+'  other, column first
 
 Update
-------
+''''''
 
 Shelves can be updated by redefining it and setting the type to
 ``Update``. Formulas can use the value of the shelf itself. This
@@ -167,7 +192,7 @@ Note that for update, the shelf name is not expanded but filtered
 using the normal selector syntax (*box*\ ``/``\ *shelf*).
 
 Tag
----
+'''
 
 Tags can be used to select shelf when doing box moves, but is also
 used to group shelves when displaying the summary. Shelves are
@@ -179,7 +204,7 @@ shelves present for layout purpose only and are excluded from the
 summary as well as being displayeddifferently.
 
 Special Tag: Ceiling
---------------------
+''''''''''''''''''''
 
 The special attribute ``ceiling=`` set the height of the ceiling. If
 the total height + bottom offset is greater than the ceiling value,
@@ -235,7 +260,7 @@ Tags provided in the section name, will be applied to the created
 boxes.
 
 Moves[\_TagOrPatterns]
-----------------------
+''''''''''''''''''''''
 
 Describes a set of moves boxes to shelves. The first column describe
 a set of boxes to moves to a set of shelves. If multiple shelves are
@@ -253,7 +278,7 @@ selectors (see selectors sections). An orientation can be given
 optionnaly.
 
 Filling order, Exit on top
---------------------------
+''''''''''''''''''''''''''
 
 When moves boxes to a new set of shelves, shelves are filled by
 alphabetical order. For example the command
@@ -295,7 +320,7 @@ in A and B. It will then start filling up C. (This syntax is similar
 to the syntax of the **Layout** section).
 
 Partition Mode
---------------
+''''''''''''''
 
 When filling a shelf with boxes, the default strategy is to use to
 either fill the shelf on the right of the existing boxes or the top
@@ -339,7 +364,7 @@ Example
    #!,@A -- resort content of shelf A
 
 Tagging
--------
+'''''''
 
 Tags provided as section parameter will be applied to the boxes
 **successfully** moved whereas boxes which couldn't be moved (not
@@ -353,7 +378,7 @@ two first boxes will have the tag ``moved`` and the last one the tag
 ``error``.
 
 Empty selection
----------------
+'''''''''''''''
 
 Sometimes, a selector doesn't select anything. This can be because of
 a typo or because a box is not present anymore in the warehouse. To
@@ -644,7 +669,7 @@ T-shirt in other shelves are being laid on the side or the other with
 no diagonal allowed.
 
 Orientations
-------------
+''''''''''''
 
 ::
 
@@ -658,7 +683,7 @@ Orientations
    @ rotated side
 
 max stacking specification
---------------------------
+''''''''''''''''''''''''''
 
 By default, boxes are stacked using only one level of depth. This
 way, no boxes hide behind others and so all boxes are visible. To
