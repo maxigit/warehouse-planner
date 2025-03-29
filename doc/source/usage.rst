@@ -55,38 +55,38 @@ The following section types are available:
 
 - shelves related
 
-  - Shelves: create or update shelves
-  - ShelfTags: modify shelf tags
-  - ShelfSplit: split shelves into subshelves
-  - ShelfJoin: opposite of split
-  - UpdateShelves: modify shelves
+  - :ref:`Shelves <shelves>`: create or update shelves
+  - :ref:`ShelfTags <shelf-tags>`: modify shelf tags
+  - :ref:`ShelfSplit <shelf-split>`: split shelves into subshelves
+  - :ref:`ShelfJoin <shelf-join>`: opposite of split
+  - :ref:`UpdateShelves <update-shelf>`: modify shelves
 
 - boxes related
 
-  - Stocktake: create new boxes with location
-  - Boxes: create new boxes
-  - Moves: moves boxes 
-  - Tags: modify boxes tags
-  - MovesAndTags: move and tags simultaneously
-  - Clones: create new boxes by cloning existing one
-  - Deletes: delete existing boxes
-  - Rearrange: rearrange boxes order
-  - FreezeOrder: change internal box order
-  - TransformTags: apply regexp transformation on tags
+  - :ref:`Stocktake <stocktake>`: create new boxes with location
+  - :ref:`Boxes <boxes>`: create new boxes
+  - :ref:`Moves <moves>`: moves boxes 
+  - :ref:`Tags <tags>`: modify boxes tags
+  - :ref:`MovesAndTags <moves-and-tags>`: move and tags simultaneously
+  - :ref:`Clones <clones>`: create new boxes by cloning existing one
+  - :ref:`Delete <delete>`: delete existing boxes
+  - :ref:`Rearrange <rearrange>`: rearrange boxes order
+  - :ref:`FreezeOrder <freeze-order>`: change internal box order
+  - :ref:`TransformTags <transform-tags>`: apply regexp transformation on tags
 
 - Miscellaenous
 
-  - Layout: describe shelf bays  and runs
-  - Orientations: box orientation rules
-  - Import: include local files
-  - ColourMap: rgb colour description
-  - CheckShelves: Check box overlap or out of box status
-  - WPL: Warehouse Programming Languge.
+  - :ref:`Layout <layout>`: describe shelf bays  and runs
+  - :ref:`Orientations <orientations>`: box orientation rules
+  - :ref:`Import <import>`: include local files
+  - :ref:`ColourMap <colour-map>`: rgb colour description
+  - :ref:`CheckShelves <check-shelves>`: Check box overlap or out of box status
+  - :ref:`WPL <wpl>`: Warehouse Programming Languge.
 
 Outputs
 -------
 
-On top the interactive explorer, ``whp`` can produce text outputs to generate miscellaneous reports, "freeze" the content of a warehouse and even generate high quality image (``.png``).
+On top the interactive explorer, ``whp`` can produce text outputs to generate miscellaneous :ref:`reports <reports>`, "freeze" the content of a warehouse and even generate high quality image (``.png``).
 
 .. todo:: add reference to whp --help
 
