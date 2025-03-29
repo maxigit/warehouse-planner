@@ -25,7 +25,7 @@ This can be used to add a subtract a value to dimension. Example
    #'l3500,#'l=+-50 => subtract 50 to the length
 
 Note that ``=+-50`` adds a value of -50 (see
-`Properties <#info-section-property>`__) to the dimension.
+`Properties`_) to the dimension.
 
 Properties
 ----------
@@ -72,17 +72,17 @@ the box to red. Those properties are
 -  ``circle``..\ ``circle4`` display a big circle of the given colour(s)
    on the box. Ideal to mark boxes. (boxes only). Displays pies if more
    than one colour is given.
-.  ``title`` text to display instead of the box or shelf name (shelves
+-  ``title`` text to display instead of the box or shelf name (shelves
    and boxes)
-.  ``bar'title`` text to display in the box bar (for each depth) or
+-  ``bar'title`` text to display in the box bar (for each depth) or
    shelf bar.
-.  ``bar'bg`` colour of the shelf bar (shelf bar).
-.  ``bar'fg`` colour of the text of the shelf bar (shelf bar).
-.  ``no'bar'gauge`` if present, disable the colour gauge behind the box
+-  ``bar'bg`` colour of the shelf bar (shelf bar).
+-  ``bar'fg`` colour of the text of the shelf bar (shelf bar).
+-  ``no'bar'gauge`` if present, disable the colour gauge behind the box
    bar or in the shelf bar.
-.  ``bar'gauge'x`` if present, offset the bar gauge by x times the box
+-  ``bar'gauge'x`` if present, offset the bar gauge by x times the box
    index.
-.  ``bar'gauge'y`` if present, offset the bar gauge by y times the box
+-  ``bar'gauge'y`` if present, offset the bar gauge by y times the box
    index.
 
 .. _colours-1:
@@ -222,12 +222,12 @@ Evaluation
 Tags and properties can be evaluated in different way resulting in
 different values. The syntax is the same for properties and tags
 
-'  ``?[then][:[:else]]`` test if the value is present.
-'  ``:[start][:[end]]`` extract substring. ``start`` and ``end`` can be
+-  ``?[then][:[:else]]`` test if the value is present.
+-  ``:[start][:[end]]`` extract substring. ``start`` and ``end`` can be
    a (negative) number.In that case, it represent how many character to
    drop on each side. If it is a char, strip until (from) the given
    char.
-'  ``%format`` integer formatting (as in
+-  ``%format`` integer formatting (as in
    `printf <https://hackage.haskell.org/package/base-4.18.0.0/docs/Text-Printf.html>`__)
 
 For example, given box inh shelf ``E01.03/2``, and ``#top`` is present
@@ -258,9 +258,9 @@ tag, the box is guaranteed to either start a new shelf, a new slice (row
 or column depending of the shelf filling strategy) or a new slot (no box
 "behind"). The corresponding tags are
 
-'  ``@start=new'shelf`` first box of an entire shelf
-'  ``@start=new'slice`` first box of a row/column
-'  ``@start=new'slot`` no box behind
+-  ``@start=new'shelf`` first box of an entire shelf
+-  ``@start=new'slice`` first box of a row/column
+-  ``@start=new'slot`` no box behind
 
 Box attributes
 --------------
@@ -269,23 +269,23 @@ Certain attributes like the current location or orientation of a box can
 be used to set a new tag with the corresponding value. The following
 attributes are available.
 
-'  ``${shelfname}`` # current shelf
-'  ``${shelftags}`` # tag of the current shelf
-'  ``${fit}`` # How the box fits in the shelf : fit, tight, or out
-'  ``${orientation}`` # current orientation
-'  ``${style}`` # current box style
-'  ``${content}`` # current box content (or colour)
-'  ``${boxname}`` # box style + content
-'  ``${dimension}`` # box dimension in cm
-'  ``${offset}`` # box offset (within the shelf) in cm
-'  ``${coordinate}`` # box coordinate (as if row and column of similar
+-  ``${shelfname}`` # current shelf
+-  ``${shelftags}`` # tag of the current shelf
+-  ``${fit}`` # How the box fits in the shelf : fit, tight, or out
+-  ``${orientation}`` # current orientation
+-  ``${style}`` # current box style
+-  ``${content}`` # current box content (or colour)
+-  ``${boxname}`` # box style + content
+-  ``${dimension}`` # box dimension in cm
+-  ``${offset}`` # box offset (within the shelf) in cm
+-  ``${coordinate}`` # box coordinate (as if row and column of similar
    boxes) (start at 1)
-'  ``${ol}`` $ length coordinate
-'  ``${ow}`` $ width coordinate
-'  ``${oh}`` $ height coordinate
-'  ``${@content}`` $ content priority
-'  ``${@style}`` $ style priority
-'  ``${@global}`` $ global priority
+-  ``${ol}`` $ length coordinate
+-  ``${ow}`` $ width coordinate
+-  ``${oh}`` $ height coordinate
+-  ``${@content}`` $ content priority
+-  ``${@style}`` $ style priority
+-  ``${@global}`` $ global priority
 
 Example
 

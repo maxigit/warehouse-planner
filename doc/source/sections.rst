@@ -42,6 +42,8 @@ Section Types
       file/stock.org#@include#stat*
       :END:
 
+.. _shelves:
+
 Shelves (Mandatory)
 -------------------
 
@@ -177,10 +179,10 @@ shelf types
 The shelf type determines the default boxes orientation and filling
 strategy. The current shelf style are
 
-'  Shelf (normal first) : tilted row first
-'  deadzone : allow up column first
-'  Update allows to update an existing shelf (tags will be ignored)
-'  other, column first
+-  ``Shelf`` (normal first) : tilted row first
+-  ``deadzone`` : allow up column first
+-  ``Update`` allows to update an existing shelf (tags will be ignored)
+-  ``other``, column first
 
 Update
 ''''''
@@ -212,6 +214,8 @@ the shelf is considered to high. It will be tagged with ``'tooHigh``,
 and the height of the shelf will be truncated accordingly to fit the
 given ceiling.
 
+.. _layout:
+
 Layout (Mandatory)
 ------------------
 
@@ -228,6 +232,8 @@ a bay by a pipe ``|`` Example:
 
 ``A1|A2|A3`` form a bay of 3 shelves, A1 at the bottom, and A3 at the
 top next to a bay of 2 shelves B1 with B2 on top.
+
+.. _stocktake:
 
 Stocktake[\_Tag]
 ----------------
@@ -246,6 +252,8 @@ the ``@throwError`` is given and box doesn't fit in the given shelf.
 Instead of moving the box to the error shelf, the planner will stop
 and generate an error message.
 
+.. _boxes:
+
 Boxes[\_TagOrPatterns]
 ----------------------
 
@@ -259,8 +267,10 @@ A set of boxes without initial location. They will be put in the
 Tags provided in the section name, will be applied to the created
 boxes.
 
+.. _moves:
+
 Moves[\_TagOrPatterns]
-''''''''''''''''''''''
+----------------------
 
 Describes a set of moves boxes to shelves. The first column describe
 a set of boxes to moves to a set of shelves. If multiple shelves are
@@ -385,6 +395,8 @@ a typo or because a box is not present anymore in the warehouse. To
 detect such cases setting the tag ``@noEmpty`` will raise an error
 (and stop) if there is nothing to moves.
 
+.. _tags:
+
 Tags[\_TagOrPatterns]
 ---------------------
 
@@ -411,6 +423,8 @@ The first line, tag all boxes with ``tag1``. The second line remove
 ``tag1`` from the A boxes. The last line set the background property
 of the box tagged with ``tag1`` to red.
 
+.. _moves-and-tags:
+
 MAT[\_TagOrPatterns] (moves and tags)
 -------------------------------------
 
@@ -434,6 +448,8 @@ Moves all new boxes (with the new tag) to A and unset the new tag.
 Note that tag parameters will also be added to the "per-line" tag. As
 in ``:Moves`` tags are applied positively to boxes successfully moved
 and negatively to leftover.
+
+.. _shelf-tags:
 
 SHELF_TAGS (shelf tags)
 -----------------------
@@ -467,8 +483,10 @@ space use by its content. Example
 Expand A and shrink B by the same amount (so that A+B stays the
 same),
 
-SHELF_JOIN (shelf split)
-------------------------
+.. _shelf-split:
+
+SHELF_SPLIT (shelf split)
+-------------------------
 
 Split a shelf performing guillotine cut. The dimension columns
 specify the dimension to cut. it can be any formula with reference
@@ -495,7 +513,9 @@ with a 3 letter suffix separated with ``/`` index added. Example
    ,A, {B:height},, -- cut length using shelf B height
    box,A,{|}*2,, cut at two time the lenght of box with | orientation
 
-SHELF_SPLIT (shelf join)
+.. _shelf-join:
+
+SHELF_JOIN (shelf join)
 ------------------------
 
 Shelves which have been split can be join back together. The selector
@@ -512,11 +532,13 @@ must refer to the base shelf (not the split ones)
    A -- join A/ba A/bb and A/ab to A
    :END:
 
-Cloning and Deleting
---------------------
+.. _clones:
+
+CLONES
+------
 
 Allows to duplicate the given boxes. Used in conjunction with
-=:Deletes:= it can be used to do slotting by creating fake boxes
+`Deletes` it can be used to do slotting by creating fake boxes
 (ghosts) which will make sure a slot is full and the remove later.
 For example
 
@@ -546,7 +568,7 @@ for, we could move all As by 4 with
    A^4,destination
 
 No more that 4 of each colour will be moved using the ghosts if
-necessary. We can then delete the ghost uting ``:Delete:``
+necessary. We can then delete the ghost using ``:Delete:``
 
 ::
 
@@ -573,6 +595,22 @@ specification with a ``!``.
    A^1,4,!#ghost
    A^1,4,!new-content
    A^1,4,!new-content#ghost
+
+.. _delete:
+
+DELETE
+--------
+
+Delete the selected boxes.
+
+::
+
+   :Delete:
+   A#ghost
+
+Delete all ``A`` boxes with the ``ghost`` tag.
+
+.. _transform-tags:
 
 Transform[=properties] (transform tags)
 ---------------------------------------
@@ -649,6 +687,8 @@ of the shelf name have changed :
    ,A,B -- rename the value of short shelf from A to B
    :END:
 
+.. _orientations:
+
 Orientations
 ------------
 
@@ -673,14 +713,14 @@ Orientations
 
 ::
 
-   * all 
-   % default orientations
-   ^ up
-   = tilted forward
-   > tilted right
-   | tilted forward & right
-   ' rotated up
-   @ rotated side
+   * -- all 
+   % -- default orientations
+   ^ -- up
+   = -- tilted forward
+   > -- tilted right
+   | -- tilted forward & right
+   ' -- rotated up
+   @ -- rotated side
 
 max stacking specification
 ''''''''''''''''''''''''''
@@ -703,6 +743,8 @@ or all of the limit can be specified as follow
    ,1x2x3 -- max width 1, max depth 2, max height 3
    ,xx3 -- max height 3
 
+.. _colour-map:
+
 Colours
 -------
 
@@ -723,6 +765,8 @@ Example
    red,ff0000
    good,green
    :END:
+
+.. _import:
 
 Import
 ------
@@ -754,6 +798,7 @@ using ``thing_to_import#tag1#tag#...``
 
       file/Base/container.org#C1 -- Call container and #C1 to all sections within it.
 
+.. _rearrange:
 
 Rearrange[\_TagOrPatterns]
 ---------------------------
@@ -835,6 +880,8 @@ Example (letters indicate content, lowercase denotes dead boxes):
    --        a1 b1 B2 c1| #bottom    A2 B2 B3 C2
    --ND:
 
+.. _freeze-order:
+
 FreezeOrder[\_TagOrPatterns]
 -----------------------------
 
@@ -849,3 +896,14 @@ or provide with a stable order.
    * -- resort everything according to default priority
    :END:
 
+.. _wpl:
+
+.. todo:: WPL
+   
+.. _check-shelves:
+   
+.. todo:: check shelves
+   
+.. _update-shelf:
+   
+.. todo:: update shelf
