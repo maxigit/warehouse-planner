@@ -8,39 +8,22 @@
 .. todolist:: 
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: -1
    :caption: Contents:
 
    usage
    sections
-   fames
+   selectors
+   tags
+   reports
    
 .. todo:: Structure files
    
-   - files
-   
-     how they work
-
-     - csv
-     
-       - sections
-
-     - orgmode
-
-     - wpl
-
-   - common concepts
-
-
-   - whp
-
-     how to invoke
-     differnet mode
 
    - brick
 
-   - report
-   
    - Reference: alphabetically sorted
+   
+   - advanced topic?  (regroup selector tags etc ...)
    
 
