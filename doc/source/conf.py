@@ -2,6 +2,19 @@ from sphinx.highlighting import lexers
 from pygments.lexer import RegexLexer
 from pygments.token import Comment, Text, Name, String, Number
 
+import os
+import sys
+import glob
+
+# Add the _exts directory to the Python path
+sys.path.append(os.path.abspath("../_exts"))
+
+# Automatically load all Python files in _exts
+extensions = [
+    os.path.splitext(os.path.basename(f))[0]
+    for f in glob.glob(os.path.join("../_exts", "*.py"))
+]
+
 class CommentOnlyLexer(RegexLexer):
     """A lexer that only highlights comments (starting with --) and leaves everything else plain."""
     name = "CommentOnly"
@@ -41,7 +54,7 @@ release = '2.2.0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['sphinx.ext.todo']
+extensions.append('sphinx.ext.todo')
 
 templates_path = ['_templates']
 exclude_patterns = []

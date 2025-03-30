@@ -629,9 +629,44 @@ dimensionTagOps dim = [dshow 'l' dLength, dshow 'w' dWidth, dshow 'h' dHeight]
 
 
 -- | Parse tags operations from a list a text.
--- If @include or @exclude is used, the tags on the right
+-- If @\@include@ or @\@exclude@ is used, the tags on the right
 -- will be used as glob pattern to filter the local tags
---lThis allows to read boxes but only set a s
+-- This allows to read boxes but only set a s
+{-  rST::tag-and-patterns
+ 
+Some sections accepts a list of tags and patterns as parameters. Those
+tags are usually applied on "success" and applied as well as the tags of
+a specific line. Tag and patterns allows to filter the final tags using
+thes special tags ``@exclude`` and ``@include``.
+
+``@exclude`` will exclude all the tags matching the (glob) patterns at
+is right
+
+``@include`` will only include all tags matching the (glob) patterns at
+is right.
+
+This is particularly usefull when import an existing file when some
+selected needs to be imported. Example, given the stock.org file
+
+::
+
+  :STOCKTAKE:
+  Bay No,Quantity,Style,Length,Width,Height,Orientations
+  shelf,1,A#status=active#bg=black,10,20,20,
+  :END:
+
+This will create a box A with the two properties ``status`` and ``bg``.
+Replace ``:STOCKTAKE:``, with ``:STOCKTAKE_@include#stat*``, will only
+the ``status`` property (it is the only one matching the pattern
+``stat*``. This can be achieved without modifying the file but importing
+it with extra tag
+
+::
+
+  :IMPORT:
+  file/stock.org#@include#stat*
+  :END:
+ -}
 parseTagAndPatterns :: [Text] ->  [Text] -> [Tag'Operation]
 parseTagAndPatterns tagsAndPatterns localTags = 
   let (defaultTags, pats) = break (`elem` ["@exclude", "@include"]) tagsAndPatterns

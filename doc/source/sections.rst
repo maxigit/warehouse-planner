@@ -5,42 +5,13 @@ Section Types
 
 .. todo:: consistent casing in title
 
+
 .. _tag or pattern:
+
 
 .. note:: Tag or Patterns
 
-   Some sections accepts a list of tags and patterns as parameters. Those
-   tags are usually applied on "success" and applied as well as the tags of
-   a specific line. Tag and patterns allows to filter the final tags using
-   thes special tags ``@exclude`` and ``@include``.
-
-   ``@exclude`` will exclude all the tags matching the (glob) patterns at
-   is right
-
-   ``@include`` will only include all tags matching the (glob) patterns at
-   is right.
-
-   This is particularly usefull when import an existing file when some
-   selected needs to be imported. Example, given the stock.org file
-
-   ::
-
-      :STOCKTAKE:
-      Bay No,Quantity,Style,Length,Width,Height,Orientations
-      shelf,1,A#status=active#bg=black,10,20,20,
-      :END:
-
-   This will create a box A with the two properties ``status`` and ``bg``.
-   Replace ``:STOCKTAKE:``, with ``:STOCKTAKE_@include#stat*``, will only
-   the ``status`` property (it is the only one matching the pattern
-   ``stat*``. This can be achieved without modifying the file but importing
-   it with extra tag
-
-   ::
-
-      :IMPORT:
-      file/stock.org#@include#stat*
-      :END:
+   .. ihaskell:: Base::tag-and-patterns
 
 .. _shelves:
 

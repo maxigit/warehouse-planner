@@ -10,3 +10,4 @@ results/*.html
 # worktree
 wt-*
 doc/build
+__pycache__
