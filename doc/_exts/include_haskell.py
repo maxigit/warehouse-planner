@@ -19,7 +19,7 @@ class IncludeHaskell(Include):
 
         # Automatically set start-after and end-before
         self.options.setdefault("start-after", f"rST::{tag}")
-        self.options.setdefault("end-before", "-}")
+        self.options.setdefault("end-before", "::rST")
 
         return super().run()
 

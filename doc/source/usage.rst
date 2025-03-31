@@ -79,7 +79,7 @@ The following section types are available:
   - :ref:`Layout <layout>`: describe shelf bays  and runs
   - :ref:`Orientations <orientations>`: box orientation rules
   - :ref:`Import <import>`: include local files
-  - :ref:`ColourMap <colour-map>`: rgb colour description
+  - :ref:`Colour <colour-map>`: rgb colour description
   - :ref:`CheckShelves <check-shelves>`: Check box overlap or out of box status
   - :ref:`WPL <wpl>`: Warehouse Programming Languge.
 

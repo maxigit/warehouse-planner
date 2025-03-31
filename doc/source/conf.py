@@ -5,6 +5,7 @@ from pygments.token import Comment, Text, Name, String, Number
 import os
 import sys
 import glob
+from pygments.filter import Filter
 
 # Add the _exts directory to the Python path
 sys.path.append(os.path.abspath("../_exts"))
@@ -15,8 +16,16 @@ extensions = [
     for f in glob.glob(os.path.join("../_exts", "*.py"))
 ]
 
+class StripBackslashFilter(Filter):
+    def filter(self, lexer, stream):
+        for ttype, value in stream:
+            yield ttype, value.replace("\\", "")
+
 class CommentOnlyLexer(RegexLexer):
     """A lexer that only highlights comments (starting with --) and leaves everything else plain."""
+    def __init__(self, **options):
+        super().__init__(**options)
+        self.add_filter(StripBackslashFilter())
     name = "CommentOnly"
     aliases = ["commentonly"]
     filenames = []
@@ -31,6 +40,7 @@ class CommentOnlyLexer(RegexLexer):
                        (r".", Text),           # Everything else is plain text
                    ]
     }
+
 
 # Register the lexer
 lexers["commentonly"] = CommentOnlyLexer()

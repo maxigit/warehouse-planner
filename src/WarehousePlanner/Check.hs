@@ -45,7 +45,29 @@ tagBoxesStatus shelf = do
   status <- checkShelfStatus shelf
   mapM_ (uncurry tagBoxStatus) status
 
+{- rST::status
+Shelves
+'''''''
 
+Check a box sticks out of its shelvf
+
+- ``@stickout=``: if the box sticks out of the shelves. The value is by how much.
+- ``@overhang``:  if the box overhangs depth-wise 
+
+Overlapping 
+'''''''''''''
+Check if boxes overlap with other boxes. 
+
+- ``@overlap``: box overlap with something
+- ``@ogroup=`: ids of all boxes overlapping 
+- ``@group-base``: id of the first box of a group
+- ``@overlappings=`: list of overlaps
+- ``@ovolume=``; volume of overlaps
+- ``@ovol=``; volume  as percentage of the volume box
+- ``@ogroup-<id>``: for each id overlapping with a box
+
+::rST
+-}
 tagBoxStatus :: Box s -> (StickoutStatus, [Box s]) -> WH () s
 tagBoxStatus box (status, overlappings) = do
   let cleanOps = [ ("@stickout",  case status of
@@ -61,7 +83,7 @@ tagBoxStatus box (status, overlappings) = do
                     , "@ogroup-" `isPrefixOf` tag
                     ]
       newOps = case overlappings of 
-                       [] -> map (,RemoveTag) ["@overlap", "@ogroup", "@ogroup-leader", "@overlapping", "@ovolume", "@ovol"]
+                       [] -> map (,RemoveTag) ["@overlap", "@ogroup", "@ogroup-base", "@overlapping", "@ovolume", "@ovol"]
                        _ -> let ids@(base:_) = map (tshow . boxId) allboxes
                                 allboxes = sort (box : overlappings)
                                 box'dims = [ (b, dimM )

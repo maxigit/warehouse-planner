@@ -666,7 +666,7 @@ it with extra tag
   :IMPORT:
   file/stock.org#@include#stat*
   :END:
- -}
+::rST -}
 parseTagAndPatterns :: [Text] ->  [Text] -> [Tag'Operation]
 parseTagAndPatterns tagsAndPatterns localTags = 
   let (defaultTags, pats) = break (`elem` ["@exclude", "@include"]) tagsAndPatterns
