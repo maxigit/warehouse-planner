@@ -98,7 +98,3 @@ Priority and selection order
 ----------------------------
 .. ihaskell :: Move::priority
 
-Set and use reference
----------------------
-
-.. ihaskell :: Csv::with-previous

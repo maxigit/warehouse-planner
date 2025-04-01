@@ -999,6 +999,115 @@ expandAttribute' (stripPrefix "/" -> Just xs'') | (pat', uncons -> Just (_,xs'))
                                return $ maybe ex (<> ex) (evaluator $ getTagValuesWithPresence shelf tag)
                                
 -- get the rank of the tag value
+{- rST::group-function
+Tags be set not only on the value of a propetry but also using a function depending on the current value of a property as well as all the values of that property for other boxes.
+
+This allows for example to calculate the rank or the index of value within the all the other boxes.
+
+Index and rank
+""""""""""""""
+
+this tag across all the boxes. The index is the index of the value of
+the values sorted alphabetically whereas the rank is the index of the
+value sorted by number of occurance. For example, if we have 1 boxes
+scanned by operator A, 3 boxes by operator B And 2 by operator C
+
+::
+
+   Box1#operator=A
+   Box2#operator=B
+   Box3#opertor=B
+   Box4#opertor=B
+   Box5#opertor=C
+   Box6#opertor=C
+
+The index of A is 1, B is 2 and C is 3, whereas the rank of A is 3 (only
+1 occurrence), B is 1 (3 occurrences) and C is 2. To get the rank or the
+index the special property syntax is ``$index``\ op\ ``[``\ tag\ ``]``
+and ``$rank``\ op\ ``[``\ tag\ ``]`` where op is an optional operator
+``-`` ``%`` or ``^`` followed by an integer.
+
+::
+
+   -n -- limit the index to n 
+   %n -- cycle within n value (index modulo n)
+   ^n -- map all indexes to the range 1-n
+
+Example, given the previous boxes
+
+::
+
+   $index[operator] -- A -> 1,  B ->  2, C -> 3
+   $rank[operator] -- A -> 3,  B ->  1, C -> 2
+   $index-2[operator] -- A -> 1,  B ->  2, C -> 2 (limit to 2)
+   $index%2[operator] -- A -> 1,  B ->  2, C -> 1 (cycle to 2)
+   $index^5[operator] -- A -> 1,  B ->  3, C -> 5 
+
+This can used to given a different colours to each boxes depending on
+the operator
+
+::
+
+   bg=Spectral10-$index%10[operator]
+
+Where Spectral10 is the 10 colours variant of the Spectral palette Of
+course different colours can be mixed
+
+::
+
+   bg=Spectral10-$index%10[style];Greys4-$index^4[style]
+
+Let's suppose we have 40 different styles. $index%10 will return 1 for
+1, 11, 21 etc ... But $index^4 will return 1 for 1-10, 2, for 2-19 etc
+... This way each of the 40 styles have a different colours.
+
+ago
+"""
+
+For dates, the
+``op``\ ``[``\ ``tag``\ ``]``\ ``transform the date not into a index but to an integer but the number of days ago (from today). Operators have a different meaning (subject to change)``
+
+::
+
+   $ago[date] -- number of days ago
+   $ago-0[date] -- number of years ago
+   $ago-n[date] -- normalize  date range To n
+   $ago-n[date] -- normalize  date range To n
+   $ago%n[date] -- year moduln n
+   $ago^0[date] -- within last week (1) , month (2), 3 moths (3), 6 months (4), year (5) , 3 years (6), more (7)$ago^n[date] -- log so that the current date range go from 1 to n
+
+transforming value
+""""""""""""""""""
+
+The index/position o the box in the current selection (taking ordering
+into account) can be used with ``$n``\ op\ ``[``\ [format]\ ``]``,
+``$select``\ op\ ``[``\ value1\ ``|``\ value2\ ``|``...\ ``]``,
+``$cycle``\ op\ ``[``\ value1\ ``|``\ value2\ ``|``...\ ``]``. This can
+be used to generate different values for each boxes
+
+::
+
+   --                       Box1    Box 2  Box3   Box4
+   $n[]              -- 1       2      3      4
+   $n*3[]            -- 3       6      9      12
+   $n%3[]            -- 1       2      3      1
+   $n^3[]            -- 1       2      3      3
+   $n[%02d]          -- 01      02     03     04
+   $select[red|BLUE] -- red     BLUE   BLUE   BLUE
+   $select[red|BLUE|]-- A       BLUE      
+   $cycle[red|BLUE]  -- red     BLUE   red    BLUE
+   
+   
+Event
+"""""
+
+``event`` and `eventId` will expand to the last event which modified the given tag.
+Example::
+
+   $even[bg]
+   
+Expands to the name of the event which last bodify ``bg``.
+::rST -}
 expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i -> 
   case stat of
     "rank" -> expandStatistic valueRank arg box prop xs
@@ -1098,7 +1207,51 @@ expandAttribute' (stripStatFunction -> Just (stat, arg, prop, xs))  = \box i ->
 
 
 expandAttribute' text = \_ _ -> return $ cons '$' text
+{- rST::box-attributes
+Certain attributes like the current location or orientation of a box can
+be used to set a new tag with the corresponding value. The following
+attributes are available.
 
+-  ``${shelfname}``:  current shelf
+-  ``${shelftags}``:  tag of the current shelf
+-  ``${fit}``:  How the box fits in the shelf : ``fit``, ``tight``, or ``out``
+-  ``${orientation}``:  current orientation
+-  ``${style}``:  current box style
+-  ``${id}``:  the box id 
+-  ``${content}``:  current box content (or colour)
+-  ``${con}``:  short box content
+-  ``${boxname}``:  box style + content
+-  ``${dimension}``:  box dimension in cm
+-  ``${offset}``:  box offset (within the shelf) in cm
+-  ``${coordinate}``:  box coordinate (as if row and column of similar
+-  ``${position-spec}``:  orientation , coordinate and relative offset if needded
+   boxes) (start at 1)
+-  ``${ol}``:  length coordinate (rounded)
+-  ``${ow}``:  width coordinate (rounded)
+-  ``${oh}``:  height coordinate (rounded)
+-  ``${cl}``:  length coordinate
+-  ``${cw}``:  width coordinate
+-  ``${ch}``:  height coordinate
+-  ``${ox}``:  length offset
+-  ``${oy}``:  width offset
+-  ``${oz}``:  height offset
+-  ``${@}`` shorthand for ``${@global}${@style}${@content}``
+-  ``${@content}``:  content priority
+-  ``${@style}``:  style priority
+-  ``${@global}``:  global priority
+-  ``${volume}``:  volume 
+-  ``${vol}``:  volume  in scientific notation
+-  ``#{hash}``: the character ``#``
+-  ``#{comma}``: the character ``,``
+-  ``#{divide}``: the character ``/``
+-  ``#{dollar}``: the character ``$``
+
+Example
+
+::
+
+   /pending,loc=${shelfname}  => All boxes in the pending location will be tagged with "loc=pending".
+::rST -}
 expandIntrinsic :: Text -> Box s -> Shelf s -> Either  Int Text
 expandIntrinsic prop0 box shelf = let
   (prop, evaluator) = parseEvaluator prop0
@@ -1251,7 +1404,41 @@ shorten content =  let
    
   
   
--- | Syntax tag[?]
+-- | Syntax tag[?] 
+{- rST::evaluator
+Tags and properties can be evaluated in different way resulting in
+different values. The syntax is the same for properties and tags
+
+-  ``?[then][:[:else]]`` test if the value is present.
+   if no parameters are given the value will the tag if preset
+-  ``??default`` value of default if the value is not preset
+-  ``:[start][:[end]]`` extract substring. ``start`` and ``end`` can be
+   a (negative) number.In that case, it represent how many character to
+   drop on each side. If it is a char, strip until (from) the given
+   char.
+-  ``%format`` integer formatting (as in
+   `printf <https://hackage.haskell.org/package/base-4.18.0.0/docs/Text-Printf.html>`__)
+
+For example, given box inh shelf ``E01.03/2``, and ``#top`` is present
+
+::
+
+   $[top?]  => top
+   $[bottom?]  => ''
+   $[top?on]  => on
+   $[bottom?Y:N]  => N
+   $[top??on top]  => top
+   $[bottom??at the bottom]  => at the bottom
+   ${shelfname} => E01.03/2
+   ${shelfname:.} => 03/2
+   ${shelfname::/} => E01.03
+   ${shelfname:.:/} => 2
+   ${shelfname:2} E01.03
+   ${shelfname:-2} /2
+   $[@global%05d] 00100
+
+This can be used in ordering as well.
+::rST -}
 parseEvaluator :: Text -> (Text, [Text] -> Maybe Text)
 parseEvaluator tag0 | Right (tag, elseValue) <- P.parse parser (unpack tag0) tag0 = 
   ( tag 
@@ -1351,7 +1538,18 @@ extractPriority key tags = do
     ns@(_:_) -> Just $ sum ns
     _ -> Nothing
 
+{- rST::break
+Normally, when moves boxes to shelves, shelves are filled continuously
+without any break betweenboxes of the same dimensions. Breaks can be
+introduced using special break tags. By tagging a given box with a break
+tag, the box is guaranteed to either start a new shelf, a new slice (row
+or column depending of the shelf filling strategy) or a new slot (no box
+"behind"). The corresponding tags are
 
+-  ``@start=new-shelf`` first box of an entire shelf
+-  ``@start=new-slice`` first box of a row/column
+-  ``@start=new-slot`` no box behind
+::rST -}
 extractBoxBreak :: Tags -> Maybe BoxBreak
 extractBoxBreak tags = case maybe [] (Set.toList) (Map.lookup "@start" tags) of
   ["new-slot"] -> Just StartNewSlot

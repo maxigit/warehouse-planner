@@ -58,9 +58,50 @@ readColorSet _ = Nothing
 
 
 
+-- | Get the RGB colour for a tagged object.
 -- underscores are stripped before looking for the color name
 -- this allow the same colours to be used more that once
 -- example, navy#_navy#white,  will use navy twice
+{- rST::colour
+All property colours accept more than one colours (separated by ``;``)
+which are colour names their hexadecimal description (for example
+"white" or "ffffff" ) . If multiples colours are given they will be
+mixed. However, each colour can only appear once (in the list of
+colour). It is however possible to give more weight to a colour by
+prefixing its name with a underscore. For example
+
+::
+
+   black#white => mid gray
+   black#_black#white => dark gray
+   black#_white#white => light gray
+
+Colour palettes defined in haskell `palette
+package <http://hackage.haskell.org/package/palette>`__ can be used. A
+colour is represented by the palette name, the number of colour it
+contains (if the palette of different variant) a dash and the colour
+index starting a 1. Example
+
+::
+
+   YlGn4-1 -- first colour of the 4 colours variant of the YlGn palette.
+   YlGn9-8 -- 8th colour of the 9 colours variant of the YlGn palette.
+   wheel24-2 -- 2nd of a colour wheel
+
+The palettes available are the one from the `Brewer
+Set <http://hackage.haskell.org/package/palette-0.3.0.2/docs/Data-Colour-Palette-BrewerSet.html>`__
+and the
+`ColorSet <http://hackage.haskell.org/package/palette-0.3.0.2/docs/Data-Colour-Palette-ColorSet.html>`__.
+Note that ``rybColor`` is name ``wheel24`` and the ``d3Colors`` 2 and
+for used double indexing Example
+
+::
+
+   d3Colors44-1  first  colour of the bright version of d3Color4
+   --       ^ bright
+   d3Colors41-1  first  colour of the dark version of d3Color4
+   --       ^ dark
+::rST -}
 colorFromTag :: HasTags tagged => Map Text Text -> tagged -> Text -> Maybe (Colour Double)
 colorFromTag colorMap box tag = let
   colors = mapMaybe (valueToColour colorMap) (getTagValues box tag)
@@ -72,6 +113,31 @@ colorFromTag colorMap box tag = let
 
 -- | Extract styling information from tag as properties
 -- use fg= foregroung
+{- rST::tags
+Some special property are used to control how boxes and
+shelves are displayed. For example assigning ``bg=red`` will set the background of
+the box to red. Those properties are
+
+-  ``bg`` background colour (shelves and boxes)
+-  ``fg`` foreground (text) colour (shelves and boxes)
+-  ``BG`` background colour of the maximum dimension (shelves)
+-  ``border`` border colour (shelves and boxes)
+-  ``circle``..\ ``circle4`` display a big circle of the given colour(s)
+   on the box. Ideal to mark boxes. (boxes only). Displays pies if more
+   than one colour is given.
+-  ``title`` text to display instead of the box or shelf name (shelves
+   and boxes)
+-  ``bar-title`` text to display in the box bar (for each depth) or
+   shelf bar.
+-  ``bar-bg`` colour of the shelf bar (shelf bar).
+-  ``bar-fg`` colour of the text of the shelf bar (shelf bar).
+-  ``no-bar-gauge`` if present, disable the colour gauge behind the box
+   bar or in the shelf bar.
+-  ``bar-gauge-x`` if present, offset the bar gauge by x times the box
+   index.
+-  ``bar-gauge-y`` if present, offset the bar gauge by y times the box
+   index.
+::rST -}
 stylingFromTags ::  Map Text Text -> Box s -> BoxStyling
 stylingFromTags colorMap box = let
   foreground = black `fromMaybe` (colorFromTag colorMap) box "fg"
