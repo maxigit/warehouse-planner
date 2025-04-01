@@ -177,6 +177,36 @@ parseShelfSelector selector = let
   BoxSelector boxSel shelfSel _ = parseBoxSelector selector
   in ShelfSelector boxSel shelfSel
 
+{- rST::number-selector
+The ``^`` symbol is used to select only a certain number of boxes per
+variant/content, per shelf, and in total
+
+::
+
+   ^ content ^ shelf ^ total
+
+Example
+
+::
+
+   TShirt^^^1 => the first box containing a t-shirt.
+   ^1 => The first box of each variations (colour)
+   ^2^3 =>  The two first boxes of each variations, with a maximum of 3 per shelves.
+
+Each number specification can also specify a starting number and some
+tags and attribute. If tags/attributes are specified, they will be
+used to sort the boxes before decidind which are the n first. If a
+"shelf" tag is specified the value of the tag will be used to group
+boxes instead of using the shelfname. Example
+
+::
+
+   TShirt^^^2:2 => The second box containg a t-shirt
+   TShirt^^^1:2 => The first, second box containg a t-shirt
+   TShirt^^^[price]1 => The box with the lowest price
+   TShirt^^^-[price]5 => the five box with hight price
+   TShirt^^^[price]{coordinate} => sort boxes by price tag and coordinate attributes
+::rST -}
 parseBoxNumberSelector :: Bool -> Text -> BoxNumberSelector
 parseBoxNumberSelector _ "" = BoxNumberSelector NoLimit NoLimit NoLimit
 parseBoxNumberSelector defUseBase s = case P.parse parser (unpack s) s of 

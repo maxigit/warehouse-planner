@@ -59,9 +59,9 @@ Overlapping
 Check if boxes overlap with other boxes. 
 
 - ``@overlap``: box overlap with something
-- ``@ogroup=`: ids of all boxes overlapping 
+- ``@ogroup=``: ids of all boxes overlapping 
 - ``@group-base``: id of the first box of a group
-- ``@overlappings=`: list of overlaps
+- ``@overlappings=``: list of overlaps
 - ``@ovolume=``; volume of overlaps
 - ``@ovol=``; volume  as percentage of the volume box
 - ``@ogroup-<id>``: for each id overlapping with a box

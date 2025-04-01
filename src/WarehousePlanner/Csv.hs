@@ -304,6 +304,8 @@ shelvesFromSelector name = do
 Update a set of shelves. CSV with the folowing header
 ::
 
+   stock_id,l,w,h,bottom,tag
+
 Updates the dimensions of the shelves containing selected boxes. Can
 be used to readjust shelves and their neighbour according to the
 space use by its content. Example
@@ -910,6 +912,41 @@ instance Csv.FromRecord r => Csv.FromRecord (BoxSelectorPlus r) where
                     
 -- | Like readFromRecocddWith  but allow the BoxSelector to
 -- be saved and reused in the next lines
+{- rST::with-previous
+When using csv file, part (or all) of a selector can be used as reference to be reused in
+the following lines. A reference can be set by enclosing it between
+``&[`` and ``]&``. It will be used as a base selector for all the
+subsequent lines of the same sections. This is somehow equivalent to
+select thoses boxes and then apply subsequent filter to the
+"selection".
+
+::
+
+   &[A]&,action   -- set A as reference and apply action to all As.
+   #tag,action2 -- equivalent to A#tag,action2
+   ]&,B,action3 -- reset the reference and apply action3 to all Bs
+
+The reference can only capture a part of the initial selector
+
+::
+
+   &[A]tag1,action   -- set A as reference and apply action to all As with tag1.
+   #tag2,action2 -- equivalent to A#tag2,action2
+   &[A#tag1]&,action   -- set A#tag1 as reference and apply action to all As with tag1.
+   #tag2,action2 -- equivalent to A#tag1#tag2,action2
+
+If only one delimiter is present, reference will set as follow
+
+::
+
+   &[A <=> &[A]&
+   A]&  <=> &[]A&
+   A&[extra  <=> A&[extra]&
+   A]&extra  <=> &[A]&extra
+
+This at the moment only works for the box selectors of the section
+related to moving or tagging boxes.
+::rST -}
 readFromRecordWithPreviousStyle :: Csv.FromRecord r => (BoxSelector -> r -> WH [a s] s) -> FilePath -> IO (WH [a s] s)
 readFromRecordWithPreviousStyle rowProcessor filename = do
     csvData <- BL.readFile filename
@@ -1543,7 +1580,7 @@ Specifies the boxes configuration within a shelves (if they are
 stacked up, on the side, how many etc). Boxes of a given style can be
 given different configuration for different shelves by specifing the
 shelf in the box selector. This is a CSV with the following header:
-``stock_id,orientation``\ Orientation must have the following format
+``stock_id,orientation`` Orientation must have the following format
 ``no-diagonal stackin-limitg orientations`` Example:
 
 ::

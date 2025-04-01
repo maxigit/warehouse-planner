@@ -1,17 +1,23 @@
-Section Types
+File Formats
+############
+
+Generalities
 ~~~~~~~~~~~~~
-
-.. todo:: sort section alphab
-
-.. todo:: consistent casing in title
-
 
 .. _tag or pattern:
 
+Tags or Patterns
+----------------
+.. ihaskell:: Base::tag-and-patterns
 
-.. note:: Tag or Patterns
+.. _with-previous:
 
-   .. ihaskell:: Base::tag-and-patterns
+Setting an reusing references
+-----------------------------
+.. ihaskell :: Csv::with-previous
+
+Section Types
+~~~~~~~~~~~~~
 
 .. _boxes:
 
