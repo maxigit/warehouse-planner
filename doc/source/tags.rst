@@ -1,5 +1,5 @@
-Working with Tags
-~~~~~~~~~~~~~~~~~
+Tags and Attributes
+~~~~~~~~~~~~~~~~~~~
 
 Virtual tags
 ------------
