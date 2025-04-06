@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>File Formats &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Boxes and shelves selector" href="selectors.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">File Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#generalities">Generalities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#tags-or-patterns">Tags or Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setting-an-reusing-references">Setting an reusing references</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#section-types">Section Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#boxes-tagorpatterns">BOXES[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#check-shelves">CHECK SHELVES</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#shelves">Shelves</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#overlapping">Overlapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#clones">CLONES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#colours">COLOURS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#delete">DELETE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#freezeorder-tagorpatterns">FREEZEORDER[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#import">IMPORT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#layout-mandatory">LAYOUT (Mandatory)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#moves-tagorpatterns">MOVES[_TagOrPatterns]</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#filling-order-exit-on-top">Filling order, Exit on top</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#partition-mode">Partition Mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tagging">Tagging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#empty-selection">Empty selection</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#moves-and-tags-tagorpatterns-mat-tam">MOVES AND TAGS[_TagOrPatterns] (MAT, TAM)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#orientations">ORIENTATIONS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id7">Orientations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#max-stacking-specification">max stacking specification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#rearrange-tagorpatterns">REARRANGE[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shelves-mandatory">SHELVES (Mandatory)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#special-shelves">Special shelves</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#name-expansion">Name expansion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#dimension-formula">dimension formula</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#shelf-types">shelf types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#update">Update</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#tag">Tag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#special-tag-ceiling">Special Tag: Ceiling</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-join-shelf-join">SHELF JOIN (shelf join)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-split-shelf-split">SHELF SPLIT (shelf split)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-tags-shelf-tags">SHELF_TAGS (shelf tags)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stocktake-tag">STOCKTAKE[_Tag]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tags-tagorpatterns">TAGS[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#transform-properties-transform-tags">TRANSFORM[=properties] (transform tags)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-shelf">UPDATE SHELF</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">File Formats</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/sections.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="file-formats">
+<h1>File Formats<a class="headerlink" href="#file-formats" title="Link to this heading"></a></h1>
+<section id="generalities">
+<h2>Generalities<a class="headerlink" href="#generalities" title="Link to this heading"></a></h2>
+<section id="tags-or-patterns">
+<span id="tag-or-pattern"></span><h3>Tags or Patterns<a class="headerlink" href="#tags-or-patterns" title="Link to this heading"></a></h3>
+<p>Some sections accepts a list of tags and patterns as parameters. Those
+tags are usually applied on “success” and applied as well as the tags of
+a specific line. Tag and patterns allows to filter the final tags using
+thes special tags <code class="docutils literal notranslate"><span class="pre">&#64;exclude</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;include</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&#64;exclude</span></code> will exclude all the tags matching the (glob) patterns at
+is right</p>
+<p><code class="docutils literal notranslate"><span class="pre">&#64;include</span></code> will only include all tags matching the (glob) patterns at
+is right.</p>
+<p>This is particularly usefull when import an existing file when some
+selected needs to be imported. Example, given the stock.org file</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:STOCKTAKE:
+Bay No,Quantity,Style,Length,Width,Height,Orientations
+shelf,1,A<span class="nt">#status</span>=active<span class="nt">#bg</span>=black,10,20,20,
+:END:
+</pre></div>
+</div>
+<p>This will create a box A with the two properties <code class="docutils literal notranslate"><span class="pre">status</span></code> and <code class="docutils literal notranslate"><span class="pre">bg</span></code>.
+Replace <code class="docutils literal notranslate"><span class="pre">:STOCKTAKE:</span></code>, with <code class="docutils literal notranslate"><span class="pre">:STOCKTAKE_&#64;include#stat*</span></code>, will only
+the <code class="docutils literal notranslate"><span class="pre">status</span></code> property (it is the only one matching the pattern
+<code class="docutils literal notranslate"><span class="pre">stat*</span></code>. This can be achieved without modifying the file but importing
+it with extra tag</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:IMPORT:
+file/stock.org#@include<span class="nt">#stat</span>*
+:END:
+</pre></div>
+</div>
+</section>
+<section id="setting-an-reusing-references">
+<span id="with-previous"></span><h3>Setting an reusing references<a class="headerlink" href="#setting-an-reusing-references" title="Link to this heading"></a></h3>
+<p>When using csv file, part (or all) of a selector can be used as reference to be reused in
+the following lines. A reference can be set by enclosing it between
+<code class="docutils literal notranslate"><span class="pre">&amp;[</span></code> and <code class="docutils literal notranslate"><span class="pre">]&amp;</span></code>. It will be used as a base selector for all the
+subsequent lines of the same sections. This is somehow equivalent to
+select thoses boxes and then apply subsequent filter to the
+“selection”.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>&amp;<span class="nv">[A]&amp;,action   -- set A as reference and apply action to all As.</span>
+<span class="nv">#tag,action2 -- equivalent to A#tag,action2</span>
+<span class="nv">]</span>&amp;,B,action3 <span class="c">-- reset the reference and apply action3 to all Bs</span>
+</pre></div>
+</div>
+<p>The reference can only capture a part of the initial selector</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>&amp;<span class="nv">[A]tag1,action   -- set A as reference and apply action to all As with tag1.</span>
+<span class="nv">#tag2,action2 -- equivalent to A#tag2,action2</span>
+<span class="nv">&amp;[A#tag1]</span>&amp;,action   <span class="c">-- set A#tag1 as reference and apply action to all As with tag1.</span>
+<span class="nt">#tag2</span>,action2 <span class="c">-- equivalent to A#tag1#tag2,action2</span>
+</pre></div>
+</div>
+<p>If only one delimiter is present, reference will set as follow</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>&amp;<span class="nv">[A &lt;=&gt; &amp;[A]&amp;</span>
+<span class="nv">A]&amp;  &lt;=&gt; &amp;[]A&amp;</span>
+<span class="nv">A&amp;[extra  &lt;=&gt; A&amp;[extra]&amp;</span>
+<span class="nv">A]&amp;extra  &lt;=&gt; &amp;[A]</span>&amp;extra
+</pre></div>
+</div>
+<p>This at the moment only works for the box selectors of the section
+related to moving or tagging boxes.</p>
+</section>
+</section>
+<section id="section-types">
+<h2>Section Types<a class="headerlink" href="#section-types" title="Link to this heading"></a></h2>
+<section id="boxes-tagorpatterns">
+<span id="boxes"></span><h3>BOXES[_TagOrPatterns]<a class="headerlink" href="#boxes-tagorpatterns" title="Link to this heading"></a></h3>
+<p>A set of boxes without initial location. They will be put in the
+<code class="docutils literal notranslate"><span class="pre">pending</span></code> shelf. It is a CSV with the following header :</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>style,quantity,l,w,h
+</pre></div>
+</div>
+<p>Tags provided in the section name, will be applied to the created
+boxes.</p>
+</section>
+<section id="check-shelves">
+<span id="id1"></span><h3>CHECK SHELVES<a class="headerlink" href="#check-shelves" title="Link to this heading"></a></h3>
+<p>Check for “problems” in the given shelves. The status of boxes (overlap or stickout of shelves)
+is given by tagging the checked boxes.</p>
+<section id="shelves">
+<h4>Shelves<a class="headerlink" href="#shelves" title="Link to this heading"></a></h4>
+<p>Check a box sticks out of its shelvf</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;stickout=</span></code>: if the box sticks out of the shelves. The value is by how much.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;overhang</span></code>:  if the box out of the mininum dimension (but still in max).</p></li>
+</ul>
+</section>
+<section id="overlapping">
+<h4>Overlapping<a class="headerlink" href="#overlapping" title="Link to this heading"></a></h4>
+<p>Check if boxes overlap with other boxes.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;overlap</span></code>: box overlap with something</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;ogroup=</span></code>: ids of all boxes overlapping</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;group-base</span></code>: id of the first box of a group</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;overlappings=</span></code>: list of overlaps</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;ovolume=</span></code>; volume of overlaps</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;ovol=</span></code>; volume  as percentage of the volume box</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;ogroup-&lt;id&gt;</span></code>: for each id overlapping with a box</p></li>
+</ul>
+</section>
+</section>
+<section id="clones">
+<span id="id2"></span><h3>CLONES<a class="headerlink" href="#clones" title="Link to this heading"></a></h3>
+<p>Allows to duplicate the given boxes. Used in conjunction with
+<cite>Deletes</cite> it can be used to do slotting by creating fake boxes
+(ghosts) which will make sure a slot is full and the remove later.
+For example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
+stock_id,quantity,content&#39;tag
+A^1,4,<span class="nt">#ghost</span>
+</pre></div>
+</div>
+<p>or (note the position of the tag <code class="docutils literal notranslate"><span class="pre">ghost</span></code></p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones-ghost:
+stock_id,quantity,tag
+A^1,4,
+</pre></div>
+</div>
+<p>will create 4 boxes with the tag <code class="docutils literal notranslate"><span class="pre">ghost</span></code> for each colour of A.
+<code class="docutils literal notranslate"><span class="pre">^1</span></code> makes sure we are doing the cloning operation once per colour.
+Without it, we will have 4 clones for every box.To create slots of
+for, we could move all As by 4 with</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Moves:
+stock_id,location
+A^4,destination
+</pre></div>
+</div>
+<p>No more that 4 of each colour will be moved using the ghosts if
+necessary. We can then delete the ghost using <code class="docutils literal notranslate"><span class="pre">:Delete:</span></code></p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Delete:
+A<span class="nt">#ghost</span>
+</pre></div>
+</div>
+<p>The content of a new box can specified before the tag. For example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
+stock_id,quantity,content&#39;tag
+A#&#39;BLK^1,4,RED<span class="nt">#ghost</span>
+</pre></div>
+</div>
+<p>Will create 4 red boxes for each BLK. By default only tags that are
+specified either as default tag or for each line will be applied to
+the box. To copy a box and ALL its tags, start the content/tag
+specification with a <code class="docutils literal notranslate"><span class="pre">!</span></code>.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
+stock_id,quantity,content&#39;tag
+A^1,4,!<span class="nt">#ghost</span>
+A^1,4,!new-content
+A^1,4,!new-content<span class="nt">#ghost</span>
+</pre></div>
+</div>
+</section>
+<section id="colours">
+<span id="colour-map"></span><h3>COLOURS<a class="headerlink" href="#colours" title="Link to this heading"></a></h3>
+<p>Defines a map colour name to colour value. The value can be either a
+existing colour name or a RGB value (without the <code class="docutils literal notranslate"><span class="pre">#</span></code>). It is a csv
+with the following header :</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>name,value
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:COLOURS:
+name,value
+red,ff0000
+good,green
+:END:
+</pre></div>
+</div>
+</section>
+<section id="delete">
+<span id="id3"></span><h3>DELETE<a class="headerlink" href="#delete" title="Link to this heading"></a></h3>
+<p>Delete the selected boxes.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Delete:
+A<span class="nt">#ghost</span>
+</pre></div>
+</div>
+<p>Delete all <code class="docutils literal notranslate"><span class="pre">A</span></code> boxes with the <code class="docutils literal notranslate"><span class="pre">ghost</span></code> tag.</p>
+</section>
+<section id="freezeorder-tagorpatterns">
+<span id="freeze-order"></span><h3>FREEZEORDER[_TagOrPatterns]<a class="headerlink" href="#freezeorder-tagorpatterns" title="Link to this heading"></a></h3>
+<p>Freeze the order boxes are stored internally accordingly to the order
+boxes are selected. Shouldn’t change much but might improve performance
+or provide with a stable order.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:FreezeOrder:
+selector
+* <span class="c">-- resort everything according to default priority</span>
+:END:
+</pre></div>
+</div>
+</section>
+<section id="import">
+<span id="id4"></span><h3>IMPORT<a class="headerlink" href="#import" title="Link to this heading"></a></h3>
+<p>Allows to import whole planner files either from existing files or
+generated on the fly from an import dispatch provider (such as <code class="docutils literal notranslate"><span class="pre">Fames</span></code>). Each line correspond to an
+import and will be replaced with the result of the import. Some
+imports accepts tags. Tags are given by “tagging” the import line
+using <code class="docutils literal notranslate"><span class="pre">thing_to_import#tag1#tag#...</span></code></p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">files/</span></code>pattern[<code class="docutils literal notranslate"><span class="pre">#</span></code>exclusive-pattern] Import all files
+matching the glob pattern. Files are local to the planner template
+directory.Tags can be used to filter out some file matched by the
+original pattern. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>files/Base.org <span class="c">--  Base.org file</span>
+files/Base/* <span class="c">-- all file present in the Base folder</span>
+files/Base/*<span class="nt">#moves</span>.org <span class="c">-- all file present in the Base folder except Base/moves.org</span>
+files/Base/moves.org <span class="c">-- Base/moves.org only</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">file/</span></code>pattern[<code class="docutils literal notranslate"><span class="pre">#</span></code>tags] Import one file matching the glob
+pattern. Files are local to the planner template directory.Tags
+are added to each sections of the corresponding file Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>file/Base/container.org<span class="nt">#C1</span> <span class="c">-- Call container and #C1 to all sections within it.</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+<section id="layout-mandatory">
+<span id="layout"></span><h3>LAYOUT (Mandatory)<a class="headerlink" href="#layout-mandatory" title="Link to this heading"></a></h3>
+<p>Describes how shelves should be displayed. Shelves are displayed as a
+matrix (row and column) of bays. A bay being a set of shelves stacked
+together from bottom to top. Each line of the layout section describe
+a row. Columns are separated by one or more space and each element of
+a bay by a pipe <code class="docutils literal notranslate"><span class="pre">|</span></code> Example:</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A1|A2|A3 B1|B2
+C D E
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">A1|A2|A3</span></code> form a bay of 3 shelves, A1 at the bottom, and A3 at the
+top next to a bay of 2 shelves B1 with B2 on top.</p>
+</section>
+<section id="moves-tagorpatterns">
+<span id="moves"></span><span id="id5"></span><h3>MOVES[_TagOrPatterns]<a class="headerlink" href="#moves-tagorpatterns" title="Link to this heading"></a></h3>
+<p>Describes a set of moves boxes to shelves. The first column describe
+a set of boxes to moves to a set of shelves. If multiple shelves are
+given, the Planner will fill the shelf in the given order and use the
+optimal orientation. If all boxes can’t fit the given shelves, the
+excedendatary boxes will be moved to the <strong>error</strong> shelf. It is CSV
+with the following header:</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>stock_id,location<span class="nv">[,orientations]</span>
+</pre></div>
+</div>
+<p>Please not the stock_id and location are in fact boxes and shelves
+selectors (see selectors sections). An orientation can be given
+optionnaly.</p>
+<section id="filling-order-exit-on-top">
+<h4>Filling order, Exit on top<a class="headerlink" href="#filling-order-exit-on-top" title="Link to this heading"></a></h4>
+<p>When moves boxes to a new set of shelves, shelves are filled by
+alphabetical order. For example the command</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Moves:
+stock_id,location
+,A|B|C
+</pre></div>
+</div>
+<p>Will move all boxes to the shelves A, B and C starting by filling A,
+the filling B and so on. Boxes are stacked in column form left to
+right. It is however sometimes desirable to carry on filling the same
+column on the next shelf rather than creating a new column on the
+current shelf. This can be achieved by specifying the “exit on top”
+option by starting the location with <code class="docutils literal notranslate"><span class="pre">^</span></code></p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Moves:
+stock_id,location
+,^A|B|C
+</pre></div>
+</div>
+<p>The code above, will fill the first colum into shelf A, then a column
+in B and then C. When the first column in C is full, it will start a
+2nd column in A, then B etc … Separating shelves with `` `` will
+indicate them as separate bay.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Move:
+:Moves:
+stock_id,location
+,^A|B C
+</pre></div>
+</div>
+<p>The code above, will fill the first columen in shelf A, then a column
+in B and then restart in A and so on until there is not column left
+in A and B. It will then start filling up C. (This syntax is similar
+to the syntax of the <strong>Layout</strong> section).</p>
+</section>
+<section id="partition-mode">
+<h4>Partition Mode<a class="headerlink" href="#partition-mode" title="Link to this heading"></a></h4>
+<p>When filling a shelf with boxes, the default strategy is to use to
+either fill the shelf on the right of the existing boxes or the top
+(which ever gives the best result). This works fine most of the time
+but might result in available spaces beeing “shadowed” by existing
+corner. In the following configuration, <code class="docutils literal notranslate"><span class="pre">#</span></code> represents existing
+boxes.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>|     .
+|a A  . B
+|##.......
+|##   .
+|## C . D
+|#####<span class="nt">#_d___</span>
+</pre></div>
+</div>
+<p>The default strategy will fill either d,D and B (filling at the
+right) or a,A and B (filling on top). The C zone is shadowed. To put
+a box in C, will requires to try every available rectangles which
+will makes the planner very slow. However, if needed, the partition
+mode (which parts of the shelf needs to be filled) can be specified
+before the shelf name (as with “exit on top”). One or more partition
+mode can be specified as follow: - <code class="docutils literal notranslate"><span class="pre">~</span></code> Above only (in the example
+above: a A B) - <code class="docutils literal notranslate"><span class="pre">:</span></code> Right only (in the example above: d D B) -
+<code class="docutils literal notranslate"><span class="pre">%</span></code> Best effort (excluding above corners a and d) C A D B Not
+specifying anything is equivalent to <code class="docutils literal notranslate"><span class="pre">~:</span></code> Another possibilty is to
+empty the shelf(ves) and fill the shelves with the existing boxes and
+the new ones. In that case, we might want to resort all boxes (old
+and new) or keep them in the orignial order (old then new). - <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>
+Sort old and new boxes - <code class="docutils literal notranslate"><span class="pre">+</span></code> old then new boxes in original order
+Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Moves:
+stock_id,location
+,%:~A <span class="c">-- tries a A B, A C B D and d D B</span>
+,A <span class="c">-- equivalent to ,~:A. Tries  a A B and d D B</span>
+,%:A <span class="c">-- tries A B C D and d D B</span>
+#!,@A <span class="c">-- resort content of shelf A</span>
+</pre></div>
+</div>
+</section>
+<section id="tagging">
+<h4>Tagging<a class="headerlink" href="#tagging" title="Link to this heading"></a></h4>
+<p>Tags provided as section parameter will be applied to the boxes
+<strong>successfully</strong> moved whereas boxes which couldn’t be moved (not
+enough space in the destination) will see those tags negated. For
+example, let’s say that we are trying to move 3 boxes in a shelf with
+<code class="docutils literal notranslate"><span class="pre">:Moves_moved_-error</span></code> but only the first 2 are moved successfully,
+the two first boxes with see <code class="docutils literal notranslate"><span class="pre">moved</span></code> and <code class="docutils literal notranslate"><span class="pre">-error</span></code> applied (which
+result in adding the tag moved but remove the tag error, whilst the
+last box will see the <code class="docutils literal notranslate"><span class="pre">-moved</span></code> and <code class="docutils literal notranslate"><span class="pre">error</span></code> apply. As a result the
+two first boxes will have the tag <code class="docutils literal notranslate"><span class="pre">moved</span></code> and the last one the tag
+<code class="docutils literal notranslate"><span class="pre">error</span></code>.</p>
+</section>
+<section id="empty-selection">
+<h4>Empty selection<a class="headerlink" href="#empty-selection" title="Link to this heading"></a></h4>
+<p>Sometimes, a selector doesn’t select anything. This can be because of
+a typo or because a box is not present anymore in the warehouse. To
+detect such cases setting the tag <code class="docutils literal notranslate"><span class="pre">&#64;noEmpty</span></code> will raise an error
+(and stop) if there is nothing to moves.</p>
+</section>
+</section>
+<section id="moves-and-tags-tagorpatterns-mat-tam">
+<span id="moves-and-tags"></span><h3>MOVES AND TAGS[_TagOrPatterns] (MAT, TAM)<a class="headerlink" href="#moves-and-tags-tagorpatterns-mat-tam" title="Link to this heading"></a></h3>
+<p>Allows to move and tag at the same time a set of boxes. This can be
+faster and less verbose than creating a move and a tag section. Tags
+needs to start with a <code class="docutils literal notranslate"><span class="pre">#</span></code> and location CAN start with <code class="docutils literal notranslate"><span class="pre">/</span></code></p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>stock_id,location<span class="nt">#tag</span><span class="nv">[,orientations]</span>
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:MAT:
+stock_id,location<span class="nt">#tag</span>
+<span class="nt">#new</span>,A<span class="nt">#-new</span>
+</pre></div>
+</div>
+<p>Moves all new boxes (with the new tag) to A and unset the new tag.
+Note that tag parameters will also be added to the “per-line” tag. As
+in <code class="docutils literal notranslate"><span class="pre">:Moves</span></code> tags are applied positively to boxes successfully moved
+and negatively to leftover.</p>
+</section>
+<section id="orientations">
+<span id="id6"></span><h3>ORIENTATIONS<a class="headerlink" href="#orientations" title="Link to this heading"></a></h3>
+<p>Specifies the boxes configuration within a shelves (if they are
+stacked up, on the side, how many etc). Boxes of a given style can be
+given different configuration for different shelves by specifing the
+shelf in the box selector. This is a CSV with the following header:
+<code class="docutils literal notranslate"><span class="pre">stock_id,orientation</span></code> Orientation must have the following format
+<code class="docutils literal notranslate"><span class="pre">no-diagonal</span> <span class="pre">stackin-limitg</span> <span class="pre">orientations</span></code> Example:</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TSHIRT/<span class="nt">#top</span>,^
+TSHIRT,!|=
+</pre></div>
+</div>
+<p>All T-shirt on top shelves (with the tag <code class="docutils literal notranslate"><span class="pre">top</span></code>) are up, whereas
+T-shirt in other shelves are being laid on the side or the other with
+no diagonal allowed.</p>
+<section id="id7">
+<h4>Orientations<a class="headerlink" href="#id7" title="Link to this heading"></a></h4>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>* <span class="c">-- all</span>
+% <span class="c">-- default orientations</span>
+^ <span class="c">-- up</span>
+= <span class="c">-- tilted forward</span>
+&gt; <span class="c">-- tilted right</span>
+| <span class="c">-- tilted forward &amp; right</span>
+&#39; <span class="c">-- rotated up</span>
+@ <span class="c">-- rotated side</span>
+</pre></div>
+</div>
+</section>
+<section id="max-stacking-specification">
+<h4>max stacking specification<a class="headerlink" href="#max-stacking-specification" title="Link to this heading"></a></h4>
+<p>By default, boxes are stacked using only one level of depth. This
+way, no boxes hide behind others and so all boxes are visible. To
+enable the use of multiple depth and allow boxes to hide each other,
+a minimum and max depth can set (before) A maximumn limit for height
+and width (actual bay length) can be specified (but no minum). Some
+or all of the limit can be specified as follow
+<code class="docutils literal notranslate"><span class="pre">depth</span> <span class="pre">|</span> <span class="pre">depth</span> <span class="pre">x</span> <span class="pre">height</span> <span class="pre">|</span> <span class="pre">lenght</span> <span class="pre">x</span> <span class="pre">depth</span> <span class="pre">x</span> <span class="pre">height</span></code> Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>,1:4 <span class="c">-- allow up to 4 depth level</span>
+,1: <span class="c">-- use a mininum of 2</span>
+,4 <span class="c">-- similar to 1:4</span>
+,4^ <span class="c">-- up to 4 levels, stacking boxes up</span>
+,1x2 <span class="c">-- max depth 1, max height 2</span>
+,1x2x3 <span class="c">-- max width 1, max depth 2, max height 3</span>
+,xx3 <span class="c">-- max height 3</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="rearrange-tagorpatterns">
+<span id="rearrange"></span><h3>REARRANGE[_TagOrPatterns]<a class="headerlink" href="#rearrange-tagorpatterns" title="Link to this heading"></a></h3>
+<p>Reposition the boxes in a cyclic manner to rearrange them, ensuring that
+boxes marked with the tag <code class="docutils literal notranslate"><span class="pre">#dead</span></code> are either eliminated or relocated
+to the end. This process involves filling the resultant gap by shifting
+the necessary boxes.</p>
+<p>By default, the reorganization occurs exclusively within groups of
+identical content. This emulates the refilling of vacant slots with
+boxes of the same content, typically sourced from an alternate shelf,
+often situated at the top. The retention of dead boxes facilitates the
+identification of the intended purpose of the empty slot.</p>
+<p>Moreover, instead of relocating all the boxes, the realignment can be
+executed in such a way that only a minimal number of boxes need to be
+shifted, allowing some boxes to remain in their original positions.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>boxes,actions
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">actions</span></code> is a list of box selectors indicating where to shift the box
+with.The syntax is as follow</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[-%/] [!]action1 &#39;&gt;&#39; [!]</span>action2 &#39;&gt;&#39; ...
+</pre></div>
+</div>
+<p>Within the actions, box selectors exclusively choose a subset of the
+main box selector. They are complete box selectors
+(<code class="docutils literal notranslate"><span class="pre">box-pattern[/shelf-pattern]</span></code>), unless the entire action begins with
+<code class="docutils literal notranslate"><span class="pre">/</span></code>, in which case, all selectors will be shelf selectors (i.e., boxes
+from the full box selector in the selected shelf).</p>
+<p>If an action begins with <code class="docutils literal notranslate"><span class="pre">!</span></code>, boxes that remain in the *selection*
+will stay in their current positions.</p>
+<p>If an action begins with <code class="docutils literal notranslate"><span class="pre">%</span></code>, boxes will be treated as a whole rather
+than by content.</p>
+<p>If an action begins with <code class="docutils literal notranslate"><span class="pre">-</span></code>, <code class="docutils literal notranslate"><span class="pre">#dead</span></code> boxes will be deleted.</p>
+<p>Example (letters indicate content, lowercase denotes dead boxes):</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:RAR:
+selector,actions
+T-Shirt,/<span class="nt">#top</span> &gt; <span class="nt">#bottom</span> <span class="c">-- Shift each box from the top shelf to the bottom shelf based on color</span>
+<span class="c">--</span>
+<span class="c">--        A2 B3 C2 C3| #top       a1 b1 C3 c1</span>
+<span class="c">--        -----------+-------- =&gt; -----------</span>
+<span class="c">--        a1 b1 B2 c1| #bottom    A2 B2 B3 C2</span>
+<span class="c">--</span>
+T-Shirt,/<span class="nt">#top</span> &gt; !<span class="nt">#bottom</span> <span class="c">-- Same, but the box on the bottom shelf (B2) remains in place</span>
+<span class="c">--</span>
+<span class="c">--        A2 B3 C2 C3| #top       a1 b1 C3 c1</span>
+<span class="c">--        -----------+-------- =&gt; -----------</span>
+<span class="c">--        a1 b1 B2 c1| #bottom    A2 B2 B3 C2</span>
+<span class="c">--</span>
+T-Shirt,/<span class="nt">#top</span> &gt; !<span class="nt">#bottom</span> <span class="c">-- B2 and C3 remain in place</span>
+<span class="c">--</span>
+<span class="c">--        A2 B3 C2 C3| #top       a1 b1 c1 C3</span>
+<span class="c">--        -----------+-------- =&gt; -----------</span>
+<span class="c">--        a1 b1 B2 c1| #bottom    A2 B3 B2 C2</span>
+<span class="c">--</span>
+T-Shirt,%/<span class="nt">#top</span> &gt; <span class="nt">#bottom</span> <span class="c">-- All boxes shift</span>
+<span class="c">--</span>
+<span class="c">--        A2 B3 C2 C3| #top       C3 a1 b1 c1</span>
+<span class="c">--        -----------+-------- =&gt; -----------</span>
+<span class="c">--        a1 b1 B2 c1| #bottom    B2 A2 B3 C2</span>
+<span class="c">--</span>
+T-Shirt,%/<span class="nt">#top</span> &gt; !<span class="nt">#bottom</span> <span class="c">-- B2 remains in place</span>
+<span class="c">--</span>
+<span class="c">--        A2 B3 C2 C3| #top       C3 a1 b1 c1</span>
+<span class="c">--        -----------+-------- =&gt; -----------</span>
+<span class="c">--        a1 b1 B2 c1| #bottom    A2 B2 B3 C2</span>
+<span class="c">--ND:</span>
+</pre></div>
+</div>
+</section>
+<section id="shelves-mandatory">
+<h3>SHELVES (Mandatory)<a class="headerlink" href="#shelves-mandatory" title="Link to this heading"></a></h3>
+<p>Create or update set of shelves. CSV with the following header :</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>name,comment,length,width,height,type<span class="nv">[,bottom]</span>
+</pre></div>
+</div>
+<p>For <code class="docutils literal notranslate"><span class="pre">lenght</span></code>, <code class="docutils literal notranslate"><span class="pre">width</span></code> and <code class="docutils literal notranslate"><span class="pre">height</span></code> a mix and a max can be
+specified as follow <em>min</em><code class="docutils literal notranslate"><span class="pre">;</span></code><em>max</em>. If <code class="docutils literal notranslate"><span class="pre">;</span></code> is not present the
+same formula will be used for both dimensions. When update both
+_min_ and _max_ or optional. The max of a dimension represents
+the physical maximum that can be use and the min the maximum that a
+box can be used after. For example when stacking boxes on the floor,
+the maximum height will be the ceiling (all box stacks have to fit
+under the ceiling) whereas the minimum height will the be maximum
+height reachable to handle the box. In other word the last box can
+stick out over min height, but no box will be stacked above the
+minimum height even though it will fit under the maximum height.
+<code class="docutils literal notranslate"><span class="pre">bottom</span></code> is optional. It represents the height of where the usable
+part of shelfstarts (taking the thickness of the shelf itself into
+accoun). This is used to determine if a shelf sticks out of the
+ceiling (when the <code class="docutils literal notranslate"><span class="pre">ceiling</span></code> tag is set). When using formula, the
+value taken from the refered shelf will be the top of the shelf (not
+the bottom). This is to allow the calculation of stacked shelves
+using the</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nn">{%-}</span>+10
+</pre></div>
+</div>
+<p>formula (10 there is the thickness of the shelf)</p>
+<section id="special-shelves">
+<h4>Special shelves<a class="headerlink" href="#special-shelves" title="Link to this heading"></a></h4>
+<p>The two first declared shelves have a special meaning. The first one
+is the <code class="docutils literal notranslate"><span class="pre">error</span></code> shelf and the second one is the <code class="docutils literal notranslate"><span class="pre">pending</span></code> shelf.
+The error shelf is used when ever a move try to fit more boxses than
+possible in the given shelf. All the selected boxes which doesn’t fit
+the given location are moved to the error shelf. The <code class="docutils literal notranslate"><span class="pre">pending</span></code>
+shelf is used when creating new boxes. Boxes created using the Boxes
+command are created within the <code class="docutils literal notranslate"><span class="pre">pending</span></code> shelf. It is best practice
+to name those shelves <code class="docutils literal notranslate"><span class="pre">error</span></code> and <code class="docutils literal notranslate"><span class="pre">pending</span></code> (or equivalent).</p>
+</section>
+<section id="name-expansion">
+<h4>Name expansion<a class="headerlink" href="#name-expansion" title="Link to this heading"></a></h4>
+<p>Groups of similar shelves can be created in one line using name
+expansion. Before creating a shelf, the name is expanded into one or
+many shelf names. One shelf will be created of each of the resulting
+name. Shelf name are split with the <code class="docutils literal notranslate"><span class="pre">|</span></code> separator, then when
+encountering <code class="docutils literal notranslate"><span class="pre">[..]</span></code>, name will be expanded by generating a name for
+each character (or word) within the bracket. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A|B =&gt; A B
+A<span class="nv">[01] =&gt; A0 A1</span>
+<span class="nv">A[ABx]X =&gt; AAX ABX AxX</span>
+<span class="nv">A[A Bx]</span>X =&gt; AAX ABxX
+</pre></div>
+</div>
+<p>More than one ranges can be provided, in this case all combinations
+will be generated. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[ABC][123]</span> =&gt; A1 A2 A3 B1 B2 B3 C1 C2 C3
+</pre></div>
+</div>
+</section>
+<section id="dimension-formula">
+<h4>dimension formula<a class="headerlink" href="#dimension-formula" title="Link to this heading"></a></h4>
+<p>Shelf dimension depending on the dimension on another shelf can be
+expressed using shelf dimension. This can be useful when shelf are
+back to back or one shelf is not physically a shelf but the space
+leftover between a shelf and wall. Basic arithmetic can be performed
+and the the same dimension of another shelf can be referenced using
+<code class="docutils literal notranslate"><span class="pre">{...}</span></code>. Wildcard (<code class="docutils literal notranslate"><span class="pre">_</span></code>,<code class="docutils literal notranslate"><span class="pre">+</span></code> and <code class="docutils literal notranslate"><span class="pre">-</span></code>) can be used to modify
+the corresponding character of the current shelf itsef. The minimum
+and maximum of two values can be computed using the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> and <code class="docutils literal notranslate"><span class="pre">|</span></code>
+operators. <code class="docutils literal notranslate"><span class="pre">%</span></code> can be used to match all characters (minus the
+number of character after it)<code class="docutils literal notranslate"><span class="pre">[</span></code>..<code class="docutils literal notranslate"><span class="pre">]</span></code> mirror the correspoding
+character within the range.<code class="docutils literal notranslate"><span class="pre">*</span></code> matches all character up to the
+nextExample</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>name,comment,length,width,height,type
+A1,,150,40,200,
+A2,,100,<span class="nn">{_-}</span>,20, <span class="c">-- same width as A1</span>
+B1,,200-<span class="nn">{A_}</span>,<span class="c">-- length 200 - length of A1</span>
+B2,,200-<span class="nn">{A_}</span>,<span class="c">-- length 200 - length of A2</span>
+B20,,200-<span class="nn">{A%}</span>,<span class="c">-- length 200 - length of A20</span>
+C1,,200-<span class="nn">{[AC]1}</span>,<span class="c">-- length 200 - length of A1</span>
+C2,,<span class="nn">{%1}</span>, <span class="c">-- length of C1</span>
+C3,,<span class="nn">{%-}</span>, <span class="c">-- length of C2</span>
+B21,,<span class="nn">{*2-}</span>, <span class="c">-- lengh of B20 (*2 matches B2)</span>
+</pre></div>
+</div>
+<p>For A2, <code class="docutils literal notranslate"><span class="pre">_</span></code> refers to the first character of the current shelf,
+i.e, <code class="docutils literal notranslate"><span class="pre">A</span></code> and <code class="docutils literal notranslate"><span class="pre">-</span></code> refers to the second character (<code class="docutils literal notranslate"><span class="pre">2</span></code>) minus 1
+‘&gt; <code class="docutils literal notranslate"><span class="pre">1</span></code> For B1, the <code class="docutils literal notranslate"><span class="pre">_</span></code> is in the second position and therefore
+correspond to the second character of <code class="docutils literal notranslate"><span class="pre">B1</span></code> : <code class="docutils literal notranslate"><span class="pre">1</span></code>. For C1, the
+<code class="docutils literal notranslate"><span class="pre">[AC]</span></code> is transform into <code class="docutils literal notranslate"><span class="pre">A</span></code> (C-&gt;A, B-&gt;B, A-&gt;C) An accessor can
+be added to a reference to select a particular dimension of the
+refered object. This is done with <code class="docutils literal notranslate"><span class="pre">{</span></code>ref<code class="docutils literal notranslate"><span class="pre">:</span></code>accessor<code class="docutils literal notranslate"><span class="pre">}</span></code>,
+where accessor can be</p>
+<p>‘  <code class="docutils literal notranslate"><span class="pre">length</span></code> min length
+‘  <code class="docutils literal notranslate"><span class="pre">width</span></code> min width
+‘  <code class="docutils literal notranslate"><span class="pre">height</span></code> min height
+‘  <code class="docutils literal notranslate"><span class="pre">Length</span></code> max length
+‘  <code class="docutils literal notranslate"><span class="pre">Width</span></code> max width
+‘  <code class="docutils literal notranslate"><span class="pre">Height</span></code> max height
+‘  <code class="docutils literal notranslate"><span class="pre">bottom</span></code> bottom (height from the ground)
+‘  <code class="docutils literal notranslate"><span class="pre">top</span></code> top (height from the ground)
+‘  <code class="docutils literal notranslate"><span class="pre">usedLength</span></code> used length (depends on boxes within)
+‘  <code class="docutils literal notranslate"><span class="pre">usedWidth</span></code> used width
+‘  <code class="docutils literal notranslate"><span class="pre">usedHeight</span></code> used heigth
+‘  <code class="docutils literal notranslate"><span class="pre">availableLength</span></code> (min length ‘ used available)
+‘  <code class="docutils literal notranslate"><span class="pre">availableWidth</span></code> (min width ‘ used available)
+‘  <code class="docutils literal notranslate"><span class="pre">availableHeight</span></code> (min height ‘ used available)
+‘  <code class="docutils literal notranslate"><span class="pre">AvailableLength</span></code> (max length ‘ used available)
+‘  <code class="docutils literal notranslate"><span class="pre">AvailableWidth</span></code> (max width ‘ used available)
+‘  <code class="docutils literal notranslate"><span class="pre">AvailableHeight</span></code> (max height ‘ used available)</p>
+<p>Please note, that <code class="docutils literal notranslate"><span class="pre">l</span></code> can be used for <code class="docutils literal notranslate"><span class="pre">length</span></code>, <code class="docutils literal notranslate"><span class="pre">al</span></code> for
+<code class="docutils literal notranslate"><span class="pre">availableLength</span></code>, <code class="docutils literal notranslate"><span class="pre">AL</span></code> for <code class="docutils literal notranslate"><span class="pre">AvailableLength</span></code> etc …</p>
+</section>
+<section id="shelf-types">
+<h4>shelf types<a class="headerlink" href="#shelf-types" title="Link to this heading"></a></h4>
+<p>The shelf type determines the default boxes orientation and filling
+strategy. The current shelf style are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Shelf</span></code> (normal first) : tilted row first</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">deadzone</span></code> : allow up column first</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Update</span></code> allows to update an existing shelf (tags will be ignored)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">other</span></code>, column first</p></li>
+</ul>
+</section>
+<section id="update">
+<h4>Update<a class="headerlink" href="#update" title="Link to this heading"></a></h4>
+<p>Shelves can be updated by redefining it and setting the type to
+<code class="docutils literal notranslate"><span class="pre">Update</span></code>. Formulas can use the value of the shelf itself. This
+feature allow to tweak a shelf previously defined within a group.
+Note that for update, the shelf name is not expanded but filtered
+using the normal selector syntax (<em>box</em><code class="docutils literal notranslate"><span class="pre">/</span></code><em>shelf</em>).</p>
+</section>
+<section id="tag">
+<h4>Tag<a class="headerlink" href="#tag" title="Link to this heading"></a></h4>
+<p>Tags can be used to select shelf when doing box moves, but is also
+used to group shelves when displaying the summary. Shelves are
+grouped using the <code class="docutils literal notranslate"><span class="pre">summary</span></code> property. Note that shelves with a
+summary value starting with a <code class="docutils literal notranslate"><span class="pre">_</span></code> are considered as virtual shelves
+and are not taken in to account when calculated used spaces and floor
+space. Also, shelves with the <code class="docutils literal notranslate"><span class="pre">sep</span></code> tag are seen as separator :
+shelves present for layout purpose only and are excluded from the
+summary as well as being displayeddifferently.</p>
+</section>
+<section id="special-tag-ceiling">
+<h4>Special Tag: Ceiling<a class="headerlink" href="#special-tag-ceiling" title="Link to this heading"></a></h4>
+<p>The special attribute <code class="docutils literal notranslate"><span class="pre">ceiling=</span></code> set the height of the ceiling. If
+the total height + bottom offset is greater than the ceiling value,
+the shelf is considered to high. It will be tagged with <code class="docutils literal notranslate"><span class="pre">'tooHigh</span></code>,
+and the height of the shelf will be truncated accordingly to fit the
+given ceiling.</p>
+</section>
+</section>
+<section id="shelf-join-shelf-join">
+<span id="shelf-join"></span><h3>SHELF JOIN (shelf join)<a class="headerlink" href="#shelf-join-shelf-join" title="Link to this heading"></a></h3>
+<p>Shelves which have been split can be join back together. The selector
+must refer to the base shelf (not the split ones)</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:SHELF_SPLIT:
+stock_id,location,length,width,height
+,A, <span class="nn">{%}</span>/2,<span class="nn">{%}</span>/2, <span class="c">-- create A/ba A/bb A/ab</span>
+:END:
+:SHELF JOIN:
+location
+A <span class="c">-- join A/ba A/bb and A/ab to A</span>
+:END:
+</pre></div>
+</div>
+</section>
+<section id="shelf-split-shelf-split">
+<span id="shelf-split"></span><h3>SHELF SPLIT (shelf split)<a class="headerlink" href="#shelf-split-shelf-split" title="Link to this heading"></a></h3>
+<p>Split a shelf performing guillotine cut. The dimension columns
+specify the dimension to cut. it can be any formula with reference
+another shelf or objet. For each object the dimension corresponding
+to the column will be used, unless accessor is specified (see
+<a class="reference external" href="#dimension-formula">dimension formula</a>) If a box selector is
+specified, the dimension of the first box found can be used. Extra
+object</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">{%}</span></code> or <code class="docutils literal notranslate"><span class="pre">{shelf}</span></code> the shelf itself</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{content}</span></code> dimension of bounding box of box inside the shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{=}</span></code> or <code class="docutils literal notranslate"><span class="pre">{|}</span></code> etc box with the given orientation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{*}</span></code> box with first possible orientation</p></li>
+</ul>
+<p>The split shelf is resized and the created ones have the same name
+with a 3 letter suffix separated with <code class="docutils literal notranslate"><span class="pre">/</span></code> index added. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:SHELF_SPLIT:
+stock_id,location,length,width,height
+,A, <span class="nn">{%}</span>/2, , <span class="c">-- cut A in 2 of half the length : A A/baa</span>
+,A, <span class="nn">{%}</span>/4 <span class="nn">{%}</span>/2, 50, 10 <span class="c">-- cut A in 12 3x2x2 A A/baa A/caa A/bba A/cba ...</span>
+,A, <span class="nn">{B:height}</span>,, <span class="c">-- cut length using shelf B height</span>
+box,A,<span class="nn">{|}</span>*2,, cut at two time the lenght of box with | orientation
+</pre></div>
+</div>
+</section>
+<section id="shelf-tags-shelf-tags">
+<span id="shelf-tags"></span><h3>SHELF_TAGS (shelf tags)<a class="headerlink" href="#shelf-tags-shelf-tags" title="Link to this heading"></a></h3>
+<p>Tag the shelves containing selected boxes. Tags can be used to
+specify the styling of a shelves. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:SHELF_TAGS:
+stock_id,tag
+A,tag <span class="c">-- tag all shelves containing A</span>
+/S,tag <span class="c">-- tag shelves with name S</span>
+/<span class="nt">#sep</span>,fg=blue <span class="c">-- set the foreground of all shelves having the `sep` tag</span>
+<span class="nt">#new</span>/<span class="nt">#top</span>,tag <span class="c">-- tag all &#39;top&#39; shelves containing a items with the new tag</span>
+</pre></div>
+</div>
+</section>
+<section id="stocktake-tag">
+<span id="stocktake"></span><h3>STOCKTAKE[_Tag]<a class="headerlink" href="#stocktake-tag" title="Link to this heading"></a></h3>
+<p>Describes a set of boxes with their location and eventually
+orientation. It is a CSV with the following header</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>Bay No,Style,QTY,Length,Width,Height,Orientations
+</pre></div>
+</div>
+<p>Tags provided in the section name, will be applied to the created
+boxes. For example, all boxes created in the section
+<code class="docutils literal notranslate"><span class="pre">:Stocktake-tag1-tag2</span></code> will be tagged with <code class="docutils literal notranslate"><span class="pre">tag1</span></code> and <code class="docutils literal notranslate"><span class="pre">tag2</span></code> If
+the <code class="docutils literal notranslate"><span class="pre">&#64;throwError</span></code> is given and box doesn’t fit in the given shelf.
+Instead of moving the box to the error shelf, the planner will stop
+and generate an error message.</p>
+</section>
+<section id="tags-tagorpatterns">
+<span id="tags"></span><h3>TAGS[_TagOrPatterns]<a class="headerlink" href="#tags-tagorpatterns" title="Link to this heading"></a></h3>
+<p>Tags allow boxes to be selected (via selector) to be either moved or
+tagged but also change their behavior (colour, priority, etc …) via
+properties. A Tag can be removed by setting with <code class="docutils literal notranslate"><span class="pre">-</span></code> The body is a
+CSV with the following header</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>stock_id,tag
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
+stock_id,tag
+,<span class="nt">#tag1</span>
+A,<span class="nt">#-tag1</span>
+<span class="nt">#tag1</span>,<span class="nt">#bg</span>=red
+</pre></div>
+</div>
+<p>The first line, tag all boxes with <code class="docutils literal notranslate"><span class="pre">tag1</span></code>. The second line remove
+<code class="docutils literal notranslate"><span class="pre">tag1</span></code> from the A boxes. The last line set the background property
+of the box tagged with <code class="docutils literal notranslate"><span class="pre">tag1</span></code> to red.</p>
+</section>
+<section id="transform-properties-transform-tags">
+<span id="transform-tags"></span><h3>TRANSFORM[=properties] (transform tags)<a class="headerlink" href="#transform-properties-transform-tags" title="Link to this heading"></a></h3>
+<div class="line-block">
+<div class="line">Allow to use POSIX regular expression to subsitute existing tags
+into new ones. Depending on if properties are given or not, the
+behavior will be slightly different. Without properties, each tag
+of the selecting boxes are matched against the pattern. A set of
+new tags is generated by substituing the pattern with the
+substitution string which is then splitted using <code class="docutils literal notranslate"><span class="pre">#</span></code>. Other tags
+can be removed by generating a <em>negative</em> tag (using <code class="docutils literal notranslate"><span class="pre">-</span></code>). The
+original tag is not deleted but can be done using <code class="docutils literal notranslate"><span class="pre">-\0</span></code>.</div>
+<div class="line">If properties are given, the transformations will only apply to the
+values of those properties. This should be faster but doesn’t allow
+renaming or deleting a tag/property. It is a CSV with the following
+header</div>
+</div>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>stock_id,pat(tern),sub(stitue)
+</pre></div>
+</div>
+<p>Examples</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A,black,blue <span class="c">--&gt; add the blue tag to each box of type A</span>
+,black,blue<span class="nt">#-black</span> <span class="c">--&gt; replace black by blue</span>
+,black,blue#-0 <span class="c">--&gt; replace black by blue. (remove black)</span>
+,^<span class="nv">[[:upper]]</span>,-0 <span class="c">--&gt; remove all tags starting with an uppercase</span>
+</pre></div>
+</div>
+<p>Group (using `(..)`) can be use to extract substring</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>,(..)-(..),2:1 <span class="c">--&gt; add BB:AA from the tag AA-BB</span>
+</pre></div>
+</div>
+<p>Properties and virtual tags are expanded in the regexp itself.
+Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
+stock_id,tag
+,shelfname=$shelfname <span class="c">-- set shelfname property using shelfname attribute</span>
+:END:
+:TRANSFORM:
+stock_id,pat,sub
+,location=.*<span class="si">$[shelfname]</span>,unmoved <span class="c">-- detect boxes which haven&#39;t changed</span>
+</pre></div>
+</div>
+<p>In this example, we need to use an intermediate property
+<code class="docutils literal notranslate"><span class="pre">shelfname</span></code> because the name of the shelf can contains <code class="docutils literal notranslate"><span class="pre">/</span></code> which
+are replaced by <code class="docutils literal notranslate"><span class="pre">'</span></code> when the tag is set. For example if object A is
+in location <code class="docutils literal notranslate"><span class="pre">W/2</span></code>, it will have a tag <code class="docutils literal notranslate"><span class="pre">location=W'2</span></code> (instead of
+<code class="docutils literal notranslate"><span class="pre">location=W/2</span></code>). <code class="docutils literal notranslate"><span class="pre">$shelfname</span></code> expands to <code class="docutils literal notranslate"><span class="pre">W/2</span></code> whereas the
+value of the shelfname propery will be W’2 (<code class="docutils literal notranslate"><span class="pre">shelfname=W'2</span></code>). This
+behavior might be fixed and therefore this workaround not necessary
+in a future versioin. To detect moves only if the the 3 first letter
+of the shelf name have changed :</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
+stock_id,tag
+,shelfname=$shelfname <span class="c">-- set shelfname property using shelfname attribute</span>
+:END:
+:TRANSFORM:
+stock_id,pat,sub
+,shelfname=(...).*,shortshelf=1
+,location=(...).*,shortloc=1
+,shortshelf=<span class="si">$[shortloc]</span>,unmoved <span class="c">-- uses the value of shortloc property</span>
+:END:
+:TRANSFORM_shortshelf:
+stock_id,pat,sub
+,A,B <span class="c">-- rename the value of short shelf from A to B</span>
+:E
+</pre></div>
+</div>
+</section>
+<section id="update-shelf">
+<span id="id8"></span><h3>UPDATE SHELF<a class="headerlink" href="#update-shelf" title="Link to this heading"></a></h3>
+<p>Update a set of shelves. CSV with the folowing header</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>stock_id,l,w,h,bottom,tag
+</pre></div>
+</div>
+<p>Updates the dimensions of the shelves containing selected boxes. Can
+be used to readjust shelves and their neighbour according to the
+space use by its content. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:UPDATE_SHELVES:
+stock_id,l,w,h,bottom,tag
+/A,<span class="nn">{A}</span>+<span class="nn">{B:availableLength}</span>,, <span class="c">-- expands A with B free space</span>
+/B,<span class="nn">{B:usedLength}</span>,, <span class="c">-- shrink B to its content</span>
+</pre></div>
+</div>
+<p>Expand A and shrink B by the same amount (so that A+B stays the
+same),</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="selectors.html" class="btn btn-neutral float-right" title="Boxes and shelves selector" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

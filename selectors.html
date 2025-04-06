@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boxes and shelves selector &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Working with Tags" href="tags.html" />
+    <link rel="prev" title="File Formats" href="sections.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Boxes and shelves selector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#glob-pattern">Glob pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#style-pattern">style pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tags">tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location-pattern">Location pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#location-tag">Location tag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#number-restriction">number restriction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#priority-and-selection-order">Priority and selection order</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Working with Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Boxes and shelves selector</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/selectors.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="boxes-and-shelves-selector">
+<h1>Boxes and shelves selector<a class="headerlink" href="#boxes-and-shelves-selector" title="Link to this heading"></a></h1>
+<p>Most operations, (moving and tagging) operates on boxes. To do so, a set
+of boxes is selected and then the operation is applied. The main way of
+selecting a box is by specifying a style, which will select all boxes of
+the given style. However, more complex selection can be selecting boxes
+by tags and locations (as well as location tag). The format of a box
+selector is the following</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>style pattern # tag(s) pattern / location pattern # location tag
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt =&gt; all boxes with the style &#39;TShirt&#39;
+<span class="nt">#white</span>  =&gt;  all boxes with the &#39;white&#39; tag
+TShirt<span class="nt">#white</span> =&gt; all boxes with the style &#39;TShirt&#39; AND the white tag
+/A =&gt; All boxes in the A Shelves
+<span class="nt">#white</span>/A* =&gt; All boxes in a shelves with the name starting with &#39;A&#39; shelves AND The white tag
+TShirt/<span class="nt">#top</span> =&gt; ALL Tshirt on the shelf with the &#39;top&#39; tag.
+</pre></div>
+</div>
+<section id="glob-pattern">
+<h2>Glob pattern<a class="headerlink" href="#glob-pattern" title="Link to this heading"></a></h2>
+<p>When selecting boxes or shelves, wildcard can be used to match the
+name and the tags of the box or the shelf using <a class="reference external" href="https://en.wikipedia.org/wiki/Glob_(programming)">UNIX glob
+pattern</a>.The
+<code class="docutils literal notranslate"><span class="pre">|</span></code> operator can also be used to give a list of alternatives.
+Example, given the location</p>
+<ul class="simple">
+<li><p>A01</p></li>
+<li><p>A02</p></li>
+<li><p>A11</p></li>
+<li><p>A12</p></li>
+<li><p>B1</p></li>
+<li><p>B2</p></li>
+<li><p>B3</p></li>
+</ul>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A* =&gt; A01 A02 A03 A11 A12 A3
+?? =&gt; B1 B2 B3 <span class="c">-- two characters only</span>
+B<span class="nv">[12]</span> =&gt; B1 B2 <span class="c">-- 3 is not in the range 1-2</span>
+A?1|B2 =&gt; A01, A11 , B2
+</pre></div>
+</div>
+<p>Please note that the syntax used to create group of shelves is only a
+subset of the glob pattern syntax. Even though pattern globing can
+only create disjunction (OR), conjunction (AND) can be achieve using
+tags. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>*ED|*XL =&gt; select things which are red OR extra large..
+*RED,red =&gt; tag all RED thing
+*XL,xl =&gt; tag all XL things
+<span class="nt">#red#xl</span> =&gt; select thing which are red AND extra large.
+</pre></div>
+</div>
+</section>
+<section id="style-pattern">
+<h2>style pattern<a class="headerlink" href="#style-pattern" title="Link to this heading"></a></h2>
+<p>A glob pattern on the name of the box.</p>
+</section>
+<section id="tags">
+<h2>tags<a class="headerlink" href="#tags" title="Link to this heading"></a></h2>
+<p>Starts should start and be separated with <code class="docutils literal notranslate"><span class="pre">#</span></code>. Only boxes with ALL
+tags will be selected. Preceding a tag with <code class="docutils literal notranslate"><span class="pre">-</span></code> means boxes wich
+don’t have this tag. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt<span class="nt">#red#-XL</span> =&gt; all red tshirt , except the XL Ones.
+</pre></div>
+</div>
+</section>
+<section id="location-pattern">
+<h2>Location pattern<a class="headerlink" href="#location-pattern" title="Link to this heading"></a></h2>
+<p>A glob pattern on the name of the shelf.</p>
+</section>
+<section id="location-tag">
+<h2>Location tag<a class="headerlink" href="#location-tag" title="Link to this heading"></a></h2>
+<p>A glob pattern on the tag to select a shelf.</p>
+</section>
+<section id="number-restriction">
+<span id="number"></span><h2>number restriction<a class="headerlink" href="#number-restriction" title="Link to this heading"></a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">^</span></code> symbol is used to select only a certain number of boxes per
+variant/content, per shelf, and in total</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>^ content ^ shelf ^ total
+</pre></div>
+</div>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt^^^1 =&gt; the first box containing a t-shirt.
+^1 =&gt; The first box of each variations (colour)
+^2^3 =&gt;  The two first boxes of each variations, with a maximum of 3 per shelves.
+</pre></div>
+</div>
+<p>Each number specification can also specify a starting number and some
+tags and attribute. If tags/attributes are specified, they will be
+used to sort the boxes before decidind which are the n first. If a
+“shelf” tag is specified the value of the tag will be used to group
+boxes instead of using the shelfname. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt^^^2:2 =&gt; The second box containg a t-shirt
+TShirt^^^1:2 =&gt; The first, second box containg a t-shirt
+TShirt^^^<span class="nv">[price]1 =&gt; The box with the lowest price</span>
+<span class="nv">TShirt^^^-[price]5 =&gt; the five box with hight price</span>
+<span class="nv">TShirt^^^[price]</span><span class="nn">{coordinate}</span> =&gt; sort boxes by price tag and coordinate attributes
+</pre></div>
+</div>
+</section>
+<section id="priority-and-selection-order">
+<span id="priority"></span><h2>Priority and selection order<a class="headerlink" href="#priority-and-selection-order" title="Link to this heading"></a></h2>
+<p>Boxes are selected in semi-arbitrary order which can be modified
+setting up priority. The order in which box are selected affect the
+way boxes are actually stacked on shelves but also which boxese are
+selected when using number restriction (see above). By default boxes
+are selected in order by</p>
+<ul class="simple">
+<li><p>global priority</p></li>
+<li><p>style name (ascending)</p></li>
+<li><p>style priority (priority within style)</p></li>
+<li><p>content name</p></li>
+<li><p>content priority (priority within content)</p></li>
+</ul>
+<p>By default, all priorities are set 100. Priorities can be modified by
+assigning the special tags, <code class="docutils literal notranslate"><span class="pre">&#64;global</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;style</span></code>, <code class="docutils literal notranslate"><span class="pre">&#64;content</span></code> but
+also any other tag using the <code class="docutils literal notranslate"><span class="pre">^[tag]</span></code> notation (see number
+restriction).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;global</span></code> global priority. Can be used to move a box first.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;style</span></code> priority within the same style. Can be use to move a
+box at the beginning of a style.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;content</span></code> priority within box of the same content (styles and
+variations). Can be</p></li>
+</ul>
+<p>For example, given fox boxes, A-Black, A-Red, B-Black, B-Red. Boxes
+will be stacked in the following fs order</p>
+<ul class="simple">
+<li><p>B-Black</p></li>
+<li><p>B-Red</p></li>
+<li><p>A-Black</p></li>
+<li><p>A-Red</p></li>
+</ul>
+<p>or</p>
+<ul class="simple">
+<li><p>A-Black</p></li>
+<li><p>A-Red</p></li>
+<li><p>B-Black</p></li>
+<li><p>B-Red</p></li>
+</ul>
+<p>A and B having the same global priority, the system is free to start
+with A or B. However, content (Black and Red) are sorted
+alphabetically. To ensure that, A is processed before B. We need to
+assign it a priority &lt; 100 to A (global priority) with</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A,@content=1
+</pre></div>
+</div>
+<p>To get B-Red boxes before B-Black boxes we can assign it a priority
+(style priority)</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>B-Red,@style=1
+</pre></div>
+</div>
+<p>Settings those two priorities will result in the following order :</p>
+<ul class="simple">
+<li><p>A-Black # &#64;style=100 &#64;content=1</p></li>
+<li><p>A-Red # &#64;style=100 &#64;content=1</p></li>
+<li><p>B-Red # &#64;style=1 &#64;content=100</p></li>
+<li><p>B-Black # &#64;style=100 &#64;content=100</p></li>
+</ul>
+<p>The content priority could be used for example, to select which one
+of the B-Black boxes to get first.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="sections.html" class="btn btn-neutral float-left" title="File Formats" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="tags.html" class="btn btn-neutral float-right" title="Working with Tags" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

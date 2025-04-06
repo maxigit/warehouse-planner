@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tags and Attributes &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Reports" href="reports.html" />
+    <link rel="prev" title="Boxes and shelves selector" href="selectors.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Tags and Attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#virtual-tags">Virtual tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#properties">Properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#styling-properties">Styling properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#colours">Colours</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#group-functions">Group functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#index-and-rank">Index and rank</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ago">ago</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#transforming-value">transforming value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#event">Event</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#evaluation">Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#breaks-and-slots">Breaks And Slots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#box-attributes">Box attributes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Tags and Attributes</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/tags.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tags-and-attributes">
+<h1>Tags and Attributes<a class="headerlink" href="#tags-and-attributes" title="Link to this heading"></a></h1>
+<section id="virtual-tags">
+<h2>Virtual tags<a class="headerlink" href="#virtual-tags" title="Link to this heading"></a></h2>
+<p>Virtual tags are tags which are not set by the user, but automatically
+set depending the box content and/or the box itself. It allows to select
+style by variations (<code class="docutils literal notranslate"><span class="pre">'</span></code>content) and dimensions (in 1/10th of mm)
+(<code class="docutils literal notranslate"><span class="pre">'l</span></code>length, <code class="docutils literal notranslate"><span class="pre">'w</span></code>width,<code class="docutils literal notranslate"><span class="pre">'h</span></code>height ). Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt#&#39;l3500 =&gt; all T-shirt with boxes with a length of 35cm.
+TShirt#&#39;RED  =&gt; all red T-shirt (with a content of Red)
+</pre></div>
+</div>
+<p>Virtual tags can also be used to change the dimension of a box. Setting
+for example the tag <code class="docutils literal notranslate"><span class="pre">'h3400</span></code> will change the box size to 34 cm. If
+more than one values is assign to a dimension, the sum of all is used.
+This can be used to add a subtract a value to dimension. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>#&#39;l3500,#&#39;l=+50 =&gt; add 50 to the length
+#&#39;l3500,#&#39;l=+-50 =&gt; subtract 50 to the length
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">=+-50</span></code> adds a value of -50 (see
+<a class="reference internal" href="#properties">Properties</a>) to the dimension.</p>
+</section>
+<section id="properties">
+<h2>Properties<a class="headerlink" href="#properties" title="Link to this heading"></a></h2>
+<p>Tags come in two flavours, tag (a simple word) or property (name
+<code class="docutils literal notranslate"><span class="pre">=</span></code>value). The main difference between both is assign a property
+value erase the previous one. For example, adding the tag <code class="docutils literal notranslate"><span class="pre">color-red</span></code>
+then <code class="docutils literal notranslate"><span class="pre">color-green</span></code> result in the box being tagged with two tags
+<code class="docutils literal notranslate"><span class="pre">color-red</span></code> and <code class="docutils literal notranslate"><span class="pre">color-green</span></code>. In the contrary, adding the tag
+<code class="docutils literal notranslate"><span class="pre">color=red</span></code> then <code class="docutils literal notranslate"><span class="pre">color=green</span></code> result in the box being tagged with
+one tag <code class="docutils literal notranslate"><span class="pre">color=green</span></code>. In this case, <code class="docutils literal notranslate"><span class="pre">color</span></code> is a property therefore
+tagging with <code class="docutils literal notranslate"><span class="pre">color=green</span></code> change the value of color (previously red)
+to green.Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A,prop=first <span class="c">--&gt; A boxes have the tag &#39;prop=first&#39;</span>
+B,prop=second
+,XXX<span class="si">$[prop]</span> <span class="c">-- create XXXfirst tag for A and XXXsecond for B</span>
+</pre></div>
+</div>
+<p>Tags from the containing shelf can be accessed via <code class="docutils literal notranslate"><span class="pre">$/</span></code>tag<code class="docutils literal notranslate"><span class="pre">/</span></code>
+Properties can have more than one value, which can be used for example
+to mix colours. Values are separated by <code class="docutils literal notranslate"><span class="pre">;</span></code> and can be added or
+removed using <code class="docutils literal notranslate"><span class="pre">=+</span></code> or <code class="docutils literal notranslate"><span class="pre">=-</span></code> For example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>color=red<span class="nt">#color</span>=green =&gt; color=green (green override red)
+color=red<span class="nt">#color</span>=+green =&gt; color=green;red (add green red)
+color=red;green =&gt; color=green;red (set two values : red and green)
+color=red;green,<span class="nt">#color</span>=-red =&gt; color=green (remove green for red and green
+</pre></div>
+</div>
+<section id="styling-properties">
+<span id="styling"></span><h3>Styling properties<a class="headerlink" href="#styling-properties" title="Link to this heading"></a></h3>
+<p>Some special property are used to control how boxes and
+shelves are displayed. For example assigning <code class="docutils literal notranslate"><span class="pre">bg=red</span></code> will set the background of
+the box to red. Those properties are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bg</span></code> background colour (shelves and boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fg</span></code> foreground (text) colour (shelves and boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BG</span></code> background colour of the maximum dimension (shelves)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">border</span></code> border colour (shelves and boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">circle</span></code>..<code class="docutils literal notranslate"><span class="pre">circle4</span></code> display a big circle of the given colour(s)
+on the box. Ideal to mark boxes. (boxes only). Displays pies if more
+than one colour is given.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">title</span></code> text to display instead of the box or shelf name (shelves
+and boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bar-title</span></code> text to display in the box bar (for each depth) or
+shelf bar.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bar-bg</span></code> colour of the shelf bar (shelf bar).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bar-fg</span></code> colour of the text of the shelf bar (shelf bar).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">no-bar-gauge</span></code> if present, disable the colour gauge behind the box
+bar or in the shelf bar.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bar-gauge-x</span></code> if present, offset the bar gauge by x times the box
+index.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bar-gauge-y</span></code> if present, offset the bar gauge by y times the box
+index.</p></li>
+</ul>
+<section id="colours">
+<span id="colours-1"></span><h4>Colours<a class="headerlink" href="#colours" title="Link to this heading"></a></h4>
+<p>All property colours accept more than one colours (separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>)
+which are colour names their hexadecimal description (for example
+“white” or “ffffff” ) . If multiples colours are given they will be
+mixed. However, each colour can only appear once (in the list of
+colour). It is however possible to give more weight to a colour by
+prefixing its name with a underscore. For example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>black<span class="nt">#white</span> =&gt; mid gray
+black<span class="nt">#_black#white</span> =&gt; dark gray
+black<span class="nt">#_white#white</span> =&gt; light gray
+</pre></div>
+</div>
+<p>Colour palettes defined in haskell <a class="reference external" href="http://hackage.haskell.org/package/palette">palette
+package</a> can be used. A
+colour is represented by the palette name, the number of colour it
+contains (if the palette of different variant) a dash and the colour
+index starting a 1. Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>YlGn4-1 <span class="c">-- first colour of the 4 colours variant of the YlGn palette.</span>
+YlGn9-8 <span class="c">-- 8th colour of the 9 colours variant of the YlGn palette.</span>
+wheel24-2 <span class="c">-- 2nd of a colour wheel</span>
+</pre></div>
+</div>
+<p>The palettes available are the one from the <a class="reference external" href="http://hackage.haskell.org/package/palette-0.3.0.2/docs/Data-Colour-Palette-BrewerSet.html">Brewer
+Set</a>
+and the
+<a class="reference external" href="http://hackage.haskell.org/package/palette-0.3.0.2/docs/Data-Colour-Palette-ColorSet.html">ColorSet</a>.
+Note that <code class="docutils literal notranslate"><span class="pre">rybColor</span></code> is name <code class="docutils literal notranslate"><span class="pre">wheel24</span></code> and the <code class="docutils literal notranslate"><span class="pre">d3Colors</span></code> 2 and
+for used double indexing Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>d3Colors44-1  first  colour of the bright version of d3Color4
+<span class="c">--       ^ bright</span>
+d3Colors41-1  first  colour of the dark version of d3Color4
+<span class="c">--       ^ dark</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="group-functions">
+<h3>Group functions<a class="headerlink" href="#group-functions" title="Link to this heading"></a></h3>
+<p>Tags be set not only on the value of a propetry but also using a function depending on the current value of a property as well as all the values of that property for other boxes.</p>
+<p>This allows for example to calculate the rank or the index of value within the all the other boxes.</p>
+<section id="index-and-rank">
+<h4>Index and rank<a class="headerlink" href="#index-and-rank" title="Link to this heading"></a></h4>
+<p>this tag across all the boxes. The index is the index of the value of
+the values sorted alphabetically whereas the rank is the index of the
+value sorted by number of occurance. For example, if we have 1 boxes
+scanned by operator A, 3 boxes by operator B And 2 by operator C</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>Box1<span class="nt">#operator</span>=A
+Box2<span class="nt">#operator</span>=B
+Box3<span class="nt">#opertor</span>=B
+Box4<span class="nt">#opertor</span>=B
+Box5<span class="nt">#opertor</span>=C
+Box6<span class="nt">#opertor</span>=C
+</pre></div>
+</div>
+<p>The index of A is 1, B is 2 and C is 3, whereas the rank of A is 3 (only
+1 occurrence), B is 1 (3 occurrences) and C is 2. To get the rank or the
+index the special property syntax is <code class="docutils literal notranslate"><span class="pre">$index</span></code>op<code class="docutils literal notranslate"><span class="pre">[</span></code>tag<code class="docutils literal notranslate"><span class="pre">]</span></code>
+and <code class="docutils literal notranslate"><span class="pre">$rank</span></code>op<code class="docutils literal notranslate"><span class="pre">[</span></code>tag<code class="docutils literal notranslate"><span class="pre">]</span></code> where op is an optional operator
+<code class="docutils literal notranslate"><span class="pre">-</span></code> <code class="docutils literal notranslate"><span class="pre">%</span></code> or <code class="docutils literal notranslate"><span class="pre">^</span></code> followed by an integer.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>-n <span class="c">-- limit the index to n</span>
+%n <span class="c">-- cycle within n value (index modulo n)</span>
+^n <span class="c">-- map all indexes to the range 1-n</span>
+</pre></div>
+</div>
+<p>Example, given the previous boxes</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>$index<span class="nv">[operator] -- A -&gt; 1,  B -&gt;  2, C -&gt; 3</span>
+<span class="nv">$rank[operator] -- A -&gt; 3,  B -&gt;  1, C -&gt; 2</span>
+<span class="nv">$index-2[operator] -- A -&gt; 1,  B -&gt;  2, C -&gt; 2 (limit to 2)</span>
+<span class="nv">$index%2[operator] -- A -&gt; 1,  B -&gt;  2, C -&gt; 1 (cycle to 2)</span>
+<span class="nv">$index^5[operator]</span> <span class="c">-- A -&gt; 1,  B -&gt;  3, C -&gt; 5</span>
+</pre></div>
+</div>
+<p>This can used to given a different colours to each boxes depending on
+the operator</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>bg=Spectral10-$index%10<span class="nv">[operator]</span>
+</pre></div>
+</div>
+<p>Where Spectral10 is the 10 colours variant of the Spectral palette Of
+course different colours can be mixed</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>bg=Spectral10-$index%10<span class="nv">[style];Greys4-$index^4[style]</span>
+</pre></div>
+</div>
+<p>Let’s suppose we have 40 different styles. $index%10 will return 1 for
+1, 11, 21 etc … But $index^4 will return 1 for 1-10, 2, for 2-19 etc
+… This way each of the 40 styles have a different colours.</p>
+</section>
+<section id="ago">
+<h4>ago<a class="headerlink" href="#ago" title="Link to this heading"></a></h4>
+<p>For dates, the
+<code class="docutils literal notranslate"><span class="pre">op</span></code><code class="docutils literal notranslate"><span class="pre">[</span></code><code class="docutils literal notranslate"><span class="pre">tag</span></code><code class="docutils literal notranslate"><span class="pre">]</span></code><code class="docutils literal notranslate"><span class="pre">transform</span> <span class="pre">the</span> <span class="pre">date</span> <span class="pre">not</span> <span class="pre">into</span> <span class="pre">a</span> <span class="pre">index</span> <span class="pre">but</span> <span class="pre">to</span> <span class="pre">an</span> <span class="pre">integer</span> <span class="pre">but</span> <span class="pre">the</span> <span class="pre">number</span> <span class="pre">of</span> <span class="pre">days</span> <span class="pre">ago</span> <span class="pre">(from</span> <span class="pre">today).</span> <span class="pre">Operators</span> <span class="pre">have</span> <span class="pre">a</span> <span class="pre">different</span> <span class="pre">meaning</span> <span class="pre">(subject</span> <span class="pre">to</span> <span class="pre">change)</span></code></p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>$ago<span class="nv">[date] -- number of days ago</span>
+<span class="nv">$ago-0[date] -- number of years ago</span>
+<span class="nv">$ago-n[date] -- normalize  date range To n</span>
+<span class="nv">$ago-n[date] -- normalize  date range To n</span>
+<span class="nv">$ago%n[date] -- year moduln n</span>
+<span class="nv">$ago^0[date] -- within last week (1) , month (2), 3 moths (3), 6 months (4), year (5) , 3 years (6), more (7)$ago^n[date]</span> <span class="c">-- log so that the current date range go from 1 to n</span>
+</pre></div>
+</div>
+</section>
+<section id="transforming-value">
+<h4>transforming value<a class="headerlink" href="#transforming-value" title="Link to this heading"></a></h4>
+<p>The index/position o the box in the current selection (taking ordering
+into account) can be used with <code class="docutils literal notranslate"><span class="pre">$n</span></code>op<code class="docutils literal notranslate"><span class="pre">[</span></code>[format]<code class="docutils literal notranslate"><span class="pre">]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">$select</span></code>op<code class="docutils literal notranslate"><span class="pre">[</span></code>value1<code class="docutils literal notranslate"><span class="pre">|</span></code>value2<code class="docutils literal notranslate"><span class="pre">|</span></code>…<code class="docutils literal notranslate"><span class="pre">]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">$cycle</span></code>op<code class="docutils literal notranslate"><span class="pre">[</span></code>value1<code class="docutils literal notranslate"><span class="pre">|</span></code>value2<code class="docutils literal notranslate"><span class="pre">|</span></code>…<code class="docutils literal notranslate"><span class="pre">]</span></code>. This can
+be used to generate different values for each boxes</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="c">--                       Box1    Box 2  Box3   Box4</span>
+$n<span class="nv">[]              -- 1       2      3      4</span>
+<span class="nv">$n*3[]            -- 3       6      9      12</span>
+<span class="nv">$n%3[]            -- 1       2      3      1</span>
+<span class="nv">$n^3[]            -- 1       2      3      3</span>
+<span class="nv">$n[%02d]          -- 01      02     03     04</span>
+<span class="nv">$select[red|BLUE] -- red     BLUE   BLUE   BLUE</span>
+<span class="nv">$select[red|BLUE|]-- A       BLUE</span>
+<span class="nv">$cycle[red|BLUE]</span>  <span class="c">-- red     BLUE   red    BLUE</span>
+</pre></div>
+</div>
+</section>
+<section id="event">
+<h4>Event<a class="headerlink" href="#event" title="Link to this heading"></a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">event</span></code> and <cite>eventId</cite> will expand to the last event which modified the given tag.
+Example:</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>$even<span class="nv">[bg]</span>
+</pre></div>
+</div>
+<p>Expands to the name of the event which last bodify <code class="docutils literal notranslate"><span class="pre">bg</span></code>.</p>
+</section>
+</section>
+<section id="evaluation">
+<h3>Evaluation<a class="headerlink" href="#evaluation" title="Link to this heading"></a></h3>
+<p>Tags and properties can be evaluated in different way resulting in
+different values. The syntax is the same for properties and tags</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">?[then][:[:else]]</span></code> test if the value is present.
+if no parameters are given the value will the tag if preset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">??default</span></code> value of default if the value is not preset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">:[start][:[end]]</span></code> extract substring. <code class="docutils literal notranslate"><span class="pre">start</span></code> and <code class="docutils literal notranslate"><span class="pre">end</span></code> can be
+a (negative) number.In that case, it represent how many character to
+drop on each side. If it is a char, strip until (from) the given
+char.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%format</span></code> integer formatting (as in
+<a class="reference external" href="https://hackage.haskell.org/package/base-4.18.0.0/docs/Text-Printf.html">printf</a>)</p></li>
+</ul>
+<p>For example, given box inh shelf <code class="docutils literal notranslate"><span class="pre">E01.03/2</span></code>, and <code class="docutils literal notranslate"><span class="pre">#top</span></code> is present</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="si">$[top?]</span>  =&gt; top
+<span class="si">$[bottom?]</span>  =&gt; &#39;&#39;
+<span class="si">$[top?on]</span>  =&gt; on
+<span class="si">$[bottom?Y:N]</span>  =&gt; N
+<span class="si">$[top??on top]</span>  =&gt; top
+<span class="si">$[bottom??at the bottom]</span>  =&gt; at the bottom
+<span class="si">${shelfname}</span> =&gt; E01.03/2
+<span class="si">${shelfname:.}</span> =&gt; 03/2
+<span class="si">${shelfname::/}</span> =&gt; E01.03
+<span class="si">${shelfname:.:/}</span> =&gt; 2
+<span class="si">${shelfname:2}</span> E01.03
+<span class="si">${shelfname:-2}</span> /2
+<span class="si">$[@global%05d]</span> 00100
+</pre></div>
+</div>
+<p>This can be used in ordering as well.</p>
+</section>
+</section>
+<section id="breaks-and-slots">
+<h2>Breaks And Slots<a class="headerlink" href="#breaks-and-slots" title="Link to this heading"></a></h2>
+<p>Normally, when moves boxes to shelves, shelves are filled continuously
+without any break betweenboxes of the same dimensions. Breaks can be
+introduced using special break tags. By tagging a given box with a break
+tag, the box is guaranteed to either start a new shelf, a new slice (row
+or column depending of the shelf filling strategy) or a new slot (no box
+“behind”). The corresponding tags are</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;start=new-shelf</span></code> first box of an entire shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;start=new-slice</span></code> first box of a row/column</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;start=new-slot</span></code> no box behind</p></li>
+</ul>
+</section>
+<section id="box-attributes">
+<h2>Box attributes<a class="headerlink" href="#box-attributes" title="Link to this heading"></a></h2>
+<p>Certain attributes like the current location or orientation of a box can
+be used to set a new tag with the corresponding value. The following
+attributes are available.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">${shelfname}</span></code>:  current shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${shelftags}</span></code>:  tag of the current shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${fit}</span></code>:  How the box fits in the shelf : <code class="docutils literal notranslate"><span class="pre">fit</span></code>, <code class="docutils literal notranslate"><span class="pre">tight</span></code>, or <code class="docutils literal notranslate"><span class="pre">out</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${orientation}</span></code>:  current orientation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${style}</span></code>:  current box style</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${id}</span></code>:  the box id</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${content}</span></code>:  current box content (or colour)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${con}</span></code>:  short box content</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${boxname}</span></code>:  box style + content</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${dimension}</span></code>:  box dimension in cm</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${offset}</span></code>:  box offset (within the shelf) in cm</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${coordinate}</span></code>:  box coordinate (as if row and column of similar</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${position-spec}</span></code>:  orientation , coordinate and relative offset if needded
+boxes) (start at 1)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${ol}</span></code>:  length coordinate (rounded)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${ow}</span></code>:  width coordinate (rounded)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${oh}</span></code>:  height coordinate (rounded)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${cl}</span></code>:  length coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${cw}</span></code>:  width coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${ch}</span></code>:  height coordinate</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${ox}</span></code>:  length offset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${oy}</span></code>:  width offset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${oz}</span></code>:  height offset</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${&#64;}</span></code> shorthand for <code class="docutils literal notranslate"><span class="pre">${&#64;global}${&#64;style}${&#64;content}</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${&#64;content}</span></code>:  content priority</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${&#64;style}</span></code>:  style priority</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${&#64;global}</span></code>:  global priority</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${volume}</span></code>:  volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">${vol}</span></code>:  volume  in scientific notation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#{hash}</span></code>: the character <code class="docutils literal notranslate"><span class="pre">#</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#{comma}</span></code>: the character <code class="docutils literal notranslate"><span class="pre">,</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#{divide}</span></code>: the character <code class="docutils literal notranslate"><span class="pre">/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#{dollar}</span></code>: the character <code class="docutils literal notranslate"><span class="pre">$</span></code></p></li>
+</ul>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>/pending,loc=<span class="si">${shelfname}</span>  =&gt; All boxes in the pending location will be tagged with &quot;loc=pending&quot;.
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="selectors.html" class="btn btn-neutral float-left" title="Boxes and shelves selector" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="reports.html" class="btn btn-neutral float-right" title="Reports" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

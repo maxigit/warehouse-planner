@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Working with Tags" href="tags.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Working with Tags</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Reports</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#mop-export">Mop export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generic-report">Generic report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-reports">Best reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#report-selector">Report Selector</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Reports</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/reports.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="reports">
+<span id="id1"></span><h1>Reports<a class="headerlink" href="#reports" title="Link to this heading"></a></h1>
+<section id="mop-export">
+<h2>Mop export<a class="headerlink" href="#mop-export" title="Link to this heading"></a></h2>
+<p>The location of all the boxes can be exported to MOP (via the
+generateMOPLocation). By default, locations are given for each style
+(regardless of the content) in the form of the pattern matching all used
+shelves. The location of a particular variant (style + content) can
+exported separately using the tag <code class="docutils literal notranslate"><span class="pre">mop-exception</span></code>. Boxes can also be
+excluded using the tag <code class="docutils literal notranslate"><span class="pre">mop-exclude</span></code>. This is particularey usefull to
+exclude shelves which shoudn’t be taken into account. Example, to
+exclude all shelves starting with <code class="docutils literal notranslate"><span class="pre">_</span></code> (shelves filtered from the
+summary report)</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
+stock_id,tag
+/<span class="nt">#_</span>*,mop-exclude
+:END:
+</pre></div>
+</div>
+<p>Arbitrary comments can also be added to a box using the tag
+<code class="docutils literal notranslate"><span class="pre">mop-comment=</span></code><em>``your comment``</em>. In that case, variant with comment
+will be exported separately (like with <code class="docutils literal notranslate"><span class="pre">mop-exception</span></code>) except the
+location will be the location of all the box of the same style (instead
+of the exact location of the box itself). To have a global comment (the
+same across all variant of the same style) without generating a line per
+variant, the tag <code class="docutils literal notranslate"><span class="pre">mop-no-exception</span></code> can be used. In case many boxes of
+the same group have different comments, the one of the first box will be
+used. To force a particula box to be used force, <code class="docutils literal notranslate"><span class="pre">&#64;content</span></code> and
+<code class="docutils literal notranslate"><span class="pre">&#64;style</span></code> can be used. Finaly, shelves with the tag <code class="docutils literal notranslate"><span class="pre">mop-priority</span></code>
+will be used first when deciding which shelf is to display first.
+Shelves with the tag <code class="docutils literal notranslate"><span class="pre">mop-excluded</span></code> will be excluded.</p>
+</section>
+<section id="generic-report">
+<h2>Generic report<a class="headerlink" href="#generic-report" title="Link to this heading"></a></h2>
+<p>A generic report can generated using special tags. All boxes will be
+grouped first using the special tag <em>``report``</em><code class="docutils literal notranslate"><span class="pre">-group</span></code> and then
+<em>``report``</em><code class="docutils literal notranslate"><span class="pre">-key</span></code>. For each group (having the same key), a line
+will be displayed with the content of <em>``report``</em><code class="docutils literal notranslate"><span class="pre">-group</span></code> (for the
+first level of grouping) and the <em>``report``</em><code class="docutils literal notranslate"><span class="pre">-value</span></code> property (for
+boxes grouped by <em>``report``</em><code class="docutils literal notranslate"><span class="pre">-key</span></code>). The <code class="docutils literal notranslate"><span class="pre">report</span></code> prefix can be
+changed by setting an alternative prefix in the parameter field. This
+allows multiples report to be defined within the same plan. The
+following group attributes will be expanded :</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;count&gt;</span></code> : number of boxes within the group</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;shelf-count&gt;</span></code> : number of different shelves</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;locations&gt;</span></code> list of shelves (compacted)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;shelves&gt;</span></code> list of shelves</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;total-volume&gt;</span></code> : total volumes in m<sup>3</sup></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;style-count&gt;</span></code> : number of different styles</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;styles&gt;</span></code> : list of styles separated by a <code class="docutils literal notranslate"><span class="pre">|</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;content-count&gt;</span></code> : number of different content</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;contents&gt;</span></code> : list of contents separated by a <code class="docutils literal notranslate"><span class="pre">|</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;sku-count&gt;</span></code> : number of different SKUs</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;skus&gt;</span></code> : list of SKUs separated by a <code class="docutils literal notranslate"><span class="pre">|</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;dimensions-count&gt;</span></code> : number of different dimensions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;orientations&gt;</span></code> : different orientations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;orientations-count&gt;</span></code> : number of different dimensions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;today&gt;</span></code> : today’s date with the following format <code class="docutils literal notranslate"><span class="pre">YYYY-MM-DD</span></code></p></li>
+</ul>
+<p>Symbols would can’t be used without being interpreted by the parser can
+be expanded using</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;hash&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">#</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;comma&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">,</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;divide&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;dollar&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">$</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>group expansion are between <code class="docutils literal notranslate"><span class="pre">$&lt;...&gt;</span></code> to avoid double expansion problem.</p>
+</div>
+<p>Example, to generate a valid TAG File tagging each box using its unique
+barcode tag with its location</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
+stock_id,tag
+,report-key=<span class="si">$[barcode]</span>
+,&quot;report-value=<span class="si">$[report-key]</span>,$location&quot;
+</pre></div>
+</div>
+<p>Note the presence of quotes wich allow a comma to be used inside the tag
+field and the use of <code class="docutils literal notranslate"><span class="pre">$[report-key]</span></code> to display the barcode in the
+report</p>
+</section>
+<section id="best-reports">
+<h2>Best reports<a class="headerlink" href="#best-reports" title="Link to this heading"></a></h2>
+<p>Best boxes, best shelves and best available shelves computes
+respectivily the best boxes to go in a given shelf, the best shelves to
+hold the given boxes. The boxes/shelves to analyses should be set in the
+parameter field. If the field starts with <code class="docutils literal notranslate"><span class="pre">!</span></code> then depth of shelf and
+boxes is not used in displaying the used ratio. Fol best shelf reports,
+a set of boxes and shelves can be given using the
+<code class="docutils literal notranslate"><span class="pre">boxSelector[,shelfSelector[,orientationRules]]</span></code> syntax. In that case,
+only the given boxes and shelves will be taken into account for the
+report.</p>
+</section>
+<section id="report-selector">
+<h2>Report Selector<a class="headerlink" href="#report-selector" title="Link to this heading"></a></h2>
+<p>Some reports like <code class="docutils literal notranslate"><span class="pre">GenerateMovesWithTags</span></code> accept a box selector as a
+parameter. If an order is given, see (selection order), the specified
+order of the boxes will be used. Also box tags shown in the report can
+be filtered using <code class="docutils literal notranslate"><span class="pre">&#64;exclude</span></code> and <code class="docutils literal notranslate"><span class="pre">&#64;include</span></code>. For example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>T-Shirt^^^<span class="nv">[barcode:-4]</span>@exclude<span class="nt">#tag1#tag2</span>
+</pre></div>
+</div>
+<p>Generates a report for t-shirt ordered by the last 4 characters of the
+barcode and doesn’t display <code class="docutils literal notranslate"><span class="pre">tag1</span></code> and <code class="docutils literal notranslate"><span class="pre">tag2</span></code>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tags.html" class="btn btn-neutral float-left" title="Working with Tags" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

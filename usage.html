@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Usage &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="File Formats" href="sections.html" />
+    <link rel="prev" title="WarehousePlanner" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#invoking-warehouseplanner">Invoking WarehousePlanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#warehouse-specification">Warehouse Specification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#packing-and-including-files">Packing and Including Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#section-types">Section Types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-concepts">Core concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#physical-objects">Physical objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tags">Tags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#selection">Selection</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Working with Tags</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Usage</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h1>
+<section id="invoking-warehouseplanner">
+<h2>Invoking WarehousePlanner<a class="headerlink" href="#invoking-warehouseplanner" title="Link to this heading"></a></h2>
+<p>WarehousePlanner is invoked from the command line, like so:</p>
+<blockquote>
+<div><p>whp [option …] file …</p>
+</div></blockquote>
+<p>Where each <code class="docutils literal notranslate"><span class="pre">file</span></code> is a filename containing whp instructions (.csv, .org or .whp) which will be executed in order.
+The filename should be relative to the current directory unless a base directory is set using the <code class="docutils literal notranslate"><span class="pre">-d</span></code> option.
+In that case each file will be relative to the base directory.</p>
+<p>By default, <code class="docutils literal notranslate"><span class="pre">whp</span></code> opens a interactive explorer representing the warehouse. Pressing the <code class="docutils literal notranslate"><span class="pre">&lt;F1&gt;</span></code> key will list the main keybindings.</p>
+</section>
+<section id="warehouse-specification">
+<h2>Warehouse Specification<a class="headerlink" href="#warehouse-specification" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">whp</span></code> works on a set of files constituting the warehouse specification. This specification is made of section of different type describing different aspect of the warehouse, such as shelves, boxes, layout, filling strategy etc …</p>
+<p>Each section can be written as a single file, where its extension determines the section type. Alternatively, multiple sections can be embedded in an <a class="reference external" href="https://orgmode.org/">orgmode</a> file using orgmode <a class="reference external" href="https://orgmode.org/manual/Drawers.html">drawers</a>.</p>
+<p>Most sections are csv-like. In that case the file extension is <code class="docutils literal notranslate"><span class="pre">.&lt;section-type&gt;.csv</span></code>. For other types the extension is just the <cite>.&lt;section-type&gt;</cite>. In both case, when embedded in orgmode document, the drawer name is the section type (followed by optional parameter).</p>
+<p>For example the <code class="docutils literal notranslate"><span class="pre">boxes</span></code> section can be written as a  <code class="docutils literal notranslate"><span class="pre">.boxes.csv</span></code> file or in a <code class="docutils literal notranslate"><span class="pre">:BOXES:</span></code> drawer.
+A <code class="docutils literal notranslate"><span class="pre">wpl</span></code> section (which is not a csv) can be written as a <code class="docutils literal notranslate"><span class="pre">.wpl</span></code> file or in a <code class="docutils literal notranslate"><span class="pre">:WPL:</span></code> drawer.</p>
+<section id="packing-and-including-files">
+<h3>Packing and Including Files<a class="headerlink" href="#packing-and-including-files" title="Link to this heading"></a></h3>
+<p>An <a class="reference external" href="https://orgmode.org/">orgmode</a> file can be use to “pack” different whp files into one using orgmode <a class="reference external" href="https://orgmode.org/manual/Drawers.html">drawers</a>. This is the main way to include different sections in one file.</p>
+<p>Each drawer corresponds to a section. The name of the drawer determines the section type and optional parameters.
+Section type are parameters are separated by <code class="docutils literal notranslate"><span class="pre">_</span></code>. For examples <code class="docutils literal notranslate"><span class="pre">:BOXES_coming:</span></code> describe a <code class="docutils literal notranslate"><span class="pre">boxes</span></code> section with one parameter <code class="docutils literal notranslate"><span class="pre">coming</span></code> <a class="footnote-reference brackets" href="#coming" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
+<p>Apart from those special drawers it, is a normal orgmode document and all orgmode features can be used to document and/or structure the warehouse specifications.</p>
+<p>Files can also be reused between different warehouse specifications using the <cite>Import</cite> section.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="coming" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>In that case, it will add the <code class="docutils literal notranslate"><span class="pre">coming</span></code> tag to all the created boxes.</p>
+</aside>
+</aside>
+</section>
+<section id="section-types">
+<h3>Section Types<a class="headerlink" href="#section-types" title="Link to this heading"></a></h3>
+<p>The following section types are available:</p>
+<ul class="simple">
+<li><p>shelves related</p>
+<ul>
+<li><p><a class="reference internal" href="sections.html#id5"><span class="std std-ref">Shelves</span></a>: create or update shelves</p></li>
+<li><p><a class="reference internal" href="sections.html#shelf-tags"><span class="std std-ref">ShelfTags</span></a>: modify shelf tags</p></li>
+<li><p><a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">ShelfSplit</span></a>: split shelves into subshelves</p></li>
+<li><p><a class="reference internal" href="sections.html#shelf-join"><span class="std std-ref">ShelfJoin</span></a>: opposite of split</p></li>
+<li><p><a class="reference internal" href="sections.html#update-shelf"><span class="std std-ref">UpdateShelves</span></a>: modify shelves</p></li>
+</ul>
+</li>
+<li><p>boxes related</p>
+<ul>
+<li><p><a class="reference internal" href="sections.html#stocktake"><span class="std std-ref">Stocktake</span></a>: create new boxes with location</p></li>
+<li><p><a class="reference internal" href="sections.html#boxes"><span class="std std-ref">Boxes</span></a>: create new boxes</p></li>
+<li><p><a class="reference internal" href="sections.html#moves"><span class="std std-ref">Moves</span></a>: moves boxes</p></li>
+<li><p><a class="reference internal" href="sections.html#tags"><span class="std std-ref">Tags</span></a>: modify boxes tags</p></li>
+<li><p><a class="reference internal" href="sections.html#moves-and-tags"><span class="std std-ref">MovesAndTags</span></a>: move and tags simultaneously</p></li>
+<li><p><a class="reference internal" href="sections.html#clones"><span class="std std-ref">Clones</span></a>: create new boxes by cloning existing one</p></li>
+<li><p><a class="reference internal" href="sections.html#delete"><span class="std std-ref">Delete</span></a>: delete existing boxes</p></li>
+<li><p><a class="reference internal" href="sections.html#rearrange"><span class="std std-ref">Rearrange</span></a>: rearrange boxes order</p></li>
+<li><p><a class="reference internal" href="sections.html#freeze-order"><span class="std std-ref">FreezeOrder</span></a>: change internal box order</p></li>
+<li><p><a class="reference internal" href="sections.html#transform-tags"><span class="std std-ref">TransformTags</span></a>: apply regexp transformation on tags</p></li>
+</ul>
+</li>
+<li><p>Miscellaenous</p>
+<ul>
+<li><p><a class="reference internal" href="sections.html#layout"><span class="std std-ref">Layout</span></a>: describe shelf bays  and runs</p></li>
+<li><p><a class="reference internal" href="sections.html#orientations"><span class="std std-ref">Orientations</span></a>: box orientation rules</p></li>
+<li><p><a class="reference internal" href="sections.html#import"><span class="std std-ref">Import</span></a>: include local files</p></li>
+<li><p><a class="reference internal" href="sections.html#colour-map"><span class="std std-ref">Colour</span></a>: rgb colour description</p></li>
+<li><p><a class="reference internal" href="sections.html#check-shelves"><span class="std std-ref">CheckShelves</span></a>: Check box overlap or out of box status</p></li>
+<li><p><a class="reference internal" href="sections.html#wpl"><span class="std std-ref">WPL</span></a>: Warehouse Programming Languge.</p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading"></a></h2>
+<p>On top the interactive explorer, <code class="docutils literal notranslate"><span class="pre">whp</span></code> can produce text outputs to generate miscellaneous <a class="reference internal" href="reports.html#reports"><span class="std std-ref">reports</span></a>, “freeze” the content of a warehouse and even generate high quality image (<code class="docutils literal notranslate"><span class="pre">.png</span></code>).</p>
+</section>
+<section id="core-concepts">
+<h2>Core concepts<a class="headerlink" href="#core-concepts" title="Link to this heading"></a></h2>
+<p>WarehousePlanner deals with various concepts that will be reused throughout this document. Understanding these foundational ideas will help in comprehending the sections that follow.</p>
+<section id="physical-objects">
+<h3>Physical objects<a class="headerlink" href="#physical-objects" title="Link to this heading"></a></h3>
+<p id="shelf"><span id="box"></span>The two main concepts are <strong>boxes</strong> and <strong>shelves</strong>.
+A box must be in a shelf and as shelf can hold zero or many boxes.
+Both have a name and dimensions (length, width, height) and can be <strong>tagged</strong>.</p>
+<p id="run"><span id="bay"></span>Shelves which are stacked together form a <strong>bay</strong>.
+A set of bays next to each other form a <strong>run</strong>.</p>
+</section>
+<section id="tags">
+<h3>Tags<a class="headerlink" href="#tags" title="Link to this heading"></a></h3>
+<p>Tags can be used to select boxes and shelves but also alter their intrisinc properties.
+For example, tagging a box with <code class="docutils literal notranslate"><span class="pre">bg=green</span></code> will display the box in green.
+They can also been used to make complex selection or control the output of report generation.</p>
+</section>
+<section id="selection">
+<span id="selector"></span><h3>Selection<a class="headerlink" href="#selection" title="Link to this heading"></a></h3>
+<p>Selections play an important role in Warehouse Planner. Pretty much every action (like moving a box to a shelf) don’t act on a single box or shelf but on a selection of boxes and a selection of shelves.
+A selector provides a way to select multiple boxes or shelves using patterns.</p>
+<p>For example:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">A*</span></code> selects all boxes or shelves which name starts with <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">#top</span></code> selects all boxes or shelves tagged with <code class="docutils literal notranslate"><span class="pre">top</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A*#top</span></code> selects all boxes or shelves whose names start with <code class="docutils literal notranslate"><span class="pre">A</span></code> and are tagged with <code class="docutils literal notranslate"><span class="pre">top</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A*</span> <span class="pre">to&gt;</span> <span class="pre">#top</span></code> moves all the boxes which name starts with <code class="docutils literal notranslate"><span class="pre">A</span></code> to the shelves tagged <code class="docutils literal notranslate"><span class="pre">top</span></code>.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="WarehousePlanner" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sections.html" class="btn btn-neutral float-right" title="File Formats" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

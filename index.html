@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WarehousePlanner &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">WarehousePlanner</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="warehouseplanner">
+<h1>WarehousePlanner<a class="headerlink" href="#warehouseplanner" title="Link to this heading"></a></h1>
+<p>WarehousePlanner is a tool designed to describe and display the layout of a warehouse
+, focusing on where and how boxes are
+positionned within shelfves. A warehouse is described using one or more text files and the tool can generate
+reports or visually display the warehouse as interactive terminal application or generate images.</p>
+<section id="features">
+<h2>Features<a class="headerlink" href="#features" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Define warehouses with structured file formats.</p></li>
+<li><p>Import and manage boxes and shelves separately.</p></li>
+<li><p>Language to move and rearrange boxes.</p></li>
+<li><p>Different strategy to “fill” shelves with boxes.</p></li>
+<li><p>Aggregate multiple files into one using Org-mode.</p></li>
+<li><p>Utilize WPL for expressive warehouse descriptions.</p></li>
+<li><p>Generate reports for warehouse analysis.</p></li>
+<li><p>Display warehouse layouts with Brick.</p></li>
+<li><p>Generate images with different styling.</p></li>
+</ul>
+</section>
+<section id="example">
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading"></a></h2>
+<p>A simple warehouse containing three shelves in two bays, with some boxes.</p>
+<div class="highlight-orgmode notranslate"><div class="highlight"><pre><span></span>This is a orgmode file. Each orgmode drawer contains a csv.
+What is between drawer (as the present text is ignored)
+
+The first drawer describes three shelves named respectively S1 , S2 and T1
+
+<span class="nd">:SHELVES:</span>
+<span class="cs">name,comment,length,width,height,type</span>
+<span class="cs">S1,,200,50,100,Shelf</span>
+<span class="cs">S2,,200,50,150,Shelf</span>
+<span class="cs">T1,,200,50,100,Shelf</span>
+<span class="nd">:END:</span>
+
+The second drawer describes the boxes and in which shelf they are.
+We have three boxes (called A) in S1 and six Bs in S2.
+B have been tagged as `bg=blue` to set the background in blue.
+
+<span class="nd">:STOCKTAKE:</span>
+<span class="cs">Bay No,Style,QTY,Length,Width,Height,Orientations</span>
+<span class="cs">S1,A,3,50,50,50,</span>
+<span class="cs">S2,B#bg=blue,6,50,50,50,</span>
+<span class="nd">:END:</span>
+
+
+Finally, we need to describe the layout (how are shelves related to each other).
+We want S2 to be on top of S1 and T1 next to it
+
+<span class="nd">:LAYOUT:</span>
+<span class="cs">S1|S2 T1</span>
+<span class="nd">:END:</span>
+</pre></div>
+</div>
+<p>Can be viewed as</p>
+<a class="reference internal image-reference" href="_images/whp-example.png"><img alt="_images/whp-example.png" class="align-center" src="_images/whp-example.png" style="width: 50%;" />
+</a>
+<p>Boxes can be then moved by adding</p>
+<div class="highlight-orgmode notranslate"><div class="highlight"><pre><span></span>The move section allows to move all the B to S1 and T1.
+<span class="nd">:MOVES:</span>
+<span class="cs">boxes,location</span>
+<span class="cs">B,S1|T1</span>
+<span class="nd">:END:</span>
+</pre></div>
+</div>
+<a class="reference internal image-reference" href="_images/whp-example-move.png"><img alt="_images/whp-example-move.png" class="align-center" src="_images/whp-example-move.png" style="width: 50%;" />
+</a>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#invoking-warehouseplanner">Invoking WarehousePlanner</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#warehouse-specification">Warehouse Specification</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#packing-and-including-files">Packing and Including Files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#section-types">Section Types</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#outputs">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#core-concepts">Core concepts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#physical-objects">Physical objects</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#tags">Tags</a></li>
+<li class="toctree-l3"><a class="reference internal" href="usage.html#selection">Selection</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sections.html#generalities">Generalities</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#tags-or-patterns">Tags or Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#setting-an-reusing-references">Setting an reusing references</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="sections.html#section-types">Section Types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#boxes-tagorpatterns">BOXES[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#check-shelves">CHECK SHELVES</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#shelves">Shelves</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#overlapping">Overlapping</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#clones">CLONES</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#colours">COLOURS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#delete">DELETE</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#freezeorder-tagorpatterns">FREEZEORDER[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#import">IMPORT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#layout-mandatory">LAYOUT (Mandatory)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#moves-tagorpatterns">MOVES[_TagOrPatterns]</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#filling-order-exit-on-top">Filling order, Exit on top</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#partition-mode">Partition Mode</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#tagging">Tagging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#empty-selection">Empty selection</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#moves-and-tags-tagorpatterns-mat-tam">MOVES AND TAGS[_TagOrPatterns] (MAT, TAM)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#orientations">ORIENTATIONS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#id7">Orientations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#max-stacking-specification">max stacking specification</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#rearrange-tagorpatterns">REARRANGE[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#shelves-mandatory">SHELVES (Mandatory)</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#special-shelves">Special shelves</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#name-expansion">Name expansion</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#dimension-formula">dimension formula</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#shelf-types">shelf types</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#update">Update</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#tag">Tag</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#special-tag-ceiling">Special Tag: Ceiling</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#shelf-join-shelf-join">SHELF JOIN (shelf join)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#shelf-split-shelf-split">SHELF SPLIT (shelf split)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#shelf-tags-shelf-tags">SHELF_TAGS (shelf tags)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#stocktake-tag">STOCKTAKE[_Tag]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#tags-tagorpatterns">TAGS[_TagOrPatterns]</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#transform-properties-transform-tags">TRANSFORM[=properties] (transform tags)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#update-shelf">UPDATE SHELF</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#glob-pattern">Glob pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#style-pattern">style pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#tags">tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#location-pattern">Location pattern</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#location-tag">Location tag</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#number-restriction">number restriction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="selectors.html#priority-and-selection-order">Priority and selection order</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#virtual-tags">Virtual tags</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#properties">Properties</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tags.html#styling-properties">Styling properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#colours">Colours</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html#group-functions">Group functions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#index-and-rank">Index and rank</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#ago">ago</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#transforming-value">transforming value</a></li>
+<li class="toctree-l4"><a class="reference internal" href="tags.html#event">Event</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tags.html#evaluation">Evaluation</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#breaks-and-slots">Breaks And Slots</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tags.html#box-attributes">Box attributes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reports.html#mop-export">Mop export</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reports.html#generic-report">Generic report</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reports.html#best-reports">Best reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reports.html#report-selector">Report Selector</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
