@@ -63,6 +63,11 @@ pureSpec = describe "WPL" do
                       , "    | A#'3"
                       ]
              ) `shouldReturn` "A-2 A-3"
+    it "collects wihout context" do
+      select (unlines [ "| A#'2"
+                      , "| A#'3"
+                      ]
+             ) `shouldReturn` "A-2 A-3"
     it "collects A3 then A2" do
       select (unlines [ "& A   || A#'3"
                       , "      || A#'2"
