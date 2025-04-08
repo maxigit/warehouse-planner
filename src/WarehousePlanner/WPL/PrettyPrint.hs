@@ -18,7 +18,8 @@ prettyStatement :: Bool -> Text -> Statement -> Text
 prettyStatement raw indent stmt = 
     case stmt of
        Action command ->  i <> prettyCommand nextIndent command
-       Ors stmts -> withPrefix prettyStatement ";" stmts
+       Ors (stmt :| []) -> prettyStatement True "" stmt
+       Ors stmts -> withPrefix prettyStatement "(o)" stmts
        Cases stmts -> withPrefix prettyCase "" stmts
        Then a b -> withPrefix prettyStatement "&" (a :| [b])
        -- Then a b -> prettyStatement raw indent a <> "\n" <>  prettyStatement False nextIndent b

@@ -193,7 +193,7 @@ caseLine = do
     let withMulti = \case  
                              Then a b | passthrough  -> Case a (Just b)
                              c -> Case c Nothing
-    fmap (flip Case Nothing) indentedBlock <|> fmap withMulti thenMulti
+    fmap (flip Case Nothing) indentedBlock <|> fmap withMulti (orBlock "case")
 
 shelfCaseLine :: MParser ShelfCase
 shelfCaseLine = double <|> simple 
