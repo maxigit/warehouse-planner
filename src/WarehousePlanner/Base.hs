@@ -57,6 +57,7 @@ module WarehousePlanner.Base
 , parseOrientationRule
 , partitionBoxes
 , partitionShelves
+, printTagOperation, printTagOperations
 , printDim
 , readOrientations
 , readTagAndPatterns
@@ -607,7 +608,20 @@ parseTagOperations tag =
    tags -> map parseTagOperation tags
   
   
+printTagOperation :: Tag'Operation -> Text
+printTagOperation (tag, op) = case op of
+  SetTag           -> tag
+  RemoveTag        -> "-" <> tag
+  SetValues []     -> "-" <> tag <> "="
+  SetValues vals   -> tag <> "=" <> intercalate ";" vals
+  AddValue val     -> tag <> "=+" <> val
+  RemoveValue val
+    | "-" `isPrefixOf` tag -> tag <> "=" <> val
+    | otherwise            -> tag <> "=-" <> val
   
+printTagOperations :: [Tag'Operation] -> Text
+printTagOperations = intercalate "#" . map printTagOperation
+
 negateTagOperations :: [Tag'Operation] -> [Tag'Operation]
 negateTagOperations tags = do
   (tag, op) <- tags

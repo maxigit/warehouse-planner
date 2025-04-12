@@ -51,6 +51,7 @@ library
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
       WarehousePlanner.WPL.PrettyPrint
+      WarehousePlanner.WPL.PrettyPrint2
       WarehousePlanner.WPL.Types
   other-modules:
       Paths_warehouse_planner
@@ -92,6 +93,7 @@ library
     , mtl
     , palette ==0.3.*
     , parser-combinators ==1.3.*
+    , prettyprinter ==1.7.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -171,6 +173,7 @@ executable whp
     , mtl
     , palette ==0.3.*
     , parser-combinators ==1.3.*
+    , prettyprinter ==1.7.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -240,6 +243,7 @@ test-suite test
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
       WarehousePlanner.WPL.PrettyPrint
+      WarehousePlanner.WPL.PrettyPrint2
       WarehousePlanner.WPL.Types
       Paths_warehouse_planner
   hs-source-dirs:
@@ -281,6 +285,7 @@ test-suite test
     , mtl
     , palette ==0.3.*
     , parser-combinators ==1.3.*
+    , prettyprinter ==1.7.*
     , process
     , regex-base
     , regex-compat-tdfa
@@ -344,6 +349,7 @@ benchmark bench
     , mtl
     , palette ==0.3.*
     , parser-combinators ==1.3.*
+    , prettyprinter ==1.7.*
     , process
     , regex-base
     , regex-compat-tdfa

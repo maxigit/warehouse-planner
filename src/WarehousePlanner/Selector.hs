@@ -305,13 +305,14 @@ printNumberSelector  BoxNumberSelector{..} = mconcat [ "^" <> printLimit lim
 
 printLimit :: Limit -> Text
 printLimit Limit{..} = key <> lim where
-  key = mconcat [ useBase <> rev <> case k of
+  key = useBase <>
+           mconcat [ rev <> case k of
                    OrdTag t -> "[" <> t <> "]"
                    OrdAttribute a -> "{" <> a <> "}"
                 | (k, reverse) <- liOrderingKey
                 , let rev = if reverse == ReverseOrder then "-" else ""
-                , let useBase = if liUseBase then "" else "="
                 ]
+  useBase = if liUseBase then "" else "="
   lim = case (liStart, liEnd) of
          (Just s, Just e) -> tshow s <> ":" <> tshow e
          (Just s, Nothing) -> tshow s

@@ -38,7 +38,7 @@ import GHC.Generics
 import Crypto.Hash qualified as Crypto
 import System.FilePath.Glob(globDir1, compile, match)
 import WarehousePlanner.WPL.Exec
-import WarehousePlanner.WPL.PrettyPrint
+import WarehousePlanner.WPL.PrettyPrint2
 
 -- * Parsing 
 -- | Read and cut a scenario file into different component
@@ -499,10 +499,9 @@ executeStep (Step header sha txt) = do
           ColourMapH -> return $ return ()
           RearrangeH tags -> execute $ readRearrangeBoxes tags path
           FreezeOrderH tags -> execute $ readFreezeOrder tags path
-          WPLH tags -> do
+          WPLH _tags -> do
              wpl <- readWPL path
-             when ("@pretty" `elem` tags) do
-                mapM_ (putStrLn . pretty) wpl
+             mapM_ (putStrLn . pretty2) wpl
              execute $ fmap runWPL $ return wpl
           CheckShelvesH -> execute $ readCheckShelves path
   return do
