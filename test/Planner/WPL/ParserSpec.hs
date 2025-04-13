@@ -1,533 +1,430 @@
-{-# LANGUAGE OverloadedLists #-}
+{-# OPTIONS_GHC -fconstraint-solver-iterations=100 #-}
+{-# LANGUAGE OverlappingInstances #-}
 module Planner.WPL.ParserSpec where
 
 import ClassyPrelude
-import Test.Hspec
+import Test.Hspec hiding (Selector)
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.Types
-import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, parseSelector)
 import WarehousePlanner.Type
+import WarehousePlanner.Expr
+import WarehousePlanner.WPL.PrettyPrint
+import WarehousePlanner.Selector (parseBoxSelector, printTagSelector, parseTagSelector)
 import Text.Megaparsec qualified as P
-import Text.Megaparsec.Debug qualified as P
-import GHC.Exts -- to^ write maybe as list
-import Data.Char (isUpper)
-import Data.Either (isLeft, isRight)
-import Data.List.NonEmpty as NE
+import Test.QuickCheck
+import Data.Text (Text, strip)
+import Data.List.NonEmpty (NonEmpty(..))
+import Test.QuickCheck.Random (mkQCGen)
+import Test.Hspec.QuickCheck(modifyArgs)
+import Data.Char (isSpace)
+import WarehousePlanner.Base 
 
-instance IsString BoxSelector where fromString = parseBoxSelector . pack 
--- instance IsString ShelfSelector where fromString = ShelfSelector SelectAnything . parseSelector . pack
-instance IsString ShelfSelector where fromString = parseShelfSelector . pack . ('/':)
+import GHC.Generics (Generic)
+import Test.QuickCheck.Arbitrary.Generic
 
-instance IsString (CSelector ShelfSelector) where fromString = CSelector . fromString
-instance IsString (CSelector BoxSelector) where fromString = CSelector . fromString
-
-instance IsString Statement where
-   fromString s@(c:_) | isUpper c || c `elem` ("/#*" :: String) = Action . SelectBoxes $ fromString s
-   fromString s = error $ s <> " should start with an uppercase"
-
-instance IsList (Maybe a) where
-     type Item (Maybe a) = a
-     toList = maybe [] pure
-     fromList = headMay
-
-spec :: Spec
-spec = parallel pureSpec
-
-parseAs :: Text -> Statement -> IO ()
--- parseAs txt result = P.parse wplParser "test" txt `shouldBe` Right [result]
-parseAs txt result = do
-        -- P.parseTest wplParser ("\n" <> txt)
-        parse txt `shouldParse` [result]
-
-parseAs' :: [Text] -> Statement -> IO ()
-parseAs' txts stmt = parse' txts `shouldParse` [stmt]
-
-shouldParse actual expected = case actual of
-           Right act | act == expected -> return ()
-           Right act -> act `shouldBe` expected
-           Left e -> expectationFailure $ P.errorBundlePretty e
-
-sameAs' :: [Text ] -> [Text] -> IO ()
-sameAs' xs ys = do
-  let x = parse "left" xs
-      y = parse "right" ys
-  x `shouldSatisfy` isRight
-  x `shouldBe` y
-  where parse desc ts = P.parse wplParser desc (intercalate "\n" ts) 
-
-parse :: Text -> Either _ [Statement]
--- parse = P.parse (P.dbg "WPL" wplParser) "test"
-parse = P.parse wplParser "test"
-
-parse' :: [Text] -> Either _ [Statement]
-parse' = parse . unlines
--- * shortcut
-a = Action
-m = Action . flip (Move Nothing Nothing []) ExitOnTop
-ss = SelectShelves . CSelector . parseShelfSelector
-sb = SelectBoxes
-
--- * Spec
-pureSpec :: Spec
-pureSpec = describe "Parsing" do
-   it "parses boxes selections" do
-      "BOXES" `parseAs` "BOXES"
-   it "parses shelves sections" do
-      "/SHELF" `parseAs` Action (SelectShelves "SHELF")
-   it "parses boxes in shelves sections" do
-      "in SHELF" `parseAs` "/SHELF"
-   it "parses shelves containing boxes sections" do
-      "with BOXES" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "BOXES")
-   it "parses simple move" do
-      "BOXES to^ SHELF" `parseAs` ("BOXES" `Then` (m "SHELF"))
-   it "parses oneliner case" do
-      "BOXES | A | B" `parseAs` ("BOXES" `Then`
-                                          (Cases [ Case "A" [Cases [Case "B" []]]]
-                                          )
-                                )
-   it "parses cases with initial break (bigger)" do
-      --  12345678901234
-      [  "BOXES"
-       , "      | A to^ S1"
-       , "      | B to^ S2"
-       ] `parseAs'` ("BOXES" `Then`
-                           Cases [ "A" `Case` [m "S1"]
-                                 , "B" `Case` [m "S2"]
+deriving instance Generic Statement
+instance Arbitrary Statement where
+   arbitrary = rebalance <$> 
+               frequency [ (10, atom)
+                     , (1, Then <$> atom <*> arbitrary)
+                     , (1, PassThrought <$> atom)
+                     , (1, ForeachShelf <$> arbitrary)
+                     , (1, ForeachBox <$> arbitrary <*> arbitrary )
+                     , (1, ForeachDo <$> arbitrary <*> arbitrary )
+                     , (1, PrettyPrint <$> arbitrary <*> arbitrary )
+                     , (1, do 
+                        -- cs <- arbitrary
+                        c <- arbitrary
+                        cs' <- scale (min 3) $ listOf arbitrary
+                        let cs = c:| cs'
+                        elements [  Cases $ fmap (\st -> Case st Nothing ) cs
+                                 , ShelfCases $ fmap (flip ShelfCase Nothing) cs
                                  ]
-                   )
-   it "parses cases with initial break (smaller)" do
-      --  123456789
-      [  "BOXES"
-       , "  | A to^ S1"
-       , "  | B to^ S2"
-       ] `sameAs'` [  "BOXES"
-                   , "      | A to^ S1"
-                   , "      | B to^ S2"
-                   ]
-   it "parses cases with basic indentation" do
-      --  123456789
-      [  "BOXES | A to^ S1"
-       , "      | B to^ S2"
-       ] `parseAs'` ("BOXES" `Then`
-                           Cases [ "A" `Case` [m "S1"]
-                                 , "B" `Case` [m "S2"]
-                                 ]
-                   )
-
-   it "parses cases with nested indentation" do
-      --  12345678901234
-      [  "BOXES | A | to^ S1"
-       , "          | to^ S2"
-       , "      | B to^ S2"
-       ] `parseAs'` ("BOXES" `Then`
-                           Cases [ "A" `Case`
-                                      [Cases [ m "S1" `Case` []
-                                             , m "S2" `Case` []
-                                             ]
-                                      ] , "B" `Case` [m "S2"]
-                                 ]
-                   )
-   it "parses with more nested cases " do
-      [  "BOXES | A | to^ S1 | to^ X"
-       , "                   | Y    "
-       , "          | to^ S2    "
-       , "      | B to^ S2"
-       ] `parseAs'` ("BOXES" `Then`
-                           Cases [ "A" `Case`
-                                      [ Cases [ m "S1" `Case`
-                                                                             [ Cases [ m "X" `Case` []
-                                                                                     , "Y" `Case` [] 
-                                                                                     ]
-                                                                             ]
-                                              , m "S2" `Case` []
-                                              ]
-                                      ]
-                                 , "B" `Case` [ m "S2"]
-                                 ]
-                   )
-   it "parses ors with nested indentation" do
-      -- ((BOXES  (A to^ S1)
-      --            to^ S2)
-      --          B to^ S2)
-      [  "BOXES  A to^ S1"
-       , "         to^ S2"
-       , "       B to^ S2"
-       ] `parseAs'`  Then (Then ("BOXES" `Then` ("A" `Then`  m "S1")) -- first line
-                                ( m "S2" )                                  -- second block
-                          )
-                          ("B" `Then` m "S2")
-       --                     Ors [ "A" `Then`
-       --                                Ors [ m "S1"
-       --                                    , m "S2"
-       --                                    ]
-       --                         , "B" `Then` m "S2"
-       --                         ]
-   it "parses ors and cases " do
-       [ "A"
-        ,"  B"
-        ,"  | X"
-        ,"  | Y"
-        ] `parseAs'` Then "A"  ( Ors [ "B"
-                                     , Cases [ Case "X" []
-                                             , Case "Y" []
-                                             ]
-                                     ]
-                               )
-   it "bug" do
-     let move s = Action $ Move Nothing Nothing [] s ExitLeft
-     [   "#batch=M "
-       , "     | #-first to> C2"
-       , "     | #first tam @C1"
-       , "    ------------------------------------------------"
-       , "     | #first"
-       , "         | M52L04FC"
-       , "            .~ M22L08DG"
-       , "                   to> pending"
-       , "                   # | #a | to> E07.06/2"
-       , "                     | to> E07.06/3"
-       , "                     | to> error"
-       , "            | to> E07.06/1"
-       , "            | to> E07.06/3"
-       , "            | to> error"
-       ] `parseAs'`
-          ( Then "#batch=M" 
-                ( Cases [ Case "#!first"[ move "C2" ]
-                        , Case "#first" [ Action (TagAndMove "@C1" []) ]
-                        , Case "#first"
-                            [ Cases [ Case "M52L04FC"
-                                             [ Ors [ Then ( Then (Action (SelectBoxes Root)) "M22L08DG")
-                                                          (Ors [ move "pending"
-                                                               , Then "#"
-                                                                      ( Cases [ Case "#a" [  Cases [ Case (move "E07.06/2") [] ] ]
-                                                                              , Case (move "E07.06/3") Nothing
-                                                                              , Case (move "error") Nothing
-                                                                              ]
-                                                                      )
-                                                               ]
-                                                          )
-                                                   , Cases [ Case (move "E07.06/1") Nothing
-                                                           , Case (move "E07.06/3") Nothing
-                                                           , Case (move "error") Nothing
-                                                           ]
-                                                   ]
-                                             ]
-                                    ]
-                            ]
-                       ]
-                )
-          )
-
-
-
-   context "new" do
-            it "atom" do
-               ["A" ] `parseAs'` "A"
-            it "atom" do
-               "A" `parseAs` "A"
-               "A  " `parseAs` "A"
-            it "parses naked cases" do
-               [ "| A"
-                ,"| B"
-                ] `parseAs'` Cases [ Case "A" []
-                                   , Case "B" []
-                                   ]
-            it "parses cases without spaces" do
-               [ "|A"
-                ] `parseAs'` Cases [ Case "A" []
-                                   ]
-            it "parse mix of cases" do
-               parse' [ "A"
-                ,"|B"
-                ,"|C"
-                ,"D"
-                ] `shouldParse` [ "A"
-                                 , Cases [ Case "B" []
-                                         , Case "C" []
-                                         ]
-                                 , "D"
-                                 ]
-            context "then" do
-               it "single line" do
-                 "A B" `parseAs`  Then "A" "B"
-               it "broke line" do
-                 [ "A "
-                  ," B"
-                  ] `parseAs'` Then "A" "B"
-               context "with ors" do
-                       it "1" do
-                         [ "A B C"
-                          ," D"
-                          ] `parseAs'` Then ("A" `Then` ("B" `Then` "C"))
-                                            "D"
-                       it "2" do
-                         [ "A"
-                          ,"    B"
-                          ,"    C"
-                          ] `parseAs'` Then "A" ( Ors [ "B"
-                                                      , "C"
-                                                      ]
-                                                )
-                       it "3" do
-                         [ "A"
-                          ,"  B"
-                          ,"    C"
-                          ,"  D"
-                          ] `parseAs'` Then "A" ( Ors [ "B" `Then` "C"
-                                                      , "D"
-                                                      ]
-                                                )
-                       it "4" do
-                         [ "Axxxxx "
-                          ,"     B"
-                          ,"  C"
-                          ,"  D"
-                           ] `parseAs'` Then (Then "Axxxxx"
-                                                   "B")
-                                             (Ors ["C", "D"])
-                       it "5" do
-                         [ "A A2 A3"
-                          ,"  B"
-                          ,"    C"
-                          ,"  D"
-                          ] `parseAs'` Then ("A" `Then` ( "A2" `Then` "A3"))
-                                            ( Ors [ "B" `Then` "C"
-                                                  , "D"
-                                                  ]
-                                            )
-               it "with &" do
-                   "A & B & C" `parseAs` Then "A" (Then "B" "C")
-               it "with indented &" do
-                   [ "A & B"
-                    ,"  & C"
-                    ,"  & D"
-                    ] `parseAs'` Then "A" ("B" `Then` ("C" `Then` "D"))
-
-            context "multi" do
-               it "one per line" do
-                parse' [ "A"
-                 ,"B"
-                 ] `shouldParse` ["A"
-                                 , "B"
-                                 ]
-               it "with cases" do
-                parse' [ "A | A2"
-                       , "  | A3"
-                        ,"B B2"
-                 ] `shouldParse` ["A" `Then` (Cases [ Case "A2" []
-                                                    , Case "A3" []
-                                                    ]
-                                             )
-                                 , "B" `Then` "B2"
-                                 ]
-               it "with cases wi" do
-                --        123456789
-                parse' [ "X"
-                       , "    A | A2"
-                       , "      | A3"
-                       , "    B B2"
-                 ] `shouldParse` [Then "X" $ Ors ["A" `Then` (Cases [ Case "A2" []
-                                                    , Case "A3" []
-                                                    ]
-                                             )
-                                 , "B" `Then` "B2"
-                                 ]]
-               it "A B Z" do
-                parse' [ "A"
-                       , "  B"
-                       , "Z"
-                       ] `shouldParse` ["A" `Then` "B"
-                                       , "Z"
-                                       ]
-               it "A B C D" do
-                parse' [ "A"
-                       , "  B"
-                       , "    C"
-                       , "  D"
-                       ] `shouldParse` ["A" `Then` Ors ["B" `Then` "C"
-                                                       , "D"
-                                                       ]
-                                       ]
-   context "foreach" do
-      it "one line" do
-         ["/A foreach:shelf B C"
-          ] `parseAs'` (Then (Action $ SelectShelves "A")
-                             $ ForeachShelf ("B" `Then` "C")
-                       )
-      it "uses full line only" do
-         [ "/A"
-          ,"   foreach:shelf B"
-          ,"        C"
-          ] `parseAs'` (Then (Action $ SelectShelves "A")
-                             $ Then (ForeachShelf "B") 
-                                    "C"
-                       )
-      it "return two statements" do
-         -- foreach should not consume the C
-         parse' [ "/A"
-                , "   foreach:shelf B"
-                , "C"
-                ] `shouldParse` [Then (Action $ SelectShelves "A")
-                             $ ForeachShelf "B"
-                             , "C"
-                             ]
-      it "uses indented block after newline" do
-         parse' [ "/A"
-                , "   foreach:shelf"
-                , "      B"
-                , "      C"
-                ] `shouldParse` [Then (Action $ SelectShelves "A")
-                                $ ForeachShelf $ Ors ["B" , "C" ]
-                                ]
-      it "uses indented block same line" do
-         parse' [ "/A"
-                , "   foreach:shelf B"
-                , "                 C"
-                ] `shouldParse` [Then (Action $ SelectShelves "A")
-                             $ ForeachShelf $ Ors ["B" , "C" ]
-                              ]
-      it "don't use next line" do
-         parse' ["/A foreach:shelf trace:count before in:shelves tam @"
-          , "B"]
-            `shouldParse` [ Then (Action $ SelectShelves "A")
-                                 ( ForeachShelf (Then (Action $ TraceCount "before" )
-                                                      (Action (SelectBoxes  CUseContext) `Then` (Action $ TagAndMove "@" []))
-                                                )
-                                 )
-
-                          , "B"
-                          ]
-      it "don't use next line in block" do
-         parse' ["/A || foreach:shelf GO"
-                ,"   || B"]
-            `shouldParse` [ Then (Action $ SelectShelves "A")
-                                 (Cases [ Case ( ForeachShelf "GO") []
-                                        , Case "B" []
-                                        ]
-                                 )
-                          ]
-      it "|| & ||" do
-        let sub =       Cases [Case (Then (Cases [ Case "A" []
-                                                 , Case "B" []
-                                                 ]
-                                           )
-                                           "C"
-                                   ) [] 
-                              ]
-
-        [ "| Main "
-         ,"   Root "
-         ,"   || & || A"
-         ,"        || B"
-         ,"      & C"
-         ] `parseAs'` Cases [Case "Main"  [ Ors [ "Root"
-                                                , sub
-                                                ]
-                                          ]
-                            ]
-      it "|| & || (2)" do
-       [  "* |  & | A#'3" -- collect A-2
-        , "       | B#'1" -- and B-1
-        , "     & #id=1"  -- only B-1#1
-        , "  || A#'2"     -- add A-3
-        ] `parseAs'` Then "*"
-                         (Cases [ Case  (Then (Cases [ (Case "A#'3" [])
-                                                     , (Case "B#'1" [])
-                                                     ]
-                                              )
-                                              "#id=1"
-                                        ) 
-                                        []
-                                -- "  || A#'3"     -- add A-3
-                                , Case "A#'2" []
-                                ]
+                        )
+                     , (1, do -- generate  at least 2 in Ors
+                         a <- arbitrary `suchThat` \case Ors _ -> False; PassThrought _ -> False ; _ -> True
+                         b <- arbitrary
+                         cs <- return [] -- scale (min 2) $ listOf arbitrary
+                         return $ Ors (a :| b : cs)
                          )
 
-   it "parses TAM with location" $ do
-      "tam loc" `parseAs` Action (TagAndMove "loc" [])
-   it "parses TAM with tag" do
-      "tam #tag" `parseAs` Action (TagAndMove "#tag" [])
-   it "parses TAM with orientations" do
-      "tam loc with |= " `parseAs` Action (TagAndMove "loc" [ OrientationStrategy {osOrientations = readOrientation '|'
-                                                                                   , osMinDepth = 0
-                                                                                   , osMaxDepth = 1
-                                                                                   , osMaxLenght = Nothing
-                                                                                   , osMaxHeight = Nothing
-                                                                                   , osUseDiagonal = True
-                                                                                   }
-                                                             , OrientationStrategy {osOrientations = readOrientation '='
-                                                                                   , osMinDepth = 0
-                                                                                   , osMaxDepth = 1
-                                                                                   , osMaxLenght = Nothing
-                                                                                   , osMaxHeight = Nothing
-                                                                                   , osUseDiagonal = True
-                                                                                   }
-                                                             ])
-   context "uppercase" do
-   -- only command should start with a lower case unless starting with '
-     it "rejects lower case selector" do
-        parse "a" `shouldSatisfy` isLeft
-     it "accept escaped lower case selector" do
-        "`a" `parseAs` Action (SelectBoxes "a")
-     it "accept  lower case selector as command argument" do
-        "with boxes" `parseAs` Action (SelectShelves $ CSelector $ parseShelfSelector  "boxes")
-   context "selectors" do
-      it "1" do
-         ".~" `parseAs` (Action (SelectBoxes Root))
-      it "2" do
-         ".~~" `parseAs` (Action (SelectBoxes $ CSelectorAnd Root Parent) )
-      it "3" do
-         ".~~A" `parseAs` (Action (SelectBoxes $ CSelectorAnd Root $ CSelectorAnd  Parent "A") )
-      it "4" do
-         ".~  A" `parseAs` Then (Action (SelectBoxes Root)) "A"
-      context "shelf case" do
-         it "" do
-            [ "& // A B"
-             ,"  /  C"
-             ,"& GO"
-             ] `parseAs'` Then (ShelfCases [ ShelfCase (Action (SelectShelves "A") `Then` Action (SelectShelves "B")) []
-                                           , ShelfCase (Action (SelectShelves "C")) []
-                                           ]
-                               )
-                               ( "GO")
-   context "bugs strategsies" do
-     it "1" do
-        [ "A "
-         ,"  .~ B | C"
-         ,"       | D"
-         ,"  E | F"
-         ,"    | G"
-         ]`parseAs'` ("A" `Then` Ors [ (Action (SelectBoxes Root)) `Then` ("B" `Then` Cases [Case "C" [], Case "D" []])
-                                     , "E"  `Then` Cases [Case "F" [], Case "G" []]
+                     ]
+             where atom = oneof [ Action <$> genericArbitrary 
+                                ]
+                   rebalance = \case
+                      Then (Then a b) c -> Then a $ rebalance (Then b c)
+                      Ors (a :| []) -> rebalance a
+                      a -> a
+   shrink = shrinkNothing
+
+deriving instance Generic Command
+instance Arbitrary Command where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic Case
+instance Arbitrary Case where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic ShelfCase
+instance Arbitrary ShelfCase where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic BoxSelector
+instance Arbitrary BoxSelector where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic ShelfSelector
+instance Arbitrary ShelfSelector where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+instance {-# OVERLAPPING #-} Arbitrary (Maybe ShelfSelector) where
+   arbitrary = do
+                p <- arbitrary
+                return case p of
+                   SelectAllShelves -> Nothing
+                   s -> Just s
+instance {-# OVERLAPPING #-} Arbitrary (Maybe BoxSelector) where
+   arbitrary = do
+                p <- arbitrary
+                return case p of
+                   SelectAllBoxes -> Nothing
+                   s -> Just s
+
+deriving instance Generic (Selector a)
+instance Arbitrary (Selector a) where
+   arbitrary = do 
+                 sel <- genericArbitrary
+                 return $ case sel of 
+                          SelectAnything -> SelectAnything
+                          _ -> sel
+   shrink = shrinkNothing -- genericShrink
+
+deriving instance Generic s => Generic (CSelector s)
+instance (Generic s, Arbitrary s) => Arbitrary (CSelector s) where
+   arbitrary = oneof $ atom <> [ CSelector  <$> arbitrary
+                               , do
+                                  a <- oneof atom
+                                  b <- arbitrary
+                                  return $ CSelectorAnd a b
+                               ]
+             where atom = map return [ SwapContext
+                                     , Parent
+                                     , Root
+                                     , CUseContext
                                      ]
-                     )
-     it "2" do
-       let z = "Z" `Then` Cases [ Case (m "E07.06/1") []
-                                , Case (m "E07.06/3") []
-                                , Case (m "error") []
-                                ] 
-       let y = "Y" `Then` Cases [ Case (Action $ SelectBoxes "^=1")
-                                       [Cases [ Case (m "E07.06/2") [] ]
-                                       ]
-                                , Case (m "E07.06/3") []
-                                , Case (m "error") []
-                                ] 
-           c = (Action (SelectBoxes Root) `Then` "C") `Then` Ors [m "pending", y]
-       [ "A"
-         ,"       | B"
-         ,"          .~ C"
-         ,"                 to^ pending"
-         ,"                 Y | ^1 | to^ E07.06/2"
-         ,"                   | to^ E07.06/3"
-         ,"                   | to^ error"
-         ,"          Z | to^ E07.06/1"
-         ,"            | to^ E07.06/3"
-         ,"            | to^ error"
-        ]`parseAs'` ( "A"  `Then` (Cases [Case "B" [Ors [c, z]]])
-                    )
-        
+   shrink = genericShrink
+
+-- deriving instance Generic (CSelector (ShelfSelector))
+-- instance Arbitrary (CSelector (ShelfSelector )) where
+--    arbitrary = genericArbitrary
+--    shrink = genericShrink
+
+deriving instance Generic Limit
+instance Arbitrary Limit where
+   arbitrary = do
+                 liStart <- oneof [return Nothing, Just <$> chooseInt (1, 3) ]
+                 liEnd <- oneof [return Nothing, Just <$> chooseInt (1, 3) ]
+                 liOrderingKey <- arbitrary
+                 liUseBase <- arbitrary
+                 return case Limit{..} of
+                          NoLimit -> NoLimit
+                          l -> l
+   shrink = shrinkNothing
+
+deriving instance Generic SortingOrder
+instance Arbitrary SortingOrder where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic OrderingKey
+instance Arbitrary OrderingKey where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic (BoxNumberSelector)
+instance Arbitrary (BoxNumberSelector) where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic (Expr Text)
+instance Arbitrary (Expr Text) where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic (NameSelector a)
+instance Arbitrary (NameSelector a) where
+   arbitrary = do 
+                 n <- oneof [NameMatches <$> arbitrary, NameDoesNotMatch <$> arbitrary ]
+                 
+                 case n of
+                   AnyNames -> return AnyNames
+                   NameDoesNotMatch (MatchAnything:_) ->  arbitrary
+                   _ -> return n
+                        
+   shrink = shrinkNothing -- genericShrink
+
+deriving instance Generic (TagSelector a)
+instance Arbitrary (TagSelector a) where
+   arbitrary = do
+                 -- oneof [ 
+                   a <- genericArbitrary
+                   case a of
+                      TagHasKey MatchAnything -> arbitrary
+                      TagIsKey MatchAnything -> arbitrary
+                      TagHasValues vs | matchAll vs -> arbitrary
+                      TagHasNotValues vs | matchAll vs -> arbitrary
+                      TagHasKeyAndValues MatchAnything _ -> arbitrary
+                      TagHasKeyAndValues k vs | matchAll vs -> return $ TagHasKey k
+                      TagIsKeyAndValues MatchAnything _ -> arbitrary
+                      TagIsKeyAndValues k vs | matchAll vs -> return $ TagIsKey k
+                      TagHasKeyAndNotValues MatchAnything _ -> arbitrary
+                      TagHasKeyAndNotValues _ vs | matchAll vs -> arbitrary
+                      TagHasValues vs | matchAll vs -> arbitrary
+                      _ -> return a
+               where matchAll = all (== (VMatch MatchAnything))
+   shrink = shrinkNothing
+   
+
+deriving instance Generic ValuePattern
+instance Arbitrary ValuePattern where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic OJustify
+instance Arbitrary OJustify where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic OrientationStrategy
+instance Arbitrary OrientationStrategy where
+   arbitrary = do
+                osOrientations <- arbitrary
+                osMinDepth <- chooseInt (1,9) `suchThat` (/=1)
+                osMaxDepth <- chooseInt (max 1 osMinDepth, 9) `suchThat` (/=1)
+                osMaxLenght <- oneof [return Nothing, Just <$> chooseInt (1,9) `suchThat` (/=1) ]
+                osMaxHeight <- oneof [return Nothing, Just <$> chooseInt (1,9) `suchThat` (/=1) ]
+                osUseDiagonal <- return False
+                return $ OrientationStrategy{..}
+   -- shrink = genericShrink
+   shrink _ = []
+   
+
+instance {-# OVERLAPPING #-} Arbitrary [OrientationStrategy] where
+   arbitrary = do 
+               -- make sure diag is consistent
+               ostrat <- arbitrary
+               let ori = osOrientations ostrat
+               elements [ [ ostrat { osUseDiagonal = False } ]
+                        , [ ostrat { osUseDiagonal = True, osOrientations = o } 
+                          | o <- [ori, rotateO ori ]
+                          ] 
+                        , [ ostrat { osUseDiagonal = False, osOrientations = o } 
+                          | o <- [ori, rotateO ori ]
+                          ] 
+                        ]
+   shrink = shrinkNothing
+
+deriving instance Generic BoxMode
+instance Arbitrary BoxMode where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic RangeBoundary
+instance Arbitrary RangeBoundary where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic ExitMode
+instance Arbitrary ExitMode where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic Direction
+instance Arbitrary Direction where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic Orientation
+instance Arbitrary Orientation where
+   arbitrary = elements [ up, tiltedForward, tiltedRight, tiltedFR, rotatedSide, rotatedUp ]
+   shrink = genericShrink
+
+deriving instance Generic PartitionMode
+instance Arbitrary PartitionMode where
+   arbitrary = do 
+             pmode <- genericArbitrary
+             return $ reOr $ case pmode of
+               -- make sure c >= 1
+               PCorner c | c<=0 -> PCorner (1-c)
+               _ -> pmode
+             where reOr = \case 
+                         POr (POr a b) c -> POr a $ reOr $ POr c b
+                         p -> p
+   shrink = genericShrink
+
+deriving instance Generic (TagOperationF Text)
+instance Arbitrary (TagOperationF Text) where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic MatchPattern
+instance Arbitrary MatchPattern where
+   arbitrary = do
+                  -- oneof [fmap MatchFull arbitrary, return MatchAnything]
+                  elements [MatchFull "pat", MatchAnything, MatchFull "name" ]
+   shrink = shrinkNothing
+   -- shrink = genericShrink
+   
+instance {-# OVERLAPPING #-} Arbitrary [MatchPattern] where
+   arbitrary = take 2 <$> sublistOf [MatchFull pat
+                                    | pat <- ["pat", "file"] <> map singleton (['a'..'z'] <> ['A'..'Z'])
+                                    ] `suchThat` \xs -> length xs > 0 
+   shrink = genericShrink
+
+instance Arbitrary Text where
+   arbitrary = elements ( [singleton c <> suf
+                          | c <- ['A'..'Z']
+                          , suf <- ["", "-X"]
+                          ]
+                        <> [ singleton w <> "0" <> tshow i <> ".0" <> tshow j
+                           | w <- "WEM"
+                           , i <- [1..9]
+                           , j <- [1..9]
+                           ]
+                        <> ["done", "Error", "tag", "ghost"]
+                        )
+
+   shrink _ = []
+
+instance Arbitrary  a => Arbitrary (NonEmpty a) where
+    arbitrary = liftA2 (:|) arbitrary arbitrary
+    shrink _ = []
 
 
+spec :: Spec
+-- spec = parallel pureSpec
+spec = pureSpec
+
+pureSpec = twoway >> parsing >> pretty
+
+twoway = describe "pretty/parse" do
+   it "parse orientation" do
+     -- quickCheckWith stdArgs { replay = Just (mkQCGen 1501443633, 0)} $
+      property \rule -> let s = showOrientationStratety rule
+                        in (parseOrientationRule [] s, s) `shouldBe` ([rule], s)
+   it "parse tags operation" do
+      property \tagOp -> let s = printTagOperation tagOp
+                        in (parseTagOperation s, s) `shouldBe` (tagOp, s)
+   it "parse tags operations" do
+      property \a -> let s = printTagOperations a
+                        in (parseTagOperations s, s) `shouldBe` (a, s)
+   it "parse tag selector" do
+      property \a -> let s = printTagSelector a
+                        in (parseTagSelector s, s) `shouldBe` (Just a, s)
+   modifyArgs (\args ->   args
+                            { maxSuccess= 100000, maxSize = 2
+                            -- , replay = Just (mkQCGen 2069934030, 0)
+                            }) $
+      it "parse any prettyprint statement" do
+                            property $ \statement -> let t = prettyShort statement
+                                                         se = parse t
+                                                      -- check if parse . pretty works
+                                                      -- if not check pretty printing of both to display the pprint version
+                                                      in if (se  == Right [statement ] ) 
+                                                         then  return ()
+                                                         -- else fmap (map prettyShort) (parse t) === Right ["", t]
+                                                         else (fmap (map prettyShort) se, se)  `shouldBe` (Right [t], Right [statement])
+                                                         --                                        force the error 
+                                                         -- else parse t === Right []
+
+-- | pretty print and collapse spaces for easier comparaison
+prettyShort statement = pack $ go (unpack $ prettyWPL statement) where
+  go (a:b:t) | isSpace a && isSpace b = go (' ':t)
+  go (a:t) | isSpace a  = ' ' : go t
+  go (a:t) = a : go t
+  go "" = ""
+
+parsing  = describe "parsing" do
+   context "consecutive" do
+       it "indented as Then" do
+          parse "A\n B" `shouldBe` parse "A B"
+       it "new line as Or" do
+          parse  "A\nB" `shouldBe` fmap concat (traverse parse ["A", "B"])
+   let texts = -- ["to> W", "to^ B"
+               -- , "to^ orules:x1x2| W"
+               -- , "to> boxes:B W"
+               -- , "tag#bg=black"
+               -- , "#bg=black { to> error }"
+               -- , "#bg=black :A { to> error }"
+               -- , "toggle #A#done#-error"
+               -- , "t:b :message prop:${shelfname}"
+               -- , "t:b :\"message\" prop:${shelfname}"
+               -- , "shelf:tag#"
+               -- , "empty:shelves=no"
+               -- , "to> pmode:behind A"
+               -- , "to> ~"
+               -- , "tag#"
+               -- , "shelf:split * { to> A }"
+               -- , "/~"
+               -- , "shelf:resize <useContext> { empty:boxes=yes }"
+               -- , "shelf:full ~ { empty:boxes=yes }"
+               -- , "shelf:resize <useContext> l:0.0 w:{M-X} h:{W01.02} { shelf:full ~ { empty:boxes=yes } }"
+               -- , "orules+=x0x@"
+               -- , "orules+=!x0x@" doesn't exist in real file as the ! disappear in the pretty printing
+               --
+               -- [ "tag# :.~ { tag# }"
+               -- , "tag# :(orules+=<empty>) { tag# }"
+               -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# } }"
+               -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# } } }"
+               -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# :~ { tag# :.~ { tag# } } } } }"
+               -- "after ~ orules=!4x9:9x@' for:?!pat/pat"
+               "trace:pretty :\"M06.07\" { foreach:box ~.~ { foreach:box ~.~ { ( shelf:full <useContext> { ; pmode=best } , shelf:resize <useContext> l:{E05.06} w:0.0 h:{M08.01} { /-~ } ) } } }":
+               []
+   forM_ texts \t -> do
+       it ("parses " <> unpack t) do
+          case parse t of
+           -- Right [s] -> pretty2 s `shouldBe` t
+           Right ss -> map prettyShort ss `shouldBe` [t]
+           Left e ->  expectationFailure $ P.errorBundlePretty e
+   describe "options" do
+      let t = Just @Text
+      it "parses 2 option in correct order" do
+        P.parse (o2 ["a"] ["b"] ) "o2" "a:hello b:message" `shouldBe` Right (t "hello", t "message")
+      it "parses 2 option in incorrect order" do
+        P.parse (o2 ["a"] ["b"] ) "o2" "b:message a:hello" `shouldBe` Right (t "hello", t "message")
+      it "parses 2 option with nothing" do
+        P.parse (o2 ["a"] ["b"] ) "o2" "" `shouldBe` Right (Nothing :: Maybe Text, Nothing :: Maybe Text)
+      it "parses 3 option in correct order" do
+        P.parse (o3 ["a"] ["b"] ["c"] ) "o3" "a:hello b:message c:third" `shouldBe` Right (t "hello", t "message", t "third")
+      it "parses 3 option with nothing" do
+         P.parse (o3 ["a"] ["b"] ["c"] ) "o3" "" `shouldBe` Right (Nothing :: Maybe Text, Nothing :: Maybe Text, Nothing :: Maybe Text)
+pretty = describe "pretty" do
+    it "layout" do
+       content <- strip <$> readFileUtf8 "data/pretty.wpl"
+       statements <- case parse content of
+                       Right ss -> return ss
+                       Left e -> error $ P.errorBundlePretty e
+
+       let result = prettyWPLs statements
+           -- parse as same result
+       writeFileUtf8 "/tmp/pretty.wpl" result
+       -- forM statements \st ->  do
+       --     let r = prettyWPL st
+       --     case parse r of
+       --        Right ss ->  ss `shouldBe` [st]
+       --        Left e -> error $ unpack $ unlines [ pack $ P.errorBundlePretty e, "when parsing", r ,"----" ]
+       -- take 500 result `shouldBe` take 500 content 
+       (r result <> "---") `shouldBe` (r content <> "\n---")
 
 
-                  
-     
+-- | spaces don't show on diff so we replace them by something visible
+r = omap \case 
+        ' ' -> '¬'
+        c -> c
+-- * util {{{
+parse = P.parse wplParser "test"

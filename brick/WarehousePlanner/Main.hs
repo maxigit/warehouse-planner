@@ -20,6 +20,8 @@ import Control.Monad.State (get)
 import System.FilePath (takeBaseName)
 import WarehousePlanner.Brick.Types
 import Data.Map qualified as Map
+import WarehousePlanner.WPL.PrettyPrint (prettyWPLs)
+import WarehousePlanner.WPL.Exec(parseWPL)
 
 -- * Type
 data Options = Options
@@ -60,6 +62,7 @@ data Command = Summary
              | Report
              | Display 
              | Export
+             | PrettyPrintWPL
              deriving (Show, Eq, Generic, Read)
              
 optionsParser :: Parser Options
@@ -172,6 +175,9 @@ commandArg = flag' Stocktake (long "stocktake"
                                    <> short 'r'
                                    <> help "Generic report. Can be selected with PARAM. Doesn't add 'report-' prefix."
                                    )
+          <|> flag' PrettyPrintWPL ( long "pretty"
+                                   <> help "pretty print WPL from stdin"
+                                   )
   
 optionsPI :: ParserInfo Options
 optionsPI = info (helper <*> optionsParser ) fullDesc
@@ -237,6 +243,14 @@ defaultMainWith expandSection = do
                       case execE of
                         Right (exec,_) -> fmap Right $  exec get
                         Left e -> return $ Left e
+       PrettyPrintWPL -> do
+          content <- case oFiles of
+                        [one] -> readFileUtf8 $ dir </> one
+                        [] -> repack <$> getContents
+                        _ -> error "Only one WPL file can be pretty printed!"
+          case parseWPL "<stdin>" $ repack content of
+             Left e -> putStrLn e
+             Right statements -> putStrLn $ prettyWPLs statements
        _ -> do
         execE <- getExec
         case execE of

@@ -105,6 +105,8 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hspec >=2.0.0
+    - QuickCheck >= 2.14
+    - generic-arbitrary >= 1.0
  
 executables:
   whp:

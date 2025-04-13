@@ -45,8 +45,9 @@ parseTerminalExpr :: MParser (Expr Text)
 parseTerminalExpr  = parseVal <|> parseExtra <|> parseGroup 
 parseVal :: MParser (Expr Text)
 parseVal = do
+      neg <- P.option False (P.char '-' $> True)
       v <- P.try P.float <|> fmap fromIntegral P.decimal
-      return $ ValE v
+      return $ ValE $ if neg then -v else v
 
 parseGroup :: MParser (Expr Text)
 parseGroup  = do

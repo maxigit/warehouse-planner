@@ -10,7 +10,7 @@ module WarehousePlanner.Selector
 , parseNameSelector
 , parseMatchPattern
 , parseTagSelector
-, printSelector, printBoxSelector, printShelfSelector
+, printSelector, printBoxSelector, printShelfSelector, printTagSelector
 , MParser
 , between
 , Selectable(..)
@@ -136,14 +136,15 @@ parseTagSelector tag = Just $ case break ('='  ==) tag of
                 Just ('-', nokey) -> TagHasNotKey $ parseMatchPattern nokey
                 Just ('!', nokey) -> TagHasNotKey $ parseMatchPattern nokey
                 _ -> TagIsKey $ parseMatchPattern key
-  ("", stripPrefix "=-" -> Just values) -> TagHasNotValues  (mkValues values)
-  ("", stripPrefix "=!" -> Just values) -> TagHasNotValues  (mkValues values)
-  ("", stripPrefix "=" -> Just values) -> TagHasValues  (mkValues values)
+  (key, "=") -> TagHasKey $ parseMatchPattern key
+  ("", stripPrefix "=-" -> Just values) | not (null values)  -> TagHasNotValues  (mkValues values)
+  ("", stripPrefix "=!" -> Just values)  | not (null values) -> TagHasNotValues  (mkValues values)
+  ("", stripPrefix "=" -> Just values)  | not (null values) -> TagHasValues  (mkValues values)
   -- ("", stripPrefix "=!" -> Just values) -> TagHasNotValues  (mkValues values)
-  (key, stripPrefix "=+" -> Just values) -> TagHasKeyAndValues (parseMatchPattern key) (mkValues values)
-  (key, stripPrefix "=-" -> Just values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
-  (key, stripPrefix "=!" -> Just values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
-  (key, stripPrefix "=" -> Just values) -> TagIsKeyAndValues (parseMatchPattern key) (mkValues values)
+  (key, stripPrefix "=+" -> Just values)  | not (null values) -> TagHasKeyAndValues (parseMatchPattern key) (mkValues values)
+  (key, stripPrefix "=-" -> Just values)  | not (null values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
+  (key, stripPrefix "=!" -> Just values)  | not (null values) -> TagHasKeyAndNotValues (parseMatchPattern key) (mkValues values)
+  (key, stripPrefix "=" -> Just values)  | not (null values) -> TagIsKeyAndValues (parseMatchPattern key) (mkValues values)
   _ -> error "Bug. Result of break = should start with = or being captured earlier"
   where mkValues = map parseVPattern . fromList . splitOnNonEscaped ";"
   
@@ -276,7 +277,7 @@ printNameSelector (NameDoesNotMatch pats) = "!" <> intercalate "|" (map printPat
 
 printTagSelector :: TagSelector s -> Text
 printTagSelector = \case
-  TagHasKey key -> printPattern key
+  TagHasKey key -> printPattern key <> "="
   TagHasNotKey key -> "-" <> printPattern key
   TagIsKey key -> printPattern key
   TagIsKeyAndValues key vals -> printPattern key <> "=" <> printVals vals
@@ -312,14 +313,15 @@ printLimit Limit{..} = key <> lim where
                 | (k, reverse) <- liOrderingKey
                 , let rev = if reverse == ReverseOrder then "-" else ""
                 ]
-  useBase = if liUseBase then "" else "="
+  useBase = if liUseBase then "@" else "="
   lim = case (liStart, liEnd) of
          (Just s, Just e) -> tshow s <> ":" <> tshow e
-         (Just s, Nothing) -> tshow s
-         (Nothing, Just e) -> ":" <> tshow e
+         (Just s, Nothing) -> tshow s <> ":"
+         (Nothing, Just e) -> tshow e
          (Nothing, Nothing) -> ""
 
 printBoxSelector :: BoxSelector -> Text
+printBoxSelector SelectAllBoxes = "#"
 printBoxSelector BoxSelector{..} = let
      shelf = case shelfSelectors of
                 SelectAnything -> ""
@@ -327,6 +329,7 @@ printBoxSelector BoxSelector{..} = let
      in printSelector boxSelectors <> shelf <> printNumberSelector numberSelector
 
 printShelfSelector :: ShelfSelector -> Text
+printShelfSelector SelectAllShelves = "#"
 printShelfSelector ShelfSelector{..} = 
    case sBoxSelectors  of
        SelectAnything -> printSelector sShelfSelectors

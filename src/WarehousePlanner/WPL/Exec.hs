@@ -11,9 +11,10 @@ import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import WarehousePlanner.Move
-import WarehousePlanner.Selector (printBoxSelector, parseBoxSelector)
+import WarehousePlanner.Selector (parseBoxSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
+import WarehousePlanner.WPL.ParserI
 import WarehousePlanner.WPL.ExContext
 import WarehousePlanner.WPL.PrettyPrint
 import WarehousePlanner.ShelfOp
@@ -91,7 +92,7 @@ executeStatement ec command =
            executeStatement ec (Cases cases)
         PrettyPrint title statement -> do
            traceM (unpack title)
-           traceM (unpack $ pretty statement) 
+           traceM (unpack $ prettyWPL statement) 
            executeStatement ec statement 
 
 
@@ -129,10 +130,10 @@ executeCommand :: forall s . ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
     Move boxm pmodem orules shelf exitMode -> do
-      newBaseEvent "TO" (maybe "" printBoxSelector   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
+      newBaseEvent "TO" (maybe "" (pack . showCSelector showBoxSelector)   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
       boxes <- getBoxPs =<< case boxm of 
                  Nothing -> return ec
-                 Just sel -> narrowBoxes sel ec
+                 Just sel -> narrowCSelector sel ec
       -- traceShowM ("BOXOS", length boxes)
       shelves <-  do
          getShelves =<< narrowCSelector shelf ec
@@ -429,14 +430,13 @@ executeCommand ec command = case command of
 readWPL :: MonadIO m => FilePath ->  m [Statement]
 readWPL filename = do 
     content <- readFileUtf8 filename
-    let e = P.runParser wplParser filename content
-    case e of
-       Left bundle -> error $ P.errorBundlePretty bundle
+    case parseWPL filename content of 
+       Left bundle -> error $ unpack bundle
        Right statements -> return statements
 
 parseWPL :: FilePath -> Text -> Either  Text [Statement]
 parseWPL source content =
-    case P.runParser wplParser source content of
+    case P.runParser ( P.try wplParserI <|> wplParser) source content of
        Left bundle -> Left $ pack $ P.errorBundlePretty bundle
        Right statements -> return statements
 

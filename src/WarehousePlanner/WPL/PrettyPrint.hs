@@ -1,110 +1,245 @@
 module WarehousePlanner.WPL.PrettyPrint
 (
-pretty
+prettyWPL, prettyWPLs
 )
 where
 
-import ClassyPrelude
+import ClassyPrelude hiding(group)
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Type
+import WarehousePlanner.Base(printTagOperations)
 import Data.List.NonEmpty (NonEmpty(..))
 import WarehousePlanner.Selector (printBoxSelector, printShelfSelector)
+import Prettyprinter
+import Prettyprinter.Render.Text
+import Data.Map qualified as Map
+import WarehousePlanner.Expr(Expr(..))
+import Data.Char (isUpper)
 
-pretty :: Statement -> Text
-pretty = prettyStatement True ""
+-- import WarehousePlanner.WPL.PrettyPrint qualified as P
+prettyWPL :: Statement -> Text
+prettyWPL = renderStrict
+          . layoutSmart defaultLayoutOptions { layoutPageWidth = AvailablePerLine 80 0.4 }
+          . pStatement
+          
+prettyWPLs :: [Statement] -> Text
+prettyWPLs = unlines . intersperse "" . map prettyWPL
 
+pStatement :: Statement -> Doc a
+pStatement = \case 
+   Action command -> pCommand command
+   Ors (stmt :| []) -> pStatement stmt
+   Ors stmts@(_ :| _) -> orsEnclosed stmts
+   -- Ors (stmt :| stmts) -> hcat $ punctuate (space<> "||" <> space) (map pStatement (stmt: stmts))
+   Cases cases -> -- align $ brackets $ vcat $ map pCase $ toList cases
+                 group $ align $ encloseSep "[ " (line <> "]") (flatAlt  "| " " | ") $ map pCase (toList cases)
+   ShelfCases cases -> -- align $ brackets $ vcat $ map pCase $ toList cases
+                 group $ align $ encloseSep "/[ " (line <> "]") (flatAlt  "| " " | ") $ map pShelfCase (toList cases)
+   -- Then a (Action action) -> pStatement a <+> align (pCommand action)
+   Then a b -> group $ pStatement a <> nest 4 (line <> pStatement b)
 
-prettyStatement :: Bool -> Text -> Statement -> Text
-prettyStatement raw indent stmt = 
-    case stmt of
-       Action command ->  i <> prettyCommand nextIndent command
-       Ors (stmt :| []) -> prettyStatement True "" stmt
-       Ors stmts -> withPrefix prettyStatement "(o)" stmts
-       Cases stmts -> withPrefix prettyCase "" stmts
-       Then a b -> withPrefix prettyStatement "&" (a :| [b])
-       -- Then a b -> prettyStatement raw indent a <> "\n" <>  prettyStatement False nextIndent b
-       PassThrought stmt -> prettyStatement raw indent stmt
-       ForeachDo stmt stmts -> i <> "foreach:do " <> prettyStatement True (indent <> "         " ) stmt <> "\n" <> indent <>  withPrefix prettyStatement ("foreach:- ") stmts
-       st -> i <> pack (show st)
-    where nextIndent = addIndent indent
-          withPrefix :: forall s . (Bool -> Text -> s -> Text) -> Text -> NonEmpty s -> Text
-          withPrefix pretty prefix stmts = let indentWithPrefix =  indent <> replicate (length prefix + 1) ' ' 
-                                           in unlines [ i <> prefix <> " " <> pretty True indentWithPrefix stmt
-                                                      | (i, stmt) <- zip ("" : repeat indent) ( toList stmts)
-                                                      ]
-          i = if raw 
-              then ""
-              else indent
-              
-prettyCommand :: Text -> Command -> Text
-prettyCommand indent command = 
-    join case command of
-       Move source pmode ors dest exitMode -> [ maybe "" prettyBoxSelector source
-                                              , case exitMode of
-                                                 ExitLeft -> "to>"
-                                                 ExitOnTop -> "to^"
-                                              , maybe "" tshow pmode
-                                              , case ors of
-                                                  [] -> ""
-                                                  _ -> "orules " <> mconcat (map tshow ors)
-                                              , prettyCSelector (addIndent indent) prettyShelfSelector dest
-                                              ]
-       Tag tagOps -> "tag ": map tshow tagOps
-       TagFor selector tagOps stmt -> "tag:for " 
-                                    : prettyCSelector indent prettyBoxSelector selector
-                                    : map tshow tagOps
-                                    <> [prettyStatement True (addIndent indent)  stmt]
-       SelectBoxes selector -> [ prettyCSelector indent prettyBoxSelector selector ]
-       SelectShelves selector -> [ "/" , prettyCSelector indent prettyShelfSelector selector ]
-       TraceBoxes desc propm -> [ "trace:boxes"
-                                 , desc
-                                 ]
-                                 <>  case propm of
-                                     Nothing -> []
-                                     Just prop -> ["with", prop ]
-       TraceShelves desc -> [ "trace:shelves"
-                                 , desc
-                                 ]
-       TraceOrientations desc -> [ "trace:orules", desc ]
-       SetPartitionMode mode -> ["place", tshow mode]
-       SplitShelf selector bselectm l w h stmt -> [ "split"
-                                             , prettyCSelector indent prettyShelfSelector selector
-                                             ]
-                                             <> case bselectm of
-                                                     Nothing -> []
-                                                     Just b ->  [ "for"
-                                                                , prettyCSelector indent prettyBoxSelector b
-                                                                ]
-                                             <> map tshow [l, w, h]
-                                             <> [prettyStatement True (addIndent indent) stmt]
+   --                 -- in parens $ hsep $ punctuate softline (map pStatement stmts)
+   --                 in align $ parens $ hsep $ (map pStatement stmts)
+   PassThrought stmt -> ";" <+> pStatement stmt
+   ForeachBox sel stmt -> "foreach:box" <+> align (vsep [ (pCSelector pBoxSelector sel)
+                                                        , pBlock stmt
+                                                        ]
+                                                  )
+   ForeachShelf stmt -> "foreach:shelf" <+> align (pBlock stmt)
+   ForeachDo stmt xs -> "foreach:do" <+> align ( pBlock stmt
+                                                 <+> orsEnclosed xs
+                                               )
+   PrettyPrint title stmt -> "trace:pretty" <> opt' "" viaShow (Just title)
+                                      <+>pBlock stmt
+                                               
 
-       _ -> [ tshow command ]
-    where join = unwords . filter (not . null)
-    
-addIndent :: Text -> Text
-addIndent = ("     " <>)
-    
-prettyCase :: Bool -> Text -> Case -> Text
-prettyCase raw indent (Case cas statementm) =
-    case statementm of
-       Nothing -> "|| " <> prettyStatement raw (indent <> "   ") cas
-       Just stmt -> "|  " <> prettyStatement raw (indent) cas
-                          <> "\n" <> indent <> "   "
-                         <> prettyStatement True (indent <> "   ") (Ors (stmt :| []))
-      
+   -- stmt -> error (show stmt)  "doda" -- $ P.pretty stmt
+   
+orsEnclosed :: NonEmpty Statement -> Doc a
+orsEnclosed stmts =  group $ align $ encloseSep "( " (line <> ")") (flatAlt ", " " , ") $ map pStatement (toList stmts)
+   
+pBlock :: Statement -> Doc a
+pBlock stmt = group $ align $ "{ " <> pStatement stmt <> line <> "}"
 
-prettyBoxSelector = printBoxSelector
-prettyShelfSelector = printShelfSelector
+pCase :: Case -> Doc a
+pCase (Case com Nothing) = pStatement com
+pCase (Case com (Just com2)) = group $ pStatement com  <> nest 4 (line <> ";" <+> pStatement com2)
 
+pShelfCase :: ShelfCase -> Doc a
+pShelfCase (ShelfCase com Nothing) = pStatement com
+pShelfCase (ShelfCase com (Just com2)) = group $ pStatement com  <> nest 4 (line <> ";" <+> pStatement com2)
 
-prettyCSelector :: Text -> (s -> Text) -> CSelector s -> Text
-prettyCSelector indent pretty csel = 
+pCommand :: Command -> Doc a
+pCommand = \case
+   Move sourceM pModeM strats dest exitMode ->
+        hcat [  case exitMode of
+                        ExitLeft -> "to>"
+                        ExitOnTop -> "to^"
+               , opt "boxes" pCBox sourceM
+               , opt' "pmode" pPartitionMode pModeM
+               -- ^ print even default value, has nothing don't mean default mode
+               -- but previously set
+               , optWithDefault "orules" null pRules (Just strats)
+               , space
+               , if isDefault dest
+                 then "*"
+                 else pCSelector pShelfSelector dest
+               ]
+                     
+            
+   Tag tagOps -> "tag#" <> pretty (printTagOperations tagOps)
+   TagFor sel tagOps stmt -> "tag#" <> pretty (printTagOperations tagOps)
+                                    <> opt "" pCBox (Just sel)
+                                    <+> nest 3 (pBlock stmt)
+   ToggleTags tagOps -> "toggle#" <> pretty (printTagOperations tagOps)
+   TagShelves tagOps -> "shelf:tag#" <> pretty (printTagOperations tagOps)
+   SelectBoxes sel -> pCSelector pBoxSelector sel 
+   SelectBoxRanges boundary sel -> pretty (toLower $ tshow boundary) <+> pCSelector pBoxSelector sel
+   SelectShelves sel -> "/" <> pCSelector pShelfSelector sel 
+   TagAndMove op strats -> "tam" <> optWithDefault "orules" (==[]) pRules (Just strats)
+                                 <+> pretty op
+   Delete -> "delete"
+   SetPartitionMode pmode -> "pmode=" <> pPartitionMode pmode
+   SetOrientationStrategies  selm os -> "orules=" <> pRules os <> opt' "for" pShelfSelector selm
+   AddOrientationStrategies  selm os -> "orules+=" <> pRules os <> opt "for" pShelfSelector selm
+   TraceCount msg -> "trace:count" <+> optWithDefault "" (=="T:C") viaShow (Just msg)
+   TraceBoxes msg propM -> hcat ["trace:boxes" , optWithDefault "" (=="T:B") viaShow (Just msg), opt' "property" viaShow propM ]
+   TraceShelves msg -> "trace:shelves" <> optWithDefault "" (=="T:S") viaShow (Just msg)
+   TraceOrientations msg -> "trace:orientation" <> optWithDefault "" (=="T:O") viaShow (Just msg)
+   SetNoEmptyBoxes True -> "empty:boxes=no"
+   SetNoEmptyBoxes False -> "empty:boxes=yes"
+   SetNoEmptyShelves True -> "empty:shelves=no"
+   SetNoEmptyShelves False -> "empty:shelves=yes"
+   AssertBoxes b text -> "assert:" <> (if b then "noboxes" else "boxes") 
+                                   <> opt' "" viaShow (Just text)
+   AssertShelves b text -> "assert:" <> (if b then "noshelves" else "shelves") 
+                                     <> opt' "" viaShow (Just text)
+   ResizeBox mode sel stmt -> let command = case mode of
+                                              MaxDimension -> "bsize:max"
+                                              MinDimension -> "bsize:min"
+                                              FirstDimension -> "bsize:first"
+                              in command <> opt "boxes" pCBox (Just sel)
+                                         <+> pBlock stmt
+   ResizeShelf  sel l w h stmt -> "shelf:resize" <+> (if isDefault sel
+                                                      then "*"
+                                                      else pCShelf sel
+                                                      )
+                                                <> opt "l" pExpr (Just l)
+                                                <> opt "w" pExpr (Just w)
+                                                <> opt "h" pExpr (Just h)
+                                                <+> pBlock stmt
+   ResizeShelfFull sel stmt -> "shelf:full" <+> align (vsep [ if isDefault sel 
+                                                              then "*"
+                                                              else pCShelf sel
+                                                           , pBlock stmt
+                                                           ]
+                                                     )
+   SplitShelf shelf boxm ls ws hs stmt -> "shelf:split" <+> (if isDefault shelf 
+                                                             then "*"
+                                                             else pCShelf shelf
+                                                             )
+                                                        <> opt "boxes" pCBox boxm
+                                                        <> optWithDefault "l" null pExprs (Just ls)
+                                                        <> optWithDefault "w" null pExprs (Just ws)
+                                                        <> optWithDefault "h" null pExprs (Just hs)
+                                                        <+> pBlock stmt
+   SwapBoxes boxes debugPrefix stickies -> "swap" <> optWithDefault "debug" null pretty debugPrefix
+                                                  <> optWithDefault "sticky" null (pretty . intercalate "#" ) (Just stickies)
+                                                  <+> pCBox boxes
+                                               
+
+                                                    
+                                              
+
+pBoxSelector sel = let t =  printBoxSelector sel
+                   in pretty case uncons t of
+                        Just (c,_) | isUpper c -> t
+                        _ -> "?" <> t
+                      
+                     
+pShelfSelector sel = (case sBoxSelectors sel of
+                        SelectAnything -> mempty
+                        _ -> "?"
+                     ) <> pretty (printShelfSelector sel)
+pCSelector :: (s -> Doc a) -> CSelector s -> Doc a
+pCSelector pSel csel = 
      case csel of
         SwapContext -> "-~"
         Parent -> "~"
         Root -> ".~"
-        CStatement statment ->  "( " <> prettyStatement False (addIndent indent) statment <> "\n" <> indent <> ")"
+        CStatement statment -> parens $ pStatement statment
         CUseContext ->  "<useContext>"
-        CSelectorAnd c1 c2 -> prettyCSelector indent pretty c1 <> prettyCSelector indent pretty c2
-        CSelector s -> pretty s
+        CSelectorAnd c1 c2 -> pCSelector pSel c1 <> pCSelector pSel c2
+        CSelector s -> pSel s
+
+pCBox :: CSelector BoxSelector -> Doc a
+pCBox = pCSelector pBoxSelector
+pCShelf :: CSelector ShelfSelector -> Doc a
+pCShelf = pCSelector pShelfSelector
+           
+pRules [] = "<empty>"
+pRules ostrats = let -- group stratetegies if possible regardless of diag and orientation
+   groups = toList $ Map.fromListWith (<>) [ (o { osOrientations = up }, [o])
+                                           -- ^ all tries need to have the same orientation 
+                                           -- we are however not using it , (the key is discared once grouped
+                                           | o <- reverse ostrats
+                                           ]
+   go [] = error "the unexpected happend!"
+   go (group@(o:_)) = let orientations = map osOrientations group
+                          diag = case group of 
+                                  [_one] -> True
+                                   -- ^^^^ don't show no diagonal indicator if there is only one orientations in the group.
+                                   -- to be consistent with parsing which does need the ! for single orientations.
+                                  _ -> all osUseDiagonal group 
+                          mainO = o { osUseDiagonal = diag}
+                      in pretty $ showOrientationStratety mainO <> mconcat ( map showOrientation' (drop 1 orientations)) 
+
+   in hcat $ punctuate comma $ map go groups
+
+-- pretty . intercalate "," $ map showOrientationStratety os
+pPartitionMode :: PartitionMode -> Doc a
+pPartitionMode = \case 
+    PRightOnly -> "right"
+    PAboveOnly -> "above"
+    PBestEffort ->  "best"
+    POverlap OLeft -> "overlap"
+    POverlap ORight -> "oright"
+    POverlap OAligned -> "oaligned"
+    PSortedOverlap -> "sorted"
+    PBehind -> "behind"
+    PCorner c -> "corner" <> pretty c
+    POr a b -> pPartitionMode a <> ","  <> pPartitionMode b
+
+pExpr :: Expr Text -> Doc a
+pExpr = \case
+ AddE a b -> p a <> "+" <> p b
+ SubE a b -> p a <> "-" <> p b
+ MulE a b -> p a <> "*" <> p b
+ DivE a b -> p a <> "/" <> p b
+ MinE a b -> p a <> "&" <> p b
+ MaxE a b -> p a <> "|" <> p b
+ ValE v -> pretty v
+ ExtraE ref -> "{" <> pretty ref <> "}"
+ where p e = case e of 
+              ValE _ -> pExpr e
+              ExtraE _ -> pExpr e
+              e -> "(" <> pExpr e <> ")"
+
+pExprs  :: [Expr Text] -> Doc a
+pExprs exs = hcat $ punctuate colon $ map pExpr exs 
+
+opt :: (Eq a, HasDefault a) => Text -> (a -> Doc d) -> Maybe a -> Doc d
+
+opt key p x = optWithDefault key isDefault p x
+
+optWithDefault :: Eq a => Text -> (a -> Bool) -> ( a -> Doc d) -> Maybe a -> Doc d
+optWithDefault key f p x = let x' = if maybe True f x
+                                    then Nothing
+                                    else x
+                           in opt' key p x'
+            
+
+opt' ::  Text -> (a -> Doc d) -> Maybe a -> Doc d
+opt' _ _ Nothing = mempty
+opt' key p (Just x) = space <> pretty key <> ":" <> p x
 

@@ -1,17 +1,18 @@
+{-# LANGUAGE DefaultSignatures #-}
 module WarehousePlanner.WPL.Types
 where
 
 import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Selector(printBoxSelector, printShelfSelector)
-import WarehousePlanner.Expr (Expr)
+import WarehousePlanner.Expr (Expr(..))
 import Data.List.NonEmpty as NE
 
 
-data Command = Move { cSource :: Maybe BoxSelector
+data Command = Move { cSource :: Maybe CBoxSelector
                     , cPartitionMode :: Maybe PartitionMode
                     , cOrientationStrategies :: [OrientationStrategy]
-                   , cDest   :: CSelector ShelfSelector
+                   , cDest   :: CShelfSelector
                    , cExitMode  :: ExitMode 
                    }
              | Tag { cTagOps :: [Tag'Operation] }
@@ -107,3 +108,45 @@ showCSelector shows sel = case sel of
 
      
 
+type CBoxSelector = CSelector BoxSelector
+type CShelfSelector = CSelector ShelfSelector
+
+-- | Part of commands . No need there
+-- but common to the parser and pretty printer
+data Option = OText Text
+            | OBoxes (CSelector BoxSelector)
+            | OPartitionMode PartitionMode
+            | ORules [OrientationStrategy]
+     deriving Show
+     
+     
+-- | Default values which dont' need to be given as argument
+-- or don't need to be pretty printed
+
+class HasDefault a where
+   def :: a
+   isDefault :: a -> Bool
+
+   default isDefault :: Eq a => a -> Bool 
+   isDefault x = x == def
+   
+   
+instance HasDefault BoxSelector where
+   def =  SelectAllBoxes
+   isDefault SelectAllBoxes = True
+   isDefault _ = False
+
+instance HasDefault ShelfSelector where
+   def =  SelectAllShelves
+   isDefault SelectAllShelves = True
+   isDefault _ = False
+   
+instance HasDefault s => HasDefault (CSelector s) where
+    def = CSelector def
+    isDefault (CSelector x) = isDefault x
+    isDefault _ = False
+    
+instance HasDefault PartitionMode where def = PRightOnly
+
+instance HasDefault (Expr Text) where
+   def = ExtraE ""

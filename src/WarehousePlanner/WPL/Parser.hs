@@ -1,23 +1,31 @@
+{-# LANGUAGE OverloadedStrings #-}
 module WarehousePlanner.WPL.Parser
-( wplParser
+(
+wplParser
+, o1, o2, o3
 )
-where
+where 
 
-import ClassyPrelude hiding(some, many, try)
+import ClassyPrelude hiding(some, many, try, (<|))
+import WarehousePlanner.Selector (MParser, parseSelector, parseShelfSelector, parseBoxSelectorWithDef, splitOnNonEscaped)
 import WarehousePlanner.WPL.Types
-import WarehousePlanner.Selector
-import WarehousePlanner.Type
-import WarehousePlanner.Base
-import WarehousePlanner.Expr
--- import WarehousePlanner.Type
 import Text.Megaparsec as P hiding((<?>))
+import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Megaparsec.Debug qualified as P
 import Text.Megaparsec.Char
-import Text.Megaparsec.Char.Lexer qualified as L
 import Data.Char
-import Data.List.NonEmpty (NonEmpty(..))
-import Control.Monad(fail)
+import Data.List.NonEmpty(nonEmpty, NonEmpty(..))
+import WarehousePlanner.Type
 import Data.Foldable qualified as F
+import Control.Monad(fail)
+import WarehousePlanner.Base
+import Data.Monoid (Last(..))
+import Data.Map qualified as Map
+import WarehousePlanner.Expr
+import Data.Text (splitOn)
+
+-- import WarehousePlanner.WPL.PrettyPrint2
+
 
 -- dbg _ = id
 dbg :: Show a => String -> MParser a -> MParser a
@@ -29,6 +37,14 @@ _dbg :: Show a => String -> MParser a -> MParser a
 _dbg = P.dbg
 (<?>):: Show a => MParser a -> String -> MParser a
 p <?> lbl = dbg lbl $ label lbl p
+dlabel lbl p = p <?> lbl
+
+wplParser :: MParser [Statement]
+-- wplParser = sepBy p (lexeme ",") <* spaces  <* eof
+wplParser = spaces *> many p <* spaces  <* eof
+
+class Parsable a where
+   p :: MParser a
 
 -- * Whitespaces & Co
 -- starting with -- but we need a space so that --| is not a comment
@@ -47,417 +63,376 @@ spaces = L.space space1
                  lineComment
                  blockComment
 
-
--- | Spaces without new lines
-hspaces :: MParser ()
-hspaces = L.space hspace1
-                 lineComment
-                 empty
-
 lexeme :: MParser a -> MParser a
-lexeme = L.lexeme hspaces
+lexeme = L.lexeme spaces
 lexeme1 p = do
    r <- p
-   lookAhead $ asum [space1, lineComment, blockComment, eof ]
-   hspaces
+   lookAhead $ asum [space1, lineComment, blockComment, eof, void "}", void ")" ]
+   spaces
    return r
-
-newLine = hspaces >> (void eol <|> eof)
-wplParser ::  MParser [Statement]
-wplParser = (some $ L.nonIndented spaces $ statement) <*  spaces <* eof
-
-
-statement :: MParser Statement
-statement = asum
-   [ indentedBlock <?> "statement:case block"
-   , thenMulti <?> "statement:then multi"
-   ]  <?> "statement:one"
-
-
-caseBlock :: MParser Statement
-caseBlock = do
-  blockOf "case" caseLine Cases
-
-shelfCaseBlock :: MParser Statement
-shelfCaseBlock = do
-  blockOf "shelfCase" shelfCaseLine ShelfCases
-
-thenBlock :: MParser Statement
-thenBlock = do
-  blockOf "thens" line mkThen 
-  where line = do
-          lexeme "&" <?> "& line"
-          indentedBlock <|> thenMulti
-        mkThen = F.foldr1 Then 
-        --       ^^^^^^^^
-        --       [a, b, c] -> a Then (b Then c)
-        --       
-passThrougBlock = do
-   blockOf "passthrough" line (PassThrought . mkOrs)
-   where line = do
-          lexeme ";" <?> "passthrough"
-          indentedBlock <|> thenMulti
-
-indentedBlock = caseBlock <|> shelfCaseBlock <|> thenBlock <|> passThrougBlock
-
--- | Statements with same indentation
-blockOf :: String -> MParser a -> (NonEmpty a -> b) -> MParser b
-blockOf name p mk = do
-  -- consume possible space to be sure to start at the beginning of
-  -- block to get the indentation correct
-  iLvl <- L.indentLevel
-  let iguard = try $ L.indentGuard hspaces EQ iLvl <?> (name <> ":blockGuard " <> show iLvl)
-  cs <- some $ iguard >> p
-  case cs of
-     [] -> fail "some returning []"
-     c:cs -> return $ mk (c :| cs)
-
-thenLine :: MParser Statement
-thenLine =do
-  beforeLvl <- L.indentLevel
-  a <- atom <?> "line:atom"
-  -- if the atom consume a new line, then there is nothing else to to parse
-  afterLvl <- L.indentLevel
-  if afterLvl <= beforeLvl
-  then return a
-  else do 
-     thenm <- optional $ try $ asum [  indentedBlock <?> "case in line"
-                             , thenLine <?> "next in line"
-                             ]
-     case thenm of
-        Nothing -> return a <* (newLine <?> "end of thenLine")
-        Just then_ -> return $ a `Then` then_
-
-thenMulti :: MParser Statement
-thenMulti = do
-  iLvl <- L.indentLevel
-  line <- thenLine <?> "thenMulti:line"
-  spaces
-  -- get different blocks of decreasing indentation
-  childrenm <- many $ (L.indentGuard spaces GT iLvl <?> ("thenMulti:guard " <> show iLvl))
-                        >> (orBlock ("thenMulti" <> show iLvl)  <?> "thenMulti:children")
-  return case childrenm of
-         [] -> line
-         ors -> F.foldl1 Then (line :| ors)
-         --     ^^^^^^^^
-         --       [a, b, c] ->  (a Then b) Then c
-
-foreachS :: MParser Statement
-foreachS = withStatement "foreach:shelf" do
-  "foreach:shelf"
-  return $ ForeachShelf 
-  
-foreachB :: MParser Statement
-foreachB = withStatement "foreach:box" do
-    lexeme "foreach:box"
-    selector <- boxSelector
-    return $ ForeachBox selector
-
-foreachDo :: MParser Statement
-foreachDo = withStatement "foreach:do" do
-    lexeme "foreach:do"
-    return \ors -> case ors of
-                          Ors (action :| (x:xs)) -> ForeachDo action (x :| xs)
-                          statement -> statement
-                          
-prettyPrint :: MParser Statement
-prettyPrint =
-    withStatement "trace:pretty"
-                  do
-                    lexeme "trace:pretty"
-                    title <- lexeme1 $ takeWhile1P (Just "title") (not . isSpace)
-                    return $ PrettyPrint title
-    <|> withStatement "trace:pretty"
-                  do
-                    lexeme "t:p"
-                    return $ PrettyPrint "PRETTY"
-
-  
-
-orBlock name = do
-  blockOf (name <> ":or") ((indentedBlock <?> "indentedBlock")
-          <|>
-          (thenMulti <?> "line block")
-          ) mkOrs
-
-mkOrs :: NonEmpty Statement -> Statement
-mkOrs ors = case ors of
-   o :| [] -> o
-   _ -> Ors ors
-
-
-
-caseLine :: MParser Case
-caseLine = do
-    passthrough <- (lexeme "||" >> return False) <|> (lexeme "|" >> return True) <?> "start caseline"
-    let withMulti = \case  
-                             Then a b | passthrough  -> Case a (Just b)
-                             c -> Case c Nothing
-    fmap (flip Case Nothing) indentedBlock <|> fmap withMulti (orBlock "case")
-
-shelfCaseLine :: MParser ShelfCase
-shelfCaseLine = double <|> simple 
-    where double = do
-                 lexeme "//" <?> "double shelfcase"
-                 shelves <- some $ lexeme shelfSelector
-                 newLine
-                 flip ShelfCase Nothing <$> case shelves of
-                    [] -> fail "some returning []"
-                    [one] -> return $ select one
-                    (c:cs) -> return . F.foldr1 Then $ fmap select (c :| cs)
-          select = Action . SelectShelves 
-          simple = do 
-                try $ lexeme "/ " <?> "simple shelfcase"
-                shelf <- shelfSelector
-                thenm <- (Just <$> thenMulti) <|> (newLine  >> return Nothing)
-                return $ ShelfCase (select shelf) thenm
-
- 
-
-atom :: MParser Statement
-atom = -- (PassThrought <$> (lexeme ";" *> statement ))
-       -- ("("  *> statement <* ")")
-       foreachS
-       <|> foreachB
-       <|> foreachDo
-       <|> prettyPrint
-       <|> (notFollowedBy "|" >> Action <$> command )
-
-command = asum $ map lexeme [ toggleTag
-                            , tagShelves
-                            , tagFor
-                            , tag
-                            , move
-                            , shelfSel
-                            , boxSel
-                            , boxRange
-                            , swapBoxes
-                            , tam
-                            , delete
-                            , traceCount
-                            , traceBoxes
-                            , traceShelves
-                            , traceOrientations
-                            , partitionMode
-                            , orientationStrategies
-                            , noEmptyBoxes
-                            , emptyBoxes
-                            , noEmptyShelves
-                            , emptyShelves
-                            , assert
-                            , resizeShelf
-                            , resizeShelfFull
-                            , resizeBox
-                            , splitShelf
-                            ] where
-   move = do
-            exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
-            pmode <- optional $ lexeme1 partitionModeParser
-            orules <- (lexeme1 "orules"  >> orientationRules) <|> return []
-            shelf <-  shelfSelector
-            return $ Move Nothing pmode orules shelf exitMode
-   tag = do
-           lexeme1 "tag"
-           tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
-           return $ Tag (parseTagOperations tagOps)
-   tagFor = withStatement "tag_with" do
-       lexeme1 "tag:for"
-       selector <- boxSelector
-       tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
-       return $ TagFor selector (parseTagOperations tagOps)
-   toggleTag = do
-           lexeme1 "tog"
-           tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
-           return $ ToggleTags (parseTagOperations tagOps)
-   tagShelves = do
-           lexeme1 ("tag:shelves" <|> "tag/")
-           tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
-           return $ TagShelves (parseTagOperations tagOps)
-   tam = do
-          lexeme1 "tam"
-          tagloc <- lexeme1 $ takeWhile1P (Just "loc#tag") (not . isSpace)
-          ors <- (lexeme1 "with" >> orientationRules)
-                 <|> return []
-          return $ TagAndMove tagloc ors
-   delete = lexeme1 "delete" >> return Delete
-   traceCount = do
-       lexeme1 "trace:count"
-       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ TraceCount desc
-       <|> lexeme1 "t:c" $> (TraceCount "T:C")
-   traceBoxes = do
-       trace <- do
-                   lexeme1 "trace:boxes"
-                   desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-                   return $ TraceBoxes desc
-                <|> lexeme1 "t:b" *> return (TraceBoxes "T:B")
-       propM <- optional (lexeme1 "with" >> lexeme1 (takeWhile1P (Just "property") (not . isSpace)))
-       return $ trace propM
-   traceShelves = do
-       lexeme1 "trace:shelves"
-       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ TraceShelves desc
-       <|> lexeme1 "t:s" $> (TraceShelves "T:S")
-   traceOrientations = do
-       lexeme1 "trace:orules"
-       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ TraceOrientations desc
-       <|> lexeme1 "t:o" $> (TraceOrientations "T:O")
-   assert = do
-       b <- (lexeme "assert:noboxes"  $> True) <|> (lexeme "assert:boxes" $> False)  
-       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ AssertBoxes b desc
-       <|> lexeme1 "a:nob" $> AssertBoxes True "A:NOBoxes"
-       <|> lexeme1 "a:b" $> AssertBoxes False "A:Boxes"
-       <|> do 
-       b <- (lexeme "assert:noshelves"  $> True) <|> (lexeme "assert:shelves" $> False)  
-       desc <- lexeme1 $ takeWhile1P (Just "description") (not . isSpace)
-       return $ AssertBoxes b desc
-       <|> lexeme1 "a:nos" $> AssertShelves True "A:NOBoxes"
-       <|> lexeme1 "a:s" $> AssertShelves False "A:Boxes"
-   partitionMode = do
-       lexeme1  "place"
-       pmode <- lexeme1 partitionModeParser
-       return $ SetPartitionMode pmode
-   orientationStrategies = do
-      cons <- (AddOrientationStrategies <$ lexeme1 "orules+")
-         <|> (SetOrientationStrategies <$ lexeme1 "orules")
-      os <- orientationRules
-      cselectorm <- optional $ (lexeme "for" >> cselector parseShelfSelector) <?> "orules:selector"
-      selectorm <- case cselectorm of
-                        Nothing -> return Nothing
-                        Just (CSelector sel) -> return $ Just sel
-                        Just sel -> fail $ show sel <> " must be a contextless selector"
-      return $ cons selectorm os
-   noEmptyBoxes = do
-      lexeme1 "empty-boxes:no"
-      return $ SetNoEmptyBoxes True
-   emptyBoxes = do
-      lexeme1 "empty-boxes:yes"
-      return $ SetNoEmptyBoxes False
-   noEmptyShelves = do
-      lexeme1 "empty-shelves:no"
-      return $ SetNoEmptyShelves True
-   emptyShelves = do
-      lexeme1 "empty-shelves:yes"
-      return $ SetNoEmptyShelves False
-   resizeShelfFull = withStatement  "shelf:full" do
-     lexeme1 "shelf:full"
-     selector <- shelfSelector
-     return $ ResizeShelfFull selector
-   resizeShelf = withStatement  "shelf:resize" do
-     lexeme1 "shelf:resize"
-     selector <- shelfSelector
-     l <- lexeme exprParser
-     w <- lexeme exprParser
-     h <- lexeme exprParser
-     return $ ResizeShelf selector l w h
-   resizeBox = withStatement "box:resize" do
-     mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
-                  , lexeme1 "bsize:min" $> MinDimension
-                  , lexeme1 "bsize:first" $> FirstDimension
+   
+instance Parsable Statement where
+         p = asum [  do
+                      lexeme ";"
+                      a <- lexeme p
+                      return $ PassThrought a
+                  , do
+                     a <- lexeme atom
+                     fm <- optional $ try followUp
+                     return case fm of 
+                       Nothing -> a
+                       Just f -> f a
                   ]
-     selector <- boxSelector
-     return $ ResizeBox mode selector
+             where atom  = asum [ 
+                           try do
+                             (o:os) <- between (lexeme "(") (lexeme ")") (sepBy1 (lexeme p) (lexeme $ ","))
+                             return case os of
+                                [] -> o
+                                _ -> Ors $ o :| os
+                          , withStatement "foreach:shelf" (lexeme1 "foreach:shelf" $> ForeachShelf)
+                          , withStatement "foreach:box" do 
+                                  lexeme1 "foreach:box" 
+                                  boxes <- lexeme p
+                                  return $ ForeachBox boxes
+                          , do
+                              lexeme "foreach:do"
+                              st <- subStatement
+                              (o:os) <- between (lexeme "(") (lexeme ")") (sepBy1 p (lexeme $ ","))
+                              return $ ForeachDo st (o :| os)
+                          , do
+                             (c:cs) <- between (lexeme "/[") (lexeme "]") (sepBy1 p (lexeme $ "|"))
+                             return $ ShelfCases $ fmap (\st -> ShelfCase st Nothing) (c:|cs)
+                          , do
+                             (c:cs) <- between (lexeme "[") (lexeme "]") (sepBy1 p (lexeme $ "|"))
+                             return $ Cases $ fmap (\st -> Case st Nothing) (c:|cs)
+                          , withStatement "trace:pretty" do
+                              lexeme1 ("trace:pretty" <|> "t:p")
+                              descM <- lexeme $ o1  ["m"]
+                              return $ PrettyPrint (fromMaybe "T:P" descM)
+                          , Action <$> p 
+                          ]
+                   followUp = asum [ do 
+                                      pos <- getSourcePos
+                                      if (unPos (sourceColumn pos) <= 1)
+                                      then do
+                                         spaces 
+                                         return id
+                                      else do
+                                           b <- p
+                                           return \a -> Then a b
 
-   splitShelf = withStatement "split" do
-     lexeme1 "split"
-     selector <- shelfSelector
-     bselectm <- optional (lexeme "for" *> boxSelector)
-     l <- splitExpr
-     w <- splitExpr
-     h <- splitExpr
-     return $ SplitShelf selector bselectm l w h
+                                   ]
+                 
+subStatement :: MParser Statement
+subStatement = lexeme "{" *> lexeme p <* lexeme "}"
+               <|> lexeme "&" *> lexeme p
 
-   boxSel = SelectBoxes <$> boxSelector 
-   shelfSel = SelectShelves <$> asum [ lexeme "/"  >> shelfSelector
-                                     , lexeme1 "with:boxes" >> return CUseContext
-                                     , lexeme1 "with" >> cselector parseShelfSelector
-                                     ]
-   boxRange = do
-      boundary <- asum $ [ lexeme1 "from" $> From
-                         , lexeme1 "upto" $> Upto
-                         , lexeme1 "before" $> Before
-                         , lexeme1 "after" $> After
-                         ]
-      selector <- label "boundary selector" boxSelector
-      return $ SelectBoxRanges boundary selector
-   swapBoxes = do
-      lexeme1 "swap"
-      debugPrefix <- optional do 
-                              lexeme1 "debug"
-                              lexeme $ takeWhile1P (Just "debug") (not . isSpace)  
-      stickym <- optional do
-                    lexeme1 "sticky"
-                    lexeme $ takeWhile1P (Just "tags") (not . isSpace)
-      selector <- boxSelector
-      let stickies = maybe [] (splitOnNonEscaped "#") stickym
-      return $ SwapBoxes selector debugPrefix stickies
-                    
-
+withStatement :: String -> MParser (Statement -> a) -> MParser a
 withStatement name parser = do
-     iLvl <- L.indentLevel
-     cons <- lexeme parser
-     spaces
-     stmt <- (L.indentGuard spaces GT iLvl <?> (name<> show iLvl))
-                >> orBlock name
-     return $ cons stmt
+   constructor <- parser
+   stmt <- subStatement <?> name
+   return  $ constructor stmt
 
+instance Parsable Command where
+  p = dlabel "command" $ asum
+        [ do -- Move
+            exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
+            (sourceM, pmode, orules) <- o3 boxesK pmodeK oRulesK
+            shelf <-  p
+            return $ Move sourceM pmode (fromMaybe [] orules) shelf exitMode
+        , do -- Tag
+           void $ optional $ lexeme "tag"
+           "#"
+           tags <- lexeme1 $ str -- takeWhileP (Just "tags") (not . isSpace)
+           let tagOps = parseTagOperations tags
+           boxesM <- o1 boxesK
+           case boxesM of
+              Just boxes -> do
+                         sub <- subStatement
+                         return $ TagFor boxes tagOps sub
+              Nothing -> do
+                      subM <- optional $ subStatement <?> "sub"
+                      case subM of
+                           Nothing -> return $ Tag tagOps
+                           Just sub -> do -- temporary tags
+                                    return $ TagFor (CSelector selectAllBoxes) tagOps sub
+        , do -- Toggle
+           void $ optional $ lexeme "toggle"
+           "#"
+           tagOps <- lexeme1 $ str -- takeWhileP (Just "tags") (not . isSpace)
+           return $ ToggleTags (parseTagOperations tagOps)
+        , do -- TagShelves
+           lexeme ("shelf:tag"  <|> "shelves:tag" <|> "stag")
+           "#"
+           tagOps <- lexeme $ str -- takeWhileP (Just "tags") (not . isSpace)
+           return $ TagShelves (parseTagOperations tagOps)
+        , do -- SelectShelves
+           lexeme "/"
+           sel <- p
+           return $ SelectShelves sel
+        , do -- SelectBoxes
+           sel <- p
+           return $ SelectBoxes sel
+        , do -- Box ranges
+             boundary <- asum $ [ lexeme1 "from" $> From
+                                , lexeme1 "upto" $> Upto
+                                , lexeme1 "before" $> Before
+                                , lexeme1 "after" $> After
+                                ]
+             selector <- label "boundary selector" p
+             return $ SelectBoxRanges boundary selector
+        , do -- Tam
+           lexeme1 "tam"
+           orules <- o1 oRulesK
+           tagLoc <- lexeme1 $ str <?> "loc#tag" --  takeWhile1P (Just "loc#tag") (not . isSpace)
+           return $ TagAndMove tagLoc (fromMaybe [] orules)
+        , lexeme1 "delete" >> return Delete
+        , do
+            lexeme ("pmode=" <|> "p=")
+            pmode <- p
+            return $ SetPartitionMode pmode
+        , do
+            cons <- lexeme $ asum [ SetOrientationStrategies <$ ("orules=" <|> "o=") 
+                                  , AddOrientationStrategies <$ ("orules+=" <|> "o+=")
+                                  ]
+            os <- p
+            selM <- o1 forK  
+            return $ cons selM os
 
-boxSelector :: MParser (CSelector BoxSelector)
-boxSelector =  label "box selector" $ asum
+        , do -- TraceCount
+            (lexeme1 $ "trace:count" <|> "t:c")
+            descM <- o1  msgK
+            return $ TraceCount (fromMaybe "T:C" descM)
+        , do -- TraceBoxes
+           lexeme1 $ asum ["trace:boxes", "trace:box", "t:b"]
+           (descM, propM) <- o2 msgK propK
+           return $ TraceBoxes (fromMaybe "T:B" descM) propM
+        , do -- TraceShelves
+            (lexeme1 $ "trace:shelves" <|> "t:s")
+            descM <- o1  msgK
+            return $ TraceShelves (fromMaybe "T:S" descM)
+        , do -- TraceOrientations
+            (lexeme1 $ "trace:orientation" <|> "t:o")
+            descM <- o1  msgK
+            return $ TraceOrientations (fromMaybe "T:O" descM)
+        , do -- Set NoEmp
+           lexeme1 $ "empty:boxes=yes"
+           return $ SetNoEmptyBoxes False
+        , do -- Set NoEmp
+           lexeme1 $ "empty:boxes=no"
+           return $ SetNoEmptyBoxes True
+        , do
+          lexeme1 "empty:shelves=no"
+          return $ SetNoEmptyShelves True
+        , do
+            lexeme1 "empty:shelves=yes"
+            return $ SetNoEmptyShelves False
+        , do -- assert
+          b <- (lexeme ("assert:noboxes" <|> "a:nob")  $> True)
+               <|> (lexeme ("assert:boxes"  <|> "a:b") $> False)  
+          descM <- o1 msgK
+          return $ AssertBoxes b (fromMaybe (if b then "A:Boxes" else "A:Boxes") descM)
+        , do -- assert
+          b <- (lexeme ("assert:noshelves" <|> "a:nos")  $> True)
+               <|> (lexeme ("assert:shelves"  <|> "a:s") $> False)  
+          descM <- o1 msgK
+          return $ AssertShelves b (fromMaybe (if b then "A:Shelves" else "A:Shelves") descM)
+        , withStatement "shelf:full" do
+                        lexeme1 $ "shelf:full"
+                        sel <- p
+                        return $ ResizeShelfFull sel
+        , withStatement "shelf:resize" do
+                        lexeme1 $ "shelf:resize"
+                        sel <- p
+                        (lsm, wsm, hsm) <- o3 ["l", "length"] ["w", "width"] ["h", "height"]
+                        let defRef = parseExpr "{}"
+                        let [ls, ws, hm] = map (fromMaybe defRef ) [lsm, wsm, hsm]
+                        return $ ResizeShelf sel ls ws hm
+        , withStatement "box:resize" do
+                        mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
+                                     , lexeme1 "bsize:min" $> MinDimension
+                                     , lexeme1 "bsize:first" $> FirstDimension
+                                     ]
+                        selM <- o1 boxesK
+                        return $ ResizeBox mode (fromMaybe (CSelector selectAllBoxes) selM)
+        , withStatement "shelf:split" do
+                        lexeme1 $ "shelf:split"
+                        sel <- p
+                        boxM <- o1 boxesK
+                        (lsm, wsm, hsm) <- o3 ["l", "length"] ["w", "width"] ["h", "height"]
+                        let [ls, ws, hm] = map (fromMaybe [] ) [lsm, wsm, hsm]
+                        return $ SplitShelf sel boxM ls ws hm
+        , do
+                        lexeme1 "swap"
+                        (debugPrefixM, stickym) <- o2 ["debug", "d"] ["sticky", "s"]
+                        selector <- p
+                        let stickies = maybe [] (splitOnNonEscaped "#") stickym
+                        return $ SwapBoxes selector debugPrefixM stickies
+
+        ]
+        where msgK = [ "msg",  "message", "m"]
+              boxesK =  [ "boxes", "box", "b"]
+              pmodeK = [ "pmode" , "p"]
+              oRulesK = [ "orules" , "o"]
+              propK = [ "prop", "property", "pr" ]
+              -- shelvesK = ["shelf", "shelves", "s"]
+              forK = ["for", "f"]
+              
+-- * Selector
+instance Parsable BoxSelector where
+   p = dlabel "box selector" $ do
+                guardLower
+                t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
+                return $ parseBoxSelectorWithDef False t
+    where guardLower :: MParser ()
+          guardLower = label "Escape lower case with ?" $ void $ (char '?') <|> lookAhead upperChar
+         
+
+instance Parsable ShelfSelector where
+  p = dlabel "shelf selector" $ asum
+            [ do
+                "?"
+                t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
+                return $ parseShelfSelector t
+            ,
+              do
+                t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
+                return $ ShelfSelector SelectAnything (parseSelector t)
+            ]
+       
+instance Parsable (Selector s) where
+   p = do 
+        t <- lexeme $ takeWhile1P (Just "selector") isSelector
+        return $ parseSelector t
+instance Parsable (CSelector BoxSelector) where
+  p  =  label "cbox" $ asum
     [  lexeme1 "in:shelves" >> return CUseContext
-    ,  lexeme1 "in" >> cselector ((\sel -> selectAllBoxes { shelfSelectors = sel} ) . parseSelector)
-    , guardLower >> cselector (parseBoxSelectorWithDef False)
+    ,  lexeme1 "in" >> do 
+                          shelves <- p
+                          return  $ CSelector (selectAllBoxes { shelfSelectors = shelves} )
+    , cselector
     ]
 
-shelfSelector :: MParser (CSelector ShelfSelector)
-shelfSelector = label "shelf selector" $ asum
+
+instance Parsable (CSelector ShelfSelector) where
+  p = label "cshelf" $ asum
      [ lexeme1 "with:boxes" >> return CUseContext
-     , lexeme1 "with" >> cselector parseShelfSelector 
-     , cselector (ShelfSelector SelectAnything . parseSelector)
+     , lexeme1 "with" >> do 
+                            BoxSelector b s _  <- p
+                            return $ CSelector (ShelfSelector b s)
+     , cselector
      ]
 isSelector :: Char -> Bool
 isSelector c = not $ isSpace c || c == ')'
 
 
-cselector :: (Text -> s) -> MParser (CSelector s)
-cselector mk = try $  do
+cselector :: Parsable s => MParser (CSelector s)
+cselector = try $  do
         gs <- many go
         selectorm <- case gs of
           [] -> Just <$> sel
-          _ -> optional sel
+          _ -> lexeme $ optional sel
         case gs <> toList selectorm of 
            [] -> fail "some returning []"
            [one] -> return one
            cs -> return $ F.foldr1 CSelectorAnd cs
-  where go = asum [swapContext, root, parent] where
+  where go = asum [swapContext, root, parent, useContext, cstatement] where
         swapContext = do
             (string "-~")
             return SwapContext
-        sel = CSelector . mk <$> lexeme1 (takeWhile1P (Just "selector") isSelector)
+        sel = CSelector <$> p
         parent = (char '~') >> return Parent
         root = (string ".~") >> return Root
-         
+        useContext = "<useContext>" >> return CUseContext
+        -- ^^^^^^ not to be used by human. here for quickcheck : to be able to parse
+        -- pretty print.
+        cstatement = lexeme "(" *> (CStatement <$> lexeme p <?> "cstatement") <* ")"
+                     --                                           ^^^^^
+                     --                                            |
+                     --  No lexeme in here. Chain of selectors ----+
+                     --  can not be separated by space
 
-orientationRules :: MParser [OrientationStrategy]
-orientationRules = do
-  rule <- lexeme $ takeWhile1P (Just "orientation rules") (not . isSpace)
-  case parseOrientationRule [tiltedForward, tiltedFR] rule of
-        [] | not (null rule) -> fail "not an rule"
-        rules -> return rules
+instance Parsable [OrientationStrategy] where
+  p = ( lexeme1 "<empty>" >> return []) <|> do
+    rule <- lexeme $ takeWhile1P (Just "orientation rules") (not . isSpace)
+    let rules = splitOn "," rule
+    mconcat <$> mapM go rules
+    where go rule = case parseOrientationRule [tiltedForward, tiltedFR] rule of
+                         [] | not (null rule) -> fail "not an rule"
+                         rules -> return rules
+          
+instance Parsable PartitionMode where
+  p = partitionModeParser
 
--- | Make sure things don't start with a lower case (to not be mixed
--- with a mispelled command
--- or escape with `
-guardLower :: MParser ()
-guardLower = label "Escape lower case with `" $ void (char '`') <|> notFollowedBy lowerChar
+-- * Option utilites
 
-
-splitExpr :: MParser [ Expr Text ]
-splitExpr = do
-  lexeme $ exprParser `P.sepBy1` lexeme ":"
-  
-  
    
+instance Parsable Text
+  where p = str
   
+instance Parsable (Expr Text) where
+   p = lexeme exprParser
+   
+instance Parsable [Expr Text] where
+  p = lexeme $ exprParser `P.sepBy1` lexeme ":"
+
+str :: MParser Text
+str = asum [ pack <$> (char '"' >> manyTill L.charLiteral (char '"' ))
+           , do "{" ; fail "string are not allowed to start with {"
+           , takeWhileP (Just "string") (\c -> not $ isSpace c || c == ')')
+           ]
+    
+o :: Show a => Parsable a => [Text] -> MParser a
+o [] = o [""]
+o keys@(k:_) = do
+   void $ asum [ string (key <> ":") | key <- toList keys ]
+   p <?> unpack k
+    
+-- | Add "" to a list of keys
+o0 :: Show a => Parsable a => [Text] -> MParser a
+o0 keys = o (keys ++ [""])
+
+combine2 :: Show a => Show b => MParser a -> MParser b -> MParser (Maybe a, Maybe b)
+combine2 pa pb = do
+     es <- some $ lexeme (((,Nothing) . Just)  <$> try pa <|> ((Nothing,) . Just) <$> pb )
+     return case nonEmpty $ map (bimap Last Last) es of 
+        Nothing -> (Nothing, Nothing)
+        Just ne -> bimap (getLast) (getLast) $ sconcat ne
+     -- aOrbM <- optional $ Left <$> pa <|> Right <$> pb
+     -- case aOrbM of
+     --    Nothing -> return (Nothing, Nothing)
+     --    Just (Left a) -> do
+     --              bm <- optional pb
+     --              return (Just a, bm)
+     --    Just (Right b) ->  do
+     --              am <- optional pa
+     --              return (am, Just b)
+
+
+o1 :: Show a => Parsable a => [Text] -> MParser (Maybe a)
+o1 = optional . o0
+
+o2 :: Show a => Show b => Parsable a => Parsable b => [Text] -> [Text] -> MParser (Maybe a, Maybe b)
+o2 a b = do
+    checkForDuplicate [a, b ]
+    fromMaybe (Nothing, Nothing) <$> ( optional $ combine2 (o0 a) (o b) )
+
+o3 :: (Parsable a, Parsable b, Parsable c, Show a, Show b, Show c) => [Text] -> [Text] -> [Text] -> MParser (Maybe a, Maybe b, Maybe c)
+o3 ka kb kc = do
+    checkForDuplicate [ka, kb, kc]
+    (abm, cm) <- fromMaybe (Nothing, Nothing) <$> ( optional $ combine2 (combine2 (o0 ka) (o kb)) (o kc) )
+    let (am, bm) = fromMaybe (Nothing, Nothing) abm
+    return (am, bm, cm)
+
+-- | Check that all set of key don't have duplicate
+-- raise a parsing in error if needed
+checkForDuplicate :: [[Text]] -> MParser ()
+checkForDuplicate keyss = let
+    keysWithCount = Map.fromListWith (+) $ map (,1 :: Int) $ concat keyss
+    in case Map.filter (>1) keysWithCount  of
+        dupMap | null dupMap  -> return ()
+        dupMap ->  let errors = [ ErrorFail $ "'" <> unpack k <> ": used for different options"
+                                | k <- keys dupMap
+                                ]
+                   in P.registerFancyFailure $ setFromList errors
+

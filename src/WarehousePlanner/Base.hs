@@ -1767,7 +1767,7 @@ modesParser = do
       (oldBoxes, sortBoxes) = fromMaybe boxesDefault (headMay boxes)
       partitionMode = case parts of
                       [] -> Nothing
-                      p:ps -> Just $ foldr POr p ps
+                      _:_ -> Just $ foldr1Ex POr parts
   return ( fromMaybe exitDefault exitMaybe
          , partitionMode
          , oldBoxes
@@ -1790,19 +1790,21 @@ partitionModeParser = do
   parts <- P.some partitionP
   return case parts of
            [] -> error "the unexpected happened" -- use of some
-           p:ps -> foldr POr p ps
+           _:_ -> foldr1Ex POr parts
 
   where partitionP = asum $  parseCorner
                           : map go
-                          [ (P.string "right", PRightOnly)
-                          , (P.string "above", PAboveOnly)
-                          , (P.string "best", PBestEffort)
-                          , (P.string "overlap", POverlap OLeft)
+                          [ (string "right", PRightOnly)
+                          , (string "above", PAboveOnly)
+                          , (string "best", PBestEffort)
+                          , (string "overlap", POverlap OLeft)
                           , (P.string "-->", POverlap ORight)
                           , (P.string "--|", POverlap OAligned)
+                          , (string "oright", POverlap ORight)
+                          , (string "oaligned", POverlap OAligned)
                           , (P.string "--^", PSortedOverlap)
-                          , (P.string "sorted", PSortedOverlap)
-                          , (P.string "behind", PBehind)
+                          , (string "sorted", PSortedOverlap)
+                          , (string "behind", PBehind)
                           ]
                           <> map go
                           [ (P.char '~', PAboveOnly)
@@ -1815,7 +1817,9 @@ partitionModeParser = do
         parseCorner = do
           "corner"
           n <- P.decimal
+          P.optional (P.char ',')
           return $ PCorner n
+        string s = s <* optional (P.char ',')
   
 -- * Warehouse Cache 
 -- ** Property stats 

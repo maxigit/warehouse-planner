@@ -136,14 +136,19 @@ data OrientationStrategy  = OrientationStrategy
   } deriving (Show, Eq, Ord)
 
 showOrientationStratety OrientationStrategy{..} =
-     showOrientation' osOrientations
+     (if not osUseDiagonal then "!" else "")
      <> mshow osMaxLenght
      <> "x"
-     <> tshow osMinDepth <> ":" <> tshow osMaxDepth
+     <> case osMinDepth of 
+            d | d > 1 -> tshow d<> ":"
+            _ -> ""
+       <> tshow osMaxDepth
      <> "x"
      <> mshow osMaxHeight
-     <> (if osUseDiagonal then "!" else "")
-     where mshow = maybe "" tshow
+     <> showOrientation' osOrientations
+     where mshow mi = case mi of
+                        Just i | i > 1 -> tshow i
+                        _ -> ""
 -- | Every box belongs to a shelf.
 -- Non placed boxes belongs to the special default shelf
 newtype BoxId s = BoxId_ (Arg Int (HiSTRef Box s)) deriving (Eq, Ord)
@@ -640,12 +645,15 @@ data ShelfSelector = ShelfSelector
   } deriving (Show, Eq)
 
 selectAllBoxes :: BoxSelector
-selectAllBoxes = BoxSelector SelectAnything
+selectAllBoxes = SelectAllBoxes
+pattern SelectAllBoxes = BoxSelector SelectAnything
                              SelectAnything
                              (BoxNumberSelector NoLimit NoLimit NoLimit)
 
+
 selectAllShelves :: ShelfSelector
-selectAllShelves = ShelfSelector SelectAnything SelectAnything
+selectAllShelves = SelectAllShelves
+pattern SelectAllShelves = ShelfSelector SelectAnything SelectAnything
 -- ** For moves
 data SortBoxes = SortBoxes | DontSortBoxes
      deriving (Eq, Ord, Show)

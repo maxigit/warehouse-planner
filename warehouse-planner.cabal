@@ -50,8 +50,9 @@ library
       WarehousePlanner.WPL.ExContext
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.ParserI
       WarehousePlanner.WPL.PrettyPrint
-      WarehousePlanner.WPL.PrettyPrint2
+      WarehousePlanner.WPL.PrettyPrintI
       WarehousePlanner.WPL.Types
   other-modules:
       Paths_warehouse_planner
@@ -212,6 +213,7 @@ test-suite test
       Planner.SpecUtil
       Planner.WarehouseSpec
       Planner.WPL.ExecSpec
+      Planner.WPL.ParserISpec
       Planner.WPL.ParserSpec
       WarehousePlanner.Affine
       WarehousePlanner.Base
@@ -242,8 +244,9 @@ test-suite test
       WarehousePlanner.WPL.ExContext
       WarehousePlanner.WPL.Exec
       WarehousePlanner.WPL.Parser
+      WarehousePlanner.WPL.ParserI
       WarehousePlanner.WPL.PrettyPrint
-      WarehousePlanner.WPL.PrettyPrint2
+      WarehousePlanner.WPL.PrettyPrintI
       WarehousePlanner.WPL.Types
       Paths_warehouse_planner
   hs-source-dirs:
@@ -265,6 +268,7 @@ test-suite test
   ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Glob
+    , QuickCheck >=2.14
     , base
     , bytestring >=0.9 && <0.11
     , cassava >=0.4.5 && <0.5
@@ -277,6 +281,7 @@ test-suite test
     , diagrams-svg ==1.4.*
     , directory >=1.1 && <1.4
     , filepath >=1.4.1.1 && <1.5
+    , generic-arbitrary >=1.0
     , ghc
     , ghc-prim
     , hspec >=2.0.0
