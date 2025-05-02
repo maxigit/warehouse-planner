@@ -39,7 +39,7 @@ prettyStatement raw indent stmt =
 prettyCommand :: Text -> Command -> Text
 prettyCommand indent command = 
     join case command of
-       Move source pmode ors dest exitMode -> [ maybe "" (prettyCSelector "" prettyBoxSelector) source
+       Move source pmode ors ((exitMode, dest):| []) -> [ maybe "" (prettyCSelector "" prettyBoxSelector) source
                                               , case exitMode of
                                                  ExitLeft -> "to>"
                                                  ExitOnTop -> "to^"
@@ -49,6 +49,7 @@ prettyCommand indent command =
                                                   _ -> "orules " <> mconcat (map tshow ors)
                                               , prettyCSelector (addIndent indent) prettyShelfSelector dest
                                               ]
+       Move{..} -> error "should not happen, as it can not be parsed"
        Tag tagOps -> "tag ": map tshow tagOps
        TagFor selector tagOps stmt -> "tag:for " 
                                     : prettyCSelector indent prettyBoxSelector selector

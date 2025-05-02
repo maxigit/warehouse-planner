@@ -1,0 +1,4 @@
+:WPL:
+A
+   to ^S*^T1|T2
+:END:

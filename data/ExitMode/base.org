@@ -1,0 +1,29 @@
+* Basic shelves
+       T2
+     S T1 U
+     
+So that they all fit boxes 3x2     
+:SHELVES:
+name,comment,length,width,height,type,bottom
+[error pending], the error shelf, 300,10,200,Shelf,0
+[S1 S2 T1 T2 U1 U2],,20*3,10,45*2,Shelf,0
+T,,{%},{%},{%},Update,25
+:END:
+:LAYOUT:
+S* T* U*
+error pending
+:END:
+:ORIENTATIONS:
+*,|=
+:END:
+* Basic boxes, on
+:BOXES:
+style,quantity,l,w,h
+A,24,45,20,10
+:END:
+
+* Moves
+:WPL:
+tag#id=$n[%02d]
+:END:
+

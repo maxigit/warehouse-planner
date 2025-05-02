@@ -196,15 +196,85 @@ spec = describe "Full scenario" do
         checkIdem "pl-65" ["check"]
      it "full" do
         checkIdem "full" []
+   context "exit modes" do
+     context "fill T* as a bay" do
+             forM_ [ ("seq", "WPL sequence")
+                   , ("cases", "WPL [..]")
+                   , ("to", "mixes ^ and >")
+                   ] \(path, title) -> 
+                  it title do
+                   rows <- loadsAndExec "data/ExitMode" ["base",path] (generateStockTakes Nothing)
+                   unlines rows `shouldBe` [here|:STOCKTAKE:
+                                                 Bay No,Position,Style,Length,Width,Height,Orientations
+                                                 S1,|1:1:1,A#id=01,45.00,20.00,10,=|
+                                                 S1,|1:1:2,A#id=02,45.00,20.00,10,=|
+                                                 S1,|2:1:1,A#id=03,45.00,20.00,10,=|
+                                                 S1,|2:1:2,A#id=04,45.00,20.00,10,=|
+                                                 S1,|3:1:1,A#id=05,45.00,20.00,10,=|
+                                                 S1,|3:1:2,A#id=06,45.00,20.00,10,=|
+                                                 T1,|1:1:1,A#id=07,45.00,20.00,10,=|
+                                                 T1,|1:1:2,A#id=08,45.00,20.00,10,=|
+                                                 T2,|1:1:1,A#id=09,45.00,20.00,10,=|
+                                                 T2,|1:1:2,A#id=10,45.00,20.00,10,=|
+                                                 T1,|2:1:1,A#id=11,45.00,20.00,10,=|
+                                                 T1,|2:1:2,A#id=12,45.00,20.00,10,=|
+                                                 T2,|2:1:1,A#id=13,45.00,20.00,10,=|
+                                                 T2,|2:1:2,A#id=14,45.00,20.00,10,=|
+                                                 T1,|3:1:1,A#id=15,45.00,20.00,10,=|
+                                                 T1,|3:1:2,A#id=16,45.00,20.00,10,=|
+                                                 T2,|3:1:1,A#id=17,45.00,20.00,10,=|
+                                                 T2,|3:1:2,A#id=18,45.00,20.00,10,=|
+                                                 U1,|1:1:1,A#id=19,45.00,20.00,10,=|
+                                                 U1,|1:1:2,A#id=20,45.00,20.00,10,=|
+                                                 U1,|2:1:1,A#id=21,45.00,20.00,10,=|
+                                                 U1,|2:1:2,A#id=22,45.00,20.00,10,=|
+                                                 U1,|3:1:1,A#id=23,45.00,20.00,10,=|
+                                                 U1,|3:1:2,A#id=24,45.00,20.00,10,=|
+                                                 :END:|]
+     context "fill S* and T* as two bays" do
+             forM_ [ ("S-T", "S* and T*")
+                   ] \(path, title) -> 
+                  it title do
+                   rows <- loadsAndExec "data/ExitMode" ["base",path] (generateStockTakes Nothing)
+                   unlines rows `shouldBe` [here|:STOCKTAKE:
+                                                 Bay No,Position,Style,Length,Width,Height,Orientations
+                                                 S1,|1:1:1,A#id=01,45.00,20.00,10,=|
+                                                 S1,|1:1:2,A#id=02,45.00,20.00,10,=|
+                                                 S2,|1:1:1,A#id=03,45.00,20.00,10,=|
+                                                 S2,|1:1:2,A#id=04,45.00,20.00,10,=|
+                                                 S1,|2:1:1,A#id=05,45.00,20.00,10,=|
+                                                 S1,|2:1:2,A#id=06,45.00,20.00,10,=|
+                                                 S2,|2:1:1,A#id=07,45.00,20.00,10,=|
+                                                 S2,|2:1:2,A#id=08,45.00,20.00,10,=|
+                                                 S1,|3:1:1,A#id=09,45.00,20.00,10,=|
+                                                 S1,|3:1:2,A#id=10,45.00,20.00,10,=|
+                                                 S2,|3:1:1,A#id=11,45.00,20.00,10,=|
+                                                 S2,|3:1:2,A#id=12,45.00,20.00,10,=|
+                                                 T1,|1:1:1,A#id=13,45.00,20.00,10,=|
+                                                 T1,|1:1:2,A#id=14,45.00,20.00,10,=|
+                                                 T2,|1:1:1,A#id=15,45.00,20.00,10,=|
+                                                 T2,|1:1:2,A#id=16,45.00,20.00,10,=|
+                                                 T1,|2:1:1,A#id=17,45.00,20.00,10,=|
+                                                 T1,|2:1:2,A#id=18,45.00,20.00,10,=|
+                                                 T2,|2:1:1,A#id=19,45.00,20.00,10,=|
+                                                 T2,|2:1:2,A#id=20,45.00,20.00,10,=|
+                                                 T1,|3:1:1,A#id=21,45.00,20.00,10,=|
+                                                 T1,|3:1:2,A#id=22,45.00,20.00,10,=|
+                                                 T2,|3:1:1,A#id=23,45.00,20.00,10,=|
+                                                 T2,|3:1:2,A#id=24,45.00,20.00,10,=|
+                                                 :END:|]
+
 
        
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
 -- to a given result.
   
 loadAndExec :: FilePath -> FilePath -> WH a RealWorld -> IO a
-loadAndExec ipath path action = do
+loadAndExec ipath path action = loadsAndExec ipath [path] action
+loadsAndExec :: FilePath -> [FilePath] -> WH a RealWorld -> IO a
+loadsAndExec ipath paths action = do
   initRepl ipath
-  load path
+  loads paths
   exec action
   
 

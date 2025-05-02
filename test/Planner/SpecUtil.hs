@@ -59,7 +59,7 @@ makeBoxesWithPartition mode shelfboxess = do
        boxes <- makeBoxes [shelf'boxes]
        shelves <- findShelfBySelector (parseSelector shelfname) 
        inEx <- aroundArrangement NewBoxesOnly
-                                 (moveBoxes ExitOnTop mode DontSortBoxes)
+                                 (\bs ss -> moveBoxes mode DontSortBoxes bs [(ExitOnTop, ss)])
                                  (map fst boxes)
                                  shelves
        mapM (\b -> (,) <$> findBox b <*> findShelf (fromMaybe def0 (boxShelf b)))

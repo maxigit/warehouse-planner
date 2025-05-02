@@ -779,7 +779,7 @@ handleWH ev =
                           (Just bs, Just ss) ->  do
                              shelves <- findShelvesByBoxNameAndNames (sSelector ss)
                              newBaseEvent "MOVE %" $ sText bs <> " TO " <> sText ss 
-                             leftOver <- excludedList <$> moveBoxes ExitLeft PBestEffort SortBoxes (toList $ sSelected bs) shelves
+                             leftOver <- excludedList <$> moveBoxes PBestEffort SortBoxes (toList $ sSelected bs) [(ExitLeft, shelves)]
                              zipWithM (updateBoxTags [("error", SetTag )]) leftOver [1..]
                              newWH <- get
                              return $ Just (newWH, bs { sSelected = setFromList $ map boxId leftOver } )

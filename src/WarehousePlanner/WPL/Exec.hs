@@ -124,24 +124,27 @@ executeStatement ec command =
          
 
 
+showExitMode'Sel :: (ExitMode, CSelector ShelfSelector ) -> String
+showExitMode'Sel (exitMode, sel) = show exitMode <> showCSelector showShelfSelector sel 
 
 
 executeCommand :: forall s . ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
-    Move boxm pmodem orules shelf exitMode -> do
-      newBaseEvent "TO" (maybe "" (pack . showCSelector showBoxSelector)   boxm <> " -> " <> pack (showCSelector showShelfSelector shelf))
+    Move boxm pmodem orules exit'sels -> do
+      newBaseEvent "TO" (maybe "" (pack . showCSelector showBoxSelector)   boxm <> " -> " <> pack (sconcat (map showExitMode'Sel  exit'sels)))
       boxes <- getBoxPs =<< case boxm of 
                  Nothing -> return ec
                  Just sel -> narrowCSelector sel ec
       -- traceShowM ("BOXOS", length boxes)
-      shelves <-  do
-         getShelves =<< narrowCSelector shelf ec
+      exit'shelves <-  forM (toList exit'sels) \(exitMode, sel) -> do
+         shelves <- getShelves =<< narrowCSelector sel ec
+         return (exitMode, shelves)
 
       let rules = case orules of
                        _ -> (Nothing, orules) : ecOrientationStrategies ec
 
-      inEx <- withBoxOrientations' rules $ moveSortedBoxes exitMode (fromMaybe (ecPartitionMode ec) pmodem) boxes shelves
+      inEx <- withBoxOrientations' rules $ moveSortedBoxes (fromMaybe (ecPartitionMode ec) pmodem) boxes exit'shelves
       return ec { ecBoxes = fmap (first boxId) inEx }
     ---------
     Tag tagOps -> do

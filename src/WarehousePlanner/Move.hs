@@ -37,6 +37,7 @@ import Data.Text(uncons)
 import Data.Foldable qualified as F
 import Data.Map qualified as Map
 import Data.Semigroup (Arg(..))
+import Control.Monad.State(evalState, get, modify)
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -359,14 +360,16 @@ bestEffort boxes = let
   in stairsFromCorners $ cornerHull allCorners
   
 -- | Move boxes of similar size to the given shelf if possible
-moveSimilarBoxes :: (Shelf' shelf) => forall s . ExitMode -> PartitionMode -> SimilarBoxes s -> [shelf s] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
-moveSimilarBoxes exitMode partitionMode boxes shelves' = do
-  shelves :: [Shelf s] <- mapM findShelf shelves'
-  pos'overlaps <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
+moveSimilarBoxes :: (Shelf' shelf) => forall s . PartitionMode -> SimilarBoxes s -> [(ExitMode, [shelf s])] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
+moveSimilarBoxes partitionMode boxes exit'shelves' = do
+  slotGroups :: [(ExitMode, [(Shelf s, _)])] <- forM exit'shelves' \(exitMode, shelves') ->  do
+     shelves <- mapM findShelf shelves'
+     pos'overlaps <- mapM (\s -> bestPositionOrBoxes partitionMode s boxes) shelves
+     return (exitMode, zip shelves pos'overlaps)
   -- ^ available positions not linked at the moment to any real boxes
   -- this is a list whith one set of slice per shelf
   let positionsWithShelf :: Slices SlotPriority (Shelf s, BoxesOrPos s)
-      positionsWithShelf = combineSlices exitMode $ zip shelves pos'overlaps
+      positionsWithShelf = combineSlicess slotGroups
   --  ^^^^^^^^^^^^^^^^^                             ^^^^^^^^^^^^^^^^^^^^^
   --       |                                              |
   --       +-- one set of slices combining                |
@@ -456,31 +459,43 @@ type SlotPriority = ( Int    -- ^ master priority
 -- consecutives shelves must be seen at one or not.
 -- The sorting can then be done by group of shelf with the same
 -- strategy.
-combineSlices :: forall s p . ExitMode -> [(Shelf s, Slices Double p)] -> Slices SlotPriority (Shelf s, p)
-combineSlices exitMode shelf'slicess = let
+combineSlicess :: forall s p . [(ExitMode, [(Shelf s, Slices Double p)])] -> Slices SlotPriority (Shelf s, p)
+combineSlicess shelf'slicess = let
   -- assign a number for each shelf and then
   -- reuse the same number within a group if needed.
   -- This way 1 2 3 4 5 will become 1 2 3 4 5 
   -- if shelves 3 and 4 are need to be filled togother
-  withN :: [ ( ArgI (Shelf s)
-             , Slices Double p
+  withN :: [ (ExitMode, [ ( ArgI (Shelf s)
+                          , Slices Double p
+                          )
+                        ]
              )
            ]
-  withN = zipWith (\s i -> first (Arg i) s) shelf'slicess [(1::Int)..]
-  sameStrategy :: [ SimilarBy FillingStrategy
-                              ( ArgI (Shelf s)
-                              , Slices Double p
-                              )
+  withN = flip evalState 1 do
+               forM shelf'slicess \(exitMode, ss) ->  do
+                 ssWithN <- forM ss \(shelf, slices) -> do
+                         i <- get
+                         modify (+1)
+                         return (Arg i shelf, slices)
+                 return $ (exitMode, ssWithN)
+  sameStrategy :: [ (ExitMode, [ SimilarBy FillingStrategy
+                               ( ArgI (Shelf s)
+                               , Slices Double p
+                               )
+                               ]
+                    )
                   ]
-  sameStrategy = groupSimilar (shelfFillingStrategy . argued . fst) withN
-  withGroupN = map adjustN sameStrategy
-  adjustN :: SimilarBy FillingStrategy
-                       ( ArgI (Shelf s) -- shelf with initial position 
-                       , Slices Double p -- slices indexed by 
-                       )
+  sameStrategy = map (fmap $ groupSimilar (shelfFillingStrategy . argued . fst)) withN
+  withGroupN = concat [ map (adjustN exitMode) same
+                      | (exitMode, same) <- sameStrategy
+                      ]
+  adjustN :: ExitMode -> SimilarBy FillingStrategy
+                         ( ArgI (Shelf s) -- shelf with initial position 
+                         , Slices Double p -- slices indexed by 
+                         )
           -> [ Slices SlotPriority (Shelf s, p)
              ]
-  adjustN (SimilarBy strategy s'is1 s'i'slices) = 
+  adjustN exitMode (SimilarBy strategy s'is1 s'i'slices) = 
     let firstI = argument (fst s'is1)
         adjust i d = if (exitMode, strategy) `elem` [(ExitOnTop, ColumnFirst), (ExitLeft, RowFirst)]
                    then (firstI, d, i) -- sames "group" , within a group fill slice then go to the next shelf
@@ -668,8 +683,8 @@ Settings those two priorities will result in the following order :
 The content priority could be used for example, to select which one
 of the B-Black boxes to get first.
 ::rST -}
-moveBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> SortBoxes -> [(box s)] -> [shelf s] -> WH (InExcluded (Box s)) s
-moveBoxes exitMode partitionMode sortMode bs ss = do
+moveBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> SortBoxes -> [(box s)] -> [(ExitMode, [shelf s])] -> WH (InExcluded (Box s)) s
+moveBoxes partitionMode sortMode bs exit'ss = do
   boxes <- mapM findBox bs
   let sorted = (if sortMode == SortBoxes then sortOnIf boxGlobalRank else id)
                $ boxes
@@ -677,12 +692,12 @@ moveBoxes exitMode partitionMode sortMode bs ss = do
       -- \^ we need to regroup box by style and size
       -- However we take into the account priority within the style before the dimension
       -- so that we can set the priority
-  inEx <- moveSortedBoxes exitMode partitionMode (map (,()) sorted) ss
+  inEx <- moveSortedBoxes partitionMode (map (,()) sorted) exit'ss
   return $ fmap fst inEx
 
 
-moveSortedBoxes :: (Box' box , Shelf' shelf) => ExitMode -> PartitionMode -> [(box s, p)] -> [shelf s] -> WH (InExcluded (Box s, p)) s
-moveSortedBoxes exitMode partitionMode bs ss = do
+moveSortedBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> [(box s, p)] -> [(ExitMode, [shelf s])] -> WH (InExcluded (Box s, p)) s
+moveSortedBoxes partitionMode bs exit'ss = do
   boxes <- mapM (firstM findBox) bs
   let layers = groupBy ((==)  `on` boxBreak . fst ) boxes
       boxBreak box = (boxStyle box, _boxDim box)
@@ -690,7 +705,7 @@ moveSortedBoxes exitMode partitionMode bs ss = do
     let groups = groupSimilar (\(b,_) -> (_boxDim b, boxStyle b)) layer
     moved'lefts <- mapM (\g -> do
                             let (boxes, priorities) = unzipSimilar g
-                            moved'lefts <- moveSimilarBoxes exitMode partitionMode boxes ss
+                            moved'lefts <- moveSimilarBoxes partitionMode boxes exit'ss
                             return case moved'lefts of
                                      (Nothing, Just _) -> (Nothing, Just g)
                                      (Just _ , Nothing)  -> (Just g, Nothing)
@@ -759,9 +774,11 @@ moveToLocations ec sortMode boxes location = do
                              Nothing -> True
                              Just sid ->  s `elem` sid
              ie <- aroundArrangementWithP addOldBoxes
-                                     ( moveBoxes exitMode
+                                     ( \bs ss -> moveBoxes 
                                                  (fromMaybe (ecPartitionMode ec) partitionMode)
-                                                 $ fromMaybe sortMode sortModeM
+                                                 ( fromMaybe sortMode sortModeM)
+                                                 bs
+                                                 [(exitMode, ss)]
                                      )
                                      (excludedList boxInEx) shelves
              return $ ie { included = Just $ includedList boxInEx ++ includedList ie }

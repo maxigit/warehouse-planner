@@ -71,7 +71,8 @@ pShelfCase (ShelfCase com (Just com2)) = group $ pStatement com  <> nest 4 (line
 
 pCommand :: Command -> Doc a
 pCommand = \case
-   Move sourceM pModeM strats dest exitMode ->
+   -- old syntax
+   Move sourceM pModeM strats ((exitMode, dest):|[]) ->
         hcat [  case exitMode of
                         ExitLeft -> "to>"
                         ExitOnTop -> "to^"
@@ -84,6 +85,24 @@ pCommand = \case
                , if isDefault dest
                  then "*"
                  else pCSelector pShelfSelector dest
+               ]
+   Move sourceM pModeM strats dest ->
+        hcat $ [ "to "
+               , opt "boxes" pCBox sourceM
+               , opt' "pmode" pPartitionMode pModeM
+               -- ^ print even default value, has nothing don't mean default mode
+               -- but previously set
+               , optWithDefault "orules" null pRules (Just strats)
+               , space
+               ]
+               <>
+               [ case exitMode of
+                    ExitOnTop -> "^"
+                    ExitLeft -> ">"
+                 <> if isDefault sel
+                 then "*"
+                 else pCSelector pShelfSelector sel
+               | (exitMode, sel) <- toList dest
                ]
                      
             

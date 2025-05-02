@@ -14,7 +14,7 @@ import Text.Megaparsec.Char.Lexer qualified as L
 import Text.Megaparsec.Debug qualified as P
 import Text.Megaparsec.Char
 import Data.Char
-import Data.List.NonEmpty(nonEmpty, NonEmpty(..))
+import Data.List.NonEmpty(nonEmpty, NonEmpty(..), some1)
 import WarehousePlanner.Type
 import Data.Foldable qualified as F
 import Control.Monad(fail)
@@ -139,7 +139,12 @@ instance Parsable Command where
             exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
             (sourceM, pmode, orules) <- o3 boxesK pmodeK oRulesK
             shelf <-  p
-            return $ Move sourceM pmode (fromMaybe [] orules) shelf exitMode
+            return $ Move sourceM pmode (fromMaybe [] orules) $ singleton (exitMode, shelf)
+        , do -- Move, the exitMode is after the options
+            lexeme "to " -- avoid collision with toggle
+            (sourceM, pmode, orules) <- o3 boxesK pmodeK oRulesK
+            exit'shelves <- some1 $ liftA2 (,) (lexeme p) p
+            return $ Move sourceM pmode (fromMaybe [] orules) exit'shelves
         , do -- Tag
            void $ optional $ lexeme "tag"
            "#"
@@ -292,13 +297,29 @@ instance Parsable ShelfSelector where
   p = dlabel "shelf selector" $ asum
             [ do
                 "?"
-                t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
+                t <- getText
                 return $ parseShelfSelector t
             ,
               do
-                t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
+                t <- getText
                 return $ ShelfSelector SelectAnything (parseSelector t)
             ]
+      where isShelfSelector c = isSelector c && (c `notElem` ("<^>" :: String)) 
+            --                                                 ^^^
+            --                                                 ||+--- exitmode left
+            --                                                 |+---- exitmode top
+            --                                                 +----- start of numeric range
+            --                                                        which end with >
+            getText = do
+                      ts <- lexeme $ some1 (range <|> takeWhile1P (Just "selector") isShelfSelector)
+                      return $ sconcat ts
+            range = do
+                     char '<'
+                     r <- takeWhile1P (Just "range") (/='>')
+                     char '>'
+                     return $ "<" <> r <> ">"
+
+
        
 instance Parsable (Selector s) where
    p = do 
@@ -364,6 +385,8 @@ instance Parsable [OrientationStrategy] where
 instance Parsable PartitionMode where
   p = partitionModeParser
 
+instance Parsable ExitMode where
+  p = ("^" $> ExitOnTop) <|> (">" $> ExitLeft )
 -- * Option utilites
 
    

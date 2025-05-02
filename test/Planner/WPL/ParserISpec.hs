@@ -63,7 +63,7 @@ parse' :: [Text] -> Either _ [Statement]
 parse' = parse . unlines
 -- * shortcut
 a = Action
-m = Action . flip (Move Nothing Nothing []) ExitOnTop
+m = Action . (Move Nothing Nothing []) . pure . (ExitOnTop,)
 ss = SelectShelves . CSelector . parseShelfSelector
 sb = SelectBoxes
 
@@ -174,7 +174,7 @@ pureSpec = describe "Parsing" do
                                      ]
                                )
    it "bug" do
-     let move s = Action $ Move Nothing Nothing [] s ExitLeft
+     let move s = Action $ Move Nothing Nothing [] (NE.singleton (ExitLeft, s))
      [   "#batch=M "
        , "     | #-first to> C2"
        , "     | #first tam @C1"

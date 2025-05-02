@@ -255,7 +255,7 @@ command = asum $ map lexeme [ toggleTag
             pmode <- optional $ lexeme1 partitionModeParser
             orules <- (lexeme1 "orules"  >> orientationRules) <|> return []
             shelf <-  shelfSelector
-            return $ Move Nothing pmode orules shelf exitMode
+            return $ Move Nothing pmode orules $ singleton (exitMode, shelf)
    tag = do
            lexeme1 "tag"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)
@@ -451,7 +451,7 @@ orientationRules = do
 -- with a mispelled command
 -- or escape with `
 guardLower :: MParser ()
-guardLower = label "Escape lower case with `" $ void (char '`') <|> notFollowedBy lowerChar
+guardLower = label "Escape lower case with `" $ void (char '`') <|> (notFollowedBy lowerChar >> notFollowedBy "[")
 
 
 splitExpr :: MParser [ Expr Text ]

@@ -1,0 +1,7 @@
+:WPL:
+A
+   [ to> S1
+   | to^ T* 
+   | to> U1
+   ]
+:END:
