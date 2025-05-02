@@ -481,7 +481,7 @@ defaultShelfStyling = ShelfStyling{..} where
   barTitle = Nothing
   displayBarGauge = True
 emptyWarehouse :: Day -> Warehouse s
-emptyWarehouse today = Warehouse mempty mempty (error "No shelves defined")
+emptyWarehouse today = Warehouse mempty mempty (error "No layout defined")
                                  (const defaultBoxStyling)
                                  (const defaultShelfStyling)
                                  defaultBoxOrientations Nothing today
