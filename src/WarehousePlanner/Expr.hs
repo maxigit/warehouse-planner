@@ -30,12 +30,12 @@ spaces :: MParser ()
 spaces = P.space >> return ()
 parseExpr :: Text -> Expr Text
 parseExpr s =  case parseExprE s of
-  Left err -> error (show err)
+  Left err -> error (P.errorBundlePretty err)
   Right expr -> expr
   
 
 parseExprE :: Text -> Either _ParseError (Expr Text)
-parseExprE s =  P.parse (exprParser <* P.eof) (unpack s) s 
+parseExprE s =  P.parse (spaces *> exprParser <* P.eof) (unpack s) s 
 
 exprParser :: MParser (Expr Text)
 exprParser   = (P.try (parseMMOp ))
