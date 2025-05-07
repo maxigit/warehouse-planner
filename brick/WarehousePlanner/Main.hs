@@ -38,7 +38,7 @@ data Options = Options
             , oCurrentRun :: Maybe Int
             , oBoxSearch :: Maybe Text
             , oShelfSearch :: Maybe Text
-            , oNoCheck :: Bool
+            , oNoCheck :: Maybe Bool
             , oNoWatch :: Bool
             }
      deriving (Show, Generic)
@@ -97,8 +97,10 @@ optionsParser = do
   oCurrentRun <- optional $ option auto $ long "run"
                                         <> metavar "RUN NUMBER"
                                         <> help "Number of the run to start with (0 based)"
-  oNoCheck <- switch $ long "no-check"
-                     <> help "Disable automatic checks"
+  oNoCheck <- asum [ flag' (Just True) ( long "no-check" <> help "Disable scenario checks")
+                   , flag' (Just False) (long "check" <> help "add auto checks")
+                   , pure Nothing
+                   ]
   oBoxSearch <- optional $ strOption $ long "box-search"
                        <> help "box selector"
   oShelfSearch <- optional $ strOption $ long "shelf-search"
@@ -206,7 +208,13 @@ defaultMainWith expandSection = do
                     case sequence (scenarioE: extraScenarios) of
                          Left e -> return $ Left e
                          Right scenarios -> do 
-                          let scenario = mconcat scenarios
+                          let scenario = filterChecks $ mconcat scenarios
+                              filterChecks = if oNoCheck == Just True
+                                             then \scen -> scen {sSteps = filter (not . isCheck) $ sSteps scen }
+                                             else id
+                              isCheck s = case s of 
+                                           Step CheckShelvesH _ _ -> True
+                                           _ -> False
                           let exec :: forall a . WH a RealWorld -> IO a
                               exec action = do
                                    let ?cache = if withHistory then refCache else noCache
@@ -297,9 +305,9 @@ extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM
     deleteM = flip fmap oDelete \del -> [ ":DELETE:" , del , ":END:" ]
     importM = flip fmap oImport \imp -> [ ":IMPORT:" , imp , ":END:" ]
     tamM = flip fmap oTagsAndMoves \tam -> [ ":Tags and Moves:" , "stock_id,tam" , tam , ":END:" ]
-    checkM = if oNoCheck
-             then Nothing
-             else Just [ ":CHECK_SHELVES:", "shelves", "#@check=-skip", ":END:" ]
+    checkM = case oNoCheck of
+                 Just False -> Just [ ":CHECK_SHELVES:", "shelves", "#@check=-skip", ":END:" ]
+                 _ -> Nothing
                                  
 
 

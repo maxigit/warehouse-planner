@@ -315,6 +315,7 @@ benchmark bench
   type: exitcode-stdio-1.0
   main-is: bench.hs
   other-modules:
+      Constants
       Paths_warehouse_planner
   hs-source-dirs:
       benchmarks

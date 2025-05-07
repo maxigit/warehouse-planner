@@ -340,16 +340,16 @@ printShelfSelector ShelfSelector{..} =
 -- split on # a#b -> [a, b] a\#b a#b
 splitOnNonEscaped :: Text -> Text -> [Text]
 splitOnNonEscaped _ txt | null txt = [""]
-splitOnNonEscaped needle txt = go txt
+splitOnNonEscaped needle txt = map concat $ go txt
    where go txt | null txt = []
          go txt =
             case breakOn needle txt of
-              (before, rest) | null rest -> [before] -- no more separators
+              (before, rest) | null rest -> [[before]] -- no more separators
                              | Just beforeWithoutEspace <- stripSuffix "\\" before ->
                                   case go (drop 1 rest) of
-                                        [] -> [ beforeWithoutEspace <> needle ]
-                                        (x:xs) -> (beforeWithoutEspace <> needle <> x) : xs
-                             | otherwise -> before : splitOnNonEscaped needle (drop 1 rest)
+                                        [] -> [ [beforeWithoutEspace , needle] ]
+                                        (x:xs) -> (beforeWithoutEspace : needle : x) : xs
+                             | otherwise -> [before] : go (drop 1 rest)
 
 
                           
