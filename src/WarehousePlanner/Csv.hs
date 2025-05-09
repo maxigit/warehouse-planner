@@ -1519,7 +1519,8 @@ processStockTakeWithPosition lookupM tagOrPatterns newBoxOrientations splitter r
               let commandsE = case parsePositionSpec posSpec of
                                   Just (or, toPos) -> let pos = Position (toPos (_boxDim box)) or
                                                       in Right [FCBoxWithPosition box pos]
-                                  Nothing -> case parseFillCommands posSpec of 
+                                  Nothing | ":" `isPrefixOf` posSpec -> return [FCBox box Nothing]
+                                          | otherwise -> case parseFillCommands posSpec of 
                                                -- [] | not (null posSpec) -> Left $ posSpec <> " is not a valid position."
                                                coms -> Right $ coms <> [FCBox box Nothing]
                   updateM st = Map.insert shelfname st fillStateMap
