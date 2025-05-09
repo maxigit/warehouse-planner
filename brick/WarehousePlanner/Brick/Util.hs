@@ -272,7 +272,7 @@ renderDiffStatus def inSummary (DiffStatus{..}) = let
   isIn = not . null $ Set.filter inSummary dsBoxIn
   isOut = not . null $ Set.filter inSummary dsBoxOut
   in if
-     | isOut && isIn   -> withAttr eventIOut $ str "@"
+     | isOut && isIn   -> withAttr eventIOut $ str "^"
      | dsBoxDeleted > 0 -> withAttr eventIn $ str "-"
      | isOut             -> withAttr eventOut $ str "<"
      | dsBoxCreated > 0 -> withAttr eventIn $ str "+"
