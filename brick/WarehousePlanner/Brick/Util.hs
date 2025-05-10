@@ -14,6 +14,7 @@ eigthH, eigthV
 , selectedAttr, selectAttr
 , bayNameAN
 , hBoxB, vBoxB
+, hBoxBottom
 , bold_, boldAttr
 , tagname_, tagNameAttr
 , virtualTagName_, virtualTagAttr
@@ -40,6 +41,7 @@ import WarehousePlanner.Summary
 import WarehousePlanner.History (findPreviousSibling, findNextSibling, findNextEvent)
 import Brick
 import Brick.Widgets.Border
+import Brick.Widgets.Table qualified as T
 import Graphics.Vty.Attributes qualified as V
 import Data.Set qualified as Set
 import WarehousePlanner.History (diffFor)
@@ -258,7 +260,13 @@ hBoxB = hBox . intersperse vBorder
 vBoxB :: [Widget n] -> Widget n
 vBoxB = vBox . intersperse hBorder 
 
-
+-- | create a row aligned to the bottom
+hBoxBottom :: [Widget n ] -> Widget n
+hBoxBottom cols = T.renderTable . T.alignBottom 0
+                                . T.surroundingBorder False
+                                . T.rowBorders False
+                                . T.columnBorders False
+                                $ T.table [cols]
 
 -- * History
 historyIndicator :: Ord a => Widget n -> (a -> Bool) -> HistoryRange -> Map Event (DiffStatus (Set a)) -> Widget n

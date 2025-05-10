@@ -65,6 +65,8 @@ data WHEvent = ENextMode
              | ETogglePropertyGradient
              | ETogglePropertyGlobal
              | EToggleShowSelected
+             | ENextLayout
+             | EPrevLayout
              -- 
              | ENextRun
              | EPrevRun
@@ -288,6 +290,7 @@ initState asToday adjust asReload title = do
       asDisplayHistory = False
       asDisplayDetails = False
       asAdjustedShelvesMode = AllShelves
+      asLayout = DoubleRun
   state <- adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
@@ -331,35 +334,39 @@ whApp extraAttrs =
                                               : B.vBorder
                                               : B.hLimit 30 (stylesSideBar s)
                                               : B.vBorder
-                                              : [ B.vBox $ (map B.hBox)
-                                                         [ renderRun asCollapseHeight 
-                                                                     (case asDepthMode of
-                                                                        DMDistinct -> DMSlot 
-                                                                        DMDistinctAndCount -> DMSlot 
-                                                                        DMFirstAndCount -> DMSlot 
-                                                                        -- DMFirst -> DMSlot 
-                                                                        _ -> asDepthMode
-                                                                     )
-                                                                     (\bhistory ->
-                                                                         let box = zCurrentEx bhistory
-                                                                             rendered =  withHLBoxAttr s renderBoxOrientation box
-                                                                         in if asDisplayHistory
-                                                                            then historyIndicator rendered
-                                                                                                  (\s -> boxShelf box == Just s)
-                                                                                                  (asHistoryRange s)
-                                                                                                  (computeBoxDiffHistoryFrom bhistory)
-                                                                            else rendered
-                                                                     )
-                                                                     (currentRun s)
-                                                         , [B.hBorder]
-                                                         , renderRun asCollapseHeight
-                                                                     asDepthMode
-                                                                     (withHLBoxAttr s renderBoxContent .  zCurrentEx)
-                                                                     (let run = currentRun s
-                                                                      in run { sDetails = drop asCurrentBay $ sDetails run }
-                                                                     )
+                                              : [ B.vBox $ 
+                                                         [ hBoxBottom runWithProp
+                                                         , B.hBorder
+                                                         , hBoxBottom $ runWithTitle True
                                                          ]
                                               ]
+                  runWithProp = renderRun asCollapseHeight 
+                                          (case asDepthMode of
+                                             DMDistinct -> DMSlot 
+                                             DMDistinctAndCount -> DMSlot 
+                                             DMFirstAndCount -> DMSlot 
+                                             -- DMFirst -> DMSlot 
+                                             _ -> asDepthMode
+                                          )
+                                          (\bhistory ->
+                                              let box = zCurrentEx bhistory
+                                                  rendered =  withHLBoxAttr s renderBoxOrientation box
+                                              in if asDisplayHistory
+                                                 then historyIndicator rendered
+                                                                       (\s -> boxShelf box == Just s)
+                                                                       (asHistoryRange s)
+                                                                       (computeBoxDiffHistoryFrom bhistory)
+                                                 else rendered
+                                          )
+                                          (currentRun s)
+                  runWithTitle shift = renderRun asCollapseHeight
+                                           asDepthMode
+                                           (withHLBoxAttr s renderBoxContent .  zCurrentEx)
+                                           (let run = currentRun s
+                                            in if shift 
+                                               then run { sDetails = drop asCurrentBay $ sDetails run }
+                                               else run
+                                           )
                   mainRun = B.emptyWidget -- renderHorizontalRun asSummaryView (currentRun s)
                   help = case asSubmap of 
                            Nothing | asDisplayMainHelp == False  -> B.emptyWidget
@@ -367,16 +374,49 @@ whApp extraAttrs =
                   reloading = if asReloading 
                                 then B.centerLayer $ B.border $ B.withAttr virtualTagName_ $ B.str "RELOADING"
                                 else B.emptyWidget
+                  oneLineBox =  B.vLimit 1 $ case currentBox s of
+                                                  Nothing -> B.txt " "
+                                                  Just box -> B.hBox $ intersperse (B.txt " ") $
+                                                                       [ withStyleAttr (boxPropValue box) (B.txt $ boxStyleAndContent  box)
+                                                                       , B.txt $ boxPositionSpec box
+                                                                       , B.txt "prop=" B.<+>  withStyleAttr (boxPropValue box) (B.txt (boxPropValue box))
+                                                                       ]
+                                                                       <>
+                                                                       [ B.txt tag B.<+> B.txt "=" B.<+> (withAttrR bold_ $ B.txt val)
+                                                                       | tag <- ["ctitle", "batch", "barcode"]
+                                                                       , val <- toList $ getTagValuem box tag
+                                                                       ]
+                  propLayout prop = [ hBoxB [ runsSideBar s
+                                                 , stylesSideBar s
+                                                 , vBoxB [ oneLineBox
+                                                         , B.padBottom B.Max (debugShelf s)
+                                                         ]
+                                                 ]
+                                        , hBoxBottom  prop
+                                        , maybe (renderStatus s) renderInput asInput
+                                       ]
               in  [ help
                   , reloading
-                  , vBoxB [ mainRun
-                           , let chunk = if asDisplayDetails
-                                         then 40
-                                         else 16
-                             in B.vLimit chunk $ hBoxB (debugShelf s :  (pure . boxDetail (\_ _ -> chunk) asWarehouse (asHistoryRange s)) (currentBoxHistory s))
-                           , main
-                           , maybe (renderStatus s) renderInput asInput
-                           ]
+                  , vBoxB $ case asLayout of
+                              PropRun -> propLayout runWithProp 
+                              TitleRun -> propLayout (runWithTitle False)
+                              DoubleRun ->  [ mainRun
+                                            , let chunk = if asDisplayDetails
+                                                          then 40
+                                                          else 16
+                                              in B.vLimit chunk $ hBoxB (debugShelf s :  (pure . boxDetail (\_ _ -> chunk) asWarehouse (asHistoryRange s)) (currentBoxHistory s))
+                                            , main
+                                            , maybe (renderStatus s) renderInput asInput
+                                            ]
+                              DoubleRunCompact ->  [ oneLineBox
+                                            , hBoxB [ stylesSideBar s
+                                                    , B.vBox [ hBoxBottom runWithProp
+                                                             , B.hBorder
+                                                             , B.padTop B.Max $ hBoxBottom (runWithTitle False)
+                                                             ]
+                                                    ]
+                                            , maybe (renderStatus s) renderInput asInput
+                                            ]
                   ]
       appChooseCursor = B.neverShowCursor
       appHandleEvent = whHandleEvent 
@@ -448,6 +488,8 @@ keyBindingGroups :: [(Maybe (Text, Char),[ (Text,  [([B.Binding], WHEvent, Text,
 keyBindingGroups =  groups
   where  groups = [ (Nothing , [("Main",                       [ mk 'm' ENextMode "next summary view mode"
                                                                , mk 'M' EPrevMode "previous summary view mode"
+                                                               , mk ' ' ENextLayout "next layout"
+                                                               , mK "backspace" EPrevLayout "next layout"
                                                                , mk 'V' ERenderRun "visualize current run (jpg)"
                                                                , mK "c-v" ERenderAllRuns "visualize current run (jpg)"
                                                                , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
@@ -668,6 +710,8 @@ handleWH ev =
     case ev of 
          ENextMode -> modify nextMode
          EPrevMode -> modify prevMode
+         ENextLayout -> modify nextLayout
+         EPrevLayout -> modify prevLayout
          EToggleViewHistory -> modify \s -> s { asDisplayHistory = not (asDisplayHistory s) }
          EToggleViewDetails -> modify \s -> s { asDisplayDetails = not (asDisplayDetails s) }
          ENextAdjustShelvesMode -> do 
@@ -995,6 +1039,10 @@ nextMode state = state { asSummaryView = succ' $ asSummaryView state }
 prevMode :: AppState -> AppState
 prevMode state = state { asSummaryView = pred' $ asSummaryView state }
          
+nextLayout, prevLayout :: AppState -> AppState
+nextLayout state = state { asLayout = succ' $ asLayout state }
+prevLayout state = state { asLayout = pred' $ asLayout state }
+
 nextOf :: Int -> SumVec a -> Int
 nextOf i ShelvesSummary{sDetails} = nextOf' i sDetails
 nextOf' i v = min (V.length v - 1) (i+1)
@@ -1177,7 +1225,11 @@ runUpdated state@AppState{..} = setBoxOrder (fst asBoxOrder) (snd asBoxOrder) $ 
              else fromList $ Map.toList $ sPropValues (currentRun state)
 -- *  Run
 runsSideBar :: AppState -> B.Widget Text
-runsSideBar state@AppState{..} = B.renderTable $ runsToTable (currentPropValue state) (asHistoryRange state) (asViewMode state) asCurrentRun asShelvesSummary 
+runsSideBar state@AppState{..} = B.renderTable $ runsToTable (currentPropValue state) (asHistoryRange state) expandShelf (asViewMode state) asCurrentRun asShelvesSummary 
+  where expandShelf = case asLayout of
+                        PropRun -> True
+                        TitleRun -> True
+                        _ -> False
 
 -- * PropValues
 stylesSideBar :: AppState -> B.Widget Text
@@ -1187,29 +1239,36 @@ stylesSideBar state@AppState{..} =
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..9] , let r = fromIntegral i / 8 ]
-  in B.vLimit 1 $ B.hBox $ [ B.withAttr specialTagName_ $ B.str $ show asCurrentRun 
-                           , B.txt (sName $ currentShelf state)  -- current shelf
-                           , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
-                           , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
-                           , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
-                           , B.center $ B.str (show asAdjustedShelvesMode)
-                           , B.center $ B.str (show asDepthMode)
-                           , B.center $ B.str $ if asCollapseHeight then "V" else ""
-                           , B.center $ B.str $ (if snd asBoxOrder then "-" else "") <> show (fst asBoxOrder)
-                           , B.center $ B.str $ if asPropertyGlobal then "G" else ""
-                           , B.center mode
-                           , surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
-                           , if asNavigateWithPrevious then B.str "~" else B.emptyWidget
-                           , surroundIf asNavigateCurrent $ B.str $ show (whCurrentEvent asWarehouse)
-                           , B.padLeft B.Max legend
-                           ]
+  in B.vLimit 2 $ B.vBox [ B.hBox $ [ B.withAttr specialTagName_ $ B.str $ show asCurrentRun 
+                                    , B.txt (sName $ currentShelf state)  -- current shelf
+                                    , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
+                                    , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
+                                    , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
+                                    , B.center $ B.str (show asAdjustedShelvesMode)
+                                    , B.center $ B.str (show asDepthMode)
+                                    , B.center $ B.str $ if asCollapseHeight then "V" else ""
+                                    , B.center $ B.str $ (if snd asBoxOrder then "-" else "") <> show (fst asBoxOrder)
+                                    , B.center $ B.str $ if asPropertyGlobal then "G" else ""
+                                    , B.center mode
+                                    ]
+                         , B.hBox $ [ surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
+                                    , if asNavigateWithPrevious then B.str "~" else B.emptyWidget
+                                    , surroundIf asNavigateCurrent $ B.str $ show (whCurrentEvent asWarehouse)
+                                    , B.padLeft B.Max legend
+                                    ]
+                         ]
   where surroundIf False w = w
         surroundIf True  w = B.hBox [B.str "[", w, B.str "]"]
              
 debugShelf :: AppState -> B.Widget Text
 debugShelf state = let
-  ssum = currentShelf state
-  sumTable =  B.alignRight 3
+  ssums = case asLayout state of 
+           PropRun -> allShelves
+           TitleRun -> allShelves
+           _ -> [ shelfSum ]
+  shelfSum = currentShelf state
+  allShelves = sDetailsList $ currentBay state 
+  sumTable ssum =  B.alignRight 3
            $  B.alignRight 4
            $  B.alignRight 5
            $ B.rowBorders False
@@ -1243,16 +1302,19 @@ debugShelf state = let
         -- -> [renderHorizontalSummary bayToBars (currentRun state) ]
         | ViewSummary sview <- asViewMode state 
         , not (asDisplayHistory state || asDisplayDetails state)
-        -> renderHorizontalSummary (B.padTop B.Max . bayToBars sview) (currentRun state)  :
-           ( B.str $ "Boxes: " <> show ( suCount $ sBoxSummary ssum) <> " Shelves:"
-                                   <> show ( suCount $ sShelvesSummary ssum)
+        -> renderHorizontalSummary (bayToBars sview) (currentRun state)  :
+           ( B.str $ "Boxes: " <> show ( suCount $ sBoxSummary shelfSum) <> " Shelves:"
+                                   <> show ( suCount $ sShelvesSummary shelfSum)
            ) :
-           [ B.renderTable sumTable ]
+           ( intersperse (B.txt " ") $ map (B.renderTable . sumTable) $ reverse ssums )
+           --                                                           ^^^^^^
+           --                                                             |
+           --                                                             +-- want shelf 1 at the bottom
         | otherwise 
         -> let boxMap = computeBoxDiffHistoryFrom  $ currentBoxHistory state
            in if asDebugShowDiffs  state
-              then [ B.str "Shelf: " B.<+> B.vBox (map (B.str  . show) $ reverse $ mapToList $ seEvents $ sExtra ssum)
-                   , B.str "For: " B.<+> B.strWrap (show $ diffFor (asHistoryRange state) $ seEvents $ sExtra ssum)
+              then [ B.str "Shelf: " B.<+> B.vBox (map (B.str  . show) $ reverse $ mapToList $ seEvents $ sExtra shelfSum)
+                   , B.str "For: " B.<+> B.strWrap (show $ diffFor (asHistoryRange state) $ seEvents $ sExtra shelfSum)
                    , B.str "BoxH: " B.<+> B.strWrap (show $ currentBoxHistory state)
                    , B.str "BoxDiffs: " B.<+> B.vBox (map (B.str . show) $ (reverse . mapToList $  boxMap))
                    , B.str "For:" B.<+> B.strWrap (show . diffFor (asHistoryRange state) $ boxMap)
@@ -1271,14 +1333,12 @@ debugShelf state = let
  -- * Render 
 renderRun :: Bool -> DepthMode -> (ZHistory1 Box RealWorld -> B.Widget n) -> Run SumVec (SumVec (ZHistory1 Box RealWorld)) -> [ B.Widget n ]
 renderRun collapseHeight depthMode renderBox run =  concat 
-          [ map (B.padTop B.Max)
+          [ 
             [ B.withAttr (fst bayNameAN )
                              $ B.vBox (map (withHLStatus (seBoxHLStatus $ sExtra bay) . B.str . pure) 
                              $ toList (sName bay <> "▄"))
                              --                     ^^^ aligned with the bottom border of the shelf
-            , B.renderTable
-            . baySummaryToTable collapseHeight depthMode renderBoxes
-            $ bay
+            , B.renderTable . baySummaryToTable collapseHeight depthMode renderBoxes $ bay
             ]
           | bay <- F.toList . sDetails $ run
           ]

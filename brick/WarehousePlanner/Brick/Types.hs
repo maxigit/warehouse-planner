@@ -1,6 +1,7 @@
 module WarehousePlanner.Brick.Types
 ( AppState(..)
 , ViewMode(..)
+, Layout(..)
 , SummaryView(..)
 , AdjustShelveMode(..) 
 , DepthMode(..)
@@ -50,6 +51,12 @@ data ViewMode = ViewSummary SummaryView
               -- 
               deriving (Show, Eq, Ord)
               
+data Layout = DoubleRun
+            | PropRun
+            | TitleRun
+            | DoubleRunCompact
+     deriving (Show, Eq, Ord, Enum, Bounded)
+
 data AdjustShelveMode = AllShelves
                       | SelectedShelves
                       | UnselectedShelves
@@ -117,7 +124,8 @@ sPropValues = sePropValues . sExtra
 
 data AppState = AppState
      { -- asViewMode  :: ViewMode
-     asSummaryView :: SummaryView
+       asLayout :: Layout
+     , asSummaryView :: SummaryView
      , asDisplayHistory :: Bool
      , asDisplayDetails :: Bool
      , asAdjustedShelvesMode :: AdjustShelveMode

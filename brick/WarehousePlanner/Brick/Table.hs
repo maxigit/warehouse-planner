@@ -21,6 +21,7 @@ import WarehousePlanner.Type
 import WarehousePlanner.Base(boxShortContent)
 import Data.Vector qualified as V
 import Text.Printf (printf)
+import Data.List.NonEmpty (NonEmpty(..))
 
 
 -- | Create a table with one cell per "offset"
@@ -148,16 +149,26 @@ baySummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..} =
 
 -- * Runs
 -- | Displays a vertical table with all the runs
-runsToTable :: Maybe Text -> HistoryRange -> ViewMode -> Int -> Runs SumVec _ -> Table Text
-runsToTable propm hrange mode current runs = selectTable current mkRow  (sDetails runs)
+runsToTable :: Maybe Text -> HistoryRange -> Bool -> ViewMode -> Int -> Runs SumVec _ -> Table Text
+runsToTable propm hrange expandShelf mode current runs = selectTable current mkRow  (sDetails runs)
     where mkRow i run = [ if mode == ViewHistory 
                           then historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra run)
                           else shelfSummaryToAllBars run 
-                        , attr run i $ padLeftRight 1 $ txt (sName run)
-                        , case mode of
-                            ViewSummary _ -> renderHorizontalSummary renderBestBarDef
+                        , (if current == i then visible . reportExtent (sName run) else id )
+                          $ (attr run i $ padLeftRight 1 $ txt (sName run))
+                        , case (mode, expandShelf) of
+                            (ViewSummary sview, True) -> let sviews = case sview of 
+                                                                       SVVolume ->  SVVolume :| [SVMaxLength .. SVMaxHeight]
+                                                                       --           ^^^^^ volume is always better than the other
+                                                                       --           so it should pick up volume as best
+                                                                       --           unless one dimension is sticking out.
+                                                                       s -> pure s
+                                                         in renderHorizontalSummary ((<+> (txt " ")) . hBox . map (renderBestBar sviews)
+                                                                           . sDetailsList)
                                                                          run
-                            ViewHistory -> hBox [ withShelfHLStatus bay $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
+                            (ViewSummary _, False) -> renderHorizontalSummary renderBestBarDef
+                                                                         run
+                            (ViewHistory, _) -> hBox [ withShelfHLStatus bay $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)
                                                 | bay <- sDetailsList run
                                                 ]
                         ]

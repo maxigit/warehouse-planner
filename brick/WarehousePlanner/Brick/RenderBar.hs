@@ -114,7 +114,7 @@ renderS smode s = let
        in charWithPerc2 c (ratio (fromSummary smode) s) 0 -- <+> hLimit 4 (str (show $ ratio (fromSummary smode) s))
        
 renderHorizontalSummary ::  (SumVec a -> Widget n) -> SumVec (SumVec a) -> Widget n
-renderHorizontalSummary renderBay ssum = hBox . map (\s -> renderBay s) $ sDetailsList ssum  where
+renderHorizontalSummary renderBay ssum = hBoxBottom . map (\s -> renderBay s) $ sDetailsList ssum  where
     -- SVSurfaceLW :| [ SVSurfaceLH, SVSurfaceWH ]
    
 -- |  Find the dimension with the least ratio
