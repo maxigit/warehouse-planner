@@ -498,14 +498,15 @@ keyBindingGroups =  groups
                                                                ])
                                , ("Shelf selection",           ( mk '0' (ESelectShelfLevel (Just "!")) "Select empty shelves"
                                                                : mk '9' (ESelectShelfLevel (Just "/#-top")) "Hide top shelves"
+                                                               : mk '1' (ESelectShelfLevel (Just "/*/[0-1]")) "First shelves"
                                                                : [mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
-                                                                 | i <- [1..5]
+                                                                 | i <- [2..5]
                                                                  , let c = tshow i
                                                                  , let sel = "/*/" <> c
                                                                  ]
                                                                <>[mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
                                                                  | i <- [6..8]
-                                                                 , let sel = "/*/[1-" <> tshow (i - 4) <> "]"
+                                                                 , let sel = "/*/[0-" <> tshow (i - 4) <> "]"
                                                                  , let c = tshow i
                                                                  ]
                                                                ))
