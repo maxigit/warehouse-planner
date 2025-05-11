@@ -56,9 +56,9 @@ shelfSummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..}
                          boxesByOffset = Map.fromListWith (<>) [ (boxOffset $ zCurrentEx box , [box])
                                                                | box <- boxes
                                                                ]
-                         boxesByName = Map.fromListWith (<>) [ ([ fromMaybe (boxStyle box) $ getTagValuem box "ctitle"
-                                                               , boxPropValue box
-                                                               ]
+                         boxesByName = Map.fromListWith (<>) [ ( [ fromMaybe (boxShortContent box) $ getTagValuem box "ctitle"
+                                                                 , boxPropValue box
+                                                                 ]
                                                                , [zbox])
                                                              | zbox <- boxes
                                                              , let box = zCurrentEx zbox
@@ -78,7 +78,7 @@ shelfSummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..}
                                             DMFirstAndCount -> let prefix = case length boxes of
                                                                                1 -> emptyWidget
                                                                                l -> str (show (l-1)) <+> str "+"
-                                                               in str "[" <+> prefix <+> renderBoxes (take 1 boxes)
+                                                               in str "[" <+> prefix <+> renderBoxes (take 1 boxes) <+> str "]"
                                             DMFirst -> renderBoxes (take 1 boxes)
                                             _ -> str "[" <+> hBox (map renderBoxes multi) <+> str "]"
          collapse xzy = let xyz = map transpose xzy
