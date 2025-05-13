@@ -717,13 +717,15 @@ narrowIncluded keep inEx = let
      --  $
       InExcluded (Just ins) (excluded toExclude)
 excludeIncluded :: (Ord k, Ord a) => (a -> k) -> [a] -> InExcluded a -> InExcluded a
-excludeIncluded _ outs (InExcluded AllOf NoneOf) = InExcluded AllOf (Just outs)
+-- excludeIncluded _ outs (InExcluded AllOf Nothing) = InExcluded AllOf (Just outs)
 excludeIncluded key outs inEx = let
   excludeSet = Set.fromList $ map key outs
   keep = (`notMember` excludeSet) . key
-  ins  = filter keep (includedList inEx)
+  ins  = case included inEx of 
+            AllOf -> AllOf
+            _ -> Just $ filter keep (includedList inEx)
   toExclude = inEx <> (InExcluded Nothing (Just outs))
-  in InExcluded (Just ins) (excluded toExclude)
+  in InExcluded (ins) (excluded toExclude)
    
 
 

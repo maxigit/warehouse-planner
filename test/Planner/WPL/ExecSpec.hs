@@ -58,16 +58,18 @@ pureSpec = describe "WPL" do
             it "with @/ use priority default" do
                select (base <> " ^^@-[id]^") `shouldReturn` "B-1#2 B-1#1 A-1 B-2 A-2 A-3"
   context "case to collect" do
-    it "collects in order A2 then A3" do
+    it "collects in order A2 then A3 and A1" do
       select (unlines [ "A   | A#'2"
                       , "    | A#'3"
+                      , "    | A#'1"
                       ]
-             ) `shouldReturn` "A-2 A-3"
+             ) `shouldReturn` "A-2 A-3 A-1"
     it "collects wihout context" do
       select (unlines [ "| A#'2"
                       , "| A#'3"
+                      , "| A#'1"
                       ]
-             ) `shouldReturn` "A-2 A-3"
+             ) `shouldReturn` "A-2 A-3 A-1"
     it "collects A3 then A2" do
       select (unlines [ "& A   || A#'3"
                       , "      || A#'2"
