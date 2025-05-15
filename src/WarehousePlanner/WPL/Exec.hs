@@ -445,6 +445,16 @@ evalCondition ec (CondShelf selector) = do
   return $ case included (ecShelves n) of 
      Just [] -> False
      _ -> True
+evalCondition ec (CondAnd c1 c2) = do
+   b <- evalCondition ec c1
+   if b
+   then evalCondition ec c2
+   else return False
+evalCondition ec (CondOr c1 c2) = do
+   b <- evalCondition ec c1
+   if b
+   then return True
+   else evalCondition ec c2
       
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]

@@ -87,8 +87,8 @@ data ShelfCase = ShelfCase Statement (Maybe Statement)
 
 data Condition = CondBox (CSelector BoxSelector)
                | CondShelf (CSelector ShelfSelector)
-               -- | CondAnd Condition Condition
-               -- | CondOr Condition Condition
+               | CondAnd Condition Condition
+               | CondOr Condition Condition
                | CondNot Condition
      deriving (Show, Eq)
 

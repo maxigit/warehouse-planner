@@ -23,6 +23,7 @@ import Data.Monoid (Last(..))
 import Data.Map qualified as Map
 import WarehousePlanner.Expr
 import Data.Text (splitOn)
+import Control.Monad.Combinators.Expr (makeExprParser, Operator(..))
 
 -- import WarehousePlanner.WPL.PrettyPrint2
 
@@ -478,8 +479,17 @@ checkForDuplicate keyss = let
 
 
 instance Parsable Condition where
-  p = asum [ "!" *> do CondNot <$> p 
-           , "/" *> do CondShelf <$> p
-           , CondBox <$> p
-           ]
+  p = makeExprParser term table <?> "conditions" where
+      term = between (lexeme "(") (lexeme ")") p <|> asum [ "/" *> do CondShelf <$> p
+                                                          , CondBox <$> p
+                                                          ]
+      table = [ [ prefix "!" CondNot ]
+              , [ binary (lexeme "&&") CondAnd ]
+              , [ binary (lexeme "||") CondOr ]
+              ]
+      prefix symbol f = Prefix (f <$ symbol)
+      binary op f = InfixL (f <$ op)
+
+  -- p = asum [ "!" *> do CondNot <$> p 
+  --          ]
 

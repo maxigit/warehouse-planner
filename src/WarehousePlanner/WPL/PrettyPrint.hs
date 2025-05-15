@@ -282,4 +282,16 @@ pCond :: Condition -> Doc a
 pCond = \case
       CondBox selector -> pCBox selector
       CondShelf selector -> "/" <> pCShelf selector
-      CondNot cond -> "!" <> pCond cond 
+      CondNot cond -> "!" <> enclose cond 
+      CondAnd c1 c2 -> enclose c1 <+> "&&" <+> enclose c2
+      CondOr c1 c2 -> enclose c1 <+> "||" <+> enclose c2
+      where enclose c = (case c of
+               CondNot _ -> doEnclose
+               CondBox _ -> id
+               CondShelf _ -> id
+               CondOr _ _ -> doEnclose
+               CondAnd _ _ -> doEnclose
+               ) $ pCond c
+            doEnclose c = "(" <+> c <+> ")"
+      
+
