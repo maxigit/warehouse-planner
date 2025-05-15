@@ -41,7 +41,7 @@ dlabel lbl p = p <?> lbl
 
 wplParser :: MParser [Statement]
 -- wplParser = sepBy p (lexeme ",") <* spaces  <* eof
-wplParser = spaces *> many p <* spaces  <* eof
+wplParser = (optional "version:2" *> spaces) *> many p <* spaces  <* eof
 
 class Parsable a where
    p :: MParser a
