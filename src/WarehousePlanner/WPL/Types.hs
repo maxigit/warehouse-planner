@@ -76,6 +76,7 @@ data Statement = Action Command
                | ShelfCases (NonEmpty ShelfCase)
                | ForeachDo Statement (NonEmpty Statement)
                | PrettyPrint Text Statement
+               | If Condition Statement (Maybe Statement)
      deriving (Show, Eq)
      
 data Case = Case Statement (Maybe Statement)
@@ -84,6 +85,12 @@ data Case = Case Statement (Maybe Statement)
 data ShelfCase = ShelfCase Statement (Maybe Statement)
     deriving (Show, Eq)
 
+data Condition = CondBox (CSelector BoxSelector)
+               | CondShelf (CSelector ShelfSelector)
+               -- | CondAnd Condition Condition
+               -- | CondOr Condition Condition
+               | CondNot Condition
+     deriving (Show, Eq)
 
 -- | Context selector, a bit more than a selector
 -- as it allows accessing parent for example

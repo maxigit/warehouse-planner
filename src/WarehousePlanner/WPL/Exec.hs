@@ -94,6 +94,11 @@ executeStatement ec command =
            traceM (unpack title)
            traceM (unpack $ prettyWPL statement) 
            executeStatement ec statement 
+        If cond then_ elsem -> do
+           b <- evalCondition ec cond
+           if | b -> executeStatement ec then_
+              | Just com <- elsem -> executeStatement ec com
+              | otherwise -> return ec
 
 
            
@@ -428,6 +433,18 @@ executeCommand ec command = case command of
       return narrowed
 
 
+evalCondition :: ExContext s ->  Condition -> WH Bool s
+evalCondition ec (CondNot cond) = not <$> evalCondition ec cond
+evalCondition ec (CondBox selector) = do
+  n <- narrowCSelector selector ec
+  return $ case included (ecBoxes n) of 
+     Just [] -> False
+     _ -> True
+evalCondition ec (CondShelf selector) = do
+  n <- narrowCSelector selector ec
+  return $ case included (ecShelves n) of 
+     Just [] -> False
+     _ -> True
       
 
 readWPL :: MonadIO m => FilePath ->  m [Statement]

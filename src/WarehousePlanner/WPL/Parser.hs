@@ -76,6 +76,23 @@ instance Parsable Statement where
                       lexeme ";"
                       a <- lexeme p
                       return $ PassThrought a
+                  , do -- if
+                      lexeme1 "if"
+                      cond <- p
+                      then_ <- subStatement  <?> "then"
+                      lexeme1 "else"
+                      else_ <- subStatement <?> "else"
+                      return $ If cond then_ (Just else_)
+                  , do -- unless
+                      lexeme1 "unless"
+                      cond <- p
+                      then_ <- subStatement  <?> "else"
+                      return $ If (CondNot $ cond)  then_ Nothing
+                  , do -- when
+                      lexeme1 "when"
+                      cond <- p
+                      then_ <- subStatement  <?> "then"
+                      return $ If cond then_ Nothing
                   , do
                      a <- lexeme atom
                      fm <- optional $ try followUp
@@ -458,4 +475,11 @@ checkForDuplicate keyss = let
                                 | k <- keys dupMap
                                 ]
                    in P.registerFancyFailure $ setFromList errors
+
+
+instance Parsable Condition where
+  p = asum [ "!" *> do CondNot <$> p 
+           , "/" *> do CondShelf <$> p
+           , CondBox <$> p
+           ]
 

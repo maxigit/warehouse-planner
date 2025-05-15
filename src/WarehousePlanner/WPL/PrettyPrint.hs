@@ -49,6 +49,20 @@ pStatement = \case
    ForeachDo stmt xs -> "foreach:do" <+> align ( pBlock stmt
                                                  <+> orsEnclosed xs
                                                )
+   If (CondNot cond) stmt Nothing -> "unless" <+> align (vsep [ pCond cond
+                                                              , pBlock stmt
+                                                              ]
+                                                        )
+   If cond stmt Nothing -> "while" <+> align (vsep [ pCond cond
+                                                     , pBlock stmt
+                                                     ]
+                                             )
+                                                     
+   If cond stmt (Just stmt2) -> "if" <+> align (vsep [ pCond cond
+                                                        , pBlock stmt
+                                                        , "else" <+> pBlock stmt2
+                                                        ]
+                                                  )
    PrettyPrint title stmt -> "trace:pretty" <> opt' "" viaShow (Just title)
                                       <+>pBlock stmt
                                                
@@ -262,3 +276,10 @@ opt' ::  Text -> (a -> Doc d) -> Maybe a -> Doc d
 opt' _ _ Nothing = mempty
 opt' key p (Just x) = space <> pretty key <> ":" <> p x
 
+
+----- Condition
+pCond :: Condition -> Doc a
+pCond = \case
+      CondBox selector -> pCBox selector
+      CondShelf selector -> "/" <> pCShelf selector
+      CondNot cond -> "!" <> pCond cond 
