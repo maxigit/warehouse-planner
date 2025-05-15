@@ -341,7 +341,7 @@ printShelfSelector ShelfSelector{..} =
 splitOnNonEscaped :: Text -> Text -> [Text]
 splitOnNonEscaped _ txt | null txt = [""]
 splitOnNonEscaped needle txt = map concat $ go txt
-   where go txt | null txt = []
+   where go txt | null txt = [[""]]
          go txt =
             case breakOn needle txt of
               (before, rest) | null rest -> [[before]] -- no more separators
