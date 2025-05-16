@@ -1,3 +1,4 @@
+import ClassyPrelude
 :set -fobject-code
 :def disp (\_ -> return "initRepl \"data\"\nload \"full-with-moves\"\ndisplay")
 :def d2 (\_ -> return "initRepl \"/home/max/Dropbox/Fames/Planner\"\nload \"Static\"\ndisplay")
