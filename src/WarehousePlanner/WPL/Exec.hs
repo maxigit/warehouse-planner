@@ -11,7 +11,7 @@ import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import WarehousePlanner.Move
-import WarehousePlanner.Selector (parseBoxSelector)
+import WarehousePlanner.Selector (parseBoxSelector, matchName)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ParserI
@@ -25,6 +25,8 @@ import Data.Map qualified as Map
 import Control.Monad.State(gets)
 import Data.List (nub)
 import Data.Proxy
+import GHC.Utils.Monad (mapAccumLM)
+import Data.Text (splitOn)
 
 
 runWPL :: [Statement] -> WH () s
@@ -431,6 +433,48 @@ executeCommand ec command = case command of
 
       void $ mapM (halfSwap debugPrefix (`elem` stickys)) zipped
       return narrowed
+    ---------
+    FillShelves shelfPropM fillTagM stmt -> do
+        let fillTag = fromMaybe "fill-spec" fillTagM
+            getShelfName :: Box s -> Int -> WH (Maybe Text) s
+            getShelfName = case shelfPropM of
+                          Nothing -> \box _ -> return $ getTagValuem box "fill-shelf"
+                          jp@(Just prop) | Just exp <- expandAttributeMaybe prop -> \box i -> Just <$> exp box i 
+                                         | otherwise -> \_ _ -> return jp
+        newEc <- executeStatement ec stmt
+        boxes <- getBoxes newEc
+        ss <- getShelves ec
+        forM  (headMay $ zip boxes ss) \(firstBox, firstShelf) -> do
+              --                         ^^^^^^^^
+              --                           +-------------- first box and first shelf
+              let fillCommands'boxs = map mkCommand boxes
+                  mkCommand box = let specm = getTagValuem box fillTag
+                                  in ( case maybe Nothing (Just . splitOn "_") specm of
+                                           Nothing | tagIsPresent box fillTag -> [FCBox box Nothing]
+                                                   | otherwise -> []
+                                           Just specs | Just (xs,  x) <- unsnoc specs
+                                                      , Just (or, toPos) <- parsePositionSpec x -> let pos = Position (toPos (_boxDim box)) or
+                                                                                                      in parseFillCommands (unwords xs)  <> [FCBoxWithPosition box pos]
+
+                                                      | otherwise -> parseFillCommands (unwords specs) <> [FCBox box Nothing]
+                                     , box
+                                     )
+                  mkState box = emptyFillState { fLastBox_ = _boxDim box}
+              mapAccumLM (\(prevFillState, i, prevShelf) (commands, box) -> do 
+                                  shelfnameM <- getShelfName box i
+                                  shelvesM <- forM shelfnameM \shelfname -> findShelfBySelector (Selector (matchName shelfname) [])
+                                  (fillState, shelf) <- case headMay =<< shelvesM of 
+                                                            Just sId | sId /= shelfId prevShelf -> (mkState box,) <$> findShelf sId
+                                                            _ ->  return (prevFillState, prevShelf)
+                                     
+                                  
+                                  (newState, r) <- mapAccumLM (executeFillCommand shelf) fillState commands
+                                  return ((newState, i+1, shelf), r)
+                         )
+                         (mkState firstBox , 1, firstShelf)
+                         fillCommands'boxs
+        
+        return newEc
 
 
 evalCondition :: ExContext s ->  Condition -> WH Bool s

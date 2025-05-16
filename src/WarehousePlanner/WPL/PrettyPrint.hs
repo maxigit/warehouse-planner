@@ -179,6 +179,9 @@ pCommand = \case
    SwapBoxes boxes debugPrefix stickies -> "swap" <> optWithDefault "debug" null pretty debugPrefix
                                                   <> optWithDefault "sticky" null (pretty . intercalate "#" ) (Just stickies)
                                                   <+> pCBox boxes
+   FillShelves {..} -> "fill"  <> optWithDefault "loc" null pretty cLoc
+                                                   <> optWithDefault "pos"  null pretty cPos
+                                                   <+> pBlock cStmt
                                                
 
                                                     

@@ -39,6 +39,9 @@ data Command = Move { cSource :: Maybe CBoxSelector
              | ResizeBox BoxMode (CSelector BoxSelector) Statement
              | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
              | SwapBoxes (CSelector BoxSelector) (Maybe Text) [Text]
+             | FillShelves { cLoc, cPos :: (Maybe Text)
+                           , cStmt ::   Statement
+                           }
      deriving (Show, Eq)
      {-
        deriving Eq

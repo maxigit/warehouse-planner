@@ -291,6 +291,10 @@ instance Parsable Command where
                         selector <- p
                         let stickies = maybe [] (splitOnNonEscaped "#") stickym
                         return $ SwapBoxes selector debugPrefixM stickies
+        , withStatement "fill" do
+            lexeme1 "fill"
+            (posM, locM) <- lexeme $ o2 ["pos", "p"]  ["loc", "l"]
+            return $ FillShelves locM posM
 
         ]
         where msgK = [ "msg",  "message", "m"]
