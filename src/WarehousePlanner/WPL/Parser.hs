@@ -96,7 +96,7 @@ instance Parsable Statement where
                       return $ If cond then_ Nothing
                   , do
                      a <- lexeme atom
-                     fm <- optional $ try followUp
+                     fm <- optional $ followUp
                      return case fm of 
                        Nothing -> a
                        Just f -> f a
