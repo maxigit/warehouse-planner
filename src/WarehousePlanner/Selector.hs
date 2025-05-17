@@ -166,7 +166,10 @@ parseBoxSelectorWithDef :: Bool -> Text -> BoxSelector
 parseBoxSelectorWithDef defUseBase "*" = BoxSelector SelectAnything SelectAnything (parseBoxNumberSelector defUseBase "")
 parseBoxSelectorWithDef defUseBase selector = let
   (box'location, numbers) = break (=='^') selector
-  (box, drop 1 -> location) = break (=='/') box'location
+  (box, location) = case splitOnNonEscaped "/" box'location of
+                               [] -> ("", "")
+                               [b] -> (b, "")
+                               (b: ls) -> (b, intercalate "/" ls)
   in BoxSelector (parseSelector box)
                  (parseSelector location)
                  $ case numbers of 

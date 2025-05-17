@@ -3611,7 +3611,7 @@ box,location,l,w,h
 :MovesAndTags:
 stock_id,tagm
 M71L07DF#'MGB,#low#1row
-M71L07DF#'KLB?YVI,#low#1row
+M71L07DF#'KLB\/YVI,#low#1row
 M71L07DF#'TLB,#low#1row
 M71L07DF#'ZRB,#low#1row
 M71L07DF#'FOC,#low#1row
@@ -4383,7 +4383,7 @@ M71E02DU/error|pending|C1|C2|C3,E27.01/5#mop-comment=TAKE TO OFFICE#mop-no-excep
 :END:
 :MovesAndTags:
 stock_id,tagm
-M51W04PF#'TIV'XIM^1,#@start=new-slice
+M51W04PF#'TIV\/XIM^1,#@start=new-slice
 M51W04PF,^E27.02/[12]
 :END:
 ** M81E06FC
@@ -5581,7 +5581,7 @@ box,location,l,w,h
 stock_id,tagm
 M31L01FC,#'l=6200#'w=3700#'h=4200
 M31L01FC#'RZA,#4th
-M31L01FC#'KLB?THW,#4th
+M31L01FC#'KLB\/THW,#4th
 M31L01FC#'ZRB,#4th
 M31L01FC#'FOC,#4th
 M31L01FC#'NEF,#4th
@@ -5595,15 +5595,15 @@ M31L01FC#'DAJ,#4th
 M31L01FC#'NAL,#4th
 M31L01FC#'AAM,#4th
 M31L01FC#'TPM,#4th
-M31L01FC#'YAN?YVI,#4th
+M31L01FC#'YAN\/YVI,#4th
 M31L01FC#'RTO,#4th
 M31L01FC#'LUP,#4th
 M31L01FC#'DGR,#4th
 M31L01FC#'NGS,#4th
 M31L01FC#'PAT,#4th
 M31L01FC#'QUT,#4th
-M31L01FC#'THW?KLB,#4th
-M31L01FC#'YAN?THW,#4th
+M31L01FC#'THW\/KLB,#4th
+M31L01FC#'YAN\/THW,#4th
 M31L01FC#'AQA,#1th
 M31L01FC#'MGB,#1th
 M31L01FC#'MLB,#1th
@@ -6004,7 +6004,7 @@ M61L02XA#'RIS^2,#ax2m
 #ax2m#'TWT,#ax2mtl#mop-exception
 #ax2m#'TIV,#ax2mtl#mop-exception
 #ax2m#'THW,#ax2mtl#mop-exception
-#ax2m#'THW'KLB,#ax2mtl#mop-exception
+#ax2m#'THW\/KLB,#ax2mtl#mop-exception
 #ax2m#'AIW,#ax2mtl#mop-exception
 #ax2m#'LTW,#ax2mtl#mop-exception
 #ax2m#'WEY,#ax2mtl#mop-excepti

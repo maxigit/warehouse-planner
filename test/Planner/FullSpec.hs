@@ -64,14 +64,14 @@ spec = describe "Full scenario" do
          -- =========
          unlines ss `shouldBe` [here|:STOCKTAKE:
                  Bay No,Position,Style,Length,Width,Height,Orientations
-                 E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01'1#n=01#position== 2:1:2,69.00,42.00,38,|=
-                 E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01'1#n=02#position== 2:2:2,69.00,42.00,38,|=
-                 E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01'1#n=03#position== 2:3:2,69.00,42.00,38,|=
-                 pending,|2:2:16+0+0+27,M71L07DF-KLB##barcode=DL23NV00277L#done#location=E02.01'3#n=04#position== 1:1:2,69.00,42.00,38,=|
-                 pending,|2:1:17+0+0+27,M71L07DF-KLB##barcode=DL23NV00275X#done#location=E02.01'3#n=05#position== 1:2:2,69.00,42.00,38,=|
-                 pending,|2:2:17+0+0+27,M71L07DF-KLB##barcode=DL23AP02942M#done#location=E02.01'3#n=06#position== 1:3:2,69.00,42.00,38,=|
-                 E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23AP02941F#done#location=E02.01'3#n=07#position== 2:1:1,69.00,42.00,38,=|
-                 E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23AP02940Y#done#location=E02.01'3#n=08#position== 2:2:1,69.00,42.00,38,=|
+                 E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01/1#n=01#position== 2:1:2,69.00,42.00,38,|=
+                 E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01/1#n=02#position== 2:2:2,69.00,42.00,38,|=
+                 E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01/1#n=03#position== 2:3:2,69.00,42.00,38,|=
+                 pending,|2:2:16+0+0+27,M71L07DF-KLB##barcode=DL23NV00277L#done#location=E02.01/3#n=04#position== 1:1:2,69.00,42.00,38,=|
+                 pending,|2:1:17+0+0+27,M71L07DF-KLB##barcode=DL23NV00275X#done#location=E02.01/3#n=05#position== 1:2:2,69.00,42.00,38,=|
+                 pending,|2:2:17+0+0+27,M71L07DF-KLB##barcode=DL23AP02942M#done#location=E02.01/3#n=06#position== 1:3:2,69.00,42.00,38,=|
+                 E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23AP02941F#done#location=E02.01/3#n=07#position== 2:1:1,69.00,42.00,38,=|
+                 E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23AP02940Y#done#location=E02.01/3#n=08#position== 2:2:1,69.00,42.00,38,=|
                  E02.01/3,=1:3:2,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
                  E02.01/3,=2:1:1,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
                  E02.01/3,=2:2:1,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
@@ -86,14 +86,14 @@ spec = describe "Full scenario" do
          -- =========
          unlines ss `shouldBe` [here|:STOCKTAKE:
             Bay No,Position,Style,Length,Width,Height,Orientations
-            E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01'1#n=01#position== 2:1:2,69.00,42.00,38,|=
-            E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01'1#n=02#position== 2:2:2,69.00,42.00,38,|=
-            E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01'1#n=03#position== 2:3:2,69.00,42.00,38,|=
-            E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23NV00277L#location=E02.01'3#n=04#position== 1:1:2,69.00,42.00,38,=|
-            E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23NV00275X#location=E02.01'3#n=05#position== 1:2:2,69.00,42.00,38,=|
-            E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23AP02942M#location=E02.01'3#n=06#position== 1:3:2,69.00,42.00,38,=|
-            E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23AP02941F#location=E02.01'3#n=07#position== 2:1:1,69.00,42.00,38,=|
-            E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23AP02940Y#location=E02.01'3#n=08#position== 2:2:1,69.00,42.00,38,=|
+            E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01/1#n=01#position== 2:1:2,69.00,42.00,38,|=
+            E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01/1#n=02#position== 2:2:2,69.00,42.00,38,|=
+            E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01/1#n=03#position== 2:3:2,69.00,42.00,38,|=
+            E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23NV00277L#location=E02.01/3#n=04#position== 1:1:2,69.00,42.00,38,=|
+            E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23NV00275X#location=E02.01/3#n=05#position== 1:2:2,69.00,42.00,38,=|
+            E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23AP02942M#location=E02.01/3#n=06#position== 1:3:2,69.00,42.00,38,=|
+            E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23AP02941F#location=E02.01/3#n=07#position== 2:1:1,69.00,42.00,38,=|
+            E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23AP02940Y#location=E02.01/3#n=08#position== 2:2:1,69.00,42.00,38,=|
             pending,|2:2:16+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
             pending,|2:1:17+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
             pending,|2:2:17+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
@@ -103,14 +103,14 @@ spec = describe "Full scenario" do
          -- same as klb but dead should be removed
          unlines ss `shouldBe` [here|:STOCKTAKE:
                  Bay No,Position,Style,Length,Width,Height,Orientations
-                 E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01'1#n=01#position== 2:1:2,69.00,42.00,38,|=
-                 E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01'1#n=02#position== 2:2:2,69.00,42.00,38,|=
-                 E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01'1#n=03#position== 2:3:2,69.00,42.00,38,|=
-                 pending,|2:2:16+0+0+27,M71L07DF-KLB##barcode=DL23NV00277L#done#location=E02.01'3#n=04#position== 1:1:2,69.00,42.00,38,=|
-                 pending,|2:1:17+0+0+27,M71L07DF-KLB##barcode=DL23NV00275X#done#location=E02.01'3#n=05#position== 1:2:2,69.00,42.00,38,=|
-                 pending,|2:2:17+0+0+27,M71L07DF-KLB##barcode=DL23AP02942M#done#location=E02.01'3#n=06#position== 1:3:2,69.00,42.00,38,=|
-                 E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23AP02941F#done#location=E02.01'3#n=07#position== 2:1:1,69.00,42.00,38,=|
-                 E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23AP02940Y#done#location=E02.01'3#n=08#position== 2:2:1,69.00,42.00,38,=|
+                 E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01/1#n=01#position== 2:1:2,69.00,42.00,38,|=
+                 E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01/1#n=02#position== 2:2:2,69.00,42.00,38,|=
+                 E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01/1#n=03#position== 2:3:2,69.00,42.00,38,|=
+                 pending,|2:2:16+0+0+27,M71L07DF-KLB##barcode=DL23NV00277L#done#location=E02.01/3#n=04#position== 1:1:2,69.00,42.00,38,=|
+                 pending,|2:1:17+0+0+27,M71L07DF-KLB##barcode=DL23NV00275X#done#location=E02.01/3#n=05#position== 1:2:2,69.00,42.00,38,=|
+                 pending,|2:2:17+0+0+27,M71L07DF-KLB##barcode=DL23AP02942M#done#location=E02.01/3#n=06#position== 1:3:2,69.00,42.00,38,=|
+                 E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23AP02941F#done#location=E02.01/3#n=07#position== 2:1:1,69.00,42.00,38,=|
+                 E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23AP02940Y#done#location=E02.01/3#n=08#position== 2:2:1,69.00,42.00,38,=|
             :END:|]
       it "keep KLB in place and remove unused" do 
          ss <- lExec "klb-inplace-unused" $ Report.generateStockTakes (Just $ parseBoxSelector "#'KLB")
@@ -122,14 +122,14 @@ spec = describe "Full scenario" do
          -- =========
          unlines ss `shouldBe` [here|:STOCKTAKE:
             Bay No,Position,Style,Length,Width,Height,Orientations
-            E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01'1#n=01#position== 2:1:2,69.00,42.00,38,|=
-            E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01'1#n=02#position== 2:2:2,69.00,42.00,38,|=
-            E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01'1#n=03#position== 2:3:2,69.00,42.00,38,|=
-            E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23NV00277L#location=E02.01'3#n=04#position== 1:1:2,69.00,42.00,38,=|
-            E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23NV00275X#location=E02.01'3#n=05#position== 1:2:2,69.00,42.00,38,=|
-            E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23AP02942M#location=E02.01'3#n=06#position== 1:3:2,69.00,42.00,38,=|
-            E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23AP02941F#location=E02.01'3#n=07#position== 2:1:1,69.00,42.00,38,=|
-            E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23AP02940Y#location=E02.01'3#n=08#position== 2:2:1,69.00,42.00,38,=|
+            E02.01/2,=1:1:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01/1#n=01#position== 2:1:2,69.00,42.00,38,|=
+            E02.01/2,=1:2:2,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01/1#n=02#position== 2:2:2,69.00,42.00,38,|=
+            E02.01/2,=1:3:2,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01/1#n=03#position== 2:3:2,69.00,42.00,38,|=
+            E02.01/3,=1:1:2,M71L07DF-KLB##barcode=DL23NV00277L#location=E02.01/3#n=04#position== 1:1:2,69.00,42.00,38,=|
+            E02.01/3,=1:2:2,M71L07DF-KLB##barcode=DL23NV00275X#location=E02.01/3#n=05#position== 1:2:2,69.00,42.00,38,=|
+            E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23AP02942M#location=E02.01/3#n=06#position== 1:3:2,69.00,42.00,38,=|
+            E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23AP02941F#location=E02.01/3#n=07#position== 2:1:1,69.00,42.00,38,=|
+            E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23AP02940Y#location=E02.01/3#n=08#position== 2:2:1,69.00,42.00,38,=|
             :END:|]
       -- xit "move top first by setting priority" -- do return ()
       it "swift KLB one by one following priority " do 
@@ -160,14 +160,14 @@ spec = describe "Full scenario" do
          -- =========
          unlines ss `shouldBe` [here|:STOCKTAKE:
                  Bay No,Position,Style,Length,Width,Height,Orientations
-                 E02.01/2,=1:1:2,M71L07DF-KLB##@content=5#barcode=DL23NV00277L#done#location=E02.01'3#n=04#position== 1:1:2,69.00,42.00,38,|=
-                 E02.01/2,=1:2:2,M71L07DF-KLB##@content=5#barcode=DL23NV00275X#done#location=E02.01'3#n=05#position== 1:2:2,69.00,42.00,38,|=
-                 E02.01/2,=1:3:2,M71L07DF-KLB##@content=5#barcode=DL23AP02942M#done#location=E02.01'3#n=06#position== 1:3:2,69.00,42.00,38,|=
-                 E02.01/3,=1:1:2,M71L07DF-KLB##@content=5#barcode=DL23AP02941F#done#location=E02.01'3#n=07#position== 2:1:1,69.00,42.00,38,=|
-                 E02.01/3,=1:2:2,M71L07DF-KLB##@content=5#barcode=DL23AP02940Y#done#location=E02.01'3#n=08#position== 2:2:1,69.00,42.00,38,=|
-                 E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01'1#n=01#position== 2:1:2,69.00,42.00,38,=|
-                 E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01'1#n=02#position== 2:2:2,69.00,42.00,38,=|
-                 E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01'1#n=03#position== 2:3:2,69.00,42.00,38,=|
+                 E02.01/2,=1:1:2,M71L07DF-KLB##@content=5#barcode=DL23NV00277L#done#location=E02.01/3#n=04#position== 1:1:2,69.00,42.00,38,|=
+                 E02.01/2,=1:2:2,M71L07DF-KLB##@content=5#barcode=DL23NV00275X#done#location=E02.01/3#n=05#position== 1:2:2,69.00,42.00,38,|=
+                 E02.01/2,=1:3:2,M71L07DF-KLB##@content=5#barcode=DL23AP02942M#done#location=E02.01/3#n=06#position== 1:3:2,69.00,42.00,38,|=
+                 E02.01/3,=1:1:2,M71L07DF-KLB##@content=5#barcode=DL23AP02941F#done#location=E02.01/3#n=07#position== 2:1:1,69.00,42.00,38,=|
+                 E02.01/3,=1:2:2,M71L07DF-KLB##@content=5#barcode=DL23AP02940Y#done#location=E02.01/3#n=08#position== 2:2:1,69.00,42.00,38,=|
+                 E02.01/3,=1:3:2,M71L07DF-KLB##barcode=DL23NV00276E#done#first#location=E02.01/1#n=01#position== 2:1:2,69.00,42.00,38,=|
+                 E02.01/3,=2:1:1,M71L07DF-KLB##barcode=DL23NV00278S#done#location=E02.01/1#n=02#position== 2:2:2,69.00,42.00,38,=|
+                 E02.01/3,=2:2:1,M71L07DF-KLB##barcode=DL23NV00279Z#done#location=E02.01/1#n=03#position== 2:3:2,69.00,42.00,38,=|
                  pending,|2:2:16+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
                  pending,|2:1:17+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|
                  pending,|2:2:17+0+0+27,M71L07DF-KLB#dead#done#ghost,69.00,42.00,38,=|

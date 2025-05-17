@@ -61,7 +61,6 @@ module WarehousePlanner.Base
 , printDim
 , readOrientations
 , readTagAndPatterns
-, replaceSlashes
 , shelfBoxes
 , updateBox
 , updateBoxTags
@@ -506,10 +505,10 @@ newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  
 newBox = newBox' Nothing
 newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
 newBox' boxM style content dim or_ shelf ors tagTexts = mdo
-    let tags' = map (parseTagOperation . omap replaceSlash) tagTexts
+    let tags' = map parseTagOperation tagTexts
         dtags = dimensionTagOps dim
         -- create "'content" tag
-        contentTag = (omap replaceSlash $ cons '\'' content, SetTag)
+        contentTag = (cons '\'' content, SetTag)
         tags = fromMaybe mempty $ modifyTags (contentTag : makeContentTags content <> tags' <> dtags) mempty
                                   --   ^ apply dimension tags after tags so dimension override tags
 
@@ -896,14 +895,14 @@ updateBoxTags tags0 box index = do
        --                 ^--  each value in Operation
        --     ^    ^-- each value of the TagOperation
        --     +------ snd of the (,)
-  let tags = [ (replaceSlashes tag, fmap replaceSlashes values )
+  let tags = [ (tag, values )
              | (tag, values) <- tags1
              ]
   updateBox (updateBoxTags' tags) box
 
 updateShelfTags :: [Tag'Operation] -> Shelf s -> WH (Shelf s) s
 updateShelfTags tags0 shelf =  do
-  let tags = [ (replaceSlashes tag, fmap replaceSlashes values )
+  let tags = [ (tag, values )
              | (tag, values) <- tags0
              ]
   updateShelf (updateShelfTags' tags) shelf
@@ -1356,11 +1355,6 @@ expandOrdkey box shelfm key = do
       let e = expandIntrinsic att box shelf
       return [either tshow id e]
 
-replaceSlash '/' = '\''
-replaceSlash c  = c
-replaceSlashes :: Text -> Text 
-replaceSlashes = omap replaceSlash
-   
 defaultPriority :: Int
 defaultPriority = 100
 defaultPriorities = (defaultPriority, defaultPriority, defaultPriority)
