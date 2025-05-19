@@ -351,7 +351,7 @@ command = asum $ map lexeme [ toggleTag
      l <- lexeme exprParser
      w <- lexeme exprParser
      h <- lexeme exprParser
-     return $ ResizeShelf selector l w h
+     return $ ResizeShelf selector Nothing l w h
    resizeBox = withStatement "box:resize" do
      mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
                   , lexeme1 "bsize:min" $> MinDimension

@@ -267,10 +267,11 @@ instance Parsable Command where
         , withStatement "shelf:resize" do
                         lexeme1 $ "shelf:resize"
                         sel <- p
+                        boxM <- o1 boxesK
                         (lsm, wsm, hsm) <- o3 ["l", "length"] ["w", "width"] ["h", "height"]
                         let defRef = parseExpr "{}"
                         let [ls, ws, hm] = map (fromMaybe defRef ) [lsm, wsm, hsm]
-                        return $ ResizeShelf sel ls ws hm
+                        return $ ResizeShelf sel boxM ls ws hm
         , withStatement "box:resize" do
                         mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
                                      , lexeme1 "bsize:min" $> MinDimension

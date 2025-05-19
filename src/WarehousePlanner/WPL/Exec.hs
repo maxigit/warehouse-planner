@@ -346,8 +346,13 @@ executeCommand ec command = case command of
         shelves <- narrowCSelector selector ec >>= getShelves
         forM shelves $ updateShelf full
         executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig }) orig )
-    ResizeShelf selector le we he statement -> do -- full
+    ResizeShelf selector bselm le we he statement -> do -- full
         shelves <- narrowCSelector selector ec >>= getShelves
+        boxm <- case bselm of
+                  Nothing -> return $ Nothing 
+                  Just sel -> do
+                     boxes <- narrowCSelector sel ec >>= getBoxes
+                     return $ headMay boxes
         forM shelves \shelf -> do
            [l, w, h] <-
              zipWithM (\exp defAcc -> do
@@ -358,7 +363,7 @@ executeCommand ec command = case command of
                                                                 <> " "
                                                                 <> show err
                                                        Right v -> v
-                             evalExpr (dimForSplit Nothing shelf)
+                             evalExpr (dimForSplit boxm shelf)
                                       exWithRef
                       )
                       [le, we, he]

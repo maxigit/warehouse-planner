@@ -153,10 +153,11 @@ pCommand = \case
                                               FirstDimension -> "bsize:first"
                               in command <> opt "boxes" pCBox (Just sel)
                                          <+> pBlock stmt
-   ResizeShelf  sel l w h stmt -> "shelf:resize" <+> (if isDefault sel
+   ResizeShelf  sel boxm l w h stmt -> "shelf:resize" <+> (if isDefault sel
                                                       then "*"
                                                       else pCShelf sel
                                                       )
+                                                <> opt "boxes" pCBox boxm
                                                 <> opt "l" pExpr (Just l)
                                                 <> opt "w" pExpr (Just w)
                                                 <> opt "h" pExpr (Just h)
