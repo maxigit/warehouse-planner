@@ -164,7 +164,7 @@ instance Parsable Command where
             exit'shelves <- some1 $ liftA2 (,) (lexeme p) p
             return $ Move sourceM pmode (fromMaybe [] orules) exit'shelves
         , do -- Tag
-           void $ optional $ lexeme "tag"
+           lexeme "tag"
            "#"
            tags <- lexeme1 $ str -- takeWhileP (Just "tags") (not . isSpace)
            let tagOps = parseTagOperations tags
@@ -180,7 +180,7 @@ instance Parsable Command where
                            Just sub -> do -- temporary tags
                                     return $ TagFor (CSelector selectAllBoxes) tagOps sub
         , do -- Toggle
-           void $ optional $ lexeme "toggle"
+           lexeme "toggle"
            "#"
            tagOps <- lexeme1 $ str -- takeWhileP (Just "tags") (not . isSpace)
            return $ ToggleTags (parseTagOperations tagOps)
@@ -312,7 +312,11 @@ instance Parsable BoxSelector where
                 t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
                 return $ parseBoxSelectorWithDef False t
     where guardLower :: MParser ()
-          guardLower = label "Escape lower case with ?" $ void $ (char '?') <|> lookAhead upperChar
+          guardLower = label "Escape lower case with ?" $ void $ (char '?') <|> lookAhead ( asum [ upperChar, char '^', char '#'])
+          --                                                                                                  ^^^^^^^^  ^^^^^^^
+          --                                                                                                     |          |
+          --                                                                                                     |          +-- tag selection
+          --                                                                                                     +------------- number limit
          
 
 instance Parsable ShelfSelector where

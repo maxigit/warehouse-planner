@@ -1,50 +1,48 @@
-?#C3
+#C3
     ( to> C3
     , tag#batch=$[pl-batch]#-pl-batch
     )
 
-?#dead M61L02XA ?/*/4 delete
+#dead M61L02XA ?/*/4 delete
 
-M31L05FA ?#-batch tag#batch=0
+M31L05FA #-batch tag#batch=0
 
 [ M32L09DB ] tag#BRING_DOWN
 
-?#BRING_DOWN
-    ?^={content}[batch]{shelfname:/}^@^@
+#BRING_DOWN
+    ^={content}[batch]{shelfname:/}^@^@
         [ ?/*.*/[34]
-            ?^={ow}-{oh}{ol}^@^@
-                [ ?^=1^@^@ | ?#-dead ; tag#NoRAR
-                ]
-        | ?/*.*/[12]
-            ?^=-{ol}{ow}{oh}^@^@
-        | ?# tag#OTHER#forRar=10000
+            ^={ow}-{oh}{ol}^@^@
+                [ ^=1^@^@ | #-dead ; tag#NoRAR ]
+        | ?/*.*/[12] ^=-{ol}{ow}{oh}^@^@
+        | # tag#OTHER#forRar=10000
         ]
-            ?#NoRAR
-                foreach:box ?^=^=^={style}{content}
+            #NoRAR
+                foreach:box ^=^=^={style}{content}
                             { tag#forRar=$n[%05d] }
 
-?#BRING_DOWN tag#-BRING_DOWN
+#BRING_DOWN tag#-BRING_DOWN
 
 M22L07DW#dead delete
 
 M22L07DW
     to> pending*
         ( tag#-@start
-        , ?^=1^@^@ tag#@start=new-slot
-        , [ bsize:max { ?^=[batch]2^@^@
+        , ^=1^@^@ tag#@start=new-slot
+        , [ bsize:max { ^=[batch]2^@^@
                           [ to^ W06.02/[12]
                           | to^ W06.03/[12]
                           | assert:noboxes :"wd7"
                           ]
                       }
-          | ?^=^=^=[batch] to> W06.0[23]/3
+          | ^=^=^=[batch] to> W06.0[23]/3
           ]
         )
 
 M31L01FC
     [ ?/#top | ?/C* ]
-        [ ?#dead ; delete
-        | ?^=^=[batch][content]^@
+        [ #dead ; delete
+        | ^=^=[batch][content]^@
             to> pending*
                 orules=x1x2|
                     [ to> W05.0[1-3]/3
@@ -56,12 +54,12 @@ M31L01FC
 M32L01DT
     orules=x2x2|
         ( ?/W05.*/3
-            [ ?#dead delete
+            [ #dead delete
             | to> pending* to> W05.0[4-5]/3
             ]
         , [ ?/N03.*/*#top | ?/C* ]
-            [ ?#dead ; delete
-            | ?^=^=[batch][content]^@
+            [ #dead ; delete
+            | ^=^=[batch][content]^@
                 to> pending*
                     [ to> N03.0[1-3]/3
                     | to> W05.0[4-5]/3
@@ -78,11 +76,11 @@ M32L01DT
 M32L07DC
     [ ?/C* | ?/pendi*
     ]
-        tag#@start=new-slot :?^=1^@^@ { ?^=^=^=[batch]
-                                          [ to> orules:x3x2= E03.01/3
-                                          | to> pmode:overlap orules:x3x2= E03.02/3
-                                          ]
-                                      }
+        tag#@start=new-slot :^=1^@^@ { ^=^=^=[batch]
+                                         [ to> orules:x3x2= E03.01/3
+                                         | to> pmode:overlap orules:x3x2= E03.02/3
+                                         ]
+                                     }
 
 /E04.0[2-4]/4
     foreach:shelf { <useContext>
@@ -91,35 +89,35 @@ M32L07DC
 
 M61E05DW
     [ ?/C* | ?/pendi* ]
-        tag#@start=new-slot :?^=1^@^@ { ?^=^=^=[batch]
-                                          to> orules:x1x|= E04.0[2-4]/4
-                                      }
+        tag#@start=new-slot :^=1^@^@ { ^=^=^=[batch]
+                                         to> orules:x1x|= E04.0[2-4]/4
+                                     }
 
 /?M02L09DA/#top
     M02L09DA
         foreach:shelf { <useContext>
-                          ?^=^=[batch]^@
+                          ^=^=[batch]^@
                               to> .~pending* to> *
                       }
 
 M02L09DA
     [ ?/C* | ?/pendi* ]
-        tag#@start=new-slot :?^=1^@^@ { ?^=^=^=[batch]
-                                          to> W03.0[2-3]/3
-                                      }
+        tag#@start=new-slot :^=1^@^@ { ^=^=^=[batch]
+                                         to> W03.0[2-3]/3
+                                     }
 
 M02L04PK#dead delete
 
 M02L04PK
-    ( ?#Coming -~ to> pending*
-    , [ [ ?#-Coming | ?^=1^@^@ ]
+    ( #Coming -~ to> pending*
+    , [ [ #-Coming | ^=1^@^@ ]
           to> pmode:overlap E06.0[56]/[12]
-              ?#
+              #
                   to> pending*
                       [ to^ pmode:overlap E06.05/[12]
                       | to^ pmode:overlap E06.06/[12]
                       ]
-      | ?^=^=^=[batch]
+      | ^=^=^=[batch]
           to> pmode:overlap E06.0[4-6]/3
       ]
     )
@@ -127,21 +125,21 @@ M02L04PK
 M32E08DW#dead delete
 
 M32E08DW
-    ( ?#Coming -~ to> pending*
-    , [ bsize:max { [ ?#-Coming
-                    | ?^=1^@^@
-                    | ?#'YAN^=2^@^@
-                    | ?^=1^@^@
+    ( #Coming -~ to> pending*
+    , [ bsize:max { [ #-Coming
+                    | ^=1^@^@
+                    | #'YAN^=2^@^@
+                    | ^=1^@^@
                     ]
                       [ to^ pmode:overlap W51.01/[12]
                       | to^ W51.02/1
                       ]
-                          ?#
+                          #
                               to> pending*
                                   [ to^ W51.01/[12] | to^ W51.02/1
                                   ]
                   }
-      | ?^=^=^=[batch]
+      | ^=^=^=[batch]
           to> pmode:overlap W51.*/3
       ]
     )
@@ -153,14 +151,14 @@ M61L03HA
         shelf:full *[78]/2
                    { ( tag#ord=${shelfname:/}#{ol} { ( ?/*/[12]
                                                          to> .~pending*
-                                                     , [ ?^=[batch][ord]1^@^@
-                                                       | ?#'TIM^=1^@^@
+                                                     , [ ^=[batch][ord]1^@^@
+                                                       | #'TIM^=1^@^@
                                                        ]
                                                          [ to^ *7/1
                                                          | to^ *8/[12]
                                                          ]
                                                              to> .~pending*
-                                                                 ?#
+                                                                 #
                                                                      [ to^ *7/1
                                                                      | to^ *8/[12]
                                                                      ]
@@ -179,21 +177,21 @@ M61L03HA
         ]
 
 M31L05DA
-    ?#-slot
+    #-slot
         /W02.0[6-8]/3
             ( foreach:do { bsize:max { to> .~pending
                                          to> *
                                      }
                          } ( ?/*6/3 , ?/*7/3 , ?/*8/3 )
-            , ?#Coming to> *8/3
+            , #Coming to> *8/3
             )
 
 C* to> ignore
 
 M31L03FA#mixed
     ( tag#b=$[barcode]
-    , ?^=^=2:^=[barcode]
-        [ ?#-slot ; delete
+    , ^=^=2:^=[barcode]
+        [ #-slot ; delete
         | tag##ghost#bg=lime
         ]
     )
@@ -201,18 +199,18 @@ M31L03FA#mixed
 M31L03FA#mixed#-twin delete
 
 M31L01XA
-    ?#-slot
+    #-slot
         [ to> pmode:sorted E<22-26>.01/4
         | to> pmode:sorted orules:x1x| E<22-26>.01/5
         ]
 
 M61L02XA
-    ( ?#-slot
+    ( #-slot
         [ ?/pending* tag#pshelf=10
-        | ?#Coming tag#pshelf=200
+        | #Coming tag#pshelf=200
         | tag#pshelf=100
         ]
-    , ?#-batch tag#batch=0
+    , #-batch tag#batch=0
     )
 
 M61L02XA
@@ -220,11 +218,11 @@ M61L02XA
     ]
 
 M61L02XA
-    [ ?#-slot
+    [ #-slot
         to> pending*
             orules=x1x|
-                [ before ?#'YAN to> W12.*/4
-                | from ?#'YAN to> W13.*/4
+                [ before #'YAN to> W12.*/4
+                | from #'YAN to> W13.*/4
                 | orules=x1x=
                     shelf:split W1[23].*/4 l:1.0e-3:{}*0.33:{}*0.33 w:{} h:{} { /W1[23].*/4/*
                                                                                   to> pmode:above *
@@ -234,24 +232,24 @@ M61L02XA
     ]
 
 M31L01DB
-    [ ?#dead#-slot ; delete
+    [ #dead#-slot ; delete
     | orules=x1x|=
         ( /E01.*/3
             ?/*/3
-                tag#pos=${shelfname::/}:${ol}:${oh} { ?^=^=^=[pos]
+                tag#pos=${shelfname::/}:${ol}:${oh} { ^=^=^=[pos]
                                                         to> .~pending
                                                     }
                     [ to> .~E01.*/3
                     | to> .~E01.0[5-8]/3
                     ]
-        , ?#Coming#-slot
+        , #Coming#-slot
             [ to> E01.<1-6>/3 ]
         )
     ]
 
 ?/W03.07/2
-    [ ?#dead ; delete
-    | tag#p=${ox%03d}:${oh%03d} { ?^=^=^=[p]
+    [ #dead ; delete
+    | tag#p=${ox%03d}:${oh%03d} { ^=^=^=[p]
                                     to> pending* to> W03.07/2
                                 }
     ]
@@ -259,11 +257,11 @@ M31L01DB
 M02L06FB
     ( to> pending*
     , /W03.0[78]/*
-        bsize:max { ?^=[batch]^@^@
+        bsize:max { ^=[batch]^@^@
                       orules=x1x|
-                          [ [ ?^=1^@^@ | ?#'YAN^=1^@^@
+                          [ [ ^=1^@^@ | #'YAN^=1^@^@
                             ]
-                              ?^@[batch]^@^@
+                              ^@[batch]^@^@
                                   [ to^ *7/*#-top
                                   | to^ *8/*#-top
                                   | assert:noboxes :"not_enough_6FB_for_one_each_colour"
@@ -275,31 +273,29 @@ M02L06FB
 
 M32L09DB tag#BRING_DOWN
 
-?#BRING_DOWN
-    ?^={content}[batch]{shelfname:/}^@^@
+#BRING_DOWN
+    ^={content}[batch]{shelfname:/}^@^@
         [ ?/*.*/[34]
-            ?^={ow}-{oh}{ol}^@^@
-                [ ?^=1^@^@ | ?#-dead ; tag#NoRAR
-                ]
-        | ?/*.*/[12]
-            ?^=-{ol}{ow}{oh}^@^@
-        | ?# tag#OTHER#forRar=10000
+            ^={ow}-{oh}{ol}^@^@
+                [ ^=1^@^@ | #-dead ; tag#NoRAR ]
+        | ?/*.*/[12] ^=-{ol}{ow}{oh}^@^@
+        | # tag#OTHER#forRar=10000
         ]
-            ?#NoRAR
-                foreach:box ?^=^=^={style}{content}
+            #NoRAR
+                foreach:box ^=^=^={style}{content}
                             { tag#forRar=$n[%05d] }
 
-?#BRING_DOWN tag#-BRING_DOWN
+#BRING_DOWN tag#-BRING_DOWN
 
-M32L09DB ?#dead delete
+M32L09DB #dead delete
 
 M32L09DB
     /<useContext>
         /#top
             shelf:full *
                        { <useContext>
-                           [ ?#dead ; delete
-                           | tag#p=${shelfname::/}:${ox%03d}:${oh%03d} { ?^=^=^=[p]
+                           [ #dead ; delete
+                           | tag#p=${shelfname::/}:${ox%03d}:${oh%03d} { ^=^=^=[p]
                                                                            to> .~pending*
                                                                                to> *
                                                                        }
@@ -315,27 +311,27 @@ M32L09DB
         | assert:noboxes :"9DB"
         ]
 
-?#dead/C3 delete
+#dead/C3 delete
 
 M02L02PA#dead delete
 
 M02L02PA
     /W04.08/2
         shelf:full *
-                   { shelf:split * boxes:M02L02PA l:111.0 w:{} h:{} { bsize:min boxes:?#'KLB { ?#Coming
-                                                                                                 to> pmode:oaligned *
-                                                                                             }
+                   { shelf:split * boxes:M02L02PA l:111.0 w:{} h:{} { bsize:min boxes:#'KLB { #Coming
+                                                                                                to> pmode:oaligned *
+                                                                                            }
                                                                     }
                    }
 
 M02E03DF
-    [ ?#dead ; delete
+    [ #dead ; delete
     | ( ?/N01.01/1 to> pending*
       , ?/pending|C3
-          ?^=[batch]^@^@
+          ^=[batch]^@^@
               ( tag#-@start
               , tag#^1 ?@start=new-slot
-              , [ ?^=2^@^@ to> N01.01/1
+              , [ ^=2^@^@ to> N01.01/1
                 | to> N01.01/[23]
                 ]
               )
@@ -346,26 +342,26 @@ M31L03FA#Coming#-slot
     to> W04.0[34]/3
 
 M31L01FH#Coming
-    [ ?#'RAS
+    [ #'RAS
         to> pmode:oaligned W07.01/[12]
             tag#mop-exception
     | to> W07.02/3
     ]
 
 foreach:do { /<useContext>
-               ?#Coming to> pmode:oaligned */*
+               #Coming to> pmode:oaligned */*
            } ( M02L04FO )
 
 M22L07DS
     /E07.04/*
         orules=x1x2=| for:*/3
-            ?#Coming
-                [ [ ?^=2^@^@ | ?# ] to> */2
+            #Coming
+                [ [ ^=2^@^@ | # ] to> */2
                 | to> */[23]
                 ]
 
 M22W01PX
-    [ ?#dead ; delete
+    [ #dead ; delete
     | to> pending*
         ; to> pmode:overlap W05.06/1
     ]
@@ -374,9 +370,9 @@ M22L03DY#dead delete
 
 M22L03DY
     ( tag#-@start
-        ?^=1^@^@ tag#@start=new-slot
+        ^=1^@^@ tag#@start=new-slot
     , to> pending*
-        [ ?^=2^@^@
+        [ ^=2^@^@
             bsize:max { [ to> W05.0[67]/2
                             tag#p=A
                         ]
@@ -384,7 +380,7 @@ M22L03DY
         | shelf:full W05.0[67]/[12]
                      { tag#-@start
                          orules=x3x=|
-                             [ ?#batch=[A-J]*
+                             [ #batch=[A-J]*
                                  to> pmode:oaligned W05.06/1
                              | to> orules:x2x4= W05.06/1
                              | to> pmode:oaligned orules:x2x4= W05.0[67]/2
@@ -408,9 +404,9 @@ M22W02PX#dead delete
         )
 
 M52L02DP
-    [ ?#dead ; delete
+    [ #dead ; delete
     | ( tag#@-start
-          ?^=1^@^@ tag#@start=new-slot
+          ^=1^@^@ tag#@start=new-slot
       , /W05.05/2
           shelf:full *
                      { orules=x3x3= to> * }
@@ -420,9 +416,9 @@ M52L02DP
 /W05.04/2
     M32L03PJ
         ( tag#@-start
-        , ?^=1^@^@ tag#@start=new-slot
+        , ^=1^@^@ tag#@start=new-slot
         , to> .~pending*
-        , bsize:max { [ ?^=[batch]2^@^@
+        , bsize:max { [ ^=[batch]2^@^@
                           to> *
                       | shelf:full *
                                    { to> pmode:overlap * }

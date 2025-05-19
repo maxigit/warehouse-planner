@@ -189,7 +189,7 @@ pCommand = \case
 
 pBoxSelector sel = let t =  printBoxSelector sel
                    in pretty case uncons t of
-                        Just (c,_) | isUpper c -> t
+                        Just (c,_) | isUpper c || c == '^' || c == '#'  -> t
                         _ -> "?" <> t
                       
                      
