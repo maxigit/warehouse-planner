@@ -69,7 +69,7 @@ narrowBoxes selector ec = do
             <> showBoxSelector selector
             <> "' included: " <> show (fmap length $ included $ ecBoxes ec)
             <> "' excluded: " <> show (fmap length $ excluded $ ecBoxes ec)
-   return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector }
+   return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector, ecParent = Just ec }
    
 narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
 narrowShelves selector ec = do
@@ -85,7 +85,7 @@ narrowShelves selector ec = do
                <> showShelfSelector selector
                <> "' included: " <> show (fmap length $ included $ ecShelves ec)
                <> "' excluded: " <> show (fmap length $ excluded $ ecShelves ec)
-    return ec { ecShelves = fmap shelfId ecS }
+    return ec { ecShelves = fmap shelfId ecS, ecParent = Just ec }
 
 getBoxPs :: ExContext s -> WH [(Box s, Priority)] s
 getBoxPs ec = do

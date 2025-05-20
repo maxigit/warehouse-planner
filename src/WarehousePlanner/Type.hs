@@ -729,6 +729,21 @@ excludeIncluded key outs inEx = let
    
 
 
+-- | Remove givin items from both included and excluded
+-- Needed when a box is deleted for example.
+-- Even thought in theory it should be excluded, it shouldn't.
+excludeInEx  :: (Ord k, Ord a) => (a -> k) -> [k] -> InExcluded a -> InExcluded a
+excludeInEx key outs inEx = let
+  excludeSet = Set.fromList $ outs
+  keep = (`notMember` excludeSet) . key
+  ins  = case included inEx of 
+            AllOf -> AllOf
+            _ -> Just $ filter keep (includedList inEx)
+  exs = case excluded inEx of
+            AllOf -> AllOf
+            _ -> Just $ filter keep (excludedList inEx)
+  in InExcluded ins exs
+  
 
   
    

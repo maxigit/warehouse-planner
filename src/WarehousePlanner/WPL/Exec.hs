@@ -243,8 +243,14 @@ executeCommand ec command = case command of
     ---------
     Delete -> do
        boxes <- getBoxes ec
-       deleteBoxes boxes
-       return ec {ecBoxes = InExcluded (Just []) (Just []) }
+       deleted <- deleteBoxes boxes
+       return case ecParent ec of
+            Nothing -> ec { ecBoxes = InExcluded (Just []) (Just []) }
+            Just parent -> ec { ecBoxes = excludeInEx fst (map boxId deleted) $ ecBoxes parent}
+            --             ^^                                                           ^^^^^^
+            --             |                                                              |
+            --             |                                                              +---  use parent boxes
+            --             +---- keep ec for other parameters as shelves                        because all boxes of the current context have been deleted
     ---------
     TraceCount desc-> do
        let ExContext{..} = ec
@@ -562,7 +568,8 @@ narrowCSelector cselector ec = do
        CStatement stmt -> executeStatement ec stmt
        CUseContext ->  do
           selector :: selector <- useContext ec
-          narrow selector ec
+          narrowed <- narrow selector ec
+          return narrowed { ecParent = Just ec }
        CSelectorAnd s1 s2 -> narrowCSelector s1 ec >>= narrowCSelector s2
    return ec' { ecNoEmptyBoxes = ecNoEmptyBoxes ec, ecNoEmptyShelves = ecNoEmptyShelves ec }
 
