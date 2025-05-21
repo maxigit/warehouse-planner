@@ -189,6 +189,7 @@ instance Parsable Command where
            "#"
            tagOps <- lexeme $ str -- takeWhileP (Just "tags") (not . isSpace)
            return $ TagShelves (parseTagOperations tagOps)
+        , lexeme "with:boxes" $> SelectShelves CCrossSelection
         , do -- SelectShelves
            lexeme "/"
            sel <- p
@@ -313,11 +314,12 @@ instance Parsable BoxSelector where
                 t <- lexeme1 (takeWhile1P (Just "selector") isSelector)
                 return $ parseBoxSelectorWithDef False t
     where guardLower :: MParser ()
-          guardLower = label "Escape lower case with ?" $ void $ (char '?') <|> lookAhead ( asum [ upperChar, char '^', char '#'])
-          --                                                                                                  ^^^^^^^^  ^^^^^^^
-          --                                                                                                     |          |
-          --                                                                                                     |          +-- tag selection
-          --                                                                                                     +------------- number limit
+          guardLower = label "Escape lower case with ?" $ void $ (char '?') <|> lookAhead ( asum [ upperChar, char '^', char '#', char '!', char '*'])
+          --                                                                                                  ^^^^^^^^  ^^^^^^^        ^^^
+          --                                                                                                     |          |           |
+          --                                                                                                     |          |           +-- negation
+          --                                                                                                     |          +-------------- tag selection
+          --                                                                                                     +------------------------- number limit
          
 
 instance Parsable ShelfSelector where
