@@ -68,7 +68,7 @@ lexeme :: MParser a -> MParser a
 lexeme = L.lexeme spaces
 lexeme1 p = do
    r <- p
-   lookAhead $ asum [space1, lineComment, blockComment, eof, void "}", void ")" ]
+   lookAhead $ asum [space1, lineComment, blockComment, eof, void "}", void ")", void "]" ]
    spaces
    return r
    
