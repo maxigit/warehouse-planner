@@ -9,7 +9,7 @@ import WarehousePlanner.WPL.Types
 import WarehousePlanner.Type
 import WarehousePlanner.Expr
 import WarehousePlanner.WPL.PrettyPrint
-import WarehousePlanner.Selector (parseBoxSelector, printTagSelector, parseTagSelector)
+import WarehousePlanner.Selector (parseBoxSelector, printTagSelector, parseTagSelector, parseMatchPattern)
 import Text.Megaparsec qualified as P
 import Test.QuickCheck
 import Data.Text (Text, strip)
@@ -276,7 +276,7 @@ deriving instance Generic MatchPattern
 instance Arbitrary MatchPattern where
    arbitrary = do
                   -- oneof [fmap MatchFull arbitrary, return MatchAnything]
-                  elements [MatchFull "pat", MatchAnything, MatchFull "name" ]
+                  elements [MatchFull "pat", MatchAnything, MatchFull "name", parseMatchPattern "[WE]01.02/3", parseMatchPattern "*A"   ]
    shrink = shrinkNothing
    -- shrink = genericShrink
    
@@ -383,7 +383,9 @@ parsing  = describe "parsing" do
                -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# } } }"
                -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# :~ { tag# :.~ { tag# } } } } }"
                -- "after ~ orules=!4x9:9x@' for:?!pat/pat"
-               "trace:pretty :\"M06.07\" { foreach:box ~.~ { foreach:box ~.~ { ( shelf:full <useContext> { ; pmode=best } , shelf:resize <useContext> l:{E05.06} w:0.0 h:{M08.01} { /-~ } ) } } }":
+              --  "trace:pretty :\"M06.07\" { foreach:box ~.~ { foreach:box ~.~ { ( shelf:full <useContext> { ; pmode=best } , shelf:resize <useContext> l:{E05.06} w:0.0 h:{M08.01} { /-~ } ) } } }":
+               "/ [AB]" :
+               "with:boxes" :
                []
    forM_ texts \t -> do
        it ("parses " <> unpack t) do

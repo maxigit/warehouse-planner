@@ -41,7 +41,7 @@ pStatement = \case
    --                 -- in parens $ hsep $ punctuate softline (map pStatement stmts)
    --                 in align $ parens $ hsep $ (map pStatement stmts)
    PassThrought stmt -> ";" <+> pStatement stmt
-   ForeachBox sel stmt -> "foreach:box" <+> align (vsep [ (pCSelector pBoxSelector sel)
+   ForeachBox sel stmt -> "foreach:box" <+> align (vsep [ (pCBox sel)
                                                         , pBlock stmt
                                                         ]
                                                   )
@@ -98,7 +98,7 @@ pCommand = \case
                , space
                , if isDefault dest
                  then "*"
-                 else pCSelector pShelfSelector dest
+                 else pCShelf dest
                ]
    Move sourceM pModeM strats dest ->
         hcat $ [ "to "
@@ -115,7 +115,7 @@ pCommand = \case
                     ExitLeft -> ">"
                  <> if isDefault sel
                  then "*"
-                 else pCSelector pShelfSelector sel
+                 else pCShelf sel
                | (exitMode, sel) <- toList dest
                ]
                      
@@ -126,9 +126,14 @@ pCommand = \case
                                     <+> nest 3 (pBlock stmt)
    ToggleTags tagOps -> "toggle#" <> pretty (printTagOperations tagOps)
    TagShelves tagOps -> "shelf:tag#" <> pretty (printTagOperations tagOps)
-   SelectBoxes sel -> pCSelector pBoxSelector sel 
-   SelectBoxRanges boundary sel -> pretty (toLower $ tshow boundary) <+> pCSelector pBoxSelector sel
-   SelectShelves sel -> "/" <> pCSelector pShelfSelector sel 
+   SelectBoxes sel -> pCBox sel 
+   SelectBoxRanges boundary sel -> pretty (toLower $ tshow boundary) <+> pCBox sel
+   SelectShelves CUseContext -> "with:boxes"
+   SelectShelves sel -> let sep = case sel of 
+                                    CSelector sel | "[" `isPrefixOf` printShelfSelector  sel -> " "
+                                    _ -> ""
+                            --- rewrite "/[" as "/ [" to not be parse as ShelfCase
+                        in "/" <> sep <> pCShelf sel 
    TagAndMove op strats -> "tam" <> optWithDefault "orules" (==[]) pRules (Just strats)
                                  <+> pretty op
    Delete -> "delete"
@@ -212,7 +217,9 @@ pCSelector pSel csel =
 pCBox :: CSelector BoxSelector -> Doc a
 pCBox = pCSelector pBoxSelector
 pCShelf :: CSelector ShelfSelector -> Doc a
-pCShelf = pCSelector pShelfSelector
+pCShelf = \case 
+   CUseContext -> "with:boxes"
+   c -> pCSelector pShelfSelector c
            
 pRules [] = "<empty>"
 pRules ostrats = let -- group stratetegies if possible regardless of diag and orientation

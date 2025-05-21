@@ -189,6 +189,7 @@ instance Parsable Command where
            "#"
            tagOps <- lexeme $ str -- takeWhileP (Just "tags") (not . isSpace)
            return $ TagShelves (parseTagOperations tagOps)
+        , lexeme1 "with:boxes" $> SelectShelves CUseContext
         , do -- SelectShelves
            lexeme "/"
            sel <- p
