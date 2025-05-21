@@ -274,9 +274,10 @@ instance Parsable Command where
                         let [ls, ws, hm] = map (fromMaybe defRef ) [lsm, wsm, hsm]
                         return $ ResizeShelf sel boxM ls ws hm
         , withStatement "box:resize" do
-                        mode <- asum [ lexeme1 "bsize:max"  $> MaxDimension
-                                     , lexeme1 "bsize:min" $> MinDimension
-                                     , lexeme1 "bsize:first" $> FirstDimension
+                        "bsize:"
+                        mode <- asum [ lexeme1 "max"  $> MaxDimension
+                                     , lexeme1 "min" $> MinDimension
+                                     , lexeme1 "first" $> FirstDimension
                                      ]
                         selM <- o1 boxesK
                         return $ ResizeBox mode (fromMaybe (CSelector selectAllBoxes) selM)
