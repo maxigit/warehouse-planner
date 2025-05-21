@@ -189,7 +189,6 @@ instance Parsable Command where
            "#"
            tagOps <- lexeme $ str -- takeWhileP (Just "tags") (not . isSpace)
            return $ TagShelves (parseTagOperations tagOps)
-        , lexeme1 "with:boxes" $> SelectShelves CUseContext
         , do -- SelectShelves
            lexeme "/"
            sel <- p
@@ -355,7 +354,7 @@ instance Parsable (Selector s) where
         return $ parseSelector t
 instance Parsable (CSelector BoxSelector) where
   p  =  label "cbox" $ asum
-    [  lexeme1 "in:shelves" >> return CUseContext
+    [  lexeme1 "in:shelves" >> return CCrossSelection
     ,  lexeme1 "in" >> do 
                           shelves <- p
                           return  $ CSelector (selectAllBoxes { shelfSelectors = shelves} )
@@ -365,7 +364,7 @@ instance Parsable (CSelector BoxSelector) where
 
 instance Parsable (CSelector ShelfSelector) where
   p = label "cshelf" $ asum
-     [ lexeme1 "with:boxes" >> return CUseContext
+     [ lexeme1 "with:boxes" >> return CCrossSelection
      , lexeme1 "with" >> do 
                             BoxSelector b s _  <- p
                             return $ CSelector (ShelfSelector b s)
@@ -392,7 +391,7 @@ cselector = try $  do
         sel = CSelector <$> p
         parent = (char '~') >> return Parent
         root = (string ".~") >> return Root
-        useContext = "<useContext>" >> return CUseContext
+        useContext = "xsel" >> return CCrossSelection
         -- ^^^^^^ not to be used by human. here for quickcheck : to be able to parse
         -- pretty print.
         cstatement = lexeme "(" *> (CStatement <$> lexeme p <?> "cstatement") <* ")"

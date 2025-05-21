@@ -69,7 +69,7 @@ M32L01DT
         )
 
 /E03.01/[34]
-    foreach:shelf { <useContext>
+    foreach:shelf { xsel
                       to> .~pending* to> *
                   }
 
@@ -83,7 +83,7 @@ M32L07DC
                                      }
 
 /E04.0[2-4]/4
-    foreach:shelf { <useContext>
+    foreach:shelf { xsel
                       to> .~pending* to> *
                   }
 
@@ -95,7 +95,7 @@ M61E05DW
 
 /?M02L09DA/#top
     M02L09DA
-        foreach:shelf { <useContext>
+        foreach:shelf { xsel
                           ^=^=[batch]^@
                               to> .~pending* to> *
                       }
@@ -290,10 +290,10 @@ M32L09DB tag#BRING_DOWN
 M32L09DB #dead delete
 
 M32L09DB
-    /<useContext>
+    /xsel
         /#top
             shelf:full *
-                       { <useContext>
+                       { xsel
                            [ #dead ; delete
                            | tag#p=${shelfname::/}:${ox%03d}:${oh%03d} { ^=^=^=[p]
                                                                            to> .~pending*
@@ -348,7 +348,7 @@ M31L01FH#Coming
     | to> W07.02/3
     ]
 
-foreach:do { /<useContext>
+foreach:do { /xsel
                #Coming to> pmode:oaligned */*
            } ( M02L04FO )
 

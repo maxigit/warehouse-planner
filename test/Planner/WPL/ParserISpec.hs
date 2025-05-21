@@ -390,7 +390,7 @@ pureSpec = describe "Parsing" do
           , "B"]
             `shouldParse` [ Then (Action $ SelectShelves "A")
                                  ( ForeachShelf (Then (Action $ TraceCount "before" )
-                                                      (Action (SelectBoxes  CUseContext) `Then` (Action $ TagAndMove "@" []))
+                                                      (Action (SelectBoxes  CCrossSelection) `Then` (Action $ TagAndMove "@" []))
                                                 )
                                  )
 

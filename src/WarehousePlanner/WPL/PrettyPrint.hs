@@ -128,7 +128,6 @@ pCommand = \case
    TagShelves tagOps -> "shelf:tag#" <> pretty (printTagOperations tagOps)
    SelectBoxes sel -> pCBox sel 
    SelectBoxRanges boundary sel -> pretty (toLower $ tshow boundary) <+> pCBox sel
-   SelectShelves CUseContext -> "with:boxes"
    SelectShelves sel -> let sep = case sel of 
                                     CSelector sel | "[" `isPrefixOf` printShelfSelector  sel -> " "
                                     _ -> ""
@@ -210,16 +209,14 @@ pCSelector pSel csel =
         Parent -> "~"
         Root -> ".~"
         CStatement statment -> parens $ pStatement statment
-        CUseContext ->  "<useContext>"
+        CCrossSelection ->  "xsel"
         CSelectorAnd c1 c2 -> pCSelector pSel c1 <> pCSelector pSel c2
         CSelector s -> pSel s
 
 pCBox :: CSelector BoxSelector -> Doc a
 pCBox = pCSelector pBoxSelector
 pCShelf :: CSelector ShelfSelector -> Doc a
-pCShelf = \case 
-   CUseContext -> "with:boxes"
-   c -> pCSelector pShelfSelector c
+pCShelf = pCSelector pShelfSelector
            
 pRules [] = "<empty>"
 pRules ostrats = let -- group stratetegies if possible regardless of diag and orientation

@@ -102,7 +102,7 @@ data CSelector  s = CSelector s
                   | Parent 
                   | Root
                   | CStatement Statement
-                  | CUseContext
+                  | CCrossSelection
                   | CSelectorAnd (CSelector s) (CSelector s)
      deriving (Eq, Show)
      
@@ -112,7 +112,7 @@ showCSelector shows sel = case sel of
     Parent -> "<Parent>"
     Root -> "<Root>"
     CStatement stmt -> "<" <> show stmt <> ">"
-    CUseContext -> "<ctxt>"
+    CCrossSelection -> "<xsel>"
     CSelectorAnd s c -> "(" <> showCSelector shows s <> " " <> showCSelector shows c <> ")"
 
      

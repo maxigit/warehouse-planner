@@ -566,7 +566,7 @@ narrowCSelector cselector ec = do
        Root -> return $ narrowFor sel withAll ec --  . show $  up $ error $ show ec
        SwapContext -> return $ inverseBoxes ec 
        CStatement stmt -> executeStatement ec stmt
-       CUseContext ->  do
+       CCrossSelection ->  do
           selector :: selector <- useContext ec
           narrowed <- narrow selector ec
           return narrowed { ecParent = Just ec }

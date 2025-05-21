@@ -115,7 +115,7 @@ instance (Generic s, Arbitrary s) => Arbitrary (CSelector s) where
              where atom = map return [ SwapContext
                                      , Parent
                                      , Root
-                                     , CUseContext
+                                     , CCrossSelection
                                      ]
    shrink = genericShrink
 
@@ -371,9 +371,9 @@ parsing  = describe "parsing" do
                -- , "tag#"
                -- , "shelf:split * { to> A }"
                -- , "/~"
-               -- , "shelf:resize <useContext> { empty:boxes=yes }"
+               -- , "shelf:resize xsel { empty:boxes=yes }"
                -- , "shelf:full ~ { empty:boxes=yes }"
-               -- , "shelf:resize <useContext> l:0.0 w:{M-X} h:{W01.02} { shelf:full ~ { empty:boxes=yes } }"
+               -- , "shelf:resize xsel l:0.0 w:{M-X} h:{W01.02} { shelf:full ~ { empty:boxes=yes } }"
                -- , "orules+=x0x@"
                -- , "orules+=!x0x@" doesn't exist in real file as the ! disappear in the pretty printing
                --
@@ -383,9 +383,8 @@ parsing  = describe "parsing" do
                -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# } } }"
                -- , "shelf:split -~ { tag# :(orules+=<empty>) { tag# :.~ { tag# :~ { tag# :.~ { tag# } } } } }"
                -- "after ~ orules=!4x9:9x@' for:?!pat/pat"
-              --  "trace:pretty :\"M06.07\" { foreach:box ~.~ { foreach:box ~.~ { ( shelf:full <useContext> { ; pmode=best } , shelf:resize <useContext> l:{E05.06} w:0.0 h:{M08.01} { /-~ } ) } } }":
+              --  "trace:pretty :\"M06.07\" { foreach:box ~.~ { foreach:box ~.~ { ( shelf:full xsel { ; pmode=best } , shelf:resize xsel l:{E05.06} w:0.0 h:{M08.01} { /-~ } ) } } }":
                "/ [AB]" :
-               "with:boxes" :
                []
    forM_ texts \t -> do
        it ("parses " <> unpack t) do

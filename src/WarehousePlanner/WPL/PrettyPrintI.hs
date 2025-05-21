@@ -105,7 +105,7 @@ prettyCSelector indent pretty csel =
         Parent -> "~"
         Root -> ".~"
         CStatement statment ->  "( " <> prettyStatement False (addIndent indent) statment <> "\n" <> indent <> ")"
-        CUseContext ->  "<useContext>"
+        CCrossSelection ->  "xsel"
         CSelectorAnd c1 c2 -> prettyCSelector indent pretty c1 <> prettyCSelector indent pretty c2
         CSelector s -> pretty s
 

@@ -371,7 +371,7 @@ command = asum $ map lexeme [ toggleTag
 
    boxSel = SelectBoxes <$> boxSelector 
    shelfSel = SelectShelves <$> asum [ lexeme "/"  >> shelfSelector
-                                     , lexeme1 "with:boxes" >> return CUseContext
+                                     , lexeme1 "with:boxes" >> return CCrossSelection
                                      , lexeme1 "with" >> cselector parseShelfSelector
                                      ]
    boxRange = do
@@ -406,14 +406,14 @@ withStatement name parser = do
 
 boxSelector :: MParser (CSelector BoxSelector)
 boxSelector =  label "box selector" $ asum
-    [  lexeme1 "in:shelves" >> return CUseContext
+    [  lexeme1 "in:shelves" >> return CCrossSelection
     ,  lexeme1 "in" >> cselector ((\sel -> selectAllBoxes { shelfSelectors = sel} ) . parseSelector)
     , guardLower >> cselector (parseBoxSelectorWithDef False)
     ]
 
 shelfSelector :: MParser (CSelector ShelfSelector)
 shelfSelector = label "shelf selector" $ asum
-     [ lexeme1 "with:boxes" >> return CUseContext
+     [ lexeme1 "with:boxes" >> return CCrossSelection
      , lexeme1 "with" >> cselector parseShelfSelector 
      , cselector (ShelfSelector SelectAnything . parseSelector)
      ]
