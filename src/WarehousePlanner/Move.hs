@@ -592,8 +592,7 @@ addSlotBounds f slices = let
             let newBound = case posOrBoxes of
                                        Left boxes -> case getContents boxes of
                                                        Nothing -> lastBound
-                                                       Just contents -> let newLower = F.maximum  $ addPrevious contents
-                                                                            addPrevious = maybe id NE.cons (lowerB lastBound)
+                                                       Just contents -> let newLower = F.maximum  contents
                                                                         in SlotBounds (Just newLower) Nothing
                                        Right _ -> lastBound
                 in (newBound, (newBound, s))
@@ -601,8 +600,7 @@ addSlotBounds f slices = let
             let newBound = case posOrBoxes of
                                        Left boxes -> case getContents boxes of
                                                        Nothing -> lastBound
-                                                       Just contents -> let newUpper = F.minimum  $ addPrevious contents
-                                                                            addPrevious = maybe id NE.cons (upperB lastBound)
+                                                       Just contents -> let newUpper = F.minimum  contents
                                                                         in bound { upperB = Just newUpper}
                                        Right _ -> bound { upperB = upperB lastBound }
             in (newBound, (newBound, s))
