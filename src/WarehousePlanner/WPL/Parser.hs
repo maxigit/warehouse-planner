@@ -102,7 +102,7 @@ instance Parsable Statement where
                        Just f -> f a
                   ]
              where atom  = asum [ 
-                           try do
+                           do
                              (o:os) <- between (lexeme "(") (lexeme ")") (sepBy1 (lexeme p) (lexeme $ ","))
                              return case os of
                                 [] -> o

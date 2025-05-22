@@ -40,6 +40,7 @@ pStatement = \case
 
    --                 -- in parens $ hsep $ punctuate softline (map pStatement stmts)
    --                 in align $ parens $ hsep $ (map pStatement stmts)
+   PassThrought stmt@(Then _ _) -> "(;" <+> pStatement stmt <+> ")"
    PassThrought stmt -> ";" <+> pStatement stmt
    ForeachBox sel stmt -> "foreach:box" <+> align (vsep [ (pCBox sel)
                                                         , pBlock stmt
