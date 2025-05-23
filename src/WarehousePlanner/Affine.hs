@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-deprecations #-}
+
 module WarehousePlanner.Affine
 ( AffDimension(..)
 , inAffDimension
@@ -45,8 +47,9 @@ affDimensionIntersection :: AffDimension -> AffDimension -> Maybe AffDimension
 affDimensionIntersection a b = let
   bottomLeft = maxDimension [aBottomLeft a, aBottomLeft b]
   topRight = minDimension [aTopRight a, aTopRight b]
+  lesser x y = x < y - 1e-5
   in
-     if and $ zipWith (<) (dimensionToList bottomLeft) (dimensionToList topRight)
+     if and $ zipWith lesser (dimensionToList bottomLeft) (dimensionToList topRight)
      then Just (AffDimension bottomLeft topRight)
      else Nothing
 
