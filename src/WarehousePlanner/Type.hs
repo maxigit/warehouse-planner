@@ -595,6 +595,7 @@ data TagSelector  a
 data MatchPattern
    = MatchFull !Text
    | MatchAnything
+   | MatchOrd Ordering Bool Text
    | MatchGlob !Glob.Pattern
    deriving (Eq, Show)
    -- -| MatchRegext Text

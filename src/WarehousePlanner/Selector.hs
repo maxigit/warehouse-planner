@@ -1,6 +1,7 @@
 module WarehousePlanner.Selector
 ( applyNameSelector
 , applyTagSelectors
+, applyPattern
 , matchName
 , parseBoxSelector
 , parseBoxSelectorWithDef
@@ -10,7 +11,7 @@ module WarehousePlanner.Selector
 , parseNameSelector
 , parseMatchPattern
 , parseTagSelector
-, printSelector, printBoxSelector, printShelfSelector, printTagSelector
+, printSelector, printBoxSelector, printShelfSelector, printTagSelector, printPattern
 , MParser
 , between
 , Selectable(..)
@@ -28,6 +29,7 @@ import Data.Map.Lazy qualified as Map
 import Data.Text (breakOn, uncons, stripPrefix)
 import Control.Monad.Fail 
 import Data.Void(Void)
+import Data.Char (isDigit)
 
 type MParser = P.Parsec Void Text
 
@@ -45,15 +47,20 @@ applyTagSelector (TagHasKey pat) tags = case pat of
   MatchFull key -> key `member` tags
   MatchAnything -> True
   MatchGlob glob -> not (null ks) where ks = filter (Glob.match glob . unpack) (keys tags)
+  MatchOrd ord eq key -> any (matchOrd ord eq key) $ keys tags
 applyTagSelector (TagHasNotKey pat) tags = not $ applyTagSelector (TagHasKey pat) tags
 applyTagSelector (TagIsKey pat) tags = case pat of
   MatchFull key -> lookup key tags == Just mempty
+  MatchOrd ord eq key -> any (matchOrd ord eq key) $ keys $ Map.filter null tags
   MatchAnything -> True
   MatchGlob glob ->  case filter (Glob.match glob . unpack) (keys tags) of
     [__one] -> True
     _ -> False
 applyTagSelector (TagIsKeyAndValues pat valuePats) tags = case pat of
   MatchFull key | Just values <- lookup key tags -> matchesAllAndAll (unRefTag tags valuePats)  values
+  MatchOrd ord eq key | ordTags <- Map.filterWithKey (\k _ -> matchOrd ord eq key k)  tags
+                      , not (null ordTags )
+                      -> applyTagSelector (TagHasValues valuePats) ordTags
   MatchAnything -> True
   MatchGlob glob ->  case filter (Glob.match glob . unpack) (keys tags) of
     [key] | Just values <- lookup key tags -> matchesAllAndAll (unRefTag tags valuePats) values
@@ -81,6 +88,8 @@ unRefTag tags = concatMap \case
          VMatch m -> [m]
          VTag tag -> maybe [] (map MatchFull . setToList) $ lookup tag tags
 
+matchOrd :: Ordering -> Bool -> Text -> Text -> Bool
+matchOrd ord eq key t =  (eq && key == t)  || compare t key == ord
 -- | Check all pattern are matched and matches all values
 matchesAllAndAll :: [MatchPattern] -> Set Text -> Bool
 matchesAllAndAll pats vals = case unmatched pats vals of
@@ -151,6 +160,19 @@ parseTagSelector tag = Just $ case break ('='  ==) tag of
 parseMatchPattern :: Text -> MatchPattern
 parseMatchPattern "" = MatchAnything
 parseMatchPattern "*" = MatchAnything
+parseMatchPattern (uncons -> Just (c1, cs1)) | c1 `elem` ("<>=" :: String)
+                                          , Just (c2, cs2)  <- uncons cs1
+                                          , Just go <- case (c1, c2) of 
+                                                            ('<', '=') -> Just $ MatchOrd LT True cs2
+                                                            ('>', '=') -> Just $ MatchOrd GT True cs2
+                                                            (_, '-') -> Nothing -- range
+                                                            ('<', _) | not (isDigit c2) -> Just $ MatchOrd LT False cs1
+                                                            ('>', _) | not (isDigit c2) -> Just $ MatchOrd GT False cs1
+                                                            --         ^^^^^^^^^^^^^^^
+                                                            --             |
+                                                            --             +---- not a globing range  for example <1-2>
+                                                            _ -> Nothing
+                                          = go
 parseMatchPattern pat | isGlob pat= MatchGlob (Glob.compile $ unpack pat)
 parseMatchPattern pat = MatchFull pat
   
@@ -259,6 +281,8 @@ applyPattern pat value = case pat of
   MatchAnything -> True
   MatchFull value0 -> value == value0
   MatchGlob glob -> Glob.match glob (unpack value)
+  MatchOrd ord eq value0 -> matchOrd ord eq value0 value
+
 -- * Misc
 matchName :: Text -> NameSelector s
 matchName name = NameMatches [MatchFull name]
@@ -295,6 +319,12 @@ printPattern :: MatchPattern -> Text
 printPattern (MatchFull pat) = pat
 printPattern (MatchAnything) = ""
 printPattern (MatchGlob pat) = pack $ Glob.decompile pat
+printPattern (MatchOrd ord eq pat ) = (case (ord, eq) of
+                                         (LT, False) -> "<"
+                                         (GT, False) -> ">"
+                                         (LT, True) -> "<="
+                                         _ -> ">="
+                                      ) <> pat
 
 printVPattern :: ValuePattern -> Text
 printVPattern (VMatch pat) = printPattern pat

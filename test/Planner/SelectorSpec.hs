@@ -7,7 +7,8 @@ import Test.Hspec
 import WarehousePlanner.Base
 import WarehousePlanner.Move
 import WarehousePlanner.Exec
-import WarehousePlanner.Selector(parseBoxNumberSelector, parseBoxSelector, parseShelfSelector)
+import WarehousePlanner.Selector( parseBoxNumberSelector, parseBoxSelector, parseShelfSelector
+                                , parseMatchPattern, applyPattern )
 import Planner.SpecUtil
 
 spec :: Spec
@@ -164,6 +165,33 @@ pureSpec = describe "Selector" do
             selectShelves "/#-top" `shouldReturn` ["S1", "S2"]
          it "negative tag !" do
             selectShelves "/#!top" `shouldReturn` ["S1", "S2"]
+      context "comparing" do
+         let ?boxes = ["S1 A#t=e B#t=f C#t=f D#t"]
+         it "#t=>e" do
+            select "#t=>e" `shouldReturn` ["B", "C"]
+         it "#t=>=e" do
+            select "#t=>=e" `shouldReturn` ["A", "B", "C"]
+   describe "pattern" do
+      context "comparing" do
+         let match pat txt = applyPattern (parseMatchPattern pat) txt
+         forM_ [ ("A", "<B", True)
+               , ("B", "<B", False)
+               , ("C", "<B", False)
+               -- 
+               , ("A", "<=B", True)
+               , ("B", "<=B", True)
+               , ("C", "<=B", False)
+               ----------------
+               , ("A", ">B", False)
+               , ("B", ">B", False)
+               , ("C", ">B", True)
+               -- 
+               , ("A", ">=B", False)
+               , ("B", ">=B", True)
+               , ("C", ">=B", True)
+               ]
+               \(t, pat, res) -> it (unpack $ t <> pat <> " " <> tshow res)
+                                 do match pat t `shouldBe` res
 
 
 

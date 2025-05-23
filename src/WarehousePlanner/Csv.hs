@@ -974,11 +974,13 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
           mergeNames (NameMatches [MatchFull full]) (NameMatches matches) = let
             fullGlob = Glob.compile $ unpack full
             addFull (MatchFull f) = MatchFull (full <> f)
+            addFull (MatchOrd ord eq f) = MatchOrd ord eq (full <> f)
             addFull (MatchAnything) = MatchFull full
             addFull (MatchGlob glob) = MatchGlob (fullGlob <> glob)
             in NameMatches (map addFull matches)
           mergeNames (NameMatches [m@(MatchGlob fullGlob)]) (NameMatches matches) = let
             addFull (MatchFull full) = MatchGlob (fullGlob <> Glob.compile (unpack full))
+            addFull pat@(MatchOrd _ _ _ ) = MatchGlob (fullGlob <> Glob.compile (unpack $ printPattern pat))
             addFull (MatchAnything) = m
             addFull (MatchGlob glob) = MatchGlob (fullGlob <> glob)
             in NameMatches (map addFull matches)
