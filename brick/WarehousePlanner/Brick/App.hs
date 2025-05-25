@@ -48,6 +48,8 @@ import Data.Csv qualified as Csv
 import Data.ByteString.Lazy qualified as BL
 import System.FSNotify as FS
 import Control.Concurrent (forkIO, threadDelay)
+import WarehousePlanner.Styling (Kolor)
+import Data.Char (isPunctuation)
 -- import System.Clipboard(setClipboardString)
 
 type WHApp = B.App AppState WHEvent Resource
@@ -433,7 +435,7 @@ submapHelp cm = let
    --           | (section, handlers) <- section'handlers
    --           ]
   
-whMain :: (AppState -> WH AppState RealWorld ) -> String -> Maybe FilePath -> (IO (Either Text (Warehouse RealWorld))) -> IO ()
+whMain :: (AppState -> WH AppState RealWorld ) -> String -> Maybe FilePath -> (IO (Either Text (Warehouse RealWorld, Map Text Kolor))) -> IO ()
 whMain adjust title watchM reload= do
   -- error $ unpack
   --       $ unlines 
@@ -443,13 +445,13 @@ whMain adjust title watchM reload= do
   --         --                             +---- same as sectionm
   --         ]
   whE <- reload
-  let wh = case whE of
+  let (wh, kolorMap) = case whE of
             Left e -> error (unpack e)
             Right w -> w
   chan <- B.newBChan 1000
   today <- utctDay <$> getCurrentTime
   let startingReload = B.writeBChan chan (EReload ReloadStart)
-  state0 <- execWH wh $ initState today adjust (reload, startingReload) title 
+  state0 <- execWH wh $ initState today adjust (fmap (fmap fst)  $ reload, startingReload) title 
   -- to avoid styles to have the same colors in the same shelf
   -- we sort them by order of first shelves
   let attrs state =
@@ -459,9 +461,10 @@ whMain adjust title watchM reload= do
             : propAttrs state
             <> eventAttrs
             <> highlightAttrs
+      colorAttrMap = fmap attrFromKolor kolorMap
       propAttrs state = 
             case asPropertyAsGradient state of
-               Nothing -> zipWith (\style attr -> (makeStyleAttrName style, attr))
+               Nothing -> zipWith (\style attr -> (makeStyleAttrName style, findWithDefault attr (fst $ break isPunctuation style) colorAttrMap))
                                   (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
                                   (cycle defaultStyleAttrs)
                Just allProps -> let props = if allProps

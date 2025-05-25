@@ -7,6 +7,7 @@ eigthH, eigthV
 , percToAttrName
 , generateLevelAttrs
 , defaultStyleAttrs
+, attrFromKolor
 , makeStyleAttrName
 , succ', pred'
 , styleNameWithAttr
@@ -39,6 +40,7 @@ import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import WarehousePlanner.Summary
 import WarehousePlanner.History (findPreviousSibling, findNextSibling, findNextEvent)
+import WarehousePlanner.Styling (Kolor)
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Table qualified as T
@@ -49,6 +51,7 @@ import WarehousePlanner.Brick.Types
 import Data.Bits ((.|.))
 import Data.List (unfoldr, nub)
 import Data.List qualified as List
+import Data.Colour.SRGB (toSRGB24, RGB(..))
 
 -- * Output Text or Widget
 -- | Output to a text (for file) or Widget
@@ -228,7 +231,10 @@ gradientAttributes names = let
      | (name, fg) <- zip names colors
      ]
 
-
+attrFromKolor :: Kolor -> V.Attr
+attrFromKolor kolor = let RGB r g b = toSRGB24 kolor
+                          fg =  V.color240 r g b
+                      in fg `on` V.black
 
 
 

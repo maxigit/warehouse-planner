@@ -4,6 +4,8 @@ module WarehousePlanner.Styling
 ( readFromPalette
 , stylingFromTags
 , shelfStylingFromTags
+, valueToKolor, valueToKolorE
+, Kolor
 )
 where
 
@@ -12,7 +14,7 @@ import Data.Colour.Palette.ColorSet
 import ClassyPrelude
 import Prelude((!!))
 import WarehousePlanner.Base
-import Data.Colour (Colour,affineCombo)
+import Data.Colour (affineCombo)
 import Data.Colour.Names (readColourName,black,lightgray,white, wheat, darkorange, lightsteelblue, royalblue, steelblue)
 import Data.Colour.SRGB(sRGB24read)
 import Data.Char(isHexDigit,toLower)
@@ -102,7 +104,7 @@ for used double indexing Example
    d3Colors41-1  first  colour of the dark version of d3Color4
    --       ^ dark
 ::rST -}
-colorFromTag :: HasTags tagged => Map Text Text -> tagged -> Text -> Maybe (Colour Double)
+colorFromTag :: HasTags tagged => Map Text Kolor -> tagged -> Text -> Maybe Kolor
 colorFromTag colorMap box tag = let
   colors = mapMaybe (valueToColour colorMap) (getTagValues box tag)
   in case colors of
@@ -138,7 +140,7 @@ the box to red. Those properties are
 -  ``bar-gauge-y`` if present, offset the bar gauge by y times the box
    index.
 ::rST -}
-stylingFromTags ::  Map Text Text -> Box s -> BoxStyling
+stylingFromTags ::  Map Text Kolor -> Box s -> BoxStyling
 stylingFromTags colorMap box = let
   foreground = black `fromMaybe` (colorFromTag colorMap) box "fg"
   background = wheat `fromMaybe` (colorFromTag colorMap) box "bg"
@@ -153,7 +155,7 @@ stylingFromTags colorMap box = let
   offsetBarGaugeY = getTagValuem box "bar-gauge-y" >>= readMay
   in BoxStyling{..}
 
-shelfStylingFromTags :: Map Text Text -> Shelf s -> ShelfStyling
+shelfStylingFromTags :: Map Text Kolor -> Shelf s -> ShelfStyling
 shelfStylingFromTags colorMap shelf = let
   isSeparator = tagIsPresent shelf "sep"
   foreground = black `fromMaybe` colorFromTag colorMap shelf "fg"
@@ -169,17 +171,21 @@ shelfStylingFromTags colorMap shelf = let
   
 -- | Transform tag value to colours
 -- Try to read standard name or use hexadecimal
-valueToColour :: Map Text Text -> Text -> Maybe (Colour Double)
+valueToColour :: Map Text Kolor -> Text -> Maybe Kolor
 valueToColour colorMap t = case  dropWhile (== '_') t of
   "" -> Nothing
-  col -> valueToColour' (findWithDefault col col colorMap)
-valueToColour' t = case t of
+  col -> lookup col colorMap <|>  valueToKolor col
+
+valueToKolor :: Text -> Maybe Kolor
+valueToKolor t = case t of
   "" -> Nothing
   cs | all isHexDigit cs && length cs == 3 -> Just $ sRGB24read (unpack cs >>= (replicate 2))
   cs | all isHexDigit cs && length cs == 6 -> Just $ sRGB24read (unpack cs)
   dropped -> readFromPalette dropped
              <|> readColourName (map Data.Char.toLower $ unpack dropped)
 
+valueToKolorE :: Text -> Either Text Kolor
+valueToKolorE t = maybe (Left $ t <> " is not a valid colour name") Right (valueToKolor t)
 -- | blend all colours equaly.
 -- folding using normal blend would not work as
 -- the weight of the last colour would count for half of everything

@@ -157,9 +157,9 @@ THW,ffffff
 LTW,2b7497
 AIW,6b54b8
 WEY,dbff0c
-NGN,2B3920
+NGN,2b3920
 XIM,888888
-RSM,D4D4D4
+RSM,d4d4d4
 :END:
 * Import initial
 ** Import 

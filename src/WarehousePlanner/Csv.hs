@@ -50,6 +50,7 @@ import Data.Text.IO(readFile)
 import GHC.Utils.Monad (mapAccumLM)
 import System.FilePath.Glob qualified as Glob
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
+import WarehousePlanner.Styling (Kolor, valueToKolorE)
 
 --  | Read shelves and allow formula between different shelves
 --  example A,,100,200,100,
@@ -723,12 +724,16 @@ Example
    good,green
    :END:
 ::rST -}
-readColourMap :: FilePath -> IO (Map Text Text)
+readColourMap :: FilePath -> IO (Map Text Kolor)
 readColourMap filename = do
     csvData <- BL.readFile filename
     case Csv.decode Csv.HasHeader csvData of
        Left err -> error $ "File:" <> filename <> " " <> err
-       Right rows -> return $ mapFromList $ Vec.toList rows
+       Right rows -> let m = mapFromList $ Vec.toList rows
+                      in case traverse valueToKolorE m of
+                         Left e -> error $ unpack e
+                         Right m' -> return m'
+
 
     
 readWarehouse :: FilePath -> IO (WH (RunsWithId s) s)

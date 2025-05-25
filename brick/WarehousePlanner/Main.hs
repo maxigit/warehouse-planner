@@ -14,6 +14,7 @@ import WarehousePlanner.Org
 import WarehousePlanner.Selector
 import WarehousePlanner.Brick.App
 import WarehousePlanner.Report
+import WarehousePlanner.Csv (readColourMap)
 import Options.Applicative
 import Data.Text.IO qualified as Text
 import Control.Monad.State (get)
@@ -249,7 +250,10 @@ defaultMainWith expandSection = do
                in whMain setParam title watchPath do
                       execE <- getExec
                       case execE of
-                        Right (exec,_) -> fmap Right $  exec get
+                        Right (exec, scenario) -> do 
+                                          contentPath <- contentPathM
+                                          colourMaps <- liftIO $ mapM (readColourMap . contentPath) (sColourMap scenario)
+                                          fmap (Right . (, mconcat $ reverse colourMaps) ) $  exec get
                         Left e -> return $ Left e
        PrettyPrintWPL -> do
           content <- case oFiles of
