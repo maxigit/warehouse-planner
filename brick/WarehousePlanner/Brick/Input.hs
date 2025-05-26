@@ -28,6 +28,7 @@ renderInput Input{..} = help <=> (mode <+> ed) where
           ISelectShelves -> str "?"
           ISelectProperty -> str "[Prop]"
           ISelectTag -> str "#"
+          ISelectShelfProperty -> str "/[Prop]"
   ed = renderEditor renderLines True iEditor
   renderLines  = hBox . map txt 
   help = vBox $ [ str "bo" <+> hl "X" <+> str "sel. "

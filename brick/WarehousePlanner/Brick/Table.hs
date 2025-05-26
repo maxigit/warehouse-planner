@@ -143,8 +143,9 @@ baySummaryToTable collapseHeight depthMode renderBoxes ssum@ShelvesSummary{..} =
           _ -> table tableCells
   -- where shelfBar s = {- txt (Summary.sName s) <=> -} hBox [renderS m s | m <- [minBound .. maxBound] ] -- [ SVMaxLength .. SVMaxHeight] ]
   -- where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
-  where shelfBar s = txt (Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
+  where shelfBar s = withShelfAttr (shelfPropValue s )  (txt $ Summary.sName s) <+>  hBox [renderS m s | m <- [ SVMaxLength .. SVMaxHeight] ] -- renderBestBarDef s
   -- where shelfBar s = renderS SVVolume s <+> txt (Summary.sName s) <+>  renderBestBarDef s
+
 
 
 -- * Runs
@@ -157,15 +158,36 @@ runsToTable propm hrange expandShelf mode current runs = selectTable current mkR
                         , (if current == i then visible . reportExtent (sName run) else id )
                           $ (attr run i $ padLeftRight 1 $ txt (sName run))
                         , case (mode, expandShelf) of
-                            (ViewSummary sview, True) -> let sviews = case sview of 
-                                                                       SVVolume ->  SVVolume :| [SVMaxLength .. SVMaxHeight]
-                                                                       --           ^^^^^ volume is always better than the other
-                                                                       --           so it should pick up volume as best
-                                                                       --           unless one dimension is sticking out.
-                                                                       s -> pure s
-                                                         in renderHorizontalSummary ((<+> (txt " ")) . hBox . map (renderBestBar sviews)
-                                                                           . sDetailsList)
-                                                                         run
+                            (ViewSummary sview, True) ->
+                                 let sviews = case sview of 
+                                                   SVVolume ->  SVVolume :| [SVMaxLength .. SVMaxHeight]
+                                                   --           ^^^^^ volume is always better than the other
+                                                   --           so it should pick up volume as best
+                                                   --           unless one dimension is sticking out.
+                                                   s -> pure s
+                                 in renderHorizontalSummary ((<+> (txt " ")) . hBox
+                                                                             . map (\s -> case shelfPropValueM s of
+                                                                                                   Just prop | sview == SVVolume -> withShelfAttr prop (txt $ toUpper $ take 1 prop)
+                                                                                                             | otherwise ->
+                                                                                                                  let r = ratio (fromSummary sview) s
+                                                                                                                      p8 = floor $ 8 * r
+                                                                                                                      c = case sview of 
+                                                                                                                            SVMaxLength -> eigthH p8
+                                                                                                                            _ -> eigthV p8
+                                                                                                                            -- _ -> chr $ 48 + p8
+                                                                                                                      in withShelfAttr prop $ str [c]
+                                                                                                   _ | sview /= SVVolume
+                                                                                                     , Just _ <- shelfPropValueM runs -> let r = ratio (fromSummary sview) s
+                                                                                                                                             p8 = floor $ 8 * r
+                                                                                                                                             c = case sview of 
+                                                                                                                                                   SVMaxLength -> eigthH p8
+                                                                                                                                                   _ -> eigthV p8
+                                                                                                                                                   -- _ -> chr $ 48 + p8
+                                                                                                                                             in withAttr grayName_  $ str [c]
+                                                                                                   _ -> renderBestBar sviews s
+                                                                                          )
+                                                   . sDetailsList)
+                                                 run
                             (ViewSummary _, False) -> renderHorizontalSummary renderBestBarDef
                                                                          run
                             (ViewHistory, _) -> hBox [ withShelfHLStatus bay $ historyIndicator (str "_") (isInSummary $ sName run) hrange (seEvents $ sExtra bay)

@@ -91,6 +91,7 @@ data WHEvent = ENextMode
              | ESetBoxOrder BoxOrder
              | ESetProperty Text
              | ESetBoxTitle Text
+             | ESetShelfProperty Text
              -- 
              | ENextHLRun
              | EPrevHLRun
@@ -197,6 +198,33 @@ makeAppShelvesSummary state = do
                                                (toList boxes)
                                                [1..]
 
+                        let shelfPropValueM = case fmap (splitOn "#") (asShelfProperty state) of
+                                               Just tags -> case  mapMaybe getTagShelfValue tags of
+                                                               [] -> Nothing
+                                                               vals -> Just $ mconcat vals
+                                               _ -> Nothing
+                            getTagShelfValue tag = case getTagValuem shelf tag of
+                                                    Just v -> Just v
+                                                    Nothing | tagIsPresent shelf tag -> Just tag
+                                                            | tag == "min" -> Just $ printDim (minDim shelf)
+                                                            | tag == "max" -> Just $ printDim (maxDim shelf)
+                                                            | tag == "flow" -> Just $ tshow $ flow shelf
+                                                            | tag == "filling" -> Just $ tshow $ shelfFillingStrategy shelf
+                                                            | tag == "bottom" -> Just $ tshow $ bottomOffset shelf
+                                                            | tag == "volume" -> Just $ tshow $ volume $ minDim shelf
+                                                            | tag == "height" -> Just $ tshow $ dHeight $ minDim shelf
+                                                            | tag == "length" -> Just $ tshow $ dLength $ minDim shelf
+                                                            | tag == "width" -> Just $ tshow $ dWidth $ minDim shelf
+                                                            | tag == "height (max)" -> Just $ tshow $ dHeight $ maxDim shelf
+                                                            | tag == "length (max)" -> Just $ tshow $ dLength $ maxDim shelf
+                                                            | tag == "width (max)" -> Just $ tshow $ dWidth $ maxDim shelf
+                                                            | tag == "volume (max)" -> Just $ tshow $ volume $ maxDim shelf
+                                                            | Just notag <- stripPrefix "-" tag , not (tagIsPresent shelf notag) -> Just $ "NO" <> tag
+                                                    _ -> Nothing
+                                                    -- TODO generalize box expansion to shelves.
+                            shelfPropValueMap = case shelfPropValueM of
+                                                  Nothing -> mempty
+                                                  Just value -> singletonMap (snd $ span isPunctuation value) (makeBoxesSummary $ toList boxes)
                         let propValueMap = Map.fromListWith (<>) propValues
                         boxesWithProp <- mapM findBox (_shelfBoxes shelf)
                         boxHistorys <- mapM getBoxHistory boxesWithProp
@@ -212,7 +240,7 @@ makeAppShelvesSummary state = do
                                                return (DiffStatus { dsBoxIn=setFromList $ map shelfName namesIn
                                                                   , dsBoxOut=setFromList $ map shelfName namesOut
                                                                   , ..})
-                        return $ SummaryExtra propValueMap (eventsWithName) mempty mempty
+                        return $ SummaryExtra propValueMap shelfPropValueMap (eventsWithName) mempty mempty
 
 updateHLStatus :: (ZHistory1 Box RealWorld -> HighlightStatus) -> (Text -> HighlightStatus) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld)) -> Runs SumVec (SumVec (ZHistory1 Box RealWorld))
 updateHLStatus fbox fshelf theRuns = let
@@ -296,6 +324,7 @@ initState asToday adjust asReload title = do
   state <- adjust $ AppState
                   { asCurrentRun=0, asCurrentBay = 0, asCurrentShelf = 0, asCurrentBox = 0
                   , asProperty = Nothing, asSelectedPropValue = Nothing, asCurrentPropValue = 0, asCurrentRunPropValues = mempty
+                  , asShelfProperty = Nothing
                   , asPropertyAsGradient = Nothing
                   , asPropertyGlobal = False
                   , asShowSelected = True
@@ -390,6 +419,7 @@ whApp extraAttrs =
                                                                        ]
                   propLayout prop = [ hBoxB [ runsSideBar s
                                                  , stylesSideBar s
+                                                 , shelvesSideBar s
                                                  , vBoxB [ oneLineBox
                                                          , B.padBottom B.Max (debugShelf s)
                                                          ]
@@ -457,21 +487,34 @@ whMain adjust title watchM reload= do
   let attrs state =
             selectedAttr
             -- : bayNameAN
-            : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr
+            : boldAttr : tagNameAttr : virtualTagAttr : specialTagAttr : grayAttr
             : propAttrs state
+            <> shelfPropAttrs state
             <> eventAttrs
             <> highlightAttrs
-      colorAttrMap = fmap attrFromKolor kolorMap
+      getColor = colorFromName kolorMap . splitOn ";"
       propAttrs state = 
             case asPropertyAsGradient state of
-               Nothing -> zipWith (\style attr -> (makeStyleAttrName style, findWithDefault attr (fst $ break isPunctuation style) colorAttrMap))
+               Nothing -> zipWith (\style attr -> (makeStyleAttrName style, maybe attr (`B.on` V.black) (getColor style)))
                                   (keys $ sePropValues $ sExtra $ asShelvesSummary  state)
                                   (cycle defaultStyleAttrs)
                Just allProps -> let props = if allProps
                                             then keys $ sePropValues $ sExtra $ asShelvesSummary  state
                                             else map fst $ toList $ asCurrentRunPropValues state
-                                in (makeStyleAttrName "∅", grayAttr)
+                                in (makeStyleAttrName "∅", snd grayAttr)
                                    : (gradientAttributes $ filter (/= "∅") props)
+      shelfPropAttrs state =
+          case asShelfProperty state of
+             Nothing ->  []
+             Just _ | Just allProps <- asPropertyAsGradient state  ->
+                             let props = if allProps
+                                          then keys $ seShelfPropValues $ sExtra $ asShelvesSummary  state
+                                          else keys $ seShelfPropValues $ sExtra $ currentRun state
+                              in (makeStyleAttrName "∅", snd grayAttr)
+                                 : (gradientShelfAttributes $ filter (/= "∅") props)
+             Just _ -> zipWith (\shelf attr -> (makeShelfAttrName shelf, maybe attr (`B.on` V.black) (getColor shelf)))
+                                  (keys $ seShelfPropValues $ sExtra $ asShelvesSummary  state)
+                                  (cycle defaultStyleAttrs)
   -- start a channel so we can send event
   let vtyBuilder = V.mkVty V.defaultConfig
   initialVty <- vtyBuilder
@@ -593,6 +636,25 @@ keyBindingGroups =  groups
                                                                , mk 'g' (ESetProperty "$[@ogroup]") "overlapping group"
                                                                ])
                                              ]
+                  ),(Just ("Shelf Property", 'P'), [("Preset",       [ mk 'p' (EStartInputSelect ISelectShelfProperty) "manual"
+                                                               , mk 's' (ESetShelfProperty "summary") "summary"
+                                                               , mk 'b' (ESetShelfProperty "bg") "background"
+                                                               , mk 't' (ESetShelfProperty "top") "is top"
+                                                               , mk 'B' (ESetShelfProperty "bottom") "bottom"
+                                                               , mk 'f' (ESetShelfProperty "flow") "flow"
+                                                               , mk 'm' (ESetShelfProperty "min") "min dimension"
+                                                               , mk 'M' (ESetShelfProperty "max") "max dimension"
+                                                               , mk 'l' (ESetShelfProperty "length") "length"
+                                                               , mk 'h' (ESetShelfProperty "height") "height"
+                                                               , mk 'w' (ESetShelfProperty "width") "width"
+                                                               , mk 'S' (ESetShelfProperty "filling") "filling strategy"
+                                                               , mk 'v' (ESetShelfProperty "volume") "volume (min)"
+                                                               , mk 'V' (ESetShelfProperty "Volume Max") "volume (max)"
+                                                               , mk 'L' (ESetShelfProperty "length (max)") "length (max)"
+                                                               , mk 'H' (ESetShelfProperty "height (max)") "height (max)"
+                                                               , mk 'W' (ESetShelfProperty "width (max)") "width (max)"
+                                                               ])
+                                             ]
                   ),(Just ("Title", 't'), [("Preset",          [ mk 't' (EStartInputSelect ISelectTag) "manual"
                                                                , mk 'S' (ESetBoxTitle "${style}") "style"
                                                                , mk 's' (ESetBoxTitle "${style:-}") "short style"
@@ -687,6 +749,7 @@ whHandleEvent ev = do
                                     ISelectBoxes -> setBoxSelection result
                                     ISelectShelves -> setShelfSelection result
                                     ISelectProperty -> setProperty result
+                                    ISelectShelfProperty -> setShelfProperty result
                                     ISelectTag -> setTagAll result
                                modify \s -> s  { asInput = Nothing 
                                                , asInputHistory = Map.alter (pure . maybe [result] (result:)) 
@@ -772,6 +835,7 @@ handleWH ev =
                                                          else False
                                                in setBoxOrder boxOrder rev s
          ESetProperty prop -> setProperty prop
+         ESetShelfProperty prop -> setShelfProperty prop
          ESetBoxTitle "" -> do 
                                propm <- gets asProperty
                                case propm of 
@@ -1238,12 +1302,25 @@ runsSideBar state@AppState{..} = B.renderTable $ runsToTable (currentPropValue s
 stylesSideBar :: AppState -> B.Widget Text
 stylesSideBar state@AppState{..} = 
   B.renderTable $ stylesToTable (selectedPropValue state) asCurrentPropValue $ fmap fst asCurrentRunPropValues
+
+shelvesSideBar :: AppState -> B.Widget Text
+shelvesSideBar state@AppState{..} = 
+  case asShelfProperty of
+     Nothing -> B.emptyWidget
+     Just _ -> let props = case asPropertyGlobal of
+                               False -> keys $ seShelfPropValues $ sExtra $ currentRun state
+                               _ -> keys $ seShelfPropValues $ sExtra asShelvesSummary
+               in B.vBox $ fmap shelfNameWithAttr props
 -- renderStatus :: AppState -> Widgets
 renderStatus state@AppState{..} = let
   mode = B.str (show asSummaryView)
   legend = B.hBox [ B.withAttr (percToAttrName r 0) (B.str [eigthV i]) | i <- [0..9] , let r = fromIntegral i / 8 ]
   in B.vLimit 2 $ B.vBox [ B.hBox $ [ B.withAttr specialTagName_ $ B.str $ show asCurrentRun 
                                     , B.txt (sName $ currentShelf state)  -- current shelf
+                                     B.<+> maybe (B.emptyWidget) (\p -> B.txt $ " " <> p <> "=") asShelfProperty
+                                     B.<+> case shelfPropValueM (currentShelf state) of
+                                                Nothing -> B.emptyWidget
+                                                Just v -> withShelfAttr v ( B.str "#" B.<+> B.txt v)
                                     , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                                     , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                                     , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
@@ -1278,7 +1355,7 @@ debugShelf state = let
            -- $ B.columnBorders False
            $ B.surroundingBorder False
            $ B.table [  [  B.str (show m)
-                        , B.txt ( sName ssum) B.<+> B.str " " B.<+> renderS m ssum
+                        , withShelfAttr (shelfPropValue ssum) (B.txt ( sName ssum) ) B.<+> B.str " " B.<+> renderS m ssum
                         , B.str $ printf "%02.0f%%" (r  * 100)
                         -- , B.str $ show ( fromSummary m $ sBoxSummary ssum) <> "/"
                         --         <> show ( fromSummary m $ sShelvesSummary ssum)
@@ -1391,6 +1468,12 @@ setProperty value = do
    modify \s -> s { asProperty = valuem }
    execute (return ())
 
+setShelfProperty :: Text -> B.EventM Resource AppState ()
+setShelfProperty value = do
+   let valuem = if null value then Nothing else Just value
+   modify \s -> s { asShelfProperty = valuem }
+   execute (return ())
+
 -- | Set a tag to all boxes (not only selected ones)
 setTagAll :: Text -> B.EventM n AppState ()
 setTagAll tag = execute do
@@ -1423,6 +1506,7 @@ makeInputData :: InputMode -> AppState -> InputData
 makeInputData imode state = let
     idInitial = case imode of 
                   ISelectProperty -> "$"
+                  ISelectShelfProperty -> ""
                   ISelectTag -> "ctitle=$"
                   ISelectShelves -> "/"
                   ISelectBoxes -> "*"

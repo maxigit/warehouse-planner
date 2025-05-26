@@ -7,11 +7,11 @@ eigthH, eigthV
 , percToAttrName
 , generateLevelAttrs
 , defaultStyleAttrs
-, attrFromKolor
 , makeStyleAttrName
+, makeShelfAttrName
 , succ', pred'
-, styleNameWithAttr
-, withStyleAttr
+, styleNameWithAttr , withStyleAttr
+, shelfNameWithAttr , withShelfAttr
 , selectedAttr, selectAttr
 , bayNameAN
 , hBoxB, vBoxB
@@ -30,17 +30,18 @@ eigthH, eigthV
 , withHLStatus
 , highlightAttrs
 , withBoxHLStatus, withShelfHLStatus
-, boxPropValue
-, gradientAttributes
+, boxPropValue, shelfPropValue, shelfPropValueM
+, gradientAttributes, gradientShelfAttributes
 , Rendered(..)
-, grayAttr
+, grayAttr, grayName_
+, colorFromName
 ) where
 
 import ClassyPrelude hiding (on)
 import WarehousePlanner.Base
 import WarehousePlanner.Summary
 import WarehousePlanner.History (findPreviousSibling, findNextSibling, findNextEvent)
-import WarehousePlanner.Styling (Kolor)
+import WarehousePlanner.Styling (Kolor, blendKolors, valueToColour)
 import Brick
 import Brick.Widgets.Border
 import Brick.Widgets.Table qualified as T
@@ -51,7 +52,9 @@ import WarehousePlanner.Brick.Types
 import Data.Bits ((.|.))
 import Data.List (unfoldr, nub)
 import Data.List qualified as List
+import Data.List.NonEmpty (NonEmpty(..))
 import Data.Colour.SRGB (toSRGB24, RGB(..))
+import Data.Char (isPunctuation)
 
 -- * Output Text or Widget
 -- | Output to a text (for file) or Widget
@@ -177,6 +180,14 @@ styleNameWithAttr :: Rendered w => Text -> w
 styleNameWithAttr style = withStyleAttr style (txtR style)
 withStyleAttr style w = withDefAttrR (makeStyleAttrName style) w
 
+
+makeShelfAttrName :: Text -> AttrName
+makeShelfAttrName shelf = attrName "shelf" <> attrName (unpack shelf)
+
+shelfNameWithAttr :: Rendered w => Text -> w
+shelfNameWithAttr shelf = withShelfAttr shelf (txtR shelf)
+withShelfAttr shelf w = withDefAttrR (makeShelfAttrName shelf) w
+
 defaultStyleAttrs :: [V.Attr]
 defaultStyleAttrs = [ with $ fg `on` V.black
                     | with <- id : [] -- map withStyle [{- V.underline, -} V.italic]
@@ -196,9 +207,15 @@ defaultStyleAttrs = [ with $ fg `on` V.black
                     ]
                     
 gradientAttributes :: [Text] -> [(AttrName, V.Attr)]
-gradientAttributes [] = []
-gradientAttributes [name] = [(makeStyleAttrName name, V.red `on` V.black)]
-gradientAttributes names = let
+gradientAttributes = gradientAttributes' makeStyleAttrName
+
+gradientShelfAttributes :: [Text] -> [(AttrName, V.Attr)]
+gradientShelfAttributes = gradientAttributes' makeShelfAttrName
+
+
+gradientAttributes' _ [] = []
+gradientAttributes' mk [name] = [(mk name, V.red `on` V.black)]
+gradientAttributes' mk names = let
   n = length names
   ng = n `div` 4
   ny = ng
@@ -227,14 +244,14 @@ gradientAttributes names = let
          <> yellowToRed
          <> redToPurple
          <> purpleToCyan
-  in [ (makeStyleAttrName name,  fg `on` V.black)
+  in [ (mk name,  fg `on` V.black)
      | (name, fg) <- zip names colors
      ]
 
-attrFromKolor :: Kolor -> V.Attr
-attrFromKolor kolor = let RGB r g b = toSRGB24 kolor
-                          fg =  V.color240 r g b
-                      in fg `on` V.black
+fromKolor :: Kolor -> V.Color
+fromKolor kolor = let RGB r g b = toSRGB24 kolor
+                  in V.color240 r g b
+
 
 
 
@@ -258,6 +275,9 @@ virtualTagName_ = attrName "vtagname"
 virtualTagAttr = (virtualTagName_, (V.red `on` V.black))
 specialTagName_ = attrName "stagname"
 specialTagAttr = (specialTagName_, (V.yellow `on` V.black))
+
+grayAttr = (grayName_, V.color240 150 150 150 `on` V.black)
+grayName_ = attrName "gray"
 
 hBoxB :: [Widget n] -> Widget n
 hBoxB = hBox . intersperse vBorder 
@@ -317,7 +337,6 @@ eventAttrs = [(ev, V.black `on` fg)
              -- , (eventOut, V.brightRed `on` V.red )
              -- ]
 
-grayAttr = V.color240 150 150 150 `on` V.black
 
 highlightAttrs :: [(AttrName, V.Attr)]
 highlightAttrs = [ (attrName "hl" , V.defAttr `V.withStyle` V.reverseVideo)
@@ -397,4 +416,20 @@ withBoxHLStatus ssum = withAttr (hlToAttr . seBoxHLStatus $ sExtra ssum)
 
 boxPropValue :: Box s -> Text
 boxPropValue box = fromMaybe (boxStyle box) $ getTagValuem box "@prop"
+
+shelfPropValue :: ShelvesSummary SummaryExtra f a -> Text
+shelfPropValue s =  fromMaybe (sName s) $ shelfPropValueM s
+shelfPropValueM :: ShelvesSummary SummaryExtra f a -> Maybe Text
+shelfPropValueM s =  headMay $  keys $ seShelfPropValues (sExtra s)
+
+
+
+colorFromName :: Map Text Kolor ->  [Text] -> Maybe V.Color
+colorFromName _colorMap [] = Nothing
+colorFromName colorMap cs =  let findColor c = asum [ valueToColour colorMap t
+                                                    | t <- [ c, toLower c, fst (break isPunctuation c), fst (break isPunctuation (toLower c)) ]
+                                                    ]
+                             in case mapMaybe findColor cs  of
+                                      [] -> Nothing
+                                      (co: cos) -> Just $ fromKolor $ blendKolors (co :| cos)
 

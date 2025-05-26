@@ -11,7 +11,7 @@ module WarehousePlanner.Brick.Types
 , selectFromSumVec
 , currentRun, currentBay, currentShelf, currentBox, currentBoxHistory
 , selectedPropValue, currentPropValue
-, sPropValues
+, sPropValues, sShelfPropValues
 , SummaryExtra(..)
 , asHistoryRange
 , asViewMode
@@ -83,6 +83,7 @@ data InputMode = ISelectBoxes
                | ISelectShelves
                | ISelectProperty 
                | ISelectTag
+               | ISelectShelfProperty
      deriving (Show, Eq, Ord, Enum, Bounded)
 
 data Input = Input { iEditor :: Editor Text Resource
@@ -107,6 +108,7 @@ type SumVec = ShelvesSummary SummaryExtra Vector
 
 data SummaryExtra = SummaryExtra 
      { sePropValues :: Map Text Summary
+     , seShelfPropValues :: Map Text Summary
      , seEvents :: Map Event (DiffStatus (Set Text)) -- ^ event which happen to items 
      , seBoxHLStatus :: HighlightStatus
      , seShelfHLStatus :: HighlightStatus
@@ -115,12 +117,16 @@ data SummaryExtra = SummaryExtra
       
 instance Semigroup SummaryExtra where
   e1 <> e2 = SummaryExtra (unionWith (<>) (sePropValues e1) (sePropValues e2))
+                          (unionWith (<>) (seShelfPropValues e1) (seShelfPropValues e2))
                           (unionWith (<>) (seEvents e1) (seEvents e2))
                           (seBoxHLStatus e1 <> seBoxHLStatus e2)
                           (seShelfHLStatus e1 <> seShelfHLStatus e2)
 
 sPropValues :: ShelvesSummary SummaryExtra a b -> Map Text Summary
 sPropValues = sePropValues . sExtra
+
+sShelfPropValues :: ShelvesSummary SummaryExtra a b -> Map Text Summary
+sShelfPropValues = seShelfPropValues . sExtra
 
 data AppState = AppState
      { -- asViewMode  :: ViewMode
@@ -136,6 +142,7 @@ data AppState = AppState
      , asCurrentBox :: Int
      ---------
      , asProperty :: Maybe Text
+     , asShelfProperty :: Maybe Text
      , asSelectedPropValue :: Maybe Text
      , asCurrentPropValue :: Int 
      , asCurrentRunPropValues :: Vector (Text, Summary)

@@ -6,6 +6,8 @@ module WarehousePlanner.Styling
 , shelfStylingFromTags
 , valueToKolor, valueToKolorE
 , Kolor
+, blendKolors
+, valueToColour
 )
 where
 
@@ -18,6 +20,7 @@ import Data.Colour (affineCombo)
 import Data.Colour.Names (readColourName,black,lightgray,white, wheat, darkorange, lightsteelblue, royalblue, steelblue)
 import Data.Colour.SRGB(sRGB24read)
 import Data.Char(isHexDigit,toLower)
+import Data.List.NonEmpty (NonEmpty(..))
 
 
 readFromPalette :: Text -> Maybe Kolor
@@ -109,9 +112,7 @@ colorFromTag colorMap box tag = let
   colors = mapMaybe (valueToColour colorMap) (getTagValues box tag)
   in case colors of
   [] -> Nothing
-  [col] -> Just col
-  (col:cols) -> let w = 1/fromIntegral (length colors) -- ALL colors
-                in Just $ affineCombo (map (w,) cols) col
+  (col:cos) -> Just $ blendKolors (col :| cos)
 
 -- | Extract styling information from tag as properties
 -- use fg= foregroung
@@ -189,3 +190,8 @@ valueToKolorE t = maybe (Left $ t <> " is not a valid colour name") Right (value
 -- | blend all colours equaly.
 -- folding using normal blend would not work as
 -- the weight of the last colour would count for half of everything
+blendKolors :: NonEmpty Kolor -> Kolor
+blendKolors colors = case colors of
+  col :| [] -> col
+  (col :| cols) -> let w = 1/fromIntegral (length colors) -- ALL colors
+                   in affineCombo (map (w,) cols) col
