@@ -19,7 +19,7 @@ import WarehousePlanner.Base
 import Data.Colour (affineCombo)
 import Data.Colour.Names (readColourName,black,lightgray,white, wheat, darkorange, lightsteelblue, royalblue, steelblue)
 import Data.Colour.SRGB(sRGB24read)
-import Data.Char(isHexDigit,toLower)
+import Data.Char(isHexDigit,toLower, isUpper)
 import Data.List.NonEmpty (NonEmpty(..))
 
 
@@ -180,8 +180,8 @@ valueToColour colorMap t = case  dropWhile (== '_') t of
 valueToKolor :: Text -> Maybe Kolor
 valueToKolor t = case t of
   "" -> Nothing
-  cs | all isHexDigit cs && length cs == 3 -> Just $ sRGB24read (unpack cs >>= (replicate 2))
-  cs | all isHexDigit cs && length cs == 6 -> Just $ sRGB24read (unpack cs)
+  cs | all isHexDigit cs && all (not . isUpper) cs && length cs == 3 -> Just $ sRGB24read (unpack cs >>= (replicate 2))
+  cs | all isHexDigit cs && all (not . isUpper) cs && length cs == 6 -> Just $ sRGB24read (unpack cs)
   dropped -> readFromPalette dropped
              <|> readColourName (map Data.Char.toLower $ unpack dropped)
 

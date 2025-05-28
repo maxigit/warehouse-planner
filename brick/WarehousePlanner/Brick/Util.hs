@@ -54,7 +54,6 @@ import Data.List (unfoldr, nub)
 import Data.List qualified as List
 import Data.List.NonEmpty (NonEmpty(..))
 import Data.Colour.SRGB (toSRGB24, RGB(..))
-import Data.Char (isPunctuation)
 
 -- * Output Text or Widget
 -- | Output to a text (for file) or Widget
@@ -429,6 +428,7 @@ colorFromName _colorMap [] = Nothing
 colorFromName colorMap cs =  let findColor c = asum [ valueToColour colorMap t
                                                     | t <- [ c, toLower c, fst (break isPunctuation c), fst (break isPunctuation (toLower c)) ]
                                                     ]
+                                 isPunctuation c = c `elem` ("/;#" :: String)
                              in case mapMaybe findColor cs  of
                                       [] -> Nothing
                                       (co: cos) -> Just $ fromKolor $ blendKolors (co :| cos)
