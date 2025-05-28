@@ -288,7 +288,7 @@ justifyRight box shelf slices = let
 justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
 justifyAlign used box slices = let
    (_,poss) = partitionEitherSlices slices
-   in case F.toList poss of
+   in case sortOn (dLength . pOffset) $ F.toList poss of
         [] -> slices
         firstSlot:_ -> -- find all the used box which are left of the first slot
                       {-
