@@ -122,7 +122,8 @@ eigthH _ = '▶'
 
 
 data Level = Empty -- blue
-           | Low  -- green
+           | Low  -- cyan
+           | LowMedium -- green
            | Medium -- yellow
            | Used -- orange
            | Full -- dark red
@@ -131,8 +132,9 @@ data Level = Empty -- blue
 
 percToLevel :: Double -> Level
 percToLevel x | x <= 1e-2 = Empty
-percToLevel x | x <= 0.30 = Low
-percToLevel x | x <= 0.60 = Medium
+percToLevel x | x <= 0.25 = Low
+percToLevel x | x <= 0.50 = LowMedium
+percToLevel x | x <= 0.75 = Medium
 percToLevel x | x <= 0.90 = Used
 percToLevel x | x <= 1 = Full
 percToLevel _             = TooMuch
@@ -154,9 +156,10 @@ generateLevelAttrs =
     
 levelToColor v = \case
   Empty -> V.color240 0 v4 v4 -- cyan
-  Low -> V.color240 0 v 0 -- green
+  Low -> V.color240 0 v v  -- cyan
+  LowMedium -> V.color240 0 v 0 --green
   Medium -> V.color240 v v 0  -- yellow
-  Used -> V.color240 v v2 0 -- orange
+  Used -> V.color240 v v4 0 -- orange
   Full -> V.color240 v2 0 0 -- red
   TooMuch -> V.color240 v 0 v -- red
   where v2 = v `div` 2
