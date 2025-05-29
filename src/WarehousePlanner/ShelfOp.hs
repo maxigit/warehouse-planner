@@ -18,8 +18,10 @@ module WarehousePlanner.ShelfOp
 import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Selector
+import WarehousePlanner.Affine
 import Data.List (scanl')
 import Data.List qualified as List
+import Data.List.NonEmpty(nonEmpty)
 import WarehousePlanner.Expr qualified as E
 import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
@@ -329,6 +331,7 @@ newShelfWithFormula dimW dimW' bottomW boxo strategy name tags = do
 -- Empty ref = shelf itself
 -- orientation, the box according to the given orientation
 -- content 
+-- @TODOC
 dimForSplit :: Maybe (Box s) -> Shelf s -> Text -> WH ShelfDimension s
 dimForSplit boxm shelf ref = 
   case unpack ref of
@@ -349,7 +352,44 @@ dimForSplit boxm shelf ref =
       return $ toSDim (rotate o (_boxDim box))
     [c] | Just box <- boxm ->
       return $ toSDim (rotate (readOrientation c) (_boxDim box))
+    _ | Just boxSel <- stripPrefix "<" ref -> select LT boxSel 
+      | Just boxSel <- stripPrefix "="  ref -> select EQ boxSel
+      | Just boxSel <- stripPrefix ">"  ref -> select GT boxSel
     _ -> dimFromRef (shelfName shelf) ref
   where toSDim (Dimension l w h) = let
                 dim = Dimension (l - 1e-6) (w - 1e-6) (h - 1e-6)
                 in ShelfDimension dim dim 0 dim
+        select ord ref = do
+                     boxes <- findBoxByShelf shelf
+                     let  sel = case ref of 
+                                    "" | Just box <- boxm  -> parseSelector (boxStyle box)
+                                    "%" | Just box <- boxm  -> parseSelector (boxStyle box)
+                                    --  no ref given, use given box style
+                                    _ -> parseSelector ref
+                          (selected, other) = partition (applySelector sel)  boxes
+                          selectedA = map boxAffDimension selected
+                          otherA = map boxAffDimension other
+                     case nonEmpty selectedA of
+                                     Nothing | ord == LT -> shelfDimension shelf
+                                             | otherwise -> return $ ShelfDimension mempty mempty 0 mempty
+                                     Just selectANN  -> let
+                                         selectBound =  sconcat selectANN
+                                         minL = dLength $ aBottomLeft selectBound
+                                         maxL = dLength $ aTopRight selectBound
+                                         leftOf aff = dLength (aTopRight aff) <= minL
+                                         rightOf aff = dLength (aBottomLeft aff) >= maxL
+                                         affE = case ord of
+                                                    LT -> case nonEmpty $ filter leftOf otherA of
+                                                           Nothing -> Left $ shelfDimension shelf
+                                                           Just aff -> Right $ sconcat aff
+                                                    EQ -> Right $ selectBound
+                                                    GT -> case nonEmpty $ filter rightOf otherA of
+                                                             Nothing -> Left $ return $ ShelfDimension mempty mempty 0 mempty
+                                                             Just aff -> Right $ sconcat aff
+                                         in case affE of 
+                                                Left r -> r
+                                                Right aff -> return $ ShelfDimension (aBottomLeft aff) (aTopRight aff) 0 mempty
+
+
+
+
