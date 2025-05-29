@@ -26,8 +26,6 @@ data AffDimension = AffDimension { aBottomLeft , aTopRight :: Dimension }
      
 instance Semigroup AffDimension where 
          (AffDimension bl tr)  <> (AffDimension bl' tr') = AffDimension (minDimension [bl, bl']) (maxDimension [tr, tr'])
-instance Monoid AffDimension where
-  mempty = AffDimension mempty mempty
   
 -- * Affine
 -- | Check weither a point is within

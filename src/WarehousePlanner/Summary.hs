@@ -12,7 +12,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.Type
 import GHC.Generics
-import Data.List.NonEmpty (NonEmpty(..))
+import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Data.Text (commonPrefixes)
 import WarehousePlanner.Affine
 
@@ -102,7 +102,9 @@ makeShelfSummary shelf = Summary{..} where
 makeBoxesSummary :: [Box s] -> Summary
 makeBoxesSummary boxes = Summary{..} where
   suVolume = sum $ map boxVolume boxes
-  maxCorner = mconcat $ map boxAffDimension boxes
+  maxCorner = case nonEmpty $ map boxAffDimension boxes of
+                  Nothing -> AffDimension mempty mempty
+                  Just cs -> sconcat cs
   Dimension suMaxLength suMaxWidth suMaxHeight = aTopRight maxCorner
   suSurfaceLW = boxesSurface dLength dWidth boxes
   suSurfaceLH = boxesSurface dLength dHeight boxes
