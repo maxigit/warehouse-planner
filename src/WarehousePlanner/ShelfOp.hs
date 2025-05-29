@@ -61,16 +61,19 @@ splitShelf shelf@Shelf{..} ls ws hs = do
         let newMax = Dimension (adjustMax ll dLength gDim)
                                (adjustMax lw dWidth gDim)
                                (adjustMax lh dHeight gDim)
+            tagOps = [("/" <> shelfName, SetTag)
+                     , ("/l", SetValues [tshow $ 1 + il])
+                     , ("/w", SetValues [tshow $ 1 + iw])
+                     , ("/h", SetValues [tshow $ 1 + ih])
+                     , (suffix, SetTag) -- include "/" so first shelf => /aaa
+                     ]
+            suffix = pack $ "/" <> map (\i -> chr $ i + 97) [ il, iw , ih ]
         if (il, iw, ih) == (0,0,0)
         then -- original shelf
-          updateShelf (\s -> s {minDim =  gDim, maxDim = newMax}) shelf
+          updateShelf (\s -> s {minDim =  gDim, maxDim = newMax}) shelf >>= updateShelfTags tagOps 
         else do -- new one
           -- create it
           let newMin = gDim
-              suffix = pack $ "/" <> map (\i -> chr $ i + 97) ( hasSuffix il ll ++ hasSuffix iw lw ++ hasSuffix ih lh)
-              -- hasSuffix 1 True = [] -- if there is no split to need to create a suffix
-              hasSuffix i _ = [i]
-
 
           new <- newShelf (shelfName <> suffix)
                           (Just $ intercalate "#" $ flattenTags shelfTag )
@@ -79,6 +82,7 @@ splitShelf shelf@Shelf{..} ls ws hs = do
                           (dHeight gOffset)
                           shelfBoxOrientator
                           shelfFillingStrategy
+                  >>= updateShelfTags tagOps
           -- steal all boxes which belongs to it
           shelfBoxes <- findBoxByShelf shelf
           forM shelfBoxes (\box -> do
@@ -178,8 +182,13 @@ unSplitShelf shelf = do
                                    ds
        newMin = Dimension (maximumEx mls) (maximumEx mws) (maximumEx mhs)
        newMax = newMin <> Dimension ldiff wdiff hdiff
-  updateShelf (\s -> s {minDim = newMin, maxDim = newMax }) shelf
-  return shelf
+       tagOps = [ ("/" <> shelfName shelf, RemoveTag)
+                , ("/l", RemoveTag)
+                , ("/w", RemoveTag)
+                , ("/h", RemoveTag)
+                , ("/aaa", RemoveTag)
+                ]
+  updateShelf (\s -> s {minDim = newMin, maxDim = newMax }) shelf >>= updateShelfTags tagOps
 
 -- | Extract the n index from a child nmae
 -- index starts a 1
