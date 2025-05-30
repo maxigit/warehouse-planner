@@ -412,7 +412,9 @@ executeCommand ec command = case command of
       newss <- forM shelves \shelf -> do
            [ls, ws, hs] <-
              zipWithM (\exprs defAcc -> do
-                forM exprs \exp -> do
+                forM exprs \ar -> 
+                    forM ar
+                      \exp -> do
                    let exWithRef = replaceRef <$> exp
                        replaceRef ref = case P.parse (parseRef $ defAcc . sMinD) (unpack ref) ref of
                                              Left err -> error $ "Split shelf parameter invalid: "
@@ -425,7 +427,7 @@ executeCommand ec command = case command of
              )
              [les, wes, hes]
              ds
-           splitShelf shelf ls ws hs
+           splitShelf shelf (absRelsToRels ls) (absRelsToRels ws) (absRelsToRels hs)
       newEc <- executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
       return newEc { ecShelves = ecShelves ec } -- ^ remove newly created shelves.
     ---------

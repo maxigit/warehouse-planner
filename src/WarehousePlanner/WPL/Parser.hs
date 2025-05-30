@@ -22,6 +22,7 @@ import WarehousePlanner.Base
 import Data.Monoid (Last(..))
 import Data.Map qualified as Map
 import WarehousePlanner.Expr
+import WarehousePlanner.ShelfOp(AbsRel(..))
 import Data.Text (splitOn)
 import Control.Monad.Combinators.Expr (makeExprParser, Operator(..))
 
@@ -426,9 +427,18 @@ instance Parsable Text
 instance Parsable (Expr Text) where
    p = lexeme exprParser
    
+instance Parsable (AbsRel (Expr Text)) where
+   p = asum [ do
+              "!" 
+              e <- p
+              return $ Abs e
+            , Rel <$> p
+            ]
 instance Parsable [Expr Text] where
   p = lexeme $ exprParser `P.sepBy1` lexeme ":"
 
+instance Parsable [AbsRel(Expr Text)] where
+  p = lexeme $ p `P.sepBy1` lexeme ":"
 str :: MParser Text
 str = asum [ pack <$> (char '"' >> manyTill L.charLiteral (char '"' ))
            , do "{" ; fail "string are not allowed to start with {"

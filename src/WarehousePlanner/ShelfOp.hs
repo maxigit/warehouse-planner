@@ -14,6 +14,8 @@ module WarehousePlanner.ShelfOp
 , dimToFormula
 , ShelfDimension(..)
 , dimForSplit
+, AbsRel(..)
+, absRelsToRels
 ) where
 import ClassyPrelude
 import WarehousePlanner.Base
@@ -400,4 +402,21 @@ dimForSplit boxm shelf ref =
 
 
 
+data AbsRel a = Abs a | Rel a deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
+-- | Transform a list of absolute relative number
+-- into a list of relative suitable for toSplit
+-- @ Rel 100 Rel 50 Abs 160 => 100 50 10
+-- @
+absRelsToRels :: [AbsRel Double] -> [Double]
+absRelsToRels rs = runDiff $ scanl' addR 0 rs where
+   addR acc (Rel r) = acc + r
+   addR acc (Abs a) = max a acc
+   runDiff xs = [  d
+                | (current, previous) <- zip (drop 1 xs) xs
+                --                           ^^^^^^^^^
+                --                               |
+                --                               +-- 0 is dropped
+                , let d = current - previous
+                , d > 0
+                ]

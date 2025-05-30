@@ -14,6 +14,7 @@ import Prettyprinter
 import Prettyprinter.Render.Text
 import Data.Map qualified as Map
 import WarehousePlanner.Expr(Expr(..))
+import WarehousePlanner.ShelfOp(AbsRel(..))
 import Data.Char (isUpper)
 
 -- import WarehousePlanner.WPL.PrettyPrint qualified as P
@@ -267,8 +268,12 @@ pExpr = \case
               ExtraE _ -> pExpr e
               e -> "(" <> pExpr e <> ")"
 
-pExprs  :: [Expr Text] -> Doc a
-pExprs exs = hcat $ punctuate colon $ map pExpr exs 
+pExprs  :: [AbsRel (Expr Text)] -> Doc a
+pExprs exs = hcat $ punctuate colon $ map pAExpr exs 
+
+pAExpr :: AbsRel (Expr Text) -> Doc a
+pAExpr (Abs e) = "!" <> pExpr e
+pAExpr (Rel e) =  pExpr e
 
 opt :: (Eq a, HasDefault a) => Text -> (a -> Doc d) -> Maybe a -> Doc d
 

@@ -8,6 +8,7 @@ import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Type
 import WarehousePlanner.Expr
+import WarehousePlanner.ShelfOp(AbsRel(..))
 import WarehousePlanner.WPL.PrettyPrint
 import WarehousePlanner.Selector (parseBoxSelector, printTagSelector, parseTagSelector, parseMatchPattern)
 import Text.Megaparsec qualified as P
@@ -154,6 +155,11 @@ instance Arbitrary (BoxNumberSelector) where
 deriving instance Generic (Expr Text)
 instance Arbitrary (Expr Text) where
    arbitrary = genericArbitrary
+   shrink = genericShrink
+   
+deriving instance Generic (AbsRel a)
+instance Arbitrary a => Arbitrary (AbsRel a) where
+   arbitrary = oneof [Abs <$> arbitrary, Rel <$> arbitrary]
    shrink = genericShrink
 
 deriving instance Generic (NameSelector a)

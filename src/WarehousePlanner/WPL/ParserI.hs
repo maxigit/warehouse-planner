@@ -18,6 +18,7 @@ import Data.Char
 import Data.List.NonEmpty (NonEmpty(..))
 import Control.Monad(fail)
 import Data.Foldable qualified as F
+import WarehousePlanner.ShelfOp(AbsRel(..))
 
 -- dbg _ = id
 dbg :: Show a => String -> MParser a -> MParser a
@@ -367,7 +368,9 @@ command = asum $ map lexeme [ toggleTag
      l <- splitExpr
      w <- splitExpr
      h <- splitExpr
-     return $ SplitShelf selector bselectm l w h
+     return $ SplitShelf selector bselectm (map Rel l)
+                                           (map Rel w)
+                                           (map Rel h)
 
    boxSel = SelectBoxes <$> boxSelector 
    shelfSel = SelectShelves <$> asum [ lexeme "/"  >> shelfSelector

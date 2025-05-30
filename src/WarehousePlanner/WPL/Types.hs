@@ -6,6 +6,7 @@ import ClassyPrelude
 import WarehousePlanner.Type
 import WarehousePlanner.Selector(printBoxSelector, printShelfSelector)
 import WarehousePlanner.Expr (Expr(..))
+import WarehousePlanner.ShelfOp(AbsRel)
 import Data.List.NonEmpty as NE
 
 
@@ -37,7 +38,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
              | ResizeShelfFull (CSelector ShelfSelector) Statement
              | ResizeShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) (Expr Text) (Expr Text) (Expr Text) Statement
              | ResizeBox BoxMode (CSelector BoxSelector) Statement
-             | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [Expr Text] [Expr Text] [Expr Text] Statement
+             | SplitShelf (CSelector ShelfSelector) (Maybe (CSelector BoxSelector)) [AbsRel (Expr Text)] [AbsRel (Expr Text)] [AbsRel (Expr Text)] Statement
              | SwapBoxes (CSelector BoxSelector) (Maybe Text) [Text]
              | FillShelves { cLoc, cPos :: (Maybe Text)
                            , cStmt ::   Statement
