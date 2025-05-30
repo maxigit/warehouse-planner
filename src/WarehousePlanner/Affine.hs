@@ -1,9 +1,5 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
-
 module WarehousePlanner.Affine
 ( AffDimension(..)
-, inAffDimension
-, affDimensionContains
 , affDimensionOverlap
 , affDimensionIntersection
 , boxAffDimension
@@ -28,35 +24,45 @@ instance Semigroup AffDimension where
          (AffDimension bl tr)  <> (AffDimension bl' tr') = AffDimension (minDimension [bl, bl']) (maxDimension [tr, tr'])
   
 -- * Affine
--- | Check weither a point is within
--- the rectange boundaries (excluding top and right edge)
-inAffDimension :: Dimension -> AffDimension -> Bool
-inAffDimension (Dimension x y z ) rec = let
-  Dimension x' y' z' = aBottomLeft rec
-  Dimension x'' y'' z'' = aTopRight rec
-  in x' <= x && x < x''
-    && y' <= y && y < y''
-    && z' <= z && z < z''
     
 -- | Check weither two rectangle overlaps
 affDimensionOverlap :: AffDimension -> AffDimension -> Bool
 affDimensionOverlap a b = isJust $ affDimensionIntersection a b
+-- | Intersection of two aff if not null
 affDimensionIntersection :: AffDimension -> AffDimension -> Maybe AffDimension
 affDimensionIntersection a b = let
   bottomLeft = maxDimension [aBottomLeft a, aBottomLeft b]
   topRight = minDimension [aTopRight a, aTopRight b]
-  lesser x y = x < y - 1e-5
-  in
-     if and $ zipWith lesser (dimensionToList bottomLeft) (dimensionToList topRight)
+  --       ^^^^^^^^^^^
+  --       The intersection is just the min/max of all coordinate
+  --       
+  --           ---+
+  --              |
+  --         +--- |     ---  <-- min bottom
+  --         | ===+  => ===  <-- max bottom
+  --         | 
+  --         +===
+  --            
+  --           ---+
+  --              |
+  --           ===+     ===  <-- min bottom
+  --         +---    => ---  <-- max bottom   REJECTED min > max
+  --         | 
+  --         +===
+  --            
+  --         +--- 
+  --         |     
+  --         | ---+     ---  <-- min bottom
+  --         | ===+  => ===  <-- max bottom
+  --         | 
+  --         +===
+  --            
+  --  We just need to check it is not null or flat
+  positive x y = x > y + 1e-5
+  in if and $ zipWith positive (dimensionToList topRight) (dimensionToList bottomLeft)
      then Just (AffDimension bottomLeft topRight)
      else Nothing
 
--- | Check if a rectance contains another one
--- We need only to check the two extreme corners
-affDimensionContains :: AffDimension -> AffDimension -> Bool
-affDimensionContains big small =
-    inAffDimension (aBottomLeft small) big && inAffDimension (aTopRight small <> Dimension 1e-6 1e-6 1e-6) big
-  
 affineToDimensions :: AffDimension -> [Dimension]
 affineToDimensions rec = let
   Dimension x' y' z' = aBottomLeft rec

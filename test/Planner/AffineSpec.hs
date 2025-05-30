@@ -18,25 +18,15 @@ pureSpec = do
 affDimensions :: Spec
 affDimensions = do
   describe "AffDimensions" do
-   context "inAffDimension" do
-     let aff = AffDimension bottomLeft topRight
-         bottomLeft = Dimension 10 20 30
-         topRight = Dimension 20 30 50 
-     it "True in the middle" do
-        inAffDimension (Dimension 15 25 40) aff `shouldBe` True
-     it "True in the left edge" do
-        inAffDimension (Dimension 10 25 40) aff `shouldBe` True
-     it "False in the right edge" do
-        inAffDimension (Dimension 15 25 50) aff `shouldBe` False
-     it "False outside" do
-        inAffDimension (Dimension 35 25 40) aff `shouldBe` False
    context "overlap" do
-     --         
-     --           C       D
-     --                       N
-     --       P       M
-     --         
-     --    O      A       B
+     --                             Q                         Q
+     --           C-------D------                 C    D
+     --           |       |   N
+     --       P---+---M---+------               P    M    N
+     --       |   |       |
+     --    O--+---A-------B------             O   A    B
+     --    
+     --       Front                               Left
      let o = Dimension 0 0 0
          p = Dimension 5 5 1
          a = Dimension 10 0 0
@@ -44,25 +34,40 @@ affDimensions = do
          c = Dimension 10 30 10
          d = Dimension 20 30 10
          m = Dimension 15 15 5
-         n = Dimension 25 15 7
+         n = Dimension 25 16 7
+         q = Dimension 500 500 500
      context "intersection" do
        it "OC & OP == OP" do
           affDimensionIntersection (AffDimension o c) (AffDimension p c) `shouldBe` Just (AffDimension p c)
        it "OM & AC" do
           affDimensionIntersection (AffDimension o m) (AffDimension a d) `shouldBe` Just (AffDimension a (Dimension 15 15 5))
-     it "overlaps" do
-       affDimensionOverlap (AffDimension o m) (AffDimension a d) `shouldBe` True
-     it "... reversed" do
-       affDimensionOverlap (AffDimension a d) (AffDimension o m) `shouldBe` True
-     it "doesn't do" do
-       affDimensionOverlap (AffDimension o c) (AffDimension m d) `shouldBe` False
-       affDimensionOverlap (AffDimension m d) (AffDimension o c) `shouldBe` False
-     it "doesn't if edge touches" do
-        affDimensionOverlap (AffDimension o c) (AffDimension a m) `shouldBe` False
-        affDimensionOverlap (AffDimension a m) (AffDimension o c) `shouldBe` False
-     it "True for crosses" do
-        affDimensionOverlap (AffDimension p n) (AffDimension a d) `shouldBe` True
-        affDimensionOverlap (AffDimension a d) (AffDimension p n) `shouldBe` True
+       it "OQ & MN == MN (inside)" do -- mn
+          affDimensionIntersection (AffDimension o q) (AffDimension m n) `shouldBe` Just (AffDimension m n)
+     context "overlaps" do
+             it "OM & AD" do
+               affDimensionOverlap (AffDimension o m) (AffDimension a d) `shouldBe` True
+             it "... reversed" do
+               affDimensionOverlap (AffDimension a d) (AffDimension o m) `shouldBe` True
+             it "doesn't do" do
+               affDimensionOverlap (AffDimension o c) (AffDimension m d) `shouldBe` False
+               affDimensionOverlap (AffDimension m d) (AffDimension o c) `shouldBe` False
+             it "doesn't if edge touches" do
+                affDimensionOverlap (AffDimension o c) (AffDimension a m) `shouldBe` False
+                affDimensionOverlap (AffDimension a m) (AffDimension o c) `shouldBe` False
+             it "doesn't if edge touches" do
+                affDimensionOverlap (AffDimension o c) (AffDimension a m) `shouldBe` False
+                affDimensionOverlap (AffDimension a m) (AffDimension o c) `shouldBe` False
+             it "True for crosses" do
+                affDimensionOverlap (AffDimension p n) (AffDimension a d) `shouldBe` True
+                affDimensionOverlap (AffDimension a d) (AffDimension p n) `shouldBe` True
+             it "does if inside" do
+                affDimensionOverlap (AffDimension a m) (AffDimension a d) `shouldBe` True
+                affDimensionOverlap (AffDimension a d) (AffDimension a m) `shouldBe` True
+             it "does if fully inside" do
+                affDimensionOverlap (AffDimension o q) (AffDimension m n) `shouldBe` True
+                affDimensionOverlap (AffDimension m n) (AffDimension o q) `shouldBe` True
+             it "does if itself" do
+                affDimensionOverlap (AffDimension a m) (AffDimension a m) `shouldBe` True
       
 -- * Tiling
 tiling :: Spec

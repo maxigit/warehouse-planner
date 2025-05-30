@@ -142,12 +142,11 @@ ds = [dLength, dWidth, dHeight]
 -- and return the relative offset
 dimInSplit :: Split -> Dimension -> Maybe Dimension
 dimInSplit Split{..} dim = let
-  diff f = f dim - f gOffset
-  diffs@[l, w, h] = map diff ds
-  in if and $ zipWith (<=) diffs (map ($ gDim) ds) 
-            ++ map (>=0) diffs
-      then Just $ Dimension l w h
-      else Nothing
+  splitAff = AffDimension gOffset $ gOffset <> gDim
+  e = 2*1e-5
+  box = AffDimension dim (dim <> Dimension e e e)
+  in fmap (\a -> aBottomLeft a <> invert gOffset) $ affDimensionIntersection splitAff box
+
 
 
 -- | Unsplit a shelf by combining all its "children<
@@ -366,7 +365,7 @@ dimForSplit boxm shelf ref =
       | Just boxSel <- stripPrefix ">"  ref -> select GT boxSel
     _ -> dimFromRef (shelfName shelf) ref
   where toSDim (Dimension l w h) = let
-                dim = Dimension (l - 1e-6) (w - 1e-6) (h - 1e-6)
+                dim = Dimension l w h -- (l - 1e-6) (w - 1e-6) (h - 1e-6)
                 in ShelfDimension dim dim 0 dim
         select ord ref = do
                      boxes <- findBoxByShelf shelf
