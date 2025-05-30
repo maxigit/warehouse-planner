@@ -11,6 +11,7 @@ import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P hiding (space)
 import Data.Void(Void)
+import Control.Monad.Combinators.Expr (makeExprParser, Operator(..))
 
 type MParser = P.Parsec Void Text
 
@@ -38,11 +39,23 @@ parseExprE :: Text -> Either _ParseError (Expr Text)
 parseExprE s =  P.parse (spaces *> exprParser <* P.eof) (unpack s) s 
 
 exprParser :: MParser (Expr Text)
-exprParser   = (P.try (parseMMOp ))
-                    <|> parseTerminalExpr 
+exprParser   = makeExprParser parseTerminalExpr table where
+  table = [ [ binary "*" MulE
+            , binary "/" DivE
+            ]
+
+          , [ binary "+" AddE
+            , binary "-" SubE
+            ]
+
+          , [ binary "&" MinE
+            , binary "|" MaxE
+            ]
+        ]
+  binary op f = InfixL (f <$ op)
 
 parseTerminalExpr :: MParser (Expr Text)
-parseTerminalExpr  = parseVal <|> parseExtra <|> parseGroup 
+parseTerminalExpr  = parseVal <|> parseExtra  <|> parseGroup 
 parseVal :: MParser (Expr Text)
 parseVal = do
       neg <- P.option False (P.char '-' $> True)
@@ -58,48 +71,6 @@ parseGroup  = do
   _ <- P.char ')'
   return e
 
-parseMulOp :: MParser (Expr Text)
-parseMulOp  = P.try p <|> parseTerminalExpr  where
-  p = do
-    e1 <- parseTerminalExpr 
-    spaces
-    op <- oneOf "*/"
-    spaces
-    e2 <- parseMulOp
-    let c = case op of
-            '*' -> MulE
-            '/' -> DivE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
-parseMMOp :: MParser (Expr Text)
-parseMMOp  = P.try p <|> parseAddOp  where
-  p = do
-    e1 <- parseAddOp 
-    spaces
-    op <- oneOf "|&"
-    spaces
-    e2 <- parseMMOp 
-    let c = case op of
-            '&' -> MinE
-            '|' -> MaxE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
-parseAddOp :: MParser (Expr Text)
-parseAddOp = P.try p <|> parseMulOp where
-  p = do
-    e1 <- parseMulOp 
-    spaces
-    op <- oneOf "+-"
-    spaces
-    e2 <- parseAddOp
-    let c = case op of
-            '+' -> AddE
-            '-' -> SubE
-            _ -> error "should not happen"
-    return $ c e1 e2
-
 parseExtra :: MParser (Expr Text)
 parseExtra = do
   _ <- P.char '{'
@@ -107,9 +78,6 @@ parseExtra = do
   _ <- P.char '}'
   return $ ExtraE extra
 
-
-oneOf :: Text -> MParser Char
-oneOf t = P.satisfy (`elem` t)
 
 -- parseRef :: MParser (Expr (RefE 
 -- parseRef accessor = do
