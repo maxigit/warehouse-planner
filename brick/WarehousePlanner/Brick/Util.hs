@@ -219,33 +219,34 @@ gradientAttributes' _ [] = []
 gradientAttributes' mk [name] = [(mk name, V.red `on` V.black)]
 gradientAttributes' mk names = let
   n = length names
-  ng = n `div` 4
+  ng = n `div` 4 -- number of bands
+  nb = ng
   ny = ng
-  nr = ny
-  np = n - ng - ny - nr
+  -- nr = ny
+  nr = n - ng - ny - nb
   range _ end 0 _ = end
   range start end nr i = start + ((end - start) * i `div` nr)
-  greenToYellow = [ V.srgbColor (range 0 255 ng i) 255 0
+  cyanToGreen = [ V.srgbColor 0 255 (range 255 0 nb i) -- 0 255 255 -> 0 255 0
+                  | i <- [0..nb-1]
+                  ]
+  greenToYellow = [ V.srgbColor (range 0 255 ng i) 255 0 -- 0 255 0 -> 255 255 0
                   | i <- [0..ng-1]
                   ]
-  yellowToRed = [ V.srgbColor 255 (range 255 0 ny i) 0
+  yellowToRed = [ V.srgbColor 255 (range 255 0 ny i) 0 -- 255 255 0 -> 255 0 0 
                 | i <- [0..ny-1]
                 ]
-  redToPurple = [ V.srgbColor 255 0 (range 0 255 nr i)
+  redToPurple = [ V.srgbColor 255 0 (range 0 255 nr i) -- 255 0 0 -> 255 0 255
                 | i <- [0..nr-1]
-                ]
-  purpleToCyan = [ V.srgbColor (range 255 0 (np-1) i) (range 0 255 (np-1) i) 255
-                | i <- [0..np-1]
                 ]
                 --                          ^^^^
                 -- so that we reach 255,
                 -- not needed for the other range
                 -- because the last color of a range
                 -- is the first of the next one
-  colors = greenToYellow
+  colors = cyanToGreen
+         <> greenToYellow
          <> yellowToRed
          <> redToPurple
-         <> purpleToCyan
   in [ (mk name,  fg `on` V.black)
      | (name, fg) <- zip names colors
      ]
