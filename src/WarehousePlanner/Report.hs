@@ -9,6 +9,7 @@ module WarehousePlanner.Report
 , generateGenericReport
 , bestBoxesFor
 , bestFitReport
+, tagShelvesWithFitData
 , bestShelvesFor
 , bestAvailableShelvesFor
 , bestHeightForShelf
@@ -47,7 +48,7 @@ import Data.Set qualified as Set
 import Data.Sequence qualified as Seq
 import Data.List qualified as List
 import Text.Tabular as Tabul
-import Data.Text(replace)
+import Data.Text(replace, breakOn)
 import Data.List.NonEmpty (NonEmpty(..))
 import WarehousePlanner.SimilarBy
 import Data.Foldable qualified as F
@@ -291,7 +292,32 @@ bestFitReport limitToBoxNb boxes shelves = do
         percent a b = pack $ printf "%.0f" (a*100/b)
         fi = fromIntegral @_ @Double
                      
-  
+
+-- | Tag all shelves with the result of fit report.
+-- Tag keys are by default "style-tag"
+tagShelvesWithFitData :: Maybe (Text -> Text -> Text) -> [Map Text  Text] -> WH () s
+tagShelvesWithFitData adjustTagM rows = do 
+   let adjustTag = fromMaybe (\style key -> style <> "-" <> key) adjustTagM
+       keyKeys =  ["shelf", "style", "part"]
+   forM_ rows  \fitMapWithRank -> do
+       -- we need to remove the "rank" which is there to keep keys in initial order
+       -- (vs alphabetical)
+       let fitMap = Map.fromList [ (key, value)
+                                 | (rank'key, value) <- Map.toList fitMapWithRank
+                                 , let key = drop 1 $ snd $ breakOn ":" rank'key
+                                 ]
+       case traverse (flip lookup fitMap) keyKeys of
+           Just [shelfname, style, partitionMode] ->  do
+                shelves <- findShelfBySelector (Selector (matchName shelfname) []) >>= mapM findShelf
+                forM_ shelves \shelf -> do
+                    let tagOps = [ ( adjustTag style key , SetValues [value])
+                                 | (tag, value) <- Map.toList fitMap
+                                 , tag `notElem` keyKeys
+                                 , "debug" `isPrefixOf` tag == False
+                                 , let key = partitionMode <> "-" <> tag 
+                                 ]
+                    void $ updateShelfTags tagOps shelf
+           _ -> error (show fitMap) -- return ()
 
 -- | How many with depth = 1
 

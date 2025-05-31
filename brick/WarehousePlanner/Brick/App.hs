@@ -128,6 +128,7 @@ data WHEvent = ENextMode
              | EYankSelectedShelves EditMode
              | EYankBestForSelected Bool EditMode
              | EYankTags EditMode -- ^ editor all tag values
+             | ETagBestShelf Bool -- tag shelves with fit data result
              -- Select shelf Level
              | ESelectShelfLevel (Maybe Text)
 
@@ -668,9 +669,10 @@ keyBindingGroups =  groups
                                                                ])
                                            ]
                   ),(Just ("Yank", 'y'), [("Yank",        [ mk key (mkEvent Yank) $ "yank " <> desc 
-                                                               | (key, mkEvent, desc)  <- yanks
-                                                               -- , mk 'B' (EYankBoxDetails True) "edit box details" 
-                                                               ])
+                                                          | (key, mkEvent, desc)  <- yanks
+                                                          -- , mk 'B' (EYankBoxDetails True) "edit box details" 
+                                                          ]
+                                                          )
                                            ]
                   ),(Just ("Edit", 'e'), [("Edit",        [ mk key (mkEvent UseVim) $ "edit " <> desc 
                                                                | (key, mkEvent, desc)  <- yanks
@@ -684,6 +686,41 @@ keyBindingGroups =  groups
                                                                | (key, mkEvent, desc)  <- yanks
                                                                ])
                                            ]
+                  ),(Just ("Fit ", 'f'), [("Fit full.\n- required corresponds to space need to fill the shelves with as many boxes as possible.\n- fitted what we need to fit only.\n- used what's is already in the shelf.",
+                                                         [ mk 'f' (ETagBestShelf True) "tag shelves with fit data (limit 'required' to  existinng boxes)"
+
+                                                         , mk 'F' (ETagBestShelf False) "tag shelves with fit data (for as many boxes as possible)"
+                                                         , mk 'l' (ESetShelfProperty "@full-l100") "required length ratio"
+                                                         , mk 'w' (ESetShelfProperty "@full-w100") "required width ratio"
+                                                         , mk 'h' (ESetShelfProperty "@full-h100")           "required height ratio"
+                                                         , mk 'L' (ESetShelfProperty "@full-wh100")          "required width × height ratio"
+                                                         , mk 'W' (ESetShelfProperty "@full-lh100")          "required length × height ratio"
+                                                         , mk 'H' (ESetShelfProperty "@full-lw100")          "required length × width ratio"
+                                                         , mk 'p' (ESetShelfProperty "@full-picking_shelves") "number of picking shelves needed"
+                                                         , mk 's' (ESetShelfProperty "@full-shelves_needed")  "number of shelves needed"
+                                                         , mk 'r' (ESetShelfProperty "@full-rvolmin100")      "min required volume ratio"
+                                                         , mk 'R' (ESetShelfProperty "@full-rvolmax100")      "max required volume ratio"
+                                                         , mk 'v' (ESetShelfProperty "@full-fvolmin100")      "fitted volume / min shelf ratio"
+                                                         , mk 'V' (ESetShelfProperty "@full-fvolmax100")      "fitted volume / max shelf ratio"
+                                                         , mk 'u' (ESetShelfProperty "@full-fVused")      "fitted volume / alread used "
+                                                         ])
+                                         ]
+                  ),(Just ("Fit right ", 'F'), [("fit right",      
+                                                         [ mk 'l' (ESetShelfProperty "@right-l100") "required length ratio"
+                                                         , mk 'w' (ESetShelfProperty "@right-w100") "required width ratio"
+                                                         , mk 'h' (ESetShelfProperty "@right-h100")           "required height ratio"
+                                                         , mk 'L' (ESetShelfProperty "@right-wh100")          "required width × height ratio"
+                                                         , mk 'W' (ESetShelfProperty "@right-lh100")          "required length × height ratio"
+                                                         , mk 'H' (ESetShelfProperty "@right-lw100")          "required length × width ratio"
+                                                         , mk 'p' (ESetShelfProperty "@right-picking_shelves") "number of picking shelves needed"
+                                                         , mk 's' (ESetShelfProperty "@right-shelves_needed")  "number of shelves needed"
+                                                         , mk 'r' (ESetShelfProperty "@right-rvolmin100")      "min required volume ratio"
+                                                         , mk 'R' (ESetShelfProperty "@right-rvolmax100")      "max required volume ratio"
+                                                         , mk 'v' (ESetShelfProperty "@right-fvolmin100")      "fitted volume / min shelf ratio"
+                                                         , mk 'V' (ESetShelfProperty "@right-fvolmax100")      "fitted volume / max shelf ratio"
+                                                         , mk 'u' (ESetShelfProperty "@right-fVused")      "fitted volume / alread used "
+                                                         ])
+                                         ]
                   )
                   ]
          mk binding event desc = ( [B.bind binding], event, desc, handleWH event)
@@ -1004,6 +1041,23 @@ handleWH ev =
                                  mapM findShelf ids
                 Report.shelvesReportFor shelves
             yankOrEdit mode (Just ".csv") (unlines text)
+         ETagBestShelf useAvailable  -> do
+            boxm <- gets currentBox
+            AppState{..} <- get
+            case boxm of 
+                 Nothing -> return ()
+                 Just boxId -> do
+                      execute $ do
+                          boxes <- do 
+                              box <- findBox boxId 
+                              findBoxByNameSelector (matchName $ boxStyle box)
+                          shelves_ <- case asShelfSelection of
+                                       Nothing ->  toList <$> gets shelves  >>= mapM findShelf
+                                       Just selection -> findShelvesByBoxNameAndNames (sSelector selection)
+                          fit <- Report.bestFitReport  useAvailable boxes shelves_
+                          Report.tagShelvesWithFitData (Just \_ k -> (if useAvailable then "@" else "all-") <> k) fit
+                          Report.tagShelvesWithFitData Nothing fit
+            
          EYankTags mode ->  do
             selection <- gets asBoxSelection
             text <- execute do Report.generateTags (fmap sSelector selection)
