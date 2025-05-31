@@ -586,7 +586,7 @@ keyBindingGroups =  groups
                                                                , mK "c-o" EPrevAdjustShelvesMode "Previous visible shelves mode"
                                                                ])
                                , ("Shelf selection",           ( mk '0' (ESelectShelfLevel (Just "!")) "Select empty shelves"
-                                                               : mk '9' (ESelectShelfLevel (Just "/#-top")) "Hide top shelves"
+                                                               : mk '9' (ESelectShelfLevel (Just "/*/*#-top")) "Hide top shelves"
                                                                : mk '1' (ESelectShelfLevel (Just "/*/[0-1]")) "First shelves"
                                                                : [mK c (ESelectShelfLevel (Just sel)) ("Show " <> sel <> " shelves only")
                                                                  | i <- [2..5]
