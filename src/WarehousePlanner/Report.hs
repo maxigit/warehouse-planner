@@ -231,9 +231,9 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("part", name)
                       , ("style", boxStyle box)
                       , ("box", printDim  bdim)
-                      , ("fit",  tshow $ fitted)
-                      , ("to_fit", tshow toFit)
-                      , ("to_pick", tshow toPick)
+                      , ("fit",  pack $ printf "%3d"  fitted)
+                      , ("to_fit", pack $ printf "%3d" toFit)
+                      , ("to_pick", pack $ printf "%3d" toPick)
                       , ("pickable", tshow pickable)
                       , ("l100", percent requiredl sl) 
                       , ("w100", percent requiredw sw)
@@ -242,8 +242,8 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("lh100", percent (requiredl*requiredh) (sl*sh))
                       , ("lw100", percent (requiredl*requiredw) (sl*sw))
                       , ("fit100", percent (fi fitted) (fi toFit))
-                      , ("shelves_needed", pack $ printf "%.1f" (fi toFit / fi fitted))
-                      , ("picking_shelves", pack $ printf "%.1f" (fi toPick / fi pickable))
+                      , ("shelves_needed", pack $ printf "%04.1f" (fi toFit / fi fitted))
+                      , ("picking_shelves", pack $ printf "%04.1f" (fi toPick / fi pickable))
                       , ("rvolmin100", percent  (requiredl*requiredw*requiredh) (volume shelfMin))
                       , ("rvolmax100", percent  (requiredl*requiredw*requiredh) (volume shelfMax))
                       , ("fvolmin100", percent  (boxVolume box * fi fitted) (volume shelfMin))
@@ -289,7 +289,12 @@ bestFitReport limitToBoxNb boxes shelves = do
                       ]
         remaining shelf required = let nrequired = invert required 
                                in (minDim shelf <> nrequired, maxDim shelf <> nrequired )
-        percent a b = pack $ printf "%.0f" (a*100/b)
+        percent a b = pack $ printf "%02.0f" (min 99 $ a*100/b)
+        --                                   ^^^^^^^^^^^^^^^^^
+        --                                   brick only shows the first number on
+        --                                   shelf summary
+        -- if we use %03 everything is nicely storted 001 010 099 etc
+        -- but everything show as 0, hence using 2 char (and cap at 99)
         fi = fromIntegral @_ @Double
                      
 
