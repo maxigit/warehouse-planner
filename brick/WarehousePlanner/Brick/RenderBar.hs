@@ -102,7 +102,9 @@ charWithPerc2 c r1 r2 = withDefAttr (percToAttrName r1 r2) (str [c])
 renderS :: SummaryView -> ShelvesSummary e f a -> Widget n
 renderS smode s = let 
        c = if  ratio (fromSummary smode) s <= 1e-6
-           then '·'
+           then if fromSummary SVVolume (sShelvesSummary s) <= 1e-5
+                then '·' -- separator
+                else '0'
            else case smode of
                      SVMaxLength -> '>'
                      SVMaxHeight -> '^'
