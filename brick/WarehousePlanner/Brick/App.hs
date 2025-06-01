@@ -202,7 +202,7 @@ makeAppShelvesSummary state = do
                         let shelfPropValueM = case fmap (splitOn "#") (asShelfProperty state) of
                                                Just tags -> case  mapMaybe getTagShelfValue tags of
                                                                [] -> Nothing
-                                                               vals -> Just $ mconcat vals
+                                                               vals -> Just $ unwords vals
                                                _ -> Nothing
                             getTagShelfValue tag = case getTagValuem shelf tag of
                                                     Just v -> Just v
@@ -696,8 +696,8 @@ keyBindingGroups =  groups
                                                          , mk 'L' (ESetShelfProperty "@full-wh100")          "required width × height ratio"
                                                          , mk 'W' (ESetShelfProperty "@full-lh100")          "required length × height ratio"
                                                          , mk 'H' (ESetShelfProperty "@full-lw100")          "required length × width ratio"
-                                                         , mk 'p' (ESetShelfProperty "@full-picking_shelves") "number of picking shelves needed"
-                                                         , mk 's' (ESetShelfProperty "@full-shelves_needed")  "number of shelves needed"
+                                                         , mk 'p' (ESetShelfProperty "@full-picking_shelves#@full-fit#@full-to_pick") "number of picking shelves needed"
+                                                         , mk 's' (ESetShelfProperty "@full-shelves_needed#@full-fit#@full-to_fit")  "number of shelves needed"
                                                          , mk 'r' (ESetShelfProperty "@full-rvolmin100")      "min required volume ratio"
                                                          , mk 'R' (ESetShelfProperty "@full-rvolmax100")      "max required volume ratio"
                                                          , mk 'v' (ESetShelfProperty "@full-fvolmin100")      "fitted volume / min shelf ratio"
@@ -712,8 +712,8 @@ keyBindingGroups =  groups
                                                          , mk 'L' (ESetShelfProperty "@right-wh100")          "required width × height ratio"
                                                          , mk 'W' (ESetShelfProperty "@right-lh100")          "required length × height ratio"
                                                          , mk 'H' (ESetShelfProperty "@right-lw100")          "required length × width ratio"
-                                                         , mk 'p' (ESetShelfProperty "@right-picking_shelves") "number of picking shelves needed"
-                                                         , mk 's' (ESetShelfProperty "@right-shelves_needed")  "number of shelves needed"
+                                                         , mk 'p' (ESetShelfProperty "@right-picking_shelves#@right-fit#@right-to_pick") "number of picking shelves needed"
+                                                         , mk 's' (ESetShelfProperty "@right-shelves_needed#@right-fit@right-to_fit")  "number of shelves needed"
                                                          , mk 'r' (ESetShelfProperty "@right-rvolmin100")      "min required volume ratio"
                                                          , mk 'R' (ESetShelfProperty "@right-rvolmax100")      "max required volume ratio"
                                                          , mk 'v' (ESetShelfProperty "@right-fvolmin100")      "fitted volume / min shelf ratio"
