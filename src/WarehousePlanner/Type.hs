@@ -302,7 +302,7 @@ type Corner = (Double, Double)
 data BoxStyling = BoxStyling
   { foreground :: Colour Double --  ^ Text colour
   , background :: Colour Double -- ^ Background colour
-  , circleBgs :: [Colour Double] -- ^ 2nd Background colour
+  , circleBgs :: [[Colour Double]] -- ^ 2nd Background colour
   , border :: Maybe (Colour Double)  -- ^ border colour if different from foreground
   , title :: [ Text ] -- ^ text to display 
   , barTitle :: Maybe Text -- ^ text to display in the bar

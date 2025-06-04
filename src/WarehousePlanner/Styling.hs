@@ -21,6 +21,8 @@ import Data.Colour.Names (readColourName,black,lightgray,white, wheat, darkorang
 import Data.Colour.SRGB(sRGB24read)
 import Data.Char(isHexDigit,toLower, isUpper)
 import Data.List.NonEmpty (NonEmpty(..))
+import Data.Text (splitOn)
+import Data.List (transpose)
 
 
 readFromPalette :: Text -> Maybe Kolor
@@ -108,11 +110,23 @@ for used double indexing Example
    --       ^ dark
 ::rST -}
 colorFromTag :: HasTags tagged => Map Text Kolor -> tagged -> Text -> Maybe Kolor
-colorFromTag colorMap box tag = let
-  colors = mapMaybe (valueToColour colorMap) (getTagValues box tag)
-  in case colors of
-  [] -> Nothing
-  (col:cos) -> Just $ blendKolors (col :| cos)
+colorFromTag colorMap box tag = headMay $ colorsFromTag colorMap box tag 
+colorsFromTag :: HasTags tagged => Map Text Kolor -> tagged -> Text -> [Kolor]
+colorsFromTag colorMap box tag = 
+  case getTagValues box tag of
+     [] -> []
+     tagValues -> -- A B/C D -> [blend  A B D , blend A C D]
+                 let namess = transpose (map (splitOn "/") tagValues)
+                     colorMaybe names = case mapMaybe (valueToColour colorMap) names of
+                                             [] -> Nothing
+                                             (col:cos) -> Just $ blendKolors (col :| cos)
+                 in mapMaybe colorMaybe namess
+
+
+    -- tagValues -> flip mapMaybe  (breakOn "/" tagValue  \colorName -> 
+    --              case valueToColour colorMap colorName of
+    --                   [] -> Nothing
+    --                   (col:cos) -> Just $ blendKolors (col :| cos)
 
 -- | Extract styling information from tag as properties
 -- use fg= foregroung
@@ -145,7 +159,7 @@ stylingFromTags ::  Map Text Kolor -> Box s -> BoxStyling
 stylingFromTags colorMap box = let
   foreground = black `fromMaybe` (colorFromTag colorMap) box "fg"
   background = wheat `fromMaybe` (colorFromTag colorMap) box "bg"
-  circleBgs = mapMaybe (colorFromTag colorMap box) ["circle", "circle2", "circle3", "circle4"]
+  circleBgs = transpose $ map (colorsFromTag colorMap box) ["circle", "circle2", "circle3", "circle4"]
   border = colorFromTag colorMap box "border"
   title = getTagValues box "title"
   barTitle= case getTagValues box "bar-title" of

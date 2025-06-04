@@ -161,22 +161,27 @@ renderBox boxStyling shelf box = do
     return $ [(3, diagram),
               (2, offsetBar backBag),
               (1, offsetBar boxBar)]
-pies :: Double -> [Colour Double] -> Diagram B 
+pies :: Double -> [[Colour Double]] -> Diagram B 
 pies _ [] = mempty
-pies radius (col1:colours) = let
-  angle = 1  / fromIntegral (length colours + 1)
-  dir0 = rotate (5/8 @@ turn) xDir
-  ps = [ wedge radius dir (angle @@ turn) # fc col #lwL 0 
-            | (col, i) <- zip colours [0..]
-            , let dir = rotate (angle * i @@ turn) dir0
-            ]
-  base = circle radius # fc col1 # lwL 0
-  in mconcat (ps ++ [base])
+pies mainRadius cocardes = let 
+  nc = fromIntegral $ length cocardes
+  go _ [] = mempty
+  go i (col1:colours) = let
+     radius = mainRadius * fromIntegral i / nc
+     angle = 1  / fromIntegral (length colours + 1)
+     dir0 = rotate (5/8 @@ turn) xDir
+     ps = [ wedge radius dir (angle @@ turn) # fc col #lwL 0 
+               | (col, i) <- zip colours [0..]
+               , let dir = rotate (angle * i @@ turn) dir0
+               ]
+     base = circle radius # fc col1 # lwL 0
+     in mconcat (ps ++ [base])
+  in mconcat $ zipWith go [1..] cocardes
 
            
 
 renderBoxBar :: Box s -> Maybe Text
-             -> Colour Double -> Colour Double -> Colour Double -> [Colour Double]
+             -> Colour Double -> Colour Double -> Colour Double -> [[Colour Double]]
              -> Diagram B
 renderBoxBar box titlem foreground background border circleBgs =
   let Dimension _l w _h = boxDim box
