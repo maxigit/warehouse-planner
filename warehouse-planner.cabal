@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        3.0.0
+version:        3.1.0
 license:        UnspecifiedLicense
 build-type:     Simple
 
