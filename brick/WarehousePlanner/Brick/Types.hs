@@ -158,6 +158,7 @@ data AppState = AppState
      , asDiffEvent :: Event -- ^ Event to show diff with
      , asNavigateCurrent :: Bool -- ^ navigate current event instead of diff event
      , asNavigateWithPrevious ::  Bool -- ^ if true, make diff = previous of 
+     , asNavigateFollowsBox :: Bool -- ^ If true , follows the curret box
      , asDebugShowDiffs :: Bool
      , asInput :: Maybe Input
      , asInputHistory :: Map InputMode [Text]

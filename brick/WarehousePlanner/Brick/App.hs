@@ -102,6 +102,7 @@ data WHEvent = ENextMode
              | EHistoryEvent HistoryEvent
              | EToggleHistoryNavigation
              | EToggleHistoryPrevious
+             | EToggleHistoryFollow
              --
              -- Input
              | EStartInputSelect InputMode
@@ -336,6 +337,7 @@ initState asToday adjust asReload title = do
                   , asDiffEvent = NoHistory
                   , asNavigateCurrent = False
                   , asNavigateWithPrevious = True
+                  , asNavigateFollowsBox = True
                   , asDebugShowDiffs = False
                   , asInput = Nothing, asInputHistory = mempty
                   , asBoxSelection = Nothing
@@ -609,6 +611,7 @@ keyBindingGroups =  groups
                   ),(Just ("Toggle", 'z'), [("History",        [ mk 'h' (EToggleHistoryNavigation) "navigation current/previous"
                                                                , mk 'H' (EToggleHistoryPrevious) "move current and previous"
                                                                , mk 'e'(EToggleViewHistory) "view/hide event history"
+                                                               , mk 'f' (EToggleHistoryFollow) "follow current box throughout history"
                                                                ])
                                            ,("Misc",           [ mk 'D' (EToggleDebugShowDiff) "show/hide diff debug info for current shelf"
                                                                , mk 'd'(EToggleViewDetails) "view/hide box/history details"
@@ -901,6 +904,7 @@ handleWH ev =
          EHistoryEvent ev -> navigateHistory ev >> modify \s -> s { asDisplayHistory = True }
          EToggleHistoryNavigation -> modify \s -> s { asNavigateCurrent = not (asNavigateCurrent s ) }
          EToggleHistoryPrevious -> modify \s -> s { asNavigateWithPrevious = not (asNavigateWithPrevious s ) }
+         EToggleHistoryFollow -> modify \s -> s { asNavigateFollowsBox = not (asNavigateFollowsBox s ) }
          EStartInputSelect mode -> modify \s -> s { asInput = Just (selectInput mode $ makeInputData mode s) }
          EReload stage ->  do
             (reload, startingReload) <- gets asReload
@@ -1141,6 +1145,7 @@ navigateHistory ev = do
                      HPreviousSibling -> findPreviousSibling current events
        setDiff e = put s { asDiffEvent = e }
    forM_ newEventM \new -> do
+        -- follow current box if needed
         if asNavigateCurrent && ev /= HResetCurrent
         then 
           setNewWHEvent new
@@ -1150,8 +1155,12 @@ navigateHistory ev = do
            if asNavigateCurrent
            then forM_ (evPreviousM new) setDiff 
            else forM_ (findNextEvent new events) setNewWHEvent
-             
-
+        when asNavigateFollowsBox $
+             forM_ (currentBox s) \box ->
+                modify  \s1 -> -- $ runUpdated . \s1 -> 
+                        case findNextBox Forward (\b -> boxId b == boxId box) s1  of
+                            (_, Nothing) -> s1
+                            (s2, Just _) -> s2
 
   
 nextMode :: AppState -> AppState
@@ -1386,8 +1395,9 @@ renderStatus state@AppState{..} = let
                                     , B.center mode
                                     ]
                          , B.hBox $ [ surroundIf (not asNavigateCurrent) $ B.txt $ displayEvent asDiffEvent
-                                    , if asNavigateWithPrevious then B.str "~" else B.emptyWidget
+                                    , if asNavigateWithPrevious then B.str " ~ " else B.str " ¦ "
                                     , surroundIf asNavigateCurrent $ B.str $ show (whCurrentEvent asWarehouse)
+                                    , if asNavigateFollowsBox then B.str " Follow" else B.emptyWidget
                                     , B.padLeft B.Max legend
                                     ]
                          ]
