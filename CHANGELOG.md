@@ -1,3 +1,5 @@
+# 3.0.0
+New WPL without indentation.
 # 2.2.0
 Implement SortedOverlap
 # 2.1.0
