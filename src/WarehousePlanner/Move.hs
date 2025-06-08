@@ -720,9 +720,8 @@ moveSortedBoxes partitionMode bs exit'ss = do
 
 moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s, Priority))  s
 moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
-  newBaseEvent "TAM" $ intercalate "," [ printBoxSelector style
-                                 , intercalate "#" tags_
-                                 , fromMaybe "" locationM
+  newBaseEvent "TAM" $ intercalate "," [ intercalate "#" (printBoxSelector style :  tags_)
+                                 , fromMaybe "<tag only>" locationM
                                  , mconcat $ map tshow orientations
                                  ]
   let withNoEmpty = partition ((== "@noempty") . toLower)
