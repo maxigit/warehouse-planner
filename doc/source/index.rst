@@ -16,6 +16,7 @@
    selectors
    tags
    reports
+   wpl
    
 .. todo:: Structure files
    

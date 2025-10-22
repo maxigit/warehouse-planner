@@ -73,6 +73,209 @@ lexeme1 p = do
    spaces
    return r
    
+{- rST::wpl-structure
+
+Comment
+-------
+
+WPL accepts two types of comments :
+
+- single line comment  starts with ``--``
+- multiline comment between ``{-`` and ``-}``
+
+
+Commands and selectors
+----------------------
+
+Commands starts with a lowercase and box selector with an uppercase.
+
+Statement chain
+---------------
+
+By default, a statement is chained with the previous one, ie use output :ref:`context` of the previous statement unless the statement starts a new line.
+In that case the statement will start a new chain. Statements between ``(...,...)`` are executed independently.
+
+Example
+
+::
+
+   A B
+   C
+
+or
+
+::
+
+  A
+    B
+  C
+
+is equilavent to 
+
+::
+
+   (A B , C)
+
+Pass through
+------------
+
+The resulting context of a statment can be ignored with ``;`` beforehand.
+
+Example 
+
+::
+
+   A (; B) C
+
+Both ``B`` and ``C`` will be evaluated with the context output of ``A``.
+
+
+::
+
+   A -+-> B
+      |
+      +-> C
+     
+Whereas ``A B C`` is evaluated like
+
+::
+
+   A --> B --> C
+
+
+Passthroughs are mainly used in case expression to ignore the result of the action.
+
+
+Example
+
+::
+
+    [ A ; do_something
+    | do_something_else
+    ]
+
+
+Apply something to ``A`` and something to everything but ``A``.
+Without the ``;``, something else would  be applied to the left over of ``A do_something`` which can be different from just ``A``.
+
+Block argument
+--------------
+
+Some commands require another statement as argument. This is the case for example of the command ``shelf:full``.
+This command set the minimum dimensions of the selected shelves to the maximum ones for the duration of the next statement.
+In order to avoid chaining ambiguity the next statement needs to be enclosed between ``{...}``.
+
+Example
+
+::
+
+  shelf:full {A} B
+  
+executes ``A`` with full shelves and then execute B. Without the braces ``shelf:full A B`` could by interpreted as either ``shelf:full {A} B`` or ``shelf:full {A B}``.
+
+
+If there is no ambiguity the ``&`` shorthand can be used, that is ``shelf:full {A}`` can be written as ``shelf:full & A``.
+
+Property argument  
+-------------------
+
+Some commands accepts optional arguments. The general syntax is ``command name:value name2:value2 ...``. Most properties have an alias (usually the first letter) and if only argument exists the name of the argument doesn't need to be specified. If the command also accept a blok argument the property arguments need to be written before.
+
+
+Example
+
+::
+
+  trace:count message:"box count" 
+  trace:count msg:"box count" 
+  trace:count m:"box count" 
+  trace:count :"box count" 
+  
+  fill pos:$[old_position] { A }
+
+
+are equivalent.
+
+Control flow
+------------
+
+
+Conditional execution
+`````````````````````
+
+:ref:`Conditions  <condition>` can be used to do classic if then else. However the else is not optional, use ``when`` or ``unless`` instead.
+
+IF THEN ELSE
+
+Executes ``stmt1`` if ``cond`` is true, ``stmt2`` otherwise.
+::
+
+   if cond then  { stmt1 }  else { stmt2 }
+   
+WHEN
+
+Executes ``stmt`` if the ``cond`` is true.
+
+::
+
+    when cond { stmt }
+    
+    
+UNLESS
+   
+Executes ``stmt`` if the ``cond`` is false.
+
+::
+
+    unless cond { stmt }
+
+Cases
+`````
+Cases exists in two flavours, box cases and shelf cases. Cases executes each statements with the left over :ref:`context` (either boxwise or shelfwise).
+A case is as list of statement between ``[..]`` or ``/[..]`` separated by comma.
+
+Example
+
+::
+
+    [ A -- select A
+    , to> S1 -- move left over (no A) to S
+    , to> S2 -- move left over (not fitting in S) to S2
+    ]
+    
+Foreach block
+`````````````
+
+Do blocks executes a statement foreach boxes, shelves or contexts.
+
+
+FOREACH:SHELF
+
+Executes ``stmt`` for each shelves in ``shelves`` selector.
+
+::
+
+  foreach:shelf shelves { stmt }
+  
+FOREACH:BOX
+
+Executes ``stmt`` for each boxes in ``boxes`` selector.
+
+::
+
+  foreach:box boxes { stmt }
+
+FOREACH:DO
+
+
+Executes ``stmt`` foreach context in in ``contexts``.
+
+:: 
+
+    foreach:do { smt } ( contexts )  
+
+
+::rST -}
 instance Parsable Statement where
          p = asum [  do
                       lexeme ";"
@@ -152,6 +355,227 @@ withStatement name parser = do
    stmt <- subStatement <?> name
    return  $ constructor stmt
 
+{- rST::wpl-commands
+
+.. _commands:
+
+Box manipulation
+----------------
+
+Boxes can moves around, tagged but also resized.
+
+- ``to^ boxes:pmode:orules shelves``: moves current boxes to given shelves. Exit on top
+- ``to> boxes:pmode:orules shelves``: moves current boxes to given shelves. Exit Left
+- ``to  boxes:pmode:orules exit'shelves``: moves current boxes to given shelves. Accept a different exit mode for each shelf.
+        Example
+
+        ::
+
+           to >A/[12]^B/[12]
+
+.. todo:: pmode
+.. todo:: orules
+
+
+- ``swap debug:sticky selector``: Swap the current boxes to match the order given by the selector.
+   The selector should only reorder the current selection. "Sticky" tags stays in place instead of moving with boxes.
+   
+   Example
+   
+   ::
+   
+     [ A | B | C ] swap [A | C | B ]
+
+- ``fill pos:loc { boxes }``:  Move boxes using to the given position and location specified by ``pos`` and ``loc`` :ref:`property <evaluation>`. The default uses the ``#fill-shelf`` and ``#fill-shelf`` tags.
+
+- ``tag #tag1#tag2``: tags the current boxes with tag1 and tag2
+- ``tag #tag1#tag2 boxes? { stmt }``: execute stmt with tag set temporaly.
+        Similar to ``(tag #tag1#tag2 , smt, tag #-tag1#-tag2)``.
+        If the boxes parameter is given, only the boxes will be tag (without narrowing the context to those boxes)
+
+- ``toggle #tag``: tag included and untag excluded.
+- ``toggle #-tag``: untag included and tag excluded.
+- ``box:resize [max|min|first] box: { stmt }``: resize temporalily all selected boxes with the given strategy. If a box selector is given  the given box will be used to calculate the new size.
+
+    - ``bsize``
+   
+    Example
+    
+       ::
+       
+          box:resize first A { stmt }
+          
+       Resize with the dimension of the first encountered A.
+
+       ::
+       
+          box:resize first { stmt }
+          
+       Resize with the dimension of the first selected box.
+
+Box selectors
+-------------
+
+Narrows the current box selection.
+
+- ``Selector``: select boxes. Start with an uppercase
+- ``?selector``: select boxes. Start with an uppercase
+- ``in:shelves``: select boxes in the current shelf selection.
+
+Box Range
+`````````
+
+Select boxes upto, from etc the given selector.
+
+- ``from selector``: after selector (included)
+- ``upto selector``: before selector (include)
+- ``after selector``: after selector (excluded)
+- ``before selector``: before selector (excluded)
+
+.. todo:: selector syntax
+
+Shelf selectors
+---------------
+
+Narrows the current shelf selection.
+
+- ``/selector``: select shelves.
+- ``with:boxes``: select shelves containing in the current box selection.
+
+Miscellaneous
+-------------
+
+- ``tam orules: tagAndMove``: tag and move current box selection as in :ref:`tag and moves section <moves-and-tag>`.
+- ``delete``:  delete current box selection.
+
+    .. danger::
+       Deleting boxes doesn't remove them from the parents and current context.
+       Chaining action after delete might cause crashes.
+
+Context parameters
+------------------
+
+Miscellaneous "global" parameters can be set per context. When a parameter is set, it applies to that effect and the context and its children only (that is, every statements within the chain). The general syntax for setting global parameter is ``parameter=value``
+
+
+- ``pmode=mode``: set the default default :ref:`partition mode <partition-mode>`.
+    - ``p=mode``
+    
+- ``orules=rules selector?``: set the :ref:`orientation <orientation-rules>` for everything or the given selector.
+- ``orules+=rules selector?``: add a rule  to the current orientation rules. The last rule has priority over the previous one.
+
+.. _empty-check:
+
+Empty checks
+````````````
+
+WHP can check if the result of a selector is empty or not. This can be used to make sure there is no typo in the selector or that the source boxes and target shelves exists.
+When enabled, the WHP will stop and display a message if the condition is met.
+
+Checks on the result of an action (like checking if all boxes have been moved successfully) can be done using :ref:`assertions <assertions>`.
+
+- ``empty:boxes=no``: stops if box selector is empty.
+- ``empty:boxes=yes``: allows empty boxes
+- ``empty:shelves=no``: stops if shelf selector is empty.
+- ``empty:shelves=yes``: allows empty shelves
+
+
+Traces and Assertions
+---------------------
+
+Trace
+`````
+
+Trace can be logged to stdout. If a message argument is provided it would be used as the title.
+
+- ``trace:count message:?``: log the number of selected boxes and shelves.
+
+  - ``t:c``
+  
+- ``trace:boxes message:prop:``: log all selected boxes. If prop is given it will be expanded as :ref:`property <evaluation>` for each boxes.
+
+  - ``trace:box``
+  - ``t:b``
+
+  Example
+  
+     ::
+     
+         trace:boxes prop:"boxname = ${boxname} $[dead?]"
+
+
+- ``trace:shelf message:``: log all selected shelves.
+
+  - ``t:s``
+- ``trace:orientation message:``: log current orientation rules.
+
+  - ``t:o``
+
+.. _assertions:
+
+Assertions
+``````````
+
+Assertions raise an error if the condition is not true. A message can be passed to help localizing which assertion failed. Unlike :ref:`empty checks <empty-check>` assertion are only checking the current context.
+
+- ``assert:noboxes message:``: asserts that there is no selected boxes
+
+  - ``a:nob``
+
+- ``assert:boxes message:``: asserts that some boxes are selected.
+
+  - ``a:b``
+
+- ``assert:noshelves message:`` asserts that no shelves are selected
+  
+  - ``a:nos:``
+
+- ``assert:shelves message:`` asserts that some shelves are selected.
+
+  - ``a:s``
+
+Shelf Manipulation
+------------------
+
+Shelves can tagged, resized or even split in grid. Shelf command accepting a block argument only perform the modification during the life span of the block.
+
+- ``shelf:tag #tag``: tag the current shelves.
+ 
+  - ``shelves:tag #tag``
+  - ``stag #tag``
+
+- ``shelf:full { stmt }``:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.
+
+- ``shelf:resize boxes:length:width:height { stmt }``: Resize the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula.
+  
+     ::
+     
+         shelf:resize height:{50%}  {stmt}
+
+     Limit the current shelves to 50% of their respective height.
+
+     ::
+     
+         shelf:resize height:{=}*2 box:A  {stmt}
+
+     Limit the current height to fit to boxes with an ``=`` orientation.
+
+- ``shelf:split boxes:length:width:height { stmt }``: Split the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula. Multiple formula are separated with a ``:``.
+  Example
+  
+     ::
+     
+         shelf:resize height:{50%}  {stmt}
+
+     Split selected shelves in 2 sub shelves of equal height.
+
+     ::
+     
+         shelf:resize height:{30%}:{30%}  {stmt}
+
+     Split selected shelves in 3 sub shelves of different height (30% , 30% and 40%).
+
+::rST -}
 instance Parsable Command where
   p = dlabel "command" $ asum
         [ do -- Move
@@ -499,6 +923,27 @@ checkForDuplicate keyss = let
                                 ]
                    in P.registerFancyFailure $ setFromList errors
 
+
+{- rST::wpl-condition
+ 
+ .. _condition:
+
+Conditions are evaluated within the current context and are true if the given selector returns at least one object.
+The selector can be a box or a shelf (starting with ``/``). Both selectors needs to be  enclosed within ``(..)``
+
+Classic logical operators (``!``, ``&&`` and ``||``) can be used to combine conditions.
+
+Example
+
+::
+
+   ( A ) --  true if there is a A box
+   ( A* *B) -- true if there is a starting with A and ending with B
+   (/S) -- if there is a S shelf
+   !( A ) && (/S) --  no A box and a shelf S 
+
+
+::rST -} 
 
 instance Parsable Condition where
   p = makeExprParser term table <?> "conditions" where

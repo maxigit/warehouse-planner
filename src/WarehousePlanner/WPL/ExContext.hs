@@ -12,6 +12,73 @@ import Control.Monad.State(gets)
 -- | Execution Context, i.e. the select boxes shelves etc ...
 -- We store ids (and not box or shelf( in purpose
 -- to force a reload if necessary when narrowing 
+{- rST::context
+ 
+.. _context:
+
+Context
+-------
+
+A WPL context represents the selected boxes and shelves but also 
+the negative selection and some global parameter such as current partition mode or orientation strategies.
+
+Each statement returns a new context which is used by the next statement in the statement chain.
+
+Narrowing
+---------
+
+Context are mostly used to narrow boxes and shelves. This allows to avoid repetition in selecting object.
+For example, to tag all the boxes A in the shelf X and Y respectively with the tag x and y one could write
+
+::
+
+   A in X tag #x
+   A in Y tag #y
+   
+The ``A`` could be factorized by writing
+
+
+::
+
+  A ( in X tag #x
+    , in Y tag #y
+    )
+
+In that case we have been narrowing boxes to all boxes with name ``A``.
+
+Inverting ``-~``
+----------------
+
+Context contains the current selection but also the left over from the previous selection.
+
+For example, in the previous example after ``A`` the box selection contains all boxes with name ``A``.
+`` in X`` selects all boxes (in the current context i.e. A) but also excludes all As not in X.
+Inverting the resulting context with select all As not in Y.
+
+Thus 
+
+::
+
+  A in X tag #x -~ tag #y
+
+Will tag all A  in X with the tag x and all the A not in X with y.
+
+Parent ``~``
+------------
+
+Uses the parent context.
+
+Root ``.~``
+-----------
+
+Uses root context.
+
+Cross Selection ``xsell``
+-------------------------
+
+Convert box selection to shelf selection or vice versa.
+
+::rST -}
 data ExContext s = ExContext
                { ecBoxes :: InExcluded (BoxId s, Priority)
                , ecShelves :: InExcluded (ShelfId s)

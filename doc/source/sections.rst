@@ -16,6 +16,8 @@ Setting an reusing references
 -----------------------------
 .. ihaskell :: Csv::with-previous
 
+.. _section-types:
+
 Section Types
 ~~~~~~~~~~~~~
 
@@ -145,8 +147,11 @@ UPDATE SHELF
 .. ihaskell:: Csv::update-shelves
 
 
-.. _wpl:
+.. _wpl_section:
 
-.. todo:: WPL
+WPL
+---
+
+Executes :ref:`WPL <wpl>` instructions, a mini language to manipulate boxes and shelves.
    
    

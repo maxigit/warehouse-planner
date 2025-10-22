@@ -799,6 +799,8 @@ in B and then restart in A and so on until there is not column left
 in A and B. It will then start filling up C. (This syntax is similar
 to the syntax of the **Layout** section).
 
+.. _partition-mode:
+
 Partition Mode
 ''''''''''''''
 
@@ -1063,6 +1065,9 @@ instance Csv.FromRecord (ForMovesAndTags s) where
 -- #tag/location
 -- location,tag
 {- rST::moves-and-tags
+
+.. _moves-and-tag:
+
 Allows to move and tag at the same time a set of boxes. This can be
 faster and less verbose than creating a move and a tag section. Tags
 needs to start with a ``#`` and location CAN start with ``/``
@@ -1584,6 +1589,9 @@ readOrientationRules defOrs filename = do
 
 -- | Read orientation rules
 {- rST::orientation-rules
+ 
+.. _orientation-rules:
+
 Specifies the boxes configuration within a shelves (if they are
 stacked up, on the side, how many etc). Boxes of a given style can be
 given different configuration for different shelves by specifing the
