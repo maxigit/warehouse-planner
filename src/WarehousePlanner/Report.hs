@@ -500,8 +500,20 @@ showHowManysFor = showHowManys . tmHowManys
 -- | Generates moves from actual styles positions, ie find all shelves
 -- for  a given styles
 
+-- @TODO make works in the middle or multiple times
 groupNames :: [Text] -> [Text]
-groupNames names = let
+groupNames = groupNamesLeft
+
+-- | Group names with commont prefix 
+-- 
+-- >>> groupNamesLeft ["A1", "A2"]
+-- ["A[12]"]
+-- 
+-- But do it only once.
+-- >>> groupNamesLeft ["A1x", "A2x", "A1y", "A2y"]
+-- ["A1[xy]", "A2[xy]"]
+groupNamesLeft :: [Text] -> [Text]
+groupNamesLeft names = let
   groups = Map'.fromListWith (<>) [(initEx name, [lastEx name]) | name <- names]
 
   toName (prefix, "") = prefix
