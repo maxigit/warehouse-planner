@@ -1,0 +1,9 @@
+.. _WPL:
+
+Warehouse Programming Language
+~~~
+
+Boxes and shelves can be manipulated via **WPL** a mini programming language.
+Possible actions includes moving and tagging boxes, tagging and resizing shelves etc ...
+Most actions are available through :ref:`section <section-types>`. Using WPL allows however more flexibility such as context, conditional and easier syntax.
+

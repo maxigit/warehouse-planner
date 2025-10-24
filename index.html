@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wpl.html">WPL</a></li>
 </ul>
 
         </div>
@@ -143,6 +144,41 @@ We want S2 to be on top of S1 and T1 next to it
 </div>
 <a class="reference internal image-reference" href="_images/whp-example-move.png"><img alt="_images/whp-example-move.png" class="align-center" src="_images/whp-example-move.png" style="width: 50%;" />
 </a>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>link to import section</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="usage.html#id2"><em>original entry</em></a> is located in /home/max/devel/warehouse-planner/doc/source/usage.rst, line 48.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>add reference to whp –help</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="usage.html#id3"><em>original entry</em></a> is located in /home/max/devel/warehouse-planner/doc/source/usage.rst, line 91.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>Structure files</p>
+<ul class="simple">
+<li><p>brick</p></li>
+<li><p>Reference: alphabetically sorted</p></li>
+<li><p>advanced topic?  (regroup selector tags etc …)</p></li>
+</ul>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="#id1"><em>original entry</em></a> is located in /home/max/devel/warehouse-planner/doc/source/index.rst, line 21.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>pmode</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="wpl.html#id6"><em>original entry</em></a> is located in ../src/WarehousePlanner/WPL/Parser.hs, line 19.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>orules</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="wpl.html#id7"><em>original entry</em></a> is located in ../src/WarehousePlanner/WPL/Parser.hs, line 20.)</p>
+<div class="admonition-todo admonition">
+<p class="admonition-title">Todo</p>
+<p>selector syntax</p>
+</div>
+<p class="todo-source">(The <a class="reference internal" href="wpl.html#id8"><em>original entry</em></a> is located in ../src/WarehousePlanner/WPL/Parser.hs, line 78.)</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
@@ -190,7 +226,7 @@ We want S2 to be on top of S1 and T1 next to it
 </li>
 <li class="toctree-l3"><a class="reference internal" href="sections.html#moves-and-tags-tagorpatterns-mat-tam">MOVES AND TAGS[_TagOrPatterns] (MAT, TAM)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sections.html#orientations">ORIENTATIONS</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="sections.html#id7">Orientations</a></li>
+<li class="toctree-l4"><a class="reference internal" href="sections.html#id9">Orientations</a></li>
 <li class="toctree-l4"><a class="reference internal" href="sections.html#max-stacking-specification">max stacking specification</a></li>
 </ul>
 </li>
@@ -212,6 +248,7 @@ We want S2 to be on top of S1 and T1 next to it
 <li class="toctree-l3"><a class="reference internal" href="sections.html#tags-tagorpatterns">TAGS[_TagOrPatterns]</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sections.html#transform-properties-transform-tags">TRANSFORM[=properties] (transform tags)</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sections.html#update-shelf">UPDATE SHELF</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sections.html#wpl">WPL</a></li>
 </ul>
 </li>
 </ul>
@@ -254,6 +291,65 @@ We want S2 to be on top of S1 and T1 next to it
 <li class="toctree-l2"><a class="reference internal" href="reports.html#report-selector">Report Selector</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="wpl.html">WPL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#warehouse-programming-language">Warehouse Programming Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#version">Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#comment">Comment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#commands-and-selectors">Commands and selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#statement-chain">Statement chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#pass-through">Pass through</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#block-argument">Block argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#property-argument">Property argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#control-flow">Control flow</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#conditional-execution">Conditional execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#cases">Cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#foreach-block">Foreach block</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#context">Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#id2">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#narrowing">Narrowing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#inverting">Inverting <code class="docutils literal notranslate"><span class="pre">-~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#parent">Parent <code class="docutils literal notranslate"><span class="pre">~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#root">Root <code class="docutils literal notranslate"><span class="pre">.~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#cross-selection-xsell">Cross Selection <code class="docutils literal notranslate"><span class="pre">xsell</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#condition">Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="wpl.html#commands">Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#box-manipulation">Box manipulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#box-selectors">Box selectors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#box-range">Box Range</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#shelf-selectors">Shelf selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#context-parameters">Context parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#empty-checks">Empty checks</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#traces-and-assertions">Traces and Assertions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#trace">Trace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="wpl.html#assertions">Assertions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="wpl.html#shelf-manipulation">Shelf Manipulation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>Structure files</p>
+<ul class="simple">
+<li><p>brick</p></li>
+<li><p>Reference: alphabetically sorted</p></li>
+<li><p>advanced topic?  (regroup selector tags etc …)</p></li>
 </ul>
 </div>
 </section>

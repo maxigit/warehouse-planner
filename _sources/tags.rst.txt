@@ -27,6 +27,8 @@ This can be used to add a subtract a value to dimension. Example
 Note that ``=+-50`` adds a value of -50 (see
 `Properties`_) to the dimension.
 
+.. _properties:
+
 Properties
 ----------
 
@@ -78,8 +80,11 @@ Group functions
 
 .. ihaskell:: Base::group-function
 
+.. _evaluation:
+
 Evaluation
 ''''''''''
+
 .. ihaskell:: Base::evaluator
 
 Breaks And Slots

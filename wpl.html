@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WPL &mdash; WarehousePlanner 2.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=b21de401"></script>
+        <script src="_static/doctools.js?v=9bcbadda"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Reports" href="reports.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: purple" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            WarehousePlanner
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sections.html">File Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">WPL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#warehouse-programming-language">Warehouse Programming Language</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#version">Version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structure">Structure</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#comment">Comment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#commands-and-selectors">Commands and selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#statement-chain">Statement chain</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pass-through">Pass through</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#block-argument">Block argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#property-argument">Property argument</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#control-flow">Control flow</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#conditional-execution">Conditional execution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cases">Cases</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#foreach-block">Foreach block</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#context">Context</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id2">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#narrowing">Narrowing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inverting">Inverting <code class="docutils literal notranslate"><span class="pre">-~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#parent">Parent <code class="docutils literal notranslate"><span class="pre">~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#root">Root <code class="docutils literal notranslate"><span class="pre">.~</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cross-selection-xsell">Cross Selection <code class="docutils literal notranslate"><span class="pre">xsell</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#condition">Condition</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#commands">Commands</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#box-manipulation">Box manipulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#box-selectors">Box selectors</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#box-range">Box Range</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-selectors">Shelf selectors</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#context-parameters">Context parameters</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#empty-checks">Empty checks</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#traces-and-assertions">Traces and Assertions</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#trace">Trace</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#assertions">Assertions</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-manipulation">Shelf Manipulation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: purple" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">WarehousePlanner</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">WPL</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/wpl.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="wpl">
+<span id="id1"></span><h1>WPL<a class="headerlink" href="#wpl" title="Link to this heading"></a></h1>
+<section id="warehouse-programming-language">
+<h2>Warehouse Programming Language<a class="headerlink" href="#warehouse-programming-language" title="Link to this heading"></a></h2>
+<p>Boxes and shelves can be manipulated via <strong>WPL</strong> a mini programming language.
+Possible actions includes moving and tagging boxes, tagging and resizing shelves etc …
+Most actions are available through <a class="reference internal" href="sections.html#section-types"><span class="std std-ref">section</span></a>. Using WPL allows however more flexibility such as context, conditional and easier syntax.</p>
+</section>
+<section id="version">
+<h2>Version<a class="headerlink" href="#version" title="Link to this heading"></a></h2>
+<p><strong>WPL</strong> exists in two versions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">version:1</span></code> uses identation to structure. It leads to parsing ambiguity and has been deprecated.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">version:2</span></code> uses <code class="docutils literal notranslate"><span class="pre">{...}</span></code> to structure code. This is the new version which should be used.</p></li>
+</ul>
+<p>Some code can be parsed by the two version with a different semantic. The specific version can be forced by starting a file with <cite>version:&lt;n&gt;</cite>.</p>
+</section>
+<section id="structure">
+<h2>Structure<a class="headerlink" href="#structure" title="Link to this heading"></a></h2>
+<section id="comment">
+<h3>Comment<a class="headerlink" href="#comment" title="Link to this heading"></a></h3>
+<p>WPL accepts two types of comments :</p>
+<ul class="simple">
+<li><p>single line comment  starts with <code class="docutils literal notranslate"><span class="pre">--</span></code></p></li>
+<li><p>multiline comment between <code class="docutils literal notranslate"><span class="pre">{-</span></code> and <code class="docutils literal notranslate"><span class="pre">-}</span></code></p></li>
+</ul>
+</section>
+<section id="commands-and-selectors">
+<h3>Commands and selectors<a class="headerlink" href="#commands-and-selectors" title="Link to this heading"></a></h3>
+<p>Commands starts with a lowercase and box selector with an uppercase.</p>
+</section>
+<section id="statement-chain">
+<h3>Statement chain<a class="headerlink" href="#statement-chain" title="Link to this heading"></a></h3>
+<p>By default, a statement is chained with the previous one, ie use output <a class="reference internal" href="#id2"><span class="std std-ref">Context</span></a> of the previous statement unless the statement starts a new line.
+In that case the statement will start a new chain. Statements between <code class="docutils literal notranslate"><span class="pre">(...,...)</span></code> are executed independently.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A B
+C
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A
+  B
+C
+</pre></div>
+</div>
+<p>is equilavent to</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>(A B , C)
+</pre></div>
+</div>
+</section>
+<section id="pass-through">
+<h3>Pass through<a class="headerlink" href="#pass-through" title="Link to this heading"></a></h3>
+<p>The resulting context of a statment can be ignored with <code class="docutils literal notranslate"><span class="pre">;</span></code> beforehand.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A (; B) C
+</pre></div>
+</div>
+<p>Both <code class="docutils literal notranslate"><span class="pre">B</span></code> and <code class="docutils literal notranslate"><span class="pre">C</span></code> will be evaluated with the context output of <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A -+-&gt; B
+   |
+   +-&gt; C
+</pre></div>
+</div>
+<p>Whereas <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">B</span> <span class="pre">C</span></code> is evaluated like</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A <span class="c">--&gt; B --&gt; C</span>
+</pre></div>
+</div>
+<p>Passthroughs are mainly used in case expression to ignore the result of the action.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[ A ; do_something</span>
+<span class="nv">| do_something_else</span>
+<span class="nv">]</span>
+</pre></div>
+</div>
+<p>Apply something to <code class="docutils literal notranslate"><span class="pre">A</span></code> and something to everything but <code class="docutils literal notranslate"><span class="pre">A</span></code>.
+Without the <code class="docutils literal notranslate"><span class="pre">;</span></code>, something else would  be applied to the left over of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">do_something</span></code> which can be different from just <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
+</section>
+<section id="block-argument">
+<h3>Block argument<a class="headerlink" href="#block-argument" title="Link to this heading"></a></h3>
+<p>Some commands require another statement as argument. This is the case for example of the command <code class="docutils literal notranslate"><span class="pre">shelf:full</span></code>.
+This command set the minimum dimensions of the selected shelves to the maximum ones for the duration of the next statement.
+In order to avoid chaining ambiguity the next statement needs to be enclosed between <code class="docutils literal notranslate"><span class="pre">{...}</span></code>.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:full <span class="nn">{A}</span> B
+</pre></div>
+</div>
+<p>executes <code class="docutils literal notranslate"><span class="pre">A</span></code> with full shelves and then execute B. Without the braces <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">A</span> <span class="pre">B</span></code> could by interpreted as either <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A}</span> <span class="pre">B</span></code> or <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A</span> <span class="pre">B}</span></code>.</p>
+<p>If there is no ambiguity the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> shorthand can be used, that is <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A}</span></code> can be written as <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">&amp;</span> <span class="pre">A</span></code>.</p>
+</section>
+<section id="property-argument">
+<h3>Property argument<a class="headerlink" href="#property-argument" title="Link to this heading"></a></h3>
+<p>Some commands accepts optional arguments. The general syntax is <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">name:value</span> <span class="pre">name2:value2</span> <span class="pre">...</span></code>. Most properties have an alias (usually the first letter) and if only argument exists the name of the argument doesn’t need to be specified. If the command also accept a blok argument the property arguments need to be written before.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:count message:&quot;box count&quot;
+trace:count msg:&quot;box count&quot;
+trace:count m:&quot;box count&quot;
+trace:count :&quot;box count&quot;
+
+fill pos:<span class="si">$[old_position]</span> <span class="nn">{ A }</span>
+</pre></div>
+</div>
+<p>are equivalent.</p>
+</section>
+<section id="control-flow">
+<h3>Control flow<a class="headerlink" href="#control-flow" title="Link to this heading"></a></h3>
+<section id="conditional-execution">
+<h4>Conditional execution<a class="headerlink" href="#conditional-execution" title="Link to this heading"></a></h4>
+<p><a class="reference internal" href="#id4"><span class="std std-ref">Conditions</span></a> can be used to do classic if then else. However the else is not optional, use <code class="docutils literal notranslate"><span class="pre">when</span></code> or <code class="docutils literal notranslate"><span class="pre">unless</span></code> instead.</p>
+<p>IF THEN ELSE</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt1</span></code> if <code class="docutils literal notranslate"><span class="pre">cond</span></code> is true, <code class="docutils literal notranslate"><span class="pre">stmt2</span></code> otherwise.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>if cond then  <span class="nn">{ stmt1 }</span>  else <span class="nn">{ stmt2 }</span>
+</pre></div>
+</div>
+<p>WHEN</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt</span></code> if the <code class="docutils literal notranslate"><span class="pre">cond</span></code> is true.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>when cond <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+<p>UNLESS</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt</span></code> if the <code class="docutils literal notranslate"><span class="pre">cond</span></code> is false.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>unless cond <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+</section>
+<section id="cases">
+<h4>Cases<a class="headerlink" href="#cases" title="Link to this heading"></a></h4>
+<p>Cases exists in two flavours, box cases and shelf cases. Cases executes each statements with the left over <a class="reference internal" href="#id2"><span class="std std-ref">Context</span></a> (either boxwise or shelfwise).
+A case is as list of statement between <code class="docutils literal notranslate"><span class="pre">[..]</span></code> or <code class="docutils literal notranslate"><span class="pre">/[..]</span></code> separated by comma.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[ A -- select A</span>
+<span class="nv">, to&gt; S1 -- move left over (no A) to S</span>
+<span class="nv">, to&gt; S2 -- move left over (not fitting in S) to S2</span>
+<span class="nv">]</span>
+</pre></div>
+</div>
+</section>
+<section id="foreach-block">
+<h4>Foreach block<a class="headerlink" href="#foreach-block" title="Link to this heading"></a></h4>
+<p>Do blocks executes a statement foreach boxes, shelves or contexts.</p>
+<p>FOREACH:SHELF</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt</span></code> for each shelves in <code class="docutils literal notranslate"><span class="pre">shelves</span></code> selector.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>foreach:shelf shelves <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+<p>FOREACH:BOX</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt</span></code> for each boxes in <code class="docutils literal notranslate"><span class="pre">boxes</span></code> selector.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>foreach:box boxes <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+<p>FOREACH:DO</p>
+<p>Executes <code class="docutils literal notranslate"><span class="pre">stmt</span></code> foreach context in in <code class="docutils literal notranslate"><span class="pre">contexts</span></code>.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>foreach:do <span class="nn">{ smt }</span> ( contexts )
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="context">
+<h2>Context<a class="headerlink" href="#context" title="Link to this heading"></a></h2>
+<section id="id2">
+<span id="id3"></span><h3>Context<a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<p>A WPL context represents the selected boxes and shelves but also
+the negative selection and some global parameter such as current partition mode or orientation strategies.</p>
+<p>Each statement returns a new context which is used by the next statement in the statement chain.</p>
+</section>
+<section id="narrowing">
+<h3>Narrowing<a class="headerlink" href="#narrowing" title="Link to this heading"></a></h3>
+<p>Context are mostly used to narrow boxes and shelves. This allows to avoid repetition in selecting object.
+For example, to tag all the boxes A in the shelf X and Y respectively with the tag x and y one could write</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A in X tag <span class="nt">#x</span>
+A in Y tag <span class="nt">#y</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">A</span></code> could be factorized by writing</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A ( in X tag <span class="nt">#x</span>
+  , in Y tag <span class="nt">#y</span>
+  )
+</pre></div>
+</div>
+<p>In that case we have been narrowing boxes to all boxes with name <code class="docutils literal notranslate"><span class="pre">A</span></code>.</p>
+</section>
+<section id="inverting">
+<h3>Inverting <code class="docutils literal notranslate"><span class="pre">-~</span></code><a class="headerlink" href="#inverting" title="Link to this heading"></a></h3>
+<p>Context contains the current selection but also the left over from the previous selection.</p>
+<p>For example, in the previous example after <code class="docutils literal notranslate"><span class="pre">A</span></code> the box selection contains all boxes with name <code class="docutils literal notranslate"><span class="pre">A</span></code>.
+`` in X`` selects all boxes (in the current context i.e. A) but also excludes all As not in X.
+Inverting the resulting context with select all As not in Y.</p>
+<p>Thus</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A in X tag <span class="nt">#x</span> -~ tag <span class="nt">#y</span>
+</pre></div>
+</div>
+<p>Will tag all A  in X with the tag x and all the A not in X with y.</p>
+</section>
+<section id="parent">
+<h3>Parent <code class="docutils literal notranslate"><span class="pre">~</span></code><a class="headerlink" href="#parent" title="Link to this heading"></a></h3>
+<p>Uses the parent context.</p>
+</section>
+<section id="root">
+<h3>Root <code class="docutils literal notranslate"><span class="pre">.~</span></code><a class="headerlink" href="#root" title="Link to this heading"></a></h3>
+<p>Uses root context.</p>
+</section>
+<section id="cross-selection-xsell">
+<h3>Cross Selection <code class="docutils literal notranslate"><span class="pre">xsell</span></code><a class="headerlink" href="#cross-selection-xsell" title="Link to this heading"></a></h3>
+<p>Convert box selection to shelf selection or vice versa.</p>
+</section>
+</section>
+<section id="condition">
+<h2>Condition<a class="headerlink" href="#condition" title="Link to this heading"></a></h2>
+<blockquote>
+<div></div></blockquote>
+<p id="id4">Conditions are evaluated within the current context and are true if the given selector returns at least one object.
+The selector can be a box or a shelf (starting with <code class="docutils literal notranslate"><span class="pre">/</span></code>). Both selectors needs to be  enclosed within <code class="docutils literal notranslate"><span class="pre">(..)</span></code></p>
+<p>Classic logical operators (<code class="docutils literal notranslate"><span class="pre">!</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code> and <code class="docutils literal notranslate"><span class="pre">||</span></code>) can be used to combine conditions.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>( A ) <span class="c">--  true if there is a A box</span>
+( A* *B) <span class="c">-- true if there is a starting with A and ending with B</span>
+(/S) <span class="c">-- if there is a S shelf</span>
+!( A ) &amp;&amp; (/S) <span class="c">--  no A box and a shelf S</span>
+</pre></div>
+</div>
+</section>
+<section id="commands">
+<h2>Commands<a class="headerlink" href="#commands" title="Link to this heading"></a></h2>
+<section id="box-manipulation">
+<span id="id5"></span><h3>Box manipulation<a class="headerlink" href="#box-manipulation" title="Link to this heading"></a></h3>
+<p>Boxes can moves around, tagged but also resized.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">to^</span> <span class="pre">boxes:pmode:orules</span> <span class="pre">shelves</span></code>: moves current boxes to given shelves. Exit on top</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to&gt;</span> <span class="pre">boxes:pmode:orules</span> <span class="pre">shelves</span></code>: moves current boxes to given shelves. Exit Left</p></li>
+<li><dl>
+<dt><code class="docutils literal notranslate"><span class="pre">to</span>&#160; <span class="pre">boxes:pmode:orules</span> <span class="pre">exit'shelves</span></code>: moves current boxes to given shelves. Accept a different exit mode for each shelf.</dt><dd><p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>to &gt;A/<span class="nv">[12]^B/[12]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+<div class="admonition-todo admonition" id="id6">
+<p class="admonition-title">Todo</p>
+<p>pmode</p>
+</div>
+<div class="admonition-todo admonition" id="id7">
+<p class="admonition-title">Todo</p>
+<p>orules</p>
+</div>
+<ul>
+<li><dl>
+<dt><code class="docutils literal notranslate"><span class="pre">swap</span> <span class="pre">debug:sticky</span> <span class="pre">selector</span></code>: Swap the current boxes to match the order given by the selector.</dt><dd><p>The selector should only reorder the current selection. “Sticky” tags stays in place instead of moving with boxes.</p>
+<p>Example</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[ A | B | C ] swap [A | C | B ]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fill</span> <span class="pre">pos:loc</span> <span class="pre">{</span> <span class="pre">boxes</span> <span class="pre">}</span></code>:  Move boxes using to the given position and location specified by <code class="docutils literal notranslate"><span class="pre">pos</span></code> and <code class="docutils literal notranslate"><span class="pre">loc</span></code> <a class="reference internal" href="tags.html#evaluation"><span class="std std-ref">property</span></a>. The default uses the <code class="docutils literal notranslate"><span class="pre">#fill-shelf</span></code> and <code class="docutils literal notranslate"><span class="pre">#fill-shelf</span></code> tags.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tag</span> <span class="pre">#tag1#tag2</span></code>: tags the current boxes with tag1 and tag2</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">boxes?</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: execute stmt with tag set temporaly.</dt><dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">(tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">,</span> <span class="pre">smt,</span> <span class="pre">tag</span> <span class="pre">#-tag1#-tag2)</span></code>.
+If the boxes parameter is given, only the boxes will be tag (without narrowing the context to those boxes)</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toggle</span> <span class="pre">#tag</span></code>: tag included and untag excluded.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">toggle</span> <span class="pre">#-tag</span></code>: untag included and tag excluded.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">box:resize</span> <span class="pre">[max|min|first]</span> <span class="pre">box:</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: resize temporalily all selected boxes with the given strategy. If a box selector is given  the given box will be used to calculate the new size.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bsize</span></code></p></li>
+</ul>
+<p>Example</p>
+<blockquote>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>box:resize first A <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+<p>Resize with the dimension of the first encountered A.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>box:resize first <span class="nn">{ stmt }</span>
+</pre></div>
+</div>
+<p>Resize with the dimension of the first selected box.</p>
+</div></blockquote>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="box-selectors">
+<h3>Box selectors<a class="headerlink" href="#box-selectors" title="Link to this heading"></a></h3>
+<p>Narrows the current box selection.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Selector</span></code>: select boxes. Start with an uppercase</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">?selector</span></code>: select boxes. Start with an uppercase</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">in:shelves</span></code>: select boxes in the current shelf selection.</p></li>
+</ul>
+<section id="box-range">
+<h4>Box Range<a class="headerlink" href="#box-range" title="Link to this heading"></a></h4>
+<p>Select boxes upto, from etc the given selector.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">from</span> <span class="pre">selector</span></code>: after selector (included)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">upto</span> <span class="pre">selector</span></code>: before selector (include)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">after</span> <span class="pre">selector</span></code>: after selector (excluded)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">before</span> <span class="pre">selector</span></code>: before selector (excluded)</p></li>
+</ul>
+<div class="admonition-todo admonition" id="id8">
+<p class="admonition-title">Todo</p>
+<p>selector syntax</p>
+</div>
+</section>
+</section>
+<section id="shelf-selectors">
+<h3>Shelf selectors<a class="headerlink" href="#shelf-selectors" title="Link to this heading"></a></h3>
+<p>Narrows the current shelf selection.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">/selector</span></code>: select shelves.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">with:boxes</span></code>: select shelves containing in the current box selection.</p></li>
+</ul>
+</section>
+<section id="miscellaneous">
+<h3>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Link to this heading"></a></h3>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">tam</span> <span class="pre">orules:</span> <span class="pre">tagAndMove</span></code>: tag and move current box selection as in <a class="reference internal" href="sections.html#moves-and-tag"><span class="std std-ref">tag and moves section</span></a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">delete</span></code>:  delete current box selection.</p>
+<blockquote>
+<div><div class="admonition danger">
+<p class="admonition-title">Danger</p>
+<p>Deleting boxes doesn’t remove them from the parents and current context.
+Chaining action after delete might cause crashes.</p>
+</div>
+</div></blockquote>
+</li>
+</ul>
+</section>
+<section id="context-parameters">
+<h3>Context parameters<a class="headerlink" href="#context-parameters" title="Link to this heading"></a></h3>
+<p>Miscellaneous “global” parameters can be set per context. When a parameter is set, it applies to that effect and the context and its children only (that is, every statements within the chain). The general syntax for setting global parameter is <code class="docutils literal notranslate"><span class="pre">parameter=value</span></code></p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">pmode=mode</span></code>: set the default default <a class="reference internal" href="sections.html#partition-mode"><span class="std std-ref">partition mode</span></a>.</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">p=mode</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orules=rules</span> <span class="pre">selector?</span></code>: set the <a class="reference internal" href="sections.html#orientation-rules"><span class="std std-ref">orientation</span></a> for everything or the given selector.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orules+=rules</span> <span class="pre">selector?</span></code>: add a rule  to the current orientation rules. The last rule has priority over the previous one.</p></li>
+</ul>
+<section id="empty-checks">
+<span id="empty-check"></span><h4>Empty checks<a class="headerlink" href="#empty-checks" title="Link to this heading"></a></h4>
+<p>WHP can check if the result of a selector is empty or not. This can be used to make sure there is no typo in the selector or that the source boxes and target shelves exists.
+When enabled, the WHP will stop and display a message if the condition is met.</p>
+<p>Checks on the result of an action (like checking if all boxes have been moved successfully) can be done using <a class="reference internal" href="#assertions"><span class="std std-ref">assertions</span></a>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">empty:boxes=no</span></code>: stops if box selector is empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">empty:boxes=yes</span></code>: allows empty boxes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">empty:shelves=no</span></code>: stops if shelf selector is empty.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">empty:shelves=yes</span></code>: allows empty shelves</p></li>
+</ul>
+</section>
+</section>
+<section id="traces-and-assertions">
+<h3>Traces and Assertions<a class="headerlink" href="#traces-and-assertions" title="Link to this heading"></a></h3>
+<section id="trace">
+<h4>Trace<a class="headerlink" href="#trace" title="Link to this heading"></a></h4>
+<p>Trace can be logged to stdout. If a message argument is provided it would be used as the title.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace:count</span> <span class="pre">message:?</span></code>: log the number of selected boxes and shelves.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t:c</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace:boxes</span> <span class="pre">message:prop:</span></code>: log all selected boxes. If prop is given it will be expanded as <a class="reference internal" href="tags.html#evaluation"><span class="std std-ref">property</span></a> for each boxes.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">trace:box</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t:b</span></code></p></li>
+</ul>
+<p>Example</p>
+<blockquote>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:boxes prop:&quot;boxname = <span class="si">${boxname}</span> <span class="si">$[dead?]</span>&quot;
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace:shelf</span> <span class="pre">message:</span></code>: log all selected shelves.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t:s</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">trace:orientation</span> <span class="pre">message:</span></code>: log current orientation rules.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t:o</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="assertions">
+<span id="id9"></span><h4>Assertions<a class="headerlink" href="#assertions" title="Link to this heading"></a></h4>
+<p>Assertions raise an error if the condition is not true. A message can be passed to help localizing which assertion failed. Unlike <a class="reference internal" href="#empty-check"><span class="std std-ref">empty checks</span></a> assertion are only checking the current context.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">assert:noboxes</span> <span class="pre">message:</span></code>: asserts that there is no selected boxes</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">a:nob</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">assert:boxes</span> <span class="pre">message:</span></code>: asserts that some boxes are selected.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">a:b</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">assert:noshelves</span> <span class="pre">message:</span></code> asserts that no shelves are selected</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">a:nos:</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">assert:shelves</span> <span class="pre">message:</span></code> asserts that some shelves are selected.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">a:s</span></code></p></li>
+</ul>
+</li>
+</ul>
+</section>
+</section>
+<section id="shelf-manipulation">
+<h3>Shelf Manipulation<a class="headerlink" href="#shelf-manipulation" title="Link to this heading"></a></h3>
+<p>Shelves can tagged, resized or even split in grid. Shelf command accepting a block argument only perform the modification during the life span of the block.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:tag</span> <span class="pre">#tag</span></code>: tag the current shelves.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">shelves:tag</span> <span class="pre">#tag</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">stag</span> <span class="pre">#tag</span></code></p></li>
+</ul>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:resize</span> <span class="pre">boxes:length:width:height</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: Resize the current shelves temporarily using dimension formula similar  to <a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">shelf split</span></a>. If a box selector is given, the first found box would be use ath “the box” in formula.</p>
+<blockquote>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
+</pre></div>
+</div>
+<p>Limit the current shelves to 50% of their respective height.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{=}</span>*2 box:A  <span class="nn">{stmt}</span>
+</pre></div>
+</div>
+<p>Limit the current height to fit to boxes with an <code class="docutils literal notranslate"><span class="pre">=</span></code> orientation.</p>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:split</span> <span class="pre">boxes:length:width:height</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: Split the current shelves temporarily using dimension formula similar  to <a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">shelf split</span></a>. If a box selector is given, the first found box would be use ath “the box” in formula. Multiple formula are separated with a <code class="docutils literal notranslate"><span class="pre">:</span></code>.
+Example</p>
+<blockquote>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
+</pre></div>
+</div>
+<p>Split selected shelves in 2 sub shelves of equal height.</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{30%}</span>:<span class="nn">{30%}</span>  <span class="nn">{stmt}</span>
+</pre></div>
+</div>
+<p>Split selected shelves in 3 sub shelves of different height (30% , 30% and 40%).</p>
+</div></blockquote>
+</li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="reports.html" class="btn btn-neutral float-left" title="Reports" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2025, Maxime Bourget.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
