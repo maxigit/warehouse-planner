@@ -546,17 +546,17 @@ Shelves can tagged, resized or even split in grid. Shelf command accepting a blo
 
 - ``shelf:full { stmt }``:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.
 
-- ``shelf:resize boxes:length:width:height { stmt }``: Resize the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula.
+- ``shelf:resize shelfves boxes:length:width:height { stmt }``: Resize the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula. Unlike ``shelf:split``, boxes out of the shelf are not removed.
   
      ::
      
-         shelf:resize height:{50%}  {stmt}
+         shelf:resize * height:{50%}  {stmt}
 
      Limit the current shelves to 50% of their respective height.
 
      ::
      
-         shelf:resize height:{=}*2 box:A  {stmt}
+         shelf:resize * height:{=}*2 box:A  {stmt}
 
      Limit the current height to fit to boxes with an ``=`` orientation.
 
@@ -565,13 +565,13 @@ Shelves can tagged, resized or even split in grid. Shelf command accepting a blo
   
      ::
      
-         shelf:resize height:{50%}  {stmt}
+         shelf:resize * height:{50%}  {stmt}
 
      Split selected shelves in 2 sub shelves of equal height.
 
      ::
      
-         shelf:resize height:{30%}:{30%}  {stmt}
+         shelf:resize * height:{30%}:{30%}  {stmt}
 
      Split selected shelves in 3 sub shelves of different height (30% , 30% and 40%).
 
