@@ -455,14 +455,10 @@ Split a shelf performing guillotine cut. The dimension columns
 specify the dimension to cut. it can be any formula with reference
 another shelf or objet. For each object the dimension corresponding
 to the column will be used, unless accessor is specified (see
-`dimension formula <#dimension-formula>`__) If a box selector is
-specified, the dimension of the first box found can be used. Extra
-object
+`dimension formula <#dimension-formula>`__). If a box selector is
+specified, the dimension of the first box found can be used.
 
--  ``{}`` or ``{%}`` or ``{shelf}`` the shelf itself
--  ``{content}`` dimension of bounding box of box inside the shelf
--  ``{=}`` or ``{|}`` etc box with the given orientation
--  ``{*}`` box with first possible orientation
+.. ihaskell:: ShelfOp::shelf-split-formula
 
 The split shelf is resized and the created ones have the same name
 with a 3 letter suffix separated with ``/`` index added. Example

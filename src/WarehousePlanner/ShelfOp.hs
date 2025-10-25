@@ -341,7 +341,50 @@ newShelfWithFormula dimW dimW' bottomW boxo strategy name tags = do
 -- Empty ref = shelf itself
 -- orientation, the box according to the given orientation
 -- content 
--- @TODOC
+{- rST::shelf-split-formula
+Extra objects
+
+-  ``{}`` or ``{%}`` or ``{shelf}`` or ``{self}`` the shelf itself
+-  ``{before}`` and ``{content}`` dimension of bounding box of boxes inside the shelf
+
+   ::
+
+       +-----------------------+
+       |     :     :           |
+       |     :     :           |
+       |     :XXXXX:           |
+       |     :XXXXX:           |
+       +-----+-----------------+
+             ^     ^
+             |     |
+             |     +---- {content}
+             +-----------{before}
+
+-  ``{=}`` or ``{|}`` etc ... given box with the specified orientation
+-  ``{box}`` dimension of the given box
+-  ``{*}`` same as box but with the box rotated to maximize the fit.
+-  ``{<selector}`` or ``{=selector}`` ``{>selector}`` similar to *before* and *content* but allow to specify the boxes.
+
+   :: 
+   
+       +-----------------------+
+       |  :         :    :     |
+       |  :         :BBBB:     |
+       |AA:         :BBBB:     |
+       |AA:         :BBBB:     |
+       +--+---------+----+-----+
+       [=A|   >A    ]    :     :
+       :  [   <B    | =B | >B  ]
+       ^  ^         ^    ^     ^
+       |  |         |    |     |
+       |  |         |    |     +--  {shelf} {>B:L}
+       |  |         |    +--------  {content}, {=B:L}, {>B}
+       |  |         +-------------  {>A:L}, {<B:L}, {=B}     
+       |  +-----------------------  {A=:L}, {>A}, {<B}
+       +--------------------------  {before}, {A=}
+
+
+::rST -}
 dimForSplit :: Maybe (Box s) -> Shelf s -> Text -> WH ShelfDimension s
 dimForSplit boxm shelf ref = 
   case unpack ref of
