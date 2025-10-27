@@ -366,7 +366,7 @@ Extra objects
 -  ``{<selector}`` or ``{=selector}`` ``{>selector}`` similar to *before* and *content* but allow to specify the boxes.
 
    :: 
-   
+        12 345678901 2345 67890
        +-----------------------+
        |  :         :    :     |
        |  :         :BBBB:     |
@@ -433,15 +433,23 @@ dimForSplit boxm shelf ref =
                                          rightOf aff = dLength (aBottomLeft aff) >= maxL
                                          affE = case ord of
                                                     LT -> case nonEmpty $ filter leftOf otherA of
-                                                           Nothing -> Left $ shelfDimension shelf
-                                                           Just aff -> Right $ sconcat aff
-                                                    EQ -> Right $ selectBound
+                                                           Nothing -> Right ( mempty
+                                                                            , aBottomLeft selectBound
+                                                                            )
+                                                           Just affs -> Right ( aTopRight (sconcat affs)
+                                                                              , aBottomLeft selectBound
+                                                                              )
+                                                    EQ -> Right (aBottomLeft selectBound, aTopRight selectBound)
                                                     GT -> case nonEmpty $ filter rightOf otherA of
-                                                             Nothing -> Left $ return $ ShelfDimension mempty mempty 0 mempty
-                                                             Just aff -> Right $ sconcat aff
+                                                             Nothing -> Left do
+                                                                    sdim <- shelfDimension shelf
+                                                                    return $ ShelfDimension (aTopRight selectBound) (sMinD sdim) 0 mempty
+                                                             Just affs -> Right ( aTopRight selectBound
+                                                                                , aBottomLeft $ sconcat affs
+                                                                                )
                                          in case affE of 
                                                 Left r -> r
-                                                Right aff -> return $ ShelfDimension (aBottomLeft aff) (aTopRight aff) 0 mempty
+                                                Right (min_, max_) -> return $ ShelfDimension min_ max_ 0 mempty
 
 
 
