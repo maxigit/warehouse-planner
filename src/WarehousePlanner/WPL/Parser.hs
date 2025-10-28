@@ -169,12 +169,12 @@ Example
 
 ::
 
-  shelf:full {A} B
+  shelf:full * {A} B
   
-executes ``A`` with full shelves and then execute B. Without the braces ``shelf:full A B`` could by interpreted as either ``shelf:full {A} B`` or ``shelf:full {A B}``.
+executes ``A`` with full shelves and then execute B. Without the braces ``shelf:full * A B`` could by interpreted as either ``shelf:full * {A} B`` or ``shelf:full * {A B}``.
 
 
-If there is no ambiguity the ``&`` shorthand can be used, that is ``shelf:full {A}`` can be written as ``shelf:full & A``.
+If there is no ambiguity the ``&`` shorthand can be used, that is ``shelf:full * {A}`` can be written as ``shelf:full * & A``.
 
 Property argument  
 -------------------
@@ -544,9 +544,9 @@ Shelves can tagged, resized or even split in grid. Shelf command accepting a blo
   - ``shelves:tag #tag``
   - ``stag #tag``
 
-- ``shelf:full { stmt }``:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.
+- ``shelf:full shelves { stmt }``:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.
 
-- ``shelf:resize shelfves boxes:length:width:height { stmt }``: Resize the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula. Unlike ``shelf:split``, boxes out of the shelf are not removed.
+- ``shelf:resize shelves boxes:length:width:height { stmt }``: Resize the current shelves temporarily using dimension formula similar  to :ref:`shelf split <shelf-split>`. If a box selector is given, the first found box would be use ath "the box" in formula. Unlike ``shelf:split``, boxes out of the shelf are not removed.
   
      ::
      
