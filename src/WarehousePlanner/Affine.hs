@@ -119,7 +119,9 @@ groupBoxesByTile px py boxes = let
                    toKeep = filter keep box'affs
                in (t, map fst toKeep)
   isBoxInTile ((x,y), (x', y')) aff = affDimensionOverlap (AffDimension (Dimension x y 0) (Dimension x' y' 1))
-                                                          aff
+                                                          (project aff)
+  project (AffDimension botLeft topRight) = AffDimension (Dimension (px botLeft) (py botLeft) 0)
+                                                         (Dimension (px topRight) (py topRight) 1)
   in mapMaybe (traverse nonEmpty) tilesWithBoxes
   
 tilesFromPoints :: (Dimension -> Double) -> (Dimension -> Double) -> [Dimension] -> [ ((Double, Double), (Double, Double)) ]
