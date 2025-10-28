@@ -210,11 +210,11 @@ Without the <code class="docutils literal notranslate"><span class="pre">;</span
 This command set the minimum dimensions of the selected shelves to the maximum ones for the duration of the next statement.
 In order to avoid chaining ambiguity the next statement needs to be enclosed between <code class="docutils literal notranslate"><span class="pre">{...}</span></code>.</p>
 <p>Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:full <span class="nn">{A}</span> B
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:full * <span class="nn">{A}</span> B
 </pre></div>
 </div>
-<p>executes <code class="docutils literal notranslate"><span class="pre">A</span></code> with full shelves and then execute B. Without the braces <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">A</span> <span class="pre">B</span></code> could by interpreted as either <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A}</span> <span class="pre">B</span></code> or <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A</span> <span class="pre">B}</span></code>.</p>
-<p>If there is no ambiguity the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> shorthand can be used, that is <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{A}</span></code> can be written as <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">&amp;</span> <span class="pre">A</span></code>.</p>
+<p>executes <code class="docutils literal notranslate"><span class="pre">A</span></code> with full shelves and then execute B. Without the braces <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">*</span> <span class="pre">A</span> <span class="pre">B</span></code> could by interpreted as either <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">*</span> <span class="pre">{A}</span> <span class="pre">B</span></code> or <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">*</span> <span class="pre">{A</span> <span class="pre">B}</span></code>.</p>
+<p>If there is no ambiguity the <code class="docutils literal notranslate"><span class="pre">&amp;</span></code> shorthand can be used, that is <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">*</span> <span class="pre">{A}</span></code> can be written as <code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">*</span> <span class="pre">&amp;</span> <span class="pre">A</span></code>.</p>
 </section>
 <section id="property-argument">
 <h3>Property argument<a class="headerlink" href="#property-argument" title="Link to this heading"></a></h3>
@@ -558,14 +558,14 @@ When enabled, the WHP will stop and display a message if the condition is met.</
 <li><p><code class="docutils literal notranslate"><span class="pre">stag</span> <span class="pre">#tag</span></code></p></li>
 </ul>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">shelf:resize</span> <span class="pre">boxes:length:width:height</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: Resize the current shelves temporarily using dimension formula similar  to <a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">shelf split</span></a>. If a box selector is given, the first found box would be use ath “the box” in formula.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:full</span> <span class="pre">shelves</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>:  Set temporarily the current shelves minimum dimensions to their respective maximum dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf:resize</span> <span class="pre">shelves</span> <span class="pre">boxes:length:width:height</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: Resize the current shelves temporarily using dimension formula similar  to <a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">shelf split</span></a>. If a box selector is given, the first found box would be use ath “the box” in formula. Unlike <code class="docutils literal notranslate"><span class="pre">shelf:split</span></code>, boxes out of the shelf are not removed.</p>
 <blockquote>
-<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize * height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
 </pre></div>
 </div>
 <p>Limit the current shelves to 50% of their respective height.</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{=}</span>*2 box:A  <span class="nn">{stmt}</span>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize * height:<span class="nn">{=}</span>*2 box:A  <span class="nn">{stmt}</span>
 </pre></div>
 </div>
 <p>Limit the current height to fit to boxes with an <code class="docutils literal notranslate"><span class="pre">=</span></code> orientation.</p>
@@ -574,11 +574,11 @@ When enabled, the WHP will stop and display a message if the condition is met.</
 <li><p><code class="docutils literal notranslate"><span class="pre">shelf:split</span> <span class="pre">boxes:length:width:height</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: Split the current shelves temporarily using dimension formula similar  to <a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">shelf split</span></a>. If a box selector is given, the first found box would be use ath “the box” in formula. Multiple formula are separated with a <code class="docutils literal notranslate"><span class="pre">:</span></code>.
 Example</p>
 <blockquote>
-<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize * height:<span class="nn">{50%}</span>  <span class="nn">{stmt}</span>
 </pre></div>
 </div>
 <p>Split selected shelves in 2 sub shelves of equal height.</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize height:<span class="nn">{30%}</span>:<span class="nn">{30%}</span>  <span class="nn">{stmt}</span>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>shelf:resize * height:<span class="nn">{30%}</span>:<span class="nn">{30%}</span>  <span class="nn">{stmt}</span>
 </pre></div>
 </div>
 <p>Split selected shelves in 3 sub shelves of different height (30% , 30% and 40%).</p>

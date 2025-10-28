@@ -782,14 +782,57 @@ A <span class="c">-- join A/ba A/bb and A/ab to A</span>
 specify the dimension to cut. it can be any formula with reference
 another shelf or objet. For each object the dimension corresponding
 to the column will be used, unless accessor is specified (see
-<a class="reference external" href="#dimension-formula">dimension formula</a>) If a box selector is
-specified, the dimension of the first box found can be used. Extra
-object</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">{%}</span></code> or <code class="docutils literal notranslate"><span class="pre">{shelf}</span></code> the shelf itself</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">{content}</span></code> dimension of bounding box of box inside the shelf</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">{=}</span></code> or <code class="docutils literal notranslate"><span class="pre">{|}</span></code> etc box with the given orientation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">{*}</span></code> box with first possible orientation</p></li>
+<a class="reference external" href="#dimension-formula">dimension formula</a>). If a box selector is
+specified, the dimension of the first box found can be used.</p>
+<p>Extra objects</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">{}</span></code> or <code class="docutils literal notranslate"><span class="pre">{%}</span></code> or <code class="docutils literal notranslate"><span class="pre">{shelf}</span></code> or <code class="docutils literal notranslate"><span class="pre">{self}</span></code> the shelf itself</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{before}</span></code> and <code class="docutils literal notranslate"><span class="pre">{content}</span></code> dimension of bounding box of boxes inside the shelf</p>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>+<span class="c">-----------------------+</span>
+|     :     :           |
+|     :     :           |
+|     :XXXXX:           |
+|     :XXXXX:           |
++<span class="c">-----+-----------------+</span>
+      ^     ^
+      |     |
+      |     +<span class="c">---- {content}</span>
+      +<span class="c">-----------{before}</span>
+</pre></div>
+</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{=}</span></code> or <code class="docutils literal notranslate"><span class="pre">{|}</span></code> etc … given box with the specified orientation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{box}</span></code> dimension of the given box</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{*}</span></code> same as box but with the box rotated to maximize the fit.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">{&lt;selector}</span></code> or <code class="docutils literal notranslate"><span class="pre">{=selector}</span></code> <code class="docutils literal notranslate"><span class="pre">{&gt;selector}</span></code> similar to <em>before</em> and <em>content</em> but allow to specify the boxes.</p>
+<dl>
+<dt>::</dt><dd><blockquote>
+<div><p>12 345678901 2345 67890</p>
+</div></blockquote>
+<table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td colspan="4"><blockquote>
+<div><p>:         :    :
+:         :BBBB:</p>
+</div></blockquote>
+<p>AA:         :BBBB:
+AA:         :BBBB:</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>[=A|   &gt;A    ]    :     :
+:  [   &lt;B    | =B | &gt;B  ]
+^  ^         ^    ^     ^
+|  |         |    |     |
+|  |         |    |     +–  {shelf} {&gt;B:L}
+|  |         |    +——–  {content}, {=B:L}, {&gt;B}
+|  |         +————-  {&gt;A:L}, {&lt;B:L}, {=B}
+|  +———————–  {A=:L}, {&gt;A}, {&lt;B}
++————————–  {before}, {A=}</p>
+</dd>
+</dl>
+</li>
 </ul>
 <p>The split shelf is resized and the created ones have the same name
 with a 3 letter suffix separated with <code class="docutils literal notranslate"><span class="pre">/</span></code> index added. Example</p>
