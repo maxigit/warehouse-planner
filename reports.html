@@ -21,6 +21,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="WPL" href="wpl.html" />
     <link rel="prev" title="Tags and Attributes" href="tags.html" /> 
 </head>
 
@@ -53,9 +54,19 @@
 <li class="toctree-l2"><a class="reference internal" href="#mop-export">Mop export</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#generic-report">Generic report</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#best-reports">Best reports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#best-fit-reports">Best fit reports</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#shelf-mode">Shelf mode</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pickable">Pickable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#required-vs-fitted">Required vs Fitted</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#field-description">Field description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#practical-use">Practical use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#brick-shortcuts">Brick shortcuts</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#report-selector">Report Selector</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="wpl.html">WPL</a></li>
 </ul>
 
         </div>
@@ -168,7 +179,7 @@ report</p>
 </section>
 <section id="best-reports">
 <h2>Best reports<a class="headerlink" href="#best-reports" title="Link to this heading"></a></h2>
-<p>Best boxes, best shelves and best available shelves computes
+<p id="id2">Best boxes, best shelves and best available shelves computes
 respectivily the best boxes to go in a given shelf, the best shelves to
 hold the given boxes. The boxes/shelves to analyses should be set in the
 parameter field. If the field starts with <code class="docutils literal notranslate"><span class="pre">!</span></code> then depth of shelf and
@@ -177,6 +188,130 @@ a set of boxes and shelves can be given using the
 <code class="docutils literal notranslate"><span class="pre">boxSelector[,shelfSelector[,orientationRules]]</span></code> syntax. In that case,
 only the given boxes and shelves will be taken into account for the
 report.</p>
+</section>
+<section id="best-fit-reports">
+<h2>Best fit reports<a class="headerlink" href="#best-fit-reports" title="Link to this heading"></a></h2>
+<p id="best-fit">The <strong>best fit</strong> report is similar to the <a class="reference internal" href="#id2"><span class="std std-ref">best reports</span></a> but instead of giving the best shelves or best boxes
+it gives all the possibilities for the selected shelves and boxes. Best shelves or best boxes for can be acheived by selecting all shelves or all boxes.
+Different columns gives or rows gives results for used or empty shelves, pickable or all boxes etc.</p>
+<p>The best shelf for a given box is done by selecting one</p>
+<section id="shelf-mode">
+<h3>Shelf mode<a class="headerlink" href="#shelf-mode" title="Link to this heading"></a></h3>
+<p>For each (shelf, box) combination a row is produce for different <em>shelf mode</em> that is, <code class="docutils literal notranslate"><span class="pre">full</span></code>, <code class="docutils literal notranslate"><span class="pre">right</span></code> or <code class="docutils literal notranslate"><span class="pre">above</span></code>.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">full</span></code>: fit as if the shelf was empty (uses the full shelf regardless of what is already in )</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">right</span></code>: fit using the empty part of the shelf at the right of existing boxes. Similar to using <code class="docutils literal notranslate"><span class="pre">right</span></code> partition mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">above</span></code>: fit using the empty part of the shelf above the of existing boxes. Similar to using <code class="docutils literal notranslate"><span class="pre">above</span></code> partition mode.</p></li>
+</ul>
+<p>Choosing all the available choices in the same report seems to be easier to use than having to chose one before launching the report.</p>
+</section>
+<section id="pickable">
+<h3>Pickable<a class="headerlink" href="#pickable" title="Link to this heading"></a></h3>
+<p>The best fit report can distinguished between <em>pickable</em> and <em>not pickable</em> boxes. Pickable are box which can be picked from
+without having to move other boxes. They are the boxes with <code class="docutils literal notranslate"><span class="pre">w=1</span></code>.
+For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4 (2x2) will be pickable.</p>
+<p>Boxes that we want to be in <em>pickable</em> zone can be marked with the tag <code class="docutils literal notranslate"><span class="pre">&#64;topick</span></code>.</p>
+<p>In the report <code class="docutils literal notranslate"><span class="pre">to_pick</span></code> is the number of box we want to be pickable (<code class="docutils literal notranslate"><span class="pre">&#64;topick</span></code>), whereas <code class="docutils literal notranslate"><span class="pre">pickable</span></code> is the number of boxes that can be picked from the given layout.
+<code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code> is the number of identical shelves required to make all box to pick as pickable.</p>
+</section>
+<section id="required-vs-fitted">
+<h3>Required vs Fitted<a class="headerlink" href="#required-vs-fitted" title="Link to this heading"></a></h3>
+<p>Depending on the <code class="docutils literal notranslate"><span class="pre">limitToBoxNb</span></code> parameter the report will try to fit either as much boxes as possible (<strong>fitted</strong>) or just the number of box selected (<strong>to fit</strong>).
+<strong>required* or field starting with **r</strong> refers to either the fitted or to fit boxes.</p>
+</section>
+<section id="field-description">
+<h3>Field description<a class="headerlink" href="#field-description" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">shelf</span></code>:  the shelf name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">content</span></code>:  styles of boxes in the shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">part</span></code>: the shelf/partition mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">style</span></code>:  the style being fit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">box</span></code>: box dimension</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit</span></code>: how many can fit (according to part mode)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_fit</span></code>:  how many boxes are selected</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">to_pick</span></code>:  how many boxes are <code class="docutils literal notranslate"><span class="pre">&#64;topick</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pickable</span></code>: how many boxes can be picked easyly</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">l100</span></code>:  required length / available length</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w100</span></code>:  required witd / available width</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">h100</span></code>:  required heigh / available height</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wh100</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lh100</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lw100</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fit100</span></code>:  fitted / to fit</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shelves_needed</span></code>:  how many shelves to fit all required</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code>: how many shelves to have enough pickable</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rvolmin100</span></code>: required volume / available volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rvolmax100</span></code>:  required volume / available max volume (use  max shelf dimension - used)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fvolmin100</span></code>:  fitted volume / available volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fvolmax100</span></code>:  fitted volume / availabe max volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orientation</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">how</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fVSused</span></code>: fitted (=/= not to_fit) volume / used volume (by existing boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">required</span></code>: required dimensions</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">used</span></code>: used dimensions (by exists boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">leftover</span></code>: shelf - used - required</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">minShelf</span></code>:  available shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxShelf</span></code>: availabe max shelf</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug_strategy</span></code>:  show orientation strategy</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug_tiling</span></code>: show tiling</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">debug_volume</span></code>:  show volume</p></li>
+</ul>
+</section>
+<section id="practical-use">
+<h3>Practical use<a class="headerlink" href="#practical-use" title="Link to this heading"></a></h3>
+<p>The best use of a shelf is either to maximize <code class="docutils literal notranslate"><span class="pre">fvolmin100</span></code> (fill the current shelf as best) or if there is enough left over to maximize <code class="docutils literal notranslate"><span class="pre">hw100</span></code>. This guarantee the best use of the available length. Minimizing <code class="docutils literal notranslate"><span class="pre">l100</span></code> is not enough as it doesn’t <em>reward</em> to use as much height and depth as possible.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fVSused</span></code> allows to check if replacing the current content of a shelf by all boxes of the given style is worth it.</p>
+<p><code class="docutils literal notranslate"><span class="pre">fit100</span></code> allows to check if the present boxes will fill nicely in the available space.</p>
+<p>Finding the best shelf for a style is done by selecting all shelves and only all boxes of a given style.
+Finding the best box for a shelf by selecting all boxes and only the desired shelf.</p>
+</section>
+<section id="brick-shortcuts">
+<h3>Brick shortcuts<a class="headerlink" href="#brick-shortcuts" title="Link to this heading"></a></h3>
+<p>In interactive mode, this report can be called with different combination of the current shelf, box, current selections or all.</p>
+<blockquote>
+<div><table class="docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p>Shortcut</p></td>
+<td></td>
+<td><p>Limit</p></td>
+<td><p>Shelves</p></td>
+<td><p>Boxes</p></td>
+</tr>
+<tr class="row-even"><td><p>a</p></td>
+<td><p>best fitted shelf</p></td>
+<td><p>to fit</p></td>
+<td><p>sel|All</p></td>
+<td><p>current</p></td>
+</tr>
+<tr class="row-odd"><td><p>S</p></td>
+<td><p>best shelf</p></td>
+<td><p>All</p></td>
+<td><p>sel|All</p></td>
+<td><p>current</p></td>
+</tr>
+<tr class="row-even"><td><p>B</p></td>
+<td><p>best fitted boxes</p></td>
+<td><p>All</p></td>
+<td><p>current</p></td>
+<td><p>sel|All</p></td>
+</tr>
+<tr class="row-odd"><td><p>f</p></td>
+<td><p>best fitted selection</p></td>
+<td><p>All</p></td>
+<td><p>sel|cur</p></td>
+<td><p>sel|cur|All</p></td>
+</tr>
+<tr class="row-even"><td><p>F</p></td>
+<td><p>best selection</p></td>
+<td><p>to fit</p></td>
+<td><p>selected</p></td>
+<td><p>sel|cur|All</p></td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<p>Instead of generating a text report, shelves can be tagged with the given information using <code class="docutils literal notranslate"><span class="pre">f</span></code> or <code class="docutils literal notranslate"><span class="pre">F</span></code> prefixes.</p>
+</section>
 </section>
 <section id="report-selector">
 <h2>Report Selector<a class="headerlink" href="#report-selector" title="Link to this heading"></a></h2>
@@ -197,6 +332,7 @@ barcode and doesn’t display <code class="docutils literal notranslate"><span c
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="tags.html" class="btn btn-neutral float-left" title="Tags and Attributes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="wpl.html" class="btn btn-neutral float-right" title="WPL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

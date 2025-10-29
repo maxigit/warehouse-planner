@@ -435,15 +435,22 @@ a box in C, will requires to try every available rectangles which
 will makes the planner very slow. However, if needed, the partition
 mode (which parts of the shelf needs to be filled) can be specified
 before the shelf name (as with “exit on top”). One or more partition
-mode can be specified as follow: - <code class="docutils literal notranslate"><span class="pre">~</span></code> Above only (in the example
-above: a A B) - <code class="docutils literal notranslate"><span class="pre">:</span></code> Right only (in the example above: d D B) -
-<code class="docutils literal notranslate"><span class="pre">%</span></code> Best effort (excluding above corners a and d) C A D B Not
-specifying anything is equivalent to <code class="docutils literal notranslate"><span class="pre">~:</span></code> Another possibilty is to
+mode can be specified as follow:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">~</span></code> Above only (in the example above: a A B)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">:</span></code> Right only (in the example above: d D B)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">%</span></code> Best effort (excluding above corners a and d) C A D B Not</p></li>
+</ul>
+<p>specifying anything is equivalent to <code class="docutils literal notranslate"><span class="pre">~:</span></code></p>
+<p>Another possibilty is to
 empty the shelf(ves) and fill the shelves with the existing boxes and
 the new ones. In that case, we might want to resort all boxes (old
-and new) or keep them in the orignial order (old then new). - <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>
-Sort old and new boxes - <code class="docutils literal notranslate"><span class="pre">+</span></code> old then new boxes in original order
-Example</p>
+and new) or keep them in the orignial order (old then new).</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&#64;</span></code> Sort old and new boxes</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">+</span></code> old then new boxes in original order</p></li>
+</ul>
+<p>Example</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Moves:
 stock_id,location
 ,%:~A <span class="c">-- tries a A B, A C B D and d D B</span>

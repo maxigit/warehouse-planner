@@ -14,6 +14,11 @@ Best reports
 
 .. ihaskell:: Report::bests
 
+Best fit reports
+----------------
+
+.. ihaskell:: Report::fit
+
 Report Selector
 ---------------
 
