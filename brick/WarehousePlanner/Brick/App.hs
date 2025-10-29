@@ -737,12 +737,12 @@ keyBindingGroups =  groups
                  ,('h', EYankBoxHistory, "box history")
                  ,('/', EYankSelectedBoxes, "box selection")
                  ,('s', EYankShelfContent, "shelf content (boxes)")
-                 ,('a', EYankBestAvailableShelfFor, "best available shelf")
-                 ,('S', EYankBestShelfFor, "best available shelf")
-                 ,('B', EYankBestBoxesFor, "best available boxes")
+                 ,('a', EYankBestAvailableShelfFor, "best fitted shelf")
+                 ,('S', EYankBestShelfFor, "best shelf")
+                 ,('B', EYankBestBoxesFor, "best boxes")
                  ,('?', EYankSelectedShelves, "Shelf selection")
-                 ,('f' ,EYankBestForSelected False, "Best fit for selected boxes and shelves")
-                 ,('F' ,EYankBestForSelected True,  "Best (available) fit for selected boxes and shelves")
+                 ,('f' ,EYankBestForSelected False, "Best fitted for selected boxes and shelves")
+                 ,('F' ,EYankBestForSelected True,  "Best for selected boxes and shelves")
                  ,('t', EYankTags, "tags")
                  ]
 flattenSections :: [(Text, [a])] -> [a]

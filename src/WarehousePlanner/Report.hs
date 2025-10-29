@@ -65,6 +65,9 @@ reportAll = do
                 <> ", " <> style
                 <> ", " <> tshow count  <> ", " <> showOrientation o
 {- rST::bests
+
+.. _best-reports:
+
 Best boxes, best shelves and best available shelves computes
 respectivily the best boxes to go in a given shelf, the best shelves to
 hold the given boxes. The boxes/shelves to analyses should be set in the
@@ -209,7 +212,115 @@ bestAvailableShelvesFor pmode (extractRanking -> (ranking, style'shelf)) = do
                      (filter ((/=0).snd) shelfInfos)
                    )
 
+{- rST::fit
 
+.. _best-fit:
+
+The **best fit** report is similar to the :ref:`best reports <best-reports>` but instead of giving the best shelves or best boxes
+it gives all the possibilities for the selected shelves and boxes. Best shelves or best boxes for can be acheived by selecting all shelves or all boxes.
+Different columns gives or rows gives results for used or empty shelves, pickable or all boxes etc.
+
+The best shelf for a given box is done by selecting one 
+
+Shelf mode
+``````````
+For each (shelf, box) combination a row is produce for different *shelf mode* that is, ``full``, ``right`` or ``above``.
+
+- ``full``: fit as if the shelf was empty (uses the full shelf regardless of what is already in )
+- ``right``: fit using the empty part of the shelf at the right of existing boxes. Similar to using ``right`` partition mode.
+- ``above``: fit using the empty part of the shelf above the of existing boxes. Similar to using ``above`` partition mode.
+
+Choosing all the available choices in the same report seems to be easier to use than having to chose one before launching the report.
+
+Pickable
+````````
+The best fit report can distinguished between *pickable* and *not pickable* boxes. Pickable are box which can be picked from
+without having to move other boxes. They are the boxes with ``w=1``. 
+For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4 (2x2) will be pickable.
+
+Boxes that we want to be in *pickable* zone can be marked with the tag ``@topick``.
+ 
+In the report ``to_pick`` is the number of box we want to be pickable (``@topick``), whereas ``pickable`` is the number of boxes that can be picked from the given layout.
+``picking_shelves`` is the number of identical shelves required to make all box to pick as pickable.
+
+Required vs Fitted
+``````````````````
+Depending on the ``limitToBoxNb`` parameter the report will try to fit either as much boxes as possible (**fitted**) or just the number of box selected (**to fit**).
+**required* or field starting with **r** refers to either the fitted or to fit boxes.
+
+Field description
+`````````````````
+
+- ``shelf``:  the shelf name
+- ``content``:  styles of boxes in the shelf
+- ``part``: the shelf/partition mode
+- ``style``:  the style being fit
+- ``box``: box dimension
+- ``fit``: how many can fit (according to part mode)
+- ``to_fit``:  how many boxes are selected
+- ``to_pick``:  how many boxes are ``@topick``
+- ``pickable``: how many boxes can be picked easyly
+- ``l100``:  required length / available length
+- ``w100``:  required witd / available width
+- ``h100``:  required heigh / available height
+- ``wh100``:  
+- ``lh100``: 
+- ``lw100``: 
+- ``fit100``:  fitted / to fit
+- ``shelves_needed``:  how many shelves to fit all required
+- ``picking_shelves``: how many shelves to have enough pickable
+- ``rvolmin100``: required volume / available volume
+- ``rvolmax100``:  required volume / available max volume (use  max shelf dimension - used)
+- ``fvolmin100``:  fitted volume / available volume
+- ``fvolmax100``:  fitted volume / availabe max volume
+- ``orientation``: 
+- ``how``: 
+- ``fVSused``: fitted (=/= not to_fit) volume / used volume (by existing boxes)
+- ``required``: required dimensions
+- ``used``: used dimensions (by exists boxes)
+- ``leftover``: shelf - used - required
+- ``minShelf``:  available shelf
+- ``maxShelf``: availabe max shelf
+- ``debug_strategy``:  show orientation strategy
+- ``debug_tiling``: show tiling
+- ``debug_volume``:  show volume
+
+Practical use
+`````````````
+
+The best use of a shelf is either to maximize ``fvolmin100`` (fill the current shelf as best) or if there is enough left over to maximize ``hw100``. This guarantee the best use of the available length. Minimizing ``l100`` is not enough as it doesn't *reward* to use as much height and depth as possible.
+
+``fVSused`` allows to check if replacing the current content of a shelf by all boxes of the given style is worth it.
+
+``fit100`` allows to check if the present boxes will fill nicely in the available space.
+
+Finding the best shelf for a style is done by selecting all shelves and only all boxes of a given style.
+Finding the best box for a shelf by selecting all boxes and only the desired shelf.
+
+Brick shortcuts
+```````````````
+In interactive mode, this report can be called with different combination of the current shelf, box, current selections or all.
+
+
+    +-----------+-------------------------------------+--------+----------+------------+
+    | Shortcut  |                                     | Limit  | Shelves  | Boxes      |
+    +-----------+-------------------------------------+--------+----------+------------+
+    | a         |  best fitted shelf                  | to fit | sel|All  | current    |
+    +-----------+-------------------------------------+--------+----------+------------+
+    | S         |  best shelf                         | All    | sel|All  | current    |
+    +-----------+-------------------------------------+--------+----------+------------+
+    | B         |  best fitted boxes                  | All    | current  | sel|All    |
+    +-----------+-------------------------------------+--------+----------+------------+
+    | f         |  best fitted selection              | All    | sel|cur  | sel|cur|All|
+    +-----------+-------------------------------------+--------+----------+------------+
+    | F         |  best selection                     | to fit | selected | sel|cur|All|
+    +-----------+-------------------------------------+--------+----------+------------+
+
+
+Instead of generating a text report, shelves can be tagged with the given information using ``f`` or ``F`` prefixes.
+
+ ::rST -}
+ 
 bestFitReport :: forall s . Bool -> [Box s] -> [Shelf s] -> WH [Map Text Text] s
 bestFitReport limitToBoxNb boxes shelves = do
    getOrs <- gets boxOrientations

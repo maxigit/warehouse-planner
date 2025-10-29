@@ -822,14 +822,21 @@ a box in C, will requires to try every available rectangles which
 will makes the planner very slow. However, if needed, the partition
 mode (which parts of the shelf needs to be filled) can be specified
 before the shelf name (as with "exit on top"). One or more partition
-mode can be specified as follow: - ``~`` Above only (in the example
-above: a A B) - ``:`` Right only (in the example above: d D B) -
-``%`` Best effort (excluding above corners a and d) C A D B Not
-specifying anything is equivalent to ``~:`` Another possibilty is to
+mode can be specified as follow:
+
+- ``~`` Above only (in the example above: a A B)
+- ``:`` Right only (in the example above: d D B)
+- ``%`` Best effort (excluding above corners a and d) C A D B Not
+specifying anything is equivalent to ``~:``
+
+Another possibilty is to
 empty the shelf(ves) and fill the shelves with the existing boxes and
 the new ones. In that case, we might want to resort all boxes (old
-and new) or keep them in the orignial order (old then new). - ``@``
-Sort old and new boxes - ``+`` old then new boxes in original order
+and new) or keep them in the orignial order (old then new).
+
+- ``@`` Sort old and new boxes
+- ``+`` old then new boxes in original order
+
 Example
 
 ::
