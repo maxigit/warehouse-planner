@@ -297,6 +297,20 @@ The best use of a shelf is either to maximize ``fvolmin100`` (fill the current s
 Finding the best shelf for a style is done by selecting all shelves and only all boxes of a given style.
 Finding the best box for a shelf by selecting all boxes and only the desired shelf.
 
+
+To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that ``shelves_needed >= picking_shelves``. If shelves_needed < picking_shelves this mean that extra space is required to pick everything 
+
+.. hint::
+
+   Let's imagine that a layout of 6x2x1 (depth of 2). 12 boxes fit in a shelf but only 6 can be picked.
+   If we have 18 boxes and 6 to pick, ``shelves_needed = 18/12 = 1.5`` and ``picking_shelves = 6/6`` = 1.
+   We can fit a shelves with 12 boxes and are left with 6 which don't need to be picked. This is the extra 0.5 (in 1.5).
+
+   If we have only 7 boxes, ``shelves_needed = 7/12 = 0.58`` where ``picking_shelves`` is still 1 which is now greater than 0.58.
+   This is telling us than we need more shelves or space to allow all pickable to be picked that the space we need to store everything.
+
+
+
 Brick shortcuts
 ```````````````
 In interactive mode, this report can be called with different combination of the current shelf, box, current selections or all.
