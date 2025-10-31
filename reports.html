@@ -264,6 +264,15 @@ For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4
 <p><code class="docutils literal notranslate"><span class="pre">fit100</span></code> allows to check if the present boxes will fill nicely in the available space.</p>
 <p>Finding the best shelf for a style is done by selecting all shelves and only all boxes of a given style.
 Finding the best box for a shelf by selecting all boxes and only the desired shelf.</p>
+<p>To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">&gt;=</span> <span class="pre">picking_shelves</span></code>. If shelves_needed &lt; picking_shelves this mean that extra space is required to pick everything</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>Let’s imagine that a layout of 6x2x1 (depth of 2). 12 boxes fit in a shelf but only 6 can be picked.
+If we have 18 boxes and 6 to pick, <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">=</span> <span class="pre">18/12</span> <span class="pre">=</span> <span class="pre">1.5</span></code> and <code class="docutils literal notranslate"><span class="pre">picking_shelves</span> <span class="pre">=</span> <span class="pre">6/6</span></code> = 1.
+We can fit a shelves with 12 boxes and are left with 6 which don’t need to be picked. This is the extra 0.5 (in 1.5).</p>
+<p>If we have only 7 boxes, <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">=</span> <span class="pre">7/12</span> <span class="pre">=</span> <span class="pre">0.58</span></code> where <code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code> is still 1 which is now greater than 0.58.
+This is telling us than we need more shelves or space to allow all pickable to be picked that the space we need to store everything.</p>
+</div>
 </section>
 <section id="brick-shortcuts">
 <h3>Brick shortcuts<a class="headerlink" href="#brick-shortcuts" title="Link to this heading"></a></h3>
