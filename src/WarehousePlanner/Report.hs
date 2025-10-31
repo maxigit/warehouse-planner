@@ -317,7 +317,10 @@ In interactive mode, this report can be called with different combination of the
     +-----------+-------------------------------------+--------+----------+------------+
 
 
-Instead of generating a text report, shelves can be tagged with the given information using ``f`` or ``F`` prefixes.
+Instead of generating a text report, shelves can be tagged with the report information using ``ff`` or ``fF``.
+
+The value of the tag(s) can be visualized for all shelves by setting the shelf property (using the ``f`` and ``F`` prefixes) to the desired tag and change the layout to display mode to display shelf properties.
+
 
  ::rST -}
  
