@@ -260,15 +260,129 @@ Field description
 - ``to_fit``:  how many boxes are selected
 - ``to_pick``:  how many boxes are ``@topick``
 - ``pickable``: how many boxes can be picked easyly
+    .. code-block:: text
+    
+       +-----------------+
+       |                 |
+       |   +---+---+---+ |
+       +---|@XX|X::|:::| |
+       |///+---+---+---+ |
+       |///|@XX|@XX|:::| |
+       +---+---+---+---+-+
+        
+       @XX@XX@XXX::::::::::
+       #  #  #  #           : to_pick  =  3
+       #  #  #  #  #  #  #  : pickable =  6
+       ##########           : to_fit   = 10
+       #################### : fit      = 18
+       
+       ----------------------
+        @ box to pick
+        X box
+        : empty slot
+        (boxes in the same cell are behind each others)
+        // used
+
 - ``l100``:  required length / available length
 - ``w100``:  required witd / available width
 - ``h100``:  required heigh / available height
 - ``wh100``:  
 - ``lh100``: 
 - ``lw100``: 
+    .. code-block:: text
+    
+       +-----------------+ ^        +-------------+
+       |                 | .        |.............|
+       |   +---+---+---+ | #        |###########..|
+       +---|@XX|X::|:::| | #        |###########..|
+       |///+---+---+---+ | #        |###########..|
+       |///|@XX|@XX|:::| | #        |###########..|
+       +---+---+---+---+-+ v  h100  +-------------+  
+                                        lh100
+           <###########..> : l100
+
 - ``fit100``:  fitted / to fit
+    .. code-block:: text
+    
+       to_fit > fit
+              +-----------------+-----------------+                  
+              |                 |                 |                  
+              |   +---+---+---+ |   +---+---+---+ |                  
+              +---|@XX|XXX|XXX| +---|:::|:::|:::| |                  
+              |///+---+---+---+ |///+---+---+---+ |                  
+              |///|@XX|@XX|XXX| |///|XXX|:::|:::| |                  
+              +---+---+---+---+-+---+---+---+---+-+                  
+
+              123456789012345678901
+              @XX@XX@XXXXXXXXXXXxxx                  : to_fit  21
+              ##################+++                  : fit100: 21/18 >100%
+              ##################+++                  : shelves_needed = 1.17
+              #  #  #  -  -  -                       : picking_shelves = 3/6 = 0.5
+              #########------------
+              
+    .. code-block:: text
+    
+
+       to_fit <= fit
+              +-----------------+-----------------+                  
+              |                 |                 |                  
+              |   +---+---+---+ |   +---+---+---+ |                  
+              +---|@XX|X::|:::| +---|:::|:::|:::| |                  
+              |///+---+---+---+ |///+---+---+---+ |                  
+              |///|@XX|@XX|:::| |///|:::|:::|:::| |                  
+              +---+---+---+---+-+---+---+---+---+-+                  
+
+              123456789012345678901
+              @XX@XX@XXXxxxxxxxxxxx  : to_fit  10
+              ##########-----------  : fit100: 10/18 55%
+              ##########-----------  : shelves_needed = 10/18 = 0.55
+              #  #  #  -  -  -       : picking_shelves = 3/6 = 0.5
+              ##########--           :  needed__picking_ratio  = 
+    
+              +-----------------+   +-----------------+                                 
+              |                 |   |                 |                                 
+              |   +---+---+---+ |   |   +---+---+---+ |                                 
+              +---|@XX|:::|:::| +   +---|###|###|:::| +                                 
+              |///+---+---+---+ |   |///+---+---+---+ |                                 
+              |///|@XX|@X:|:::| |   |///|###|###|:::| |                                 
+              +---+---+---+---+-+   +---+---+---+---+-+                                 
+
+    .. code-block:: text
+    
+       to_pick >  shelves
+              +-----------------+-----------------+                  
+              |                 |                 |                  
+              |   +---+---+---+ |   +---+---+---+ |                  
+              +---|@::|@::|@::| +---|@X:|:::|:::| |                  
+              |///+---+---+---+ |///+---+---+---+ |                  
+              |///|@::|@::|@::| |///|@X:|:::|:::| |                  
+              +---+---+---+---+-+---+---+---+---+-+                  
+
+              123456789012345678901
+              @@@@@@@X@Xxxxxxxxxxxx  : to_fit  10
+              ##########-----------  : fit100: 10/18 55%
+              ##########-----------  : shelves_needed = 10/18 = 0.55
+              ######+ +              : picking_shelves = 8/6 = 1.33
+              ##########--           :  needed__picking_ratio  = 
+              +-----------------+-----------------+                  
+              |                 |                 |                  
+              |   +---+---+---+ |   +---+---+---+ |                  
+              +---|#  |#  |#  | +---|+  |   |   | |                  
+              |///+---+---+---+ |///+---+---+---+ |                  
+              |///|#  |#  |#  | |///|+  |   |   | |                  
+              +---+---+---+---+-+---+---+---+---+-+                  
+
+- ``refficiency100``: Ratio between the volume occupied by the fitted boxes and the required bouding boxes.
+- ``pefficiency100``: Ratio between the volume occupied by the fitted boxes and the bouding boxes required to make everything pickable.
 - ``shelves_needed``:  how many shelves to fit all required
 - ``picking_shelves``: how many shelves to have enough pickable
+- ``extra_stock_ratio``:  shelves_needed / picking_shelves.
+-      If > 1
+-      shelves_needed > picking_shelves. We need extra "stock" shelves
+-
+-      If < 1
+-      shelves_needed < picking_shelves. Allowing everything to be picked involded more shelves than required
+-      to store everything.
 - ``rvolmin100``: required volume / available volume
 - ``rvolmax100``:  required volume / available max volume (use  max shelf dimension - used)
 - ``fvolmin100``:  fitted volume / available volume
@@ -298,7 +412,14 @@ Finding the best shelf for a style is done by selecting all shelves and only all
 Finding the best box for a shelf by selecting all boxes and only the desired shelf.
 
 
-To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that ``shelves_needed >= picking_shelves``. If shelves_needed < picking_shelves this mean that extra space is required to pick everything 
+To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that ``shelves_needed >= picking_shelves`` or ``extra_stock_ratio`` > 1 . If shelves_needed < picking_shelves this mean that extra space is required to pick everything 
+
+
+``refficiency`` gives the ratio of boxes actually in the shelf with the number of slots used.
+For example for a nx3x3 layout. 10 boxes will require n=2 resulting in 18 slots available even though only 10 are used. The efficiency will be 10/18.
+
+``pefficiency`` same as ``refficiency`` but for the space required to make everything pickable.
+For a nx3x3 layout and 10 boxes. If we have 7 boxes to pick, this will require n=3 result in 27 slots from which only 10 are used. The efficiency will drop to 10/27
 
 .. hint::
 
@@ -310,6 +431,22 @@ To make sure that there is no waste in depth, that is that if using enough slots
    This is telling us than we need more shelves or space to allow all pickable to be picked that the space we need to store everything.
 
 
+********** Todos  ***************
+
+use case
+````````
+
+A/ needs to be pickable (1 of each column)
+
+B/ we don't care just store them  but we don't want wasted slots
+
+configuration
+`````````````
+X/ more pickables than stocks
+X/ pickables = stocks
+Y/ more stocks than pickables
+
+less 
 
 Brick shortcuts
 ```````````````
@@ -345,7 +482,7 @@ bestFitReport limitToBoxNb boxes shelves = do
    let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
        go (SimilarBy (bdim,_) box bxs) shelf = do
            boxesInShelf <- findBoxByShelf shelf
-           let toPick = length $ filter (flip tagIsPresent "@topick") bxs
+           let toPick = max 1 $ length $ filter (flip tagIsPresent "@topick") bxs
            let ors = getOrs box shelf
                -- for empty shelf
                current@(Dimension lrequired _wrequired hrequired) = maxDimension $ map (aTopRight . boxAffDimension) boxesInShelf
@@ -370,10 +507,14 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("lh100", percent (requiredl*requiredh) (sl*sh))
                       , ("lw100", percent (requiredl*requiredw) (sl*sw))
                       , ("fit100", percent (fi fitted) (fi toFit))
-                      , ("shelves_needed", pack $ printf "%04.1f" (fi toFit / fi fitted))
-                      , ("picking_shelves", pack $ printf "%04.1f" (fi toPick / fi pickable))
-                      , ("rvolmin100", percent  (requiredl*requiredw*requiredh) (volume shelfMin))
-                      , ("rvolmax100", percent  (requiredl*requiredw*requiredh) (volume shelfMax))
+                      , ("shelves_needed", pack $ printf "%04.2f" shelvesNeeded)
+                      , ("picking_shelves", pack $ printf "%04.2f" pickingShelves)
+                      , ("extra_stock_ratio", pack $ printf "%04.2f"  extraStockRatio)
+                      , ("d", tshow (extraStockRatio, refficiency, pefficiency, "boxVolume", boxVolume box, "fiddet", fitted, required, volume required ))
+                      , ("rvolmin100", percent  (volume required) (volume shelfMin))
+                      , ("rvolmax100", percent  (volume required) (volume shelfMax))
+                      , ("refficiency100", percent  refficiency 1)
+                      , ("pefficiency100", percent  pefficiency 1)
                       , ("fvolmin100", percent  (boxVolume box * fi fitted) (volume shelfMin))
                       , ("fvolmax100", percent  (boxVolume box * fi fitted) (volume shelfMax))
                       , ("orientation", showOrientationWithDiag or tilingMode)
@@ -397,14 +538,19 @@ bestFitReport limitToBoxNb boxes shelves = do
                       ]
                     | (name, (shelfMin, shelfMax@(Dimension sl sw sh))) <- tries
                     , let (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
-                    , let toFit = 1 + length bxs
-                    , let fitted = tmTotal tilingMode
-                    , let pickable = tmPickable tilingMode
-                    , let required@(Dimension requiredl requiredw requiredh) =
+                          toFit = 1 + length bxs
+                          fitted = tmTotal tilingMode
+                          pickable = tmPickable tilingMode
+                          shelvesNeeded = fi toFit / fi fitted
+                          pickingShelves = fi toPick / fi pickable
+                          required@(Dimension requiredl requiredw requiredh) =
                                 maxDimension $ map (aTopRight . positionToAffine bdim )
                                              $ (if limitToBoxNb then (take toFit) else id)
                                              $ F.toList 
                                              $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
+                          refficiency = boxVolume box * fi toFit / volume required
+                          pefficiency = refficiency * extraStockRatio
+                          extraStockRatio = shelvesNeeded / pickingShelves
                     , fitted > 0
                     , let contents = Map.fromListWith (+) $ map (,1) $ map boxStyle boxesInShelf
                     ]
