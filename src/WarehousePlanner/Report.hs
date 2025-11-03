@@ -478,7 +478,8 @@ The value of the tag(s) can be visualized for all shelves by setting the shelf p
 bestFitReport :: forall s . Bool -> [Box s] -> [Shelf s] -> WH [Map Text Text] s
 bestFitReport limitToBoxNb boxes shelves = do
    getOrs <- gets boxOrientations
-   let groups  = groupSimilar (\b -> (_boxDim b, boxStyle b)) boxes
+   let groups  = groupSimilar getKey $ sortOn getKey boxes --  (\b -> (_boxDim b, boxStyle b)) boxes
+       getKey b = (_boxDim b, boxStyle b)
    let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
        go (SimilarBy (bdim,_) box bxs) shelf = do
            boxesInShelf <- findBoxByShelf shelf
