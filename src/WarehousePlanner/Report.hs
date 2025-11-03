@@ -510,7 +510,6 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("shelves_needed", pack $ printf "%04.2f" shelvesNeeded)
                       , ("picking_shelves", pack $ printf "%04.2f" pickingShelves)
                       , ("extra_stock_ratio", pack $ printf "%04.2f"  extraStockRatio)
-                      , ("d", tshow (extraStockRatio, refficiency, pefficiency, "boxVolume", boxVolume box, "fiddet", fitted, required, volume required ))
                       , ("rvolmin100", percent  (volume required) (volume shelfMin))
                       , ("rvolmax100", percent  (volume required) (volume shelfMax))
                       , ("refficiency100", percent  refficiency 1)
@@ -548,9 +547,18 @@ bestFitReport limitToBoxNb boxes shelves = do
                                              $ (if limitToBoxNb then (take toFit) else id)
                                              $ F.toList 
                                              $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
+                          prequired = 
+                                maxDimension -- $ required
+                                             ( map (aTopRight . positionToAffine bdim )
+                                             $ take (toPick * fitted `div` pickable)
+                                             $ F.toList 
+                                             $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
+                                             )
                           refficiency = boxVolume box * fi toFit / volume required
-                          pefficiency = refficiency * extraStockRatio
-                          extraStockRatio = shelvesNeeded / pickingShelves
+                          pefficiency = boxVolume box * fi toFit / volume prequired -- refficiency * extraStockRatio
+                          -- ^^ if toFit > to pick and behind : they all fit > 100% we assume extra stock on another shelf
+                          extraStockRatio = pefficiency / refficiency -- = volume required / volume prequired
+                          -- > 1 extra shelves required to store extra stock
                     , fitted > 0
                     , let contents = Map.fromListWith (+) $ map (,1) $ map boxStyle boxesInShelf
                     ]
