@@ -555,8 +555,8 @@ bestFitReport limitToBoxNb boxes shelves = do
                                              $ F.toList 
                                              $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
                                              )
-                          refficiency = boxVolume box * fi toFit / volume required
-                          pefficiency = boxVolume box * fi toFit / volume prequired -- refficiency * extraStockRatio
+                          refficiency = boxVolume box * (fi $ max fitted toFit) / volume required
+                          pefficiency = boxVolume box * (fi $ max fitted toFit) / volume prequired -- refficiency * extraStockRatio
                           -- ^^ if toFit > to pick and behind : they all fit > 100% we assume extra stock on another shelf
                           extraStockRatio = pefficiency / refficiency -- = volume required / volume prequired
                           -- > 1 extra shelves required to store extra stock
