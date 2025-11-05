@@ -389,7 +389,7 @@ Boxes can moves around, tagged but also resized.
 - ``fill pos:loc { boxes }``:  Move boxes using to the given position and location specified by ``pos`` and ``loc`` :ref:`property <evaluation>`. The default uses the ``#fill-shelf`` and ``#fill-shelf`` tags.
 
 - ``tag #tag1#tag2``: tags the current boxes with tag1 and tag2
-- ``tag #tag1#tag2 boxes? { stmt }``: execute stmt with tag set temporaly.
+- ``tag #tag1#tag2 boxes:boxes? { stmt }``: execute stmt with tag set temporaly.
         Similar to ``(tag #tag1#tag2 , smt, tag #-tag1#-tag2)``.
         If the boxes parameter is given, only the boxes will be tag (without narrowing the context to those boxes)
 
