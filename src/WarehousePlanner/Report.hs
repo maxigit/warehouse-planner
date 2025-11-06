@@ -8,7 +8,7 @@ module WarehousePlanner.Report
 , generateMOPLocations
 , generateGenericReport
 , bestBoxesFor
-, bestFitReport
+, bestFitReport, bestFitFor
 , tagShelvesWithFitData
 , bestShelvesFor
 , bestAvailableShelvesFor
@@ -418,6 +418,8 @@ To make sure that there is no waste in depth, that is that if using enough slots
 ``refficiency`` gives the ratio of boxes actually in the shelf with the number of slots used.
 For example for a nx3x3 layout. 10 boxes will require n=2 resulting in 18 slots available even though only 10 are used. The efficiency will be 10/18.
 
+For effecive efficiency (taking into account waste around boxes), use ``refficiency*r2100``.
+
 ``pefficiency`` same as ``refficiency`` but for the space required to make everything pickable.
 For a nx3x3 layout and 10 boxes. If we have 7 boxes to pick, this will require n=3 result in 27 slots from which only 10 are used. The efficiency will drop to 10/27
 
@@ -496,72 +498,11 @@ bestFitReport limitToBoxNb boxes shelves = do
                       , ("content", unwords [ t <> "x" <> tshow q | (t,q) <- Map.toList contents ])
                       , ("part", name)
                       , ("style", boxStyle box)
-                      , ("box", printDim  bdim)
-                      , ("fit",  pack $ printf "%3d"  fitted)
-                      , ("to_fit", pack $ printf "%3d" toFit)
-                      , ("to_pick", pack $ printf "%3d" toPick)
-                      , ("pickable", tshow pickable)
-                      , ("l100", percent requiredl sl) 
-                      , ("w100", percent requiredw sw)
-                      , ("h100", percent requiredh sh)
-                      , ("wh100", percent (requiredw*requiredh) (sw*sh))
-                      , ("lh100", percent (requiredl*requiredh) (sl*sh))
-                      , ("lw100", percent (requiredl*requiredw) (sl*sw))
-                      , ("fit100", percent (fi fitted) (fi toFit))
-                      , ("shelves_needed", pack $ printf "%04.2f" shelvesNeeded)
-                      , ("picking_shelves", pack $ printf "%04.2f" pickingShelves)
-                      , ("extra_stock_ratio", pack $ printf "%04.2f"  extraStockRatio)
-                      , ("rvolmin100", percent  (volume required) (volume shelfMin))
-                      , ("rvolmax100", percent  (volume required) (volume shelfMax))
-                      , ("refficiency100", percent  refficiency 1)
-                      , ("pefficiency100", percent  pefficiency 1)
-                      , ("fvolmin100", percent  (boxVolume box * fi fitted) (volume shelfMin))
-                      , ("fvolmax100", percent  (boxVolume box * fi fitted) (volume shelfMax))
-                      , ("orientation", showOrientationWithDiag or tilingMode)
-                      , ("how", unwords [ pack $ printf "%dx%dx%d" (perLength hmany) (perDepth hmany) (perHeight hmany)
-                                        | hmany <- toList $ tmHowManys tilingMode
-                                        ]
-                        )
-                      , ("fVSused", case boxesInShelf of
-                                          [] -> percent (1.0 :: Double) 1.0
-                                          _ -> percent (boxVolume box * fi fitted) (volume current))
-                      , ("required", printDim required)
-                      , ("used", printDim current)
-                      , ("leftover", printDim (shelfMin <> invert required))
-                      , ("minShelf", printDim shelfMin)
-                      , ("maxShelf", printDim shelfMax)
-                      , ("debug_strategy", unwords $ map showOrientationStratety ors)
-                      , ("debug_tiling", tshow tilingMode)
-                      , ("debug_volume", pack $ printf "{\"required_volume\":%f, \"current\":%f, \"box_volume\":%f}"
-                                                     (volume required)      (volume current) (boxVolume box)
-                                                     )
                       ]
-                    | (name, (shelfMin, shelfMax@(Dimension sl sw sh))) <- tries
-                    , let (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
-                          toFit = 1 + length bxs
-                          fitted = tmTotal tilingMode
-                          pickable = tmPickable tilingMode
-                          shelvesNeeded = fi toFit / fi fitted
-                          pickingShelves = fi toPick / fi pickable
-                          required@(Dimension requiredl requiredw requiredh) =
-                                maxDimension $ map (aTopRight . positionToAffine bdim )
-                                             $ (if limitToBoxNb then (take toFit) else id)
-                                             $ F.toList 
-                                             $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
-                          prequired = 
-                                maxDimension -- $ required
-                                             ( map (aTopRight . positionToAffine bdim )
-                                             $ take (toPick * fitted `div` pickable)
-                                             $ F.toList 
-                                             $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
-                                             )
-                          refficiency = boxVolume box * (fi $ max fitted toFit) / volume required
-                          pefficiency = boxVolume box * (fi $ max fitted toFit) / volume prequired -- refficiency * extraStockRatio
-                          -- ^^ if toFit > to pick and behind : they all fit > 100% we assume extra stock on another shelf
-                          extraStockRatio = pefficiency / refficiency -- = volume required / volume prequired
-                          -- > 1 extra shelves required to store extra stock
-                    , fitted > 0
-                    , let contents = Map.fromListWith (+) $ map (,1) $ map boxStyle boxesInShelf
+                      <> bestFitFor limitToBoxNb (shelfMin, shelfMax) current bdim ors toFit toPick
+                    | (name, (shelfMin, shelfMax)) <- tries
+                    , let toFit = 1 + length bxs
+                          contents = Map.fromListWith (+) $ map (,1) $ map boxStyle boxesInShelf
                     ]
    concat <$> sequence [ go simBoxes shelf
                           | simBoxes <- groups
@@ -572,15 +513,124 @@ bestFitReport limitToBoxNb boxes shelves = do
                       ]
         remaining shelf required = let nrequired = invert required 
                                in (minDim shelf <> nrequired, maxDim shelf <> nrequired )
-        percent a b = pack $ printf "%02.0f" (min 99 $ a*100/b)
-        --                                   ^^^^^^^^^^^^^^^^^
-        --                                   brick only shows the first number on
-        --                                   shelf summary
-        -- if we use %03 everything is nicely storted 001 010 099 etc
-        -- but everything show as 0, hence using 2 char (and cap at 99)
-        fi = fromIntegral @_ @Double
                      
 
+bestFitFor :: Bool -> (Dimension, Dimension) -> Dimension -> Dimension -> [OrientationStrategy] -> Int -> Int -> [(Text, Text)]
+bestFitFor limitToBoxNb (shelfMin, shelfMax@(Dimension sl sw sh)) current bdim ors toFit toPick = 
+   [ ("box", printDim  bdim)
+   , ("fit",  pack $ printf "%3d"  fitted)
+   , ("to_fit", pack $ printf "%3d" toFit)
+   , ("to_pick", pack $ printf "%3d" toPick)
+   , ("pickable", tshow pickable)
+   , ("l100", percent requiredl sl) 
+   , ("w100", percent requiredw sw)
+   , ("h100", percent requiredh sh)
+   , ("wh100", percent (requiredw*requiredh) (sw*sh))
+   , ("lh100", percent (requiredl*requiredh) (sl*sh))
+   , ("lw100", percent (requiredl*requiredw) (sl*sw))
+   , ("r2100", percent req2 1) -- best of wh and lw
+   , ("fit100", percent (fi fitted) (fi toFit))
+   , ("shelves_needed", pack $ printf "%04.2f" shelvesNeeded)
+   , ("picking_shelves", pack $ printf "%04.2f" pickingShelves)
+   , ("extra_stock_ratio", pack $ printf "%04.2f"  extraStockRatio)
+   , ("rvolmin100", percent  (volume required) (volume shelfMin))
+   , ("rvolmax100", percent  (volume required) (volume shelfMax))
+   , ("refficiency100", percent  refficiency 1)
+   , ("pefficiency100", percent  pefficiency 1)
+   , ("fvolmin100", percent  (bvol * fi fitted) (volume shelfMin))
+   , ("fvolmax100", percent  (bvol * fi fitted) (volume shelfMax))
+   , ("orientation", showOrientationWithDiag or tilingMode)
+   , ("how", unwords [ pack $ printf "%dx%dx%d" (perLength hmany) (perDepth hmany) (perHeight hmany)
+                     | hmany <- toList $ tmHowManys tilingMode
+                     ]
+     )
+   , ("fVSused", case volume current of
+                       0 -> percent (1.0 :: Double) 1.0
+                       v -> percent (bvol * fi fitted) v
+                       )
+   , ("required", printDim required)
+   , ("prequired", printDim prequired)
+   , ("used", printDim current)
+   , ("leftover", printDim leftOver)
+   , ("leftover_mode", leftOverMode)
+   , ("minShelf", printDim shelfMin)
+   , ("maxShelf", printDim shelfMax)
+   , ("debug_strategy", unwords $ map showOrientationStratety ors)
+   , ("debug_tiling", tshow tilingMode)
+   , ("debug_volume", pack $ printf "{\"required_volume\":%f, \"current\":%f, \"box_volume\":%f}"
+                                  (volume required)      (volume current) (bvol)
+                                  )
+   , ("debug_pbulk", tshow  (length positionsInPickable))
+   , ("debug_inFront", tshow  (length inFront, length hidden))
+   , ("debug_upTo", tshow  (pickables, upTolastPickable))
+   ]
+   where (or, tilingMode,_) = bestArrangement ors [(shelfMin, shelfMax, ())] bdim
+         bvol = volume bdim
+         fitted = tmTotal tilingMode
+         pickable = length inFront -- tmPickable tilingMode
+         shelvesNeeded = fi toFit / fi fitted
+         pickingShelves = fi toPick / fi pickable
+         allPositions = F.toList $ generatePositions mempty ColumnFirst or (rotate or bdim) tilingMode
+         positions =(if limitToBoxNb then (take toFit) else id) allPositions
+         (inFront, hidden) = partition (\p -> dWidth (pOffset p) <= 0   ) allPositions
+         pickables = take toPick inFront
+         upTolastPickable = case lastMay pickables of
+                                  Nothing -> []
+                                  Just lastP | (befores, after) <- List.break (== lastP) allPositions ->  befores ++ take 1 after
+
+         required@(Dimension requiredl requiredw requiredh) =
+                  maxDimension $ map (aTopRight . positionToAffine bdim )
+                               $ positions
+         (leftOver , leftOverMode, req2) =
+               let right  = shelfMax { dLength = sl - requiredl }
+                   above = shelfMax { dHeight = sh - requiredh } 
+               in if volume above > volume right 
+                  then (above, "above", requiredl*requiredw/ (sl*sh))
+                  else (right, "right", requiredw*requiredh/ (sw*sh))
+         prequired@(Dimension pl pw ph)  = maxDimension $ map (aTopRight . positionToAffine bdim) upTolastPickable 
+         --                                                                                       ^^^^^^^^^^^^^^^^
+         -- we need not only all pickable slots but the one behinds to get the prequired deep enough
+         inPickable pos = let Dimension l w h   = aTopRight $ positionToAffine bdim pos
+                          in  l <= pl && w <= pw && h <= ph
+         positionsInPickable = filter inPickable  allPositions
+
+         refficiency = bvol * (fi $ min fitted toFit) / volume required
+         pefficiency = bvol * (fi $ min fitted toFit) / volume prequired -- refficiency * extraStockRatio
+         -- ^^ if toFit > to pick and behind : they all fit > 100% we assume extra stock on another shelf
+         extraStockRatio = fi toFit / fi (length positionsInPickable)
+         -- > 1 extra shelves required to store extra stock
+         percent a b = pack $ printf "%02.0f" (min 99 $ a*100/b)
+         --                                   ^^^^^^^^^^^^^^^^^
+         --                                   brick only shows the first number on
+         --                                   shelf summary
+         -- if we use %03 everything is nicely storted 001 010 099 etc
+         -- but everything show as 0, hence using 2 char (and cap at 99)
+         fi = fromIntegral @_ @Double
+
+-- | Calculate the number of boxes needed to fake generatePositions
+-- to use as many position as required to fit enough to fit boxes and make pickables pickable.
+-- Ex if howMany = 2x2x2 and pickable = 1 the number will be at least 2 (1 pickable and one behind
+numberToFakePicking :: TilingMode -> Int -> Int -> Int
+numberToFakePicking _ toFit toPick | toFit < toPick = 0
+numberToFakePicking tm toFit toPick = fst $ go tm toPick (toFit - toPick) 
+  where go :: TilingMode -> Int -> Int -> (Int, (Int, Int))
+        --                                 ^     ^   ^
+        --                                 |     |   |
+        --                                 |     |   +--- extra remaining
+        --                                 |     +------- to pick remaining
+        --                                 +------------- number
+        go _ 0 extra = (0, (0,extra))
+        go tm toPick extra = case tm of 
+           Regular hm -> let slots = min toPick (perLength hm * perHeight hm)
+                             hidden = slots * (perDepth hm - 1)
+                         in (slots + hidden, (toPick - slots, max 0 ( extra - hidden)) )
+           Diagonal hm _ -> go (Regular hm) toPick extra
+           TilingCombo _ tm1 tm2 -> let (n, (toPickLeft, extraLeft)) = go tm1 toPick extra
+                                        (n2, left) = go tm2 toPickLeft extraLeft
+                                    in (n+n2, left)
+
+                                             
+    
 -- | Tag all shelves with the result of fit report.
 -- Tag keys are by default "style-tag"
 tagShelvesWithFitData :: Maybe (Text -> Text -> Text) -> [Map Text  Text] -> WH () s
