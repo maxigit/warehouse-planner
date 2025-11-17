@@ -680,7 +680,13 @@ instance Parsable Command where
           b <- (lexeme ("assert:noboxes" <|> "a:nob")  $> True)
                <|> (lexeme ("assert:boxes"  <|> "a:b") $> False)  
           descM <- o1 msgK
-          return $ AssertBoxes b (fromMaybe (if b then "A:Boxes" else "A:Boxes") descM)
+          desc <- case descM of
+                    Just d -> return d
+                    Nothing -> do
+                         pos <- getSourcePos 
+                         return $ ( if b then  "assert:noboxes" else "assert:boxes")  <> " failed. (" <> pack (sourcePosPretty pos) <> ")"
+
+          return $ AssertBoxes b desc
         , do -- assert
           b <- (lexeme ("assert:noshelves" <|> "a:nos")  $> True)
                <|> (lexeme ("assert:shelves"  <|> "a:s") $> False)  
