@@ -1328,6 +1328,8 @@ expandIntrinsic' prop _box _shelf =
        "comma" -> Right ","
        "divide" -> Right "/"
        "dollar" -> Right "$"
+       "semicolon" -> Right ";"
+       "semi" -> Right ";"
        _ -> error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
 
 

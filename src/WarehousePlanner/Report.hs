@@ -1167,6 +1167,10 @@ expandReportValue today boxes shelves s = let
             , replace "$<comma>" ","
             , replace "$<dollar>" "$"
             , replace "$<divide>" "/"
+            , replace "$<semicolon>" ";"
+            , replace "$<space>" " "
+            , replace "$<tab>" "\t"
+            , replace "$<newline>" "\n"
             , replace "$<today>" (pack $ formatTime defaultTimeLocale "%Y-%m-%d" today)
             ]
   orientations = concatMap showOrientation . List.nub . sort $ map orientation boxes
@@ -1200,6 +1204,10 @@ be expanded using
 -  ``$<comma>`` ``,``
 -  ``$<divide>`` ``/``
 -  ``$<dollar>`` ``$``
+-  ``$<semicolon>`` ``;``
+-  ``$<space>`` `` ``
+-  ``$<tab>`` ``\t``
+-  ``$<newline>`` ``\n``
 
 .. note::
    
