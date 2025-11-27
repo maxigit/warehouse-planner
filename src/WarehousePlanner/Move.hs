@@ -1,5 +1,4 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
@@ -290,35 +289,24 @@ justifyRight box shelf slices = let
 justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
 justifyAlign used box slices = let
    (_,poss) = partitionEitherSlices slices
-   in case sortOn (dLength . pOffset) $ F.toList poss of
-        [] -> slices
-        firstSlot:_ -> -- find all the used box which are left of the first slot
-                      {-
-                                
-                                
-                                +-----+-----+-----+
-                                |     |     |     |
-                                | YYYY|Y    |     |
-                                +-----+-----+-----+
-                                |.XXX.|.....|     |
-                                |.XXX.|.....|     |  . zone
-                                +-----+-----+-----+
-                                | XXX |     |     |
-                                | XXXA|AA   |     |
-                                +-----+-----+-----+
-                                     ^
-                                     +--- offset
-                                Only X overlap
-                       -}
-                       let leftOf = filter (affDimensionOverlap zone) used
-                           firstOffset = pOffset firstSlot
-                           zone = AffDimension (Dimension 0 0 (dHeight $ pOffset firstSlot)) (aTopRight $ positionToAffine box firstSlot)
-                           firstL = dLength firstOffset
-                           maxOffset = case fromNullable $ map (dLength . aTopRight) leftOf of
-                                            Nothing -> firstL
-                                            Just ls-> maximum ls
-                           offset = Dimension (maxOffset - firstL) 0 0 
-                       in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
+   posAs = map (positionToAffine box) poss
+   -- boxes could be grouped by rectangural tiles to speed things up
+   usedTiles = used
+   tiles = F.toList posAs
+   offsets :: [ Double ]
+   offsets = map minOffset tiles
+   minOffset :: AffDimension -> Double
+   minOffset tile = let
+      leftOf = filter (affDimensionOverlap zone) usedTiles
+      -- like tile but starts at l = w == 0 to intersect with all usedTile on the left
+      zone = tile { aBottomLeft = Dimension 0 0 (dHeight $ aBottomLeft tile) }
+      in case maximumMay  $ map (dLength . aTopRight) leftOf of
+                       Nothing ->  0 
+                       Just l-> dLength (aBottomLeft tile) - l
+   in case minimumMay offsets of 
+        Nothing -> slices
+        Just o -> let offset = Dimension (-o) 0 0 
+                  in fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
 
            
    
