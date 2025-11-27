@@ -17,6 +17,7 @@ module WarehousePlanner.Slices
 import ClassyPrelude hiding (uncons, stripPrefix )
 import WarehousePlanner.Type (BoxBreak(..))
 import Data.Foldable qualified as F
+import Data.Bifoldable (Bifoldable(..))
 -- | An ordered list. Modifying it using fmap doesn't reorder it.
 -- It is so that we can work with infinite list.
 -- Therefore fmap should be used with caution and make sure
@@ -77,6 +78,15 @@ instance Bifunctor Slice where
 instance Bifunctor Slices where
   bimap l r (Slices key'slices) = Slices $ fmap (bimap l (bimap l r)) key'slices
   
+instance Bifoldable Slot where 
+  bifoldMap f g (SlotO k'as ) = mconcat $ map (bifoldMap f g) k'as
+  
+instance Bifoldable Slice where
+  bifoldMap f g (SliceO xs) = mconcat $ map (bifoldMap f $ bifoldMap f g) xs
+  
+instance Bifoldable Slices where
+  bifoldMap f g (SlicesO xs) = mconcat $ map (bifoldMap f $ bifoldMap f g) xs
+
 -------------------------------------------------- {{{ 1
 -- * Utilities         
 --------------------------------------------------

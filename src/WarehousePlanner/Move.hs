@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
@@ -38,6 +39,7 @@ import Data.Foldable qualified as F
 import Data.Map qualified as Map
 import Data.Semigroup (Arg(..))
 import Control.Monad.State(evalState, get, modify)
+import Data.Bifoldable qualified as F
 
 -- | Remove boxes for shelves and rearrange
 -- shelves before doing any move
@@ -369,7 +371,8 @@ moveSimilarBoxes partitionMode boxes exit'shelves' = do
   -- ^ available positions not linked at the moment to any real boxes
   -- this is a list whith one set of slice per shelf
   let positionsWithShelf :: Slices SlotPriority (Shelf s, BoxesOrPos s)
-      positionsWithShelf = combineSlicess slotGroups
+      positionsWithShelf = combineSlicess tolerance slotGroups
+      tolerance = (minimumEx $ 20 : ( dimensionToList . fst $ similarKey boxes)) / 2
   --  ^^^^^^^^^^^^^^^^^                             ^^^^^^^^^^^^^^^^^^^^^
   --       |                                              |
   --       +-- one set of slices combining                |
@@ -459,8 +462,8 @@ type SlotPriority = ( Int    -- ^ master priority
 -- consecutives shelves must be seen at one or not.
 -- The sorting can then be done by group of shelf with the same
 -- strategy.
-combineSlicess :: forall s p . [(ExitMode, [(Shelf s, Slices Double p)])] -> Slices SlotPriority (Shelf s, p)
-combineSlicess shelf'slicess = let
+combineSlicess :: forall s p . Double -> [(ExitMode, [(Shelf s, Slices Double p)])] -> Slices SlotPriority (Shelf s, p)
+combineSlicess tolerance shelf'slicess = let
   -- assign a number for each shelf and then
   -- reuse the same number within a group if needed.
   -- This way 1 2 3 4 5 will become 1 2 3 4 5 
@@ -489,21 +492,50 @@ combineSlicess shelf'slicess = let
   withGroupN = concat [ map (adjustN exitMode) same
                       | (exitMode, same) <- sameStrategy
                       ]
+  slices = concatMap (  map snd . snd ) shelf'slicess :: [Slices Double p ]
+  xs = List.nub 
+     . sort 
+     $ concatMap (F.bifoldMap pure (const [])) slices
   adjustN :: ExitMode -> SimilarBy FillingStrategy
                          ( ArgI (Shelf s) -- shelf with initial position 
                          , Slices Double p -- slices indexed by 
                          )
           -> [ Slices SlotPriority (Shelf s, p)
              ]
+  align x = findWithDefault x x (alignColumnMap tolerance xs)
   adjustN exitMode (SimilarBy strategy s'is1 s'i'slices) = 
     let firstI = argument (fst s'is1)
-        adjust i d = if (exitMode, strategy) `elem` [(ExitOnTop, ColumnFirst), (ExitLeft, RowFirst)]
+        adjust i (align -> d) = if (exitMode, strategy) `elem` [(ExitOnTop, ColumnFirst), (ExitLeft, RowFirst)]
                    then (firstI, d, i) -- sames "group" , within a group fill slice then go to the next shelf
                    else (i, d, i) -- fill shelf first, then go to the next one
     in [ bimap (adjust i) (shelf,) slices
        | (Arg i shelf, slices) <- s'is1 : s'i'slices
        ]
   in foldMap concat withGroupN
+  
+  
+-- | Create a map to group offsets in "columns"
+-- For example
+--
+--    [9,10,11, 19,20]
+--    correspond to two column [9,10,11] and [19,20]
+--    the correspoding map should give
+--     9 =>  9
+--    10 =>  9
+--    11 =>  9
+--    19 => 19
+--    20 => 19
+alignColumnMap :: Double -> [Double] -> Map Double Double
+alignColumnMap _ [] = mempty
+alignColumnMap tolerance xs@(x:_) = Map.fromList $ zip xs columns where
+   columns = if tolerance == 0 
+             then xs
+             else snd $ List.mapAccumL align x xs
+   align lastColumn x = if abs (lastColumn - x) <= tolerance
+                        then (lastColumn, lastColumn)
+                        else (x, x)
+   
+  
 -- | Assign boxes to positions in order (like a zip) but with respect to box breaks.
 -- (skip to the next column if column break for example)
 assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
