@@ -88,7 +88,7 @@ splitShelf shelf@Shelf{..} ls ws hs = do
           -- steal all boxes which belongs to it
           shelfBoxes <- findBoxByShelf shelf
           forM shelfBoxes (\box -> do
-            case dimInSplit split (boxOffset box ) of
+            case dimInSplit split { gDim = newMax }  (boxOffset box ) of
               Nothing -> return ()
               Just offset -> do
                 assignShelf (Just new) box
