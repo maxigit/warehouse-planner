@@ -142,7 +142,8 @@ narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
 narrowShelves selector ec = do
     (ecS, incs) <- case included (ecShelves ec) of 
       Nothing {- AllOf -} -> do
-            inc  <- findShelvesByBoxNameAndNames selector
+            incNotSorted  <- findShelvesByBoxNameAndNames selector
+            let inc = sortOn shelfName incNotSorted
             return (allIncluded { included = Just inc }, inc)
       Just inc -> do
            (incs, exs) <- partitionShelves selector inc
