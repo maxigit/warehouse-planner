@@ -1329,22 +1329,40 @@ drawAllRuns app = do
 -- * Find  nex Box
 findNextBox :: SearchDirection -> (Box RealWorld  -> Bool) -> AppState -> (AppState, Maybe (Box RealWorld))
 findNextBox direction good state =
-  let next = case direction of
-                  Forward -> nextBoxThrough
-                  Backward -> prevBoxThrough
-  in case next state of
-     new | coordinate new /= coordinate state , Just nextBox <- currentBox new -> 
-           if good nextBox
-           then (new, Just nextBox)
-           else findNextBox direction good new
-     new | coordinate new /= coordinate state , Nothing <- currentBox new -> 
-       findNextBox direction good new
-     _ -> (state , Nothing)
+      -- we can not just recurse on findNextBox without a way to make it loop
+      -- if there is no box matching the condidition. 
+      -- to do so we search forward and stop
+      -- and then start from 0 and stop
+  case go (> cstate) state of
+        (newState, Just newBox) -> (newState, Just newBox)
+        (_, Nothing) ->  case go (<= cstate) state { asCurrentRun = 0
+                                                   , asCurrentBay = 0
+                                                   , asCurrentShelf = 0
+                                                   , asCurrentBox = 0
+                                                   } of
+                                  --               ^^^^^^^^^^^^^^^^^
+                                  -- we can not just new state because if there is no boxes
+                                  -- asCurrentBox is set to -1, which mean that newState < state (state -1)
+                                  -- in that case we don't wrap but just try againg the current box and fail
+                                    (newState, Just newBox ) -> (newState, Just newBox)
+                                    (_, Nothing) -> (state, Nothing)
+   
   where coordinate s = ( asCurrentRun s
                        , asCurrentBay s
                        , asCurrentShelf s
                        , asCurrentBox s
                        )
+        go cond st = case next st of
+                     --- Box found stop
+                     new | Just nextBox <- currentBox new , good nextBox  -> (new, Just nextBox)
+                     new | cond (coordinate new) -> go cond new -- try next
+                     -- stop condition not matched (we are wraping or overtaking initial state)
+                     --
+                     new ->  (new , Nothing)
+        next = case direction of
+                  Forward -> nextBoxThrough
+                  Backward -> prevBoxThrough
+        cstate = coordinate state
 
 -- * Post update
 -- | update the list of current styles
