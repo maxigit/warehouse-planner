@@ -610,9 +610,9 @@ bestFitFor limitToBoxNb (shelfMin, shelfMax@(Dimension sl sw sh)) current bdim o
 -- | Calculate the number of boxes needed to fake generatePositions
 -- to use as many position as required to fit enough to fit boxes and make pickables pickable.
 -- Ex if howMany = 2x2x2 and pickable = 1 the number will be at least 2 (1 pickable and one behind
-numberToFakePicking :: TilingMode -> Int -> Int -> Int
-numberToFakePicking _ toFit toPick | toFit < toPick = 0
-numberToFakePicking tm toFit toPick = fst $ go tm toPick (toFit - toPick) 
+_numberToFakePicking :: TilingMode -> Int -> Int -> Int
+_numberToFakePicking _ toFit toPick | toFit < toPick = 0
+_numberToFakePicking tm toFit toPick = fst $ go tm toPick (toFit - toPick) 
   where go :: TilingMode -> Int -> Int -> (Int, (Int, Int))
         --                                 ^     ^   ^
         --                                 |     |   |
@@ -659,7 +659,7 @@ tagShelvesWithFitData adjustTagM rows = do
 
 -- | How many with depth = 1
 
-tmPickable tm = sum [ perLength hm * perHeight hm |   hm <- toList $ tmHowManys tm ]
+_tmPickable tm = sum [ perLength hm * perHeight hm |   hm <- toList $ tmHowManys tm ]
 
 -- * Summary 
 -- Display total volume shelf volume
