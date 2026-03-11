@@ -74,12 +74,14 @@ computeBoxDiffM (Just box1) (Just box2) = computeBoxDiff box1 box2
 -- | Only check if boxes have moved out
 computeShelfDiff :: Shelf s -> Shelf s -> DiffStatus (Set (ShelfId s))
 computeShelfDiff shelf1 shelf2 = DiffStatus{..} where
-  dsBoxOut  = case boxesFor shelf2 \\ boxesFor shelf1  of
+  boxesIn1 = boxesFor shelf1
+  boxesIn2 = boxesFor shelf2
+  dsBoxOut  = case boxesIn2 \\ boxesIn1  of
                            --                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
                            --                   box present initially - box left now
                    set | null set -> mempty
                    _ -> singletonSet $ shelfId shelf2
-  dsBoxIn = case boxesFor shelf1 \\ boxesFor shelf2  of
+  dsBoxIn = case boxesIn1 \\ boxesIn2  of
                  set | null set -> mempty
                  _ -> singletonSet $ shelfId shelf1
   dsBoxUpdated = 0
@@ -132,7 +134,7 @@ diffFor HistoryRange{..} eventMap = fromMaybe (NoHistory, mempty) $
 -- * Zippers
 toZHistory :: Event -> History a s -> ZHistory (a s)
 toZHistory ev history = let
-  m = mapFromList (toList history)
+  m = Map.fromDistinctDescList (toList history)
   (before, currentm, zAfter) = Map.splitLookup ev m
   zBefore = maybe mempty (Map.singleton ev) currentm <> before
   in ZHistory{..}
@@ -172,10 +174,16 @@ findSiblings ev events = let
 --                                       ^^^^^
 mergeEventMaps :: Ord k => Semigroup a =>  k -> [Map k a ] -> Map k a
 mergeEventMaps pivot maps = let
-    events = foldMap Map.keysSet maps
-    in Map.fromListWith (<>) [ (ev, a)
-                            | ev <- toList events
-                            , evMap <- maps
-                            , (found,a) <- toList $ Map.lookupLE ev evMap
-                            , (ev > pivot && found > pivot) || (ev <= pivot && found <= pivot)
-                            ]
+    events = toList $ foldMap Map.keysSet maps
+    in Map.fromAscList [ (ev, sconcat as)
+                       | ev <- events
+                       , let as' = [ a
+                                  | evMap <- maps
+                                  , (found,a) <- toList $ Map.lookupLE ev evMap
+                                  , (ev > pivot && found > pivot) || (ev <= pivot && found <= pivot)
+                                  ]
+                       , let as = case NE.nonEmpty as' of
+                                     Nothing  -> error "The unexpected happend, if ev is present there should be at least one event in it"
+                                     Just ne -> ne
+
+                       ]
