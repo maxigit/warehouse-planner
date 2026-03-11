@@ -84,6 +84,7 @@ data InputMode = ISelectBoxes
                | ISelectProperty 
                | ISelectTag
                | ISelectShelfProperty
+               | ICommand
      deriving (Show, Eq, Ord, Enum, Bounded)
 
 data Input = Input { iEditor :: Editor Text Resource

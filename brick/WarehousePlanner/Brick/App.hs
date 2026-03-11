@@ -147,7 +147,8 @@ data HistoryEvent = HPrevious
                   | HFirst
                   | HLast
                   | HSwapCurrent
-     deriving(Show, Eq, Ord, Enum, Bounded)
+                  | HGotTo Int
+     deriving(Show, Eq, Ord) -- , Enum, Bounded)
 
 data ReloadStage = ReloadRequest | ReloadStart
   deriving (Eq, Show, Ord) -- , Enum, Bounded)
@@ -544,6 +545,7 @@ keyBindingGroups =  groups
                                                                , mK "f1 C-h" EDisplayMainHelp "display main keybindings"
                                                                , mK "q C-c" (EQuit) "Quit"
                                                                , mK "C-r" (EReload ReloadRequest) "Reload"
+                                                               , mk ':' (EStartInputSelect ICommand) "Command"
                                                                ])
                                ,("Navigation",                 [ mk 'g' (EFirstRun) "first run"
                                                                , mk 'G' (ELastRun) "last run"
@@ -791,6 +793,7 @@ whHandleEvent ev = do
                                     ISelectProperty -> setProperty result
                                     ISelectShelfProperty -> setShelfProperty result
                                     ISelectTag -> setTagAll result
+                                    ICommand -> executeCommand result
                                modify \s -> s  { asInput = Nothing 
                                                , asInputHistory = Map.alter (pure . maybe [result] (result:)) 
                                                                             (iMode input)
@@ -1143,6 +1146,9 @@ navigateHistory ev = do
                                         zhistory -> fmap fst $ Map.lookupGT current $ zBefore zhistory <> zAfter zhistory
                      HNextSibling -> findNextSibling current events
                      HPreviousSibling -> findPreviousSibling current events
+                     HGotTo n -> find (\e -> evId e == n) events
+                                           
+                                 
        setDiff e = put s { asDiffEvent = e }
    forM_ newEventM \new -> do
         -- follow current box if needed
@@ -1566,6 +1572,12 @@ setTagAll tag = execute do
 
 setBoxTitle title = setTagAll ("ctitle=" <> title)
    
+executeCommand :: Text -> B.EventM n AppState ()
+executeCommand command = do
+   case readMay command of
+      Nothing -> return ()
+      Just n -> navigateHistory (HGotTo n)
+
 
 makeBoxSelection :: Text -> WH (Maybe (Selection BoxSelector (BoxId s))) s
 makeBoxSelection "" = return Nothing
@@ -1592,6 +1604,7 @@ makeInputData imode state = let
                   ISelectTag -> "ctitle=$"
                   ISelectShelves -> "/"
                   ISelectBoxes -> "*"
+                  ICommand -> ""
                   -- _ -> ""
     idShelf =  sName $ currentShelf state
     idPropertyValue = fromMaybe "" $ selectedPropValue state
