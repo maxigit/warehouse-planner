@@ -336,7 +336,7 @@ initState asToday adjust asReload title = do
                   , asTitle = title
                   , asDiffEvent = NoHistory
                   , asNavigateCurrent = False
-                  , asNavigateWithPrevious = True
+                  , asNavigateWithPrevious = False
                   , asNavigateFollowsBox = True
                   , asDebugShowDiffs = False
                   , asInput = Nothing, asInputHistory = mempty
