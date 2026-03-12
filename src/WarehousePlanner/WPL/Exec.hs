@@ -72,8 +72,12 @@ executeStatement ec command =
            -- set the context to each individial shelf and 
            -- Maybe we should use the parent content
            let shelves = includedList $ ecShelves ec
-           forM_ shelves \shelf -> 
-                void $ executeStatement (ec { ecShelves = (ecShelves ec) {included = Just [shelf] }}) statement
+           forM_ shelves \shelf -> do
+                s <- findShelf shelf
+                newWHEvent 9 $ "FSHELF: " <> tshow s
+                void $ executeStatement (ec { ecShelves = (ecShelves ec) {included = Just [shelf] }
+                                            , ecParent = Just ec
+                                            }) statement
            return ec
         ForeachBox selector statement -> do
            boxes <- narrowCSelector selector ec >>= getBoxPs
@@ -81,15 +85,18 @@ executeStatement ec command =
            let groups = groupBy (\a b -> key a == key b) boxes
                key (_, (global,_)) = global
            forM_ groups \box'ps -> do
+                newWHEvent 9 $ "FBOX" <> tshow box'ps
                 let idSet = Set.fromList $ map (boxId . fst) box'ps
                 void $ executeStatement ec { ecBoxes = narrowIncluded (\(bId, _) -> bId `member` idSet)
                                                                       (ecBoxes ec)
+                                           , ecParent = Just ec
                                            }
                                         statement
            return ec
         ForeachDo action statements  -> do
            -- execute action for all of the statment
            -- collecting boxes as in a case 
+           newWHEvent 9 $ "FDO: " <> tshow action
            let cases = fmap (\st -> Case st $ Just action) statements
            executeStatement ec (Cases cases)
         PrettyPrint title statement -> do
