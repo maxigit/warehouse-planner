@@ -454,6 +454,7 @@ executeCommand ec command = case command of
                           Nothing -> \box _ -> return $ getTagValuem box "fill-shelf"
                           jp@(Just prop) | Just exp <- expandAttributeMaybe prop -> \box i -> Just <$> exp box i 
                                          | otherwise -> \_ _ -> return jp
+        newBaseEvent "Fill" ("loc:" <> maybe "" tshow shelfPropM <> " pos:" <> fillTag)
         newEc <- executeStatement ec stmt
         boxes <- getBoxes newEc
         ss <- getShelves ec
