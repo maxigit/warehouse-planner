@@ -439,6 +439,7 @@ executeCommand ec command = case command of
       return newEc { ecShelves = ecShelves ec } -- ^ remove newly created shelves.
     ---------
     SwapBoxes boxSelector debugPrefix stickys -> do
+      newBaseEvent "Swap" (tshow boxSelector) 
       -- swap selected boxes (in the selected order)
       -- with the original order (in the given order)
       original <- getBoxes ec
