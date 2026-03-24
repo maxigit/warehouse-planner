@@ -426,7 +426,7 @@ findBoxesWithShelf = mapM go where
        box <- findBox bId
        shelfM <- forM (boxShelf box) findShelf
        case shelfM of
-         Nothing -> error $ "No shelf for box" <> show box
+         Nothing -> error $ "No shelf for box" <> show (box, boxTags box)
          Just shelf -> return (box, shelf)
 
 partitionShelves :: (Traversable f, Shelf' shelfId) => ShelfSelector -> f (shelfId s) -> WH ([Shelf s], [Shelf s]) s
