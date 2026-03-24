@@ -386,7 +386,7 @@ Boxes can moves around, tagged but also resized.
    
      [ A | B | C ] swap [A | C | B ]
 
-- ``fill pos:loc { boxes }``:  Move boxes using to the given position and location specified by ``pos`` and ``loc`` :ref:`property <evaluation>`. The default uses the ``#fill-shelf`` and ``#fill-shelf`` tags.
+- ``fill pos:loc { boxes }``:  Move boxes using to the given position and location specified by ``pos`` and ``loc`` :ref:`property <evaluation>`. The default uses the ``#fill-shelf`` and ``#fill-spec`` tags.
 
 - ``tag #tag1#tag2``: tags the current boxes with tag1 and tag2
 - ``tag #tag1#tag2 boxes:boxes? { stmt }``: execute stmt with tag set temporaly.
