@@ -22,6 +22,7 @@ import Data.Semigroup(Arg(..))
 import Data.Text qualified as Text
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import WarehousePlanner.History.Types
+import Data.Kind(Type)
 import Data.Foldable qualified as F
 
 -- * Types 
@@ -346,7 +347,7 @@ class BoxIdable a where
 class (BoxIdable b) => Box' b where
   findBox :: b s  -> WH (Box s) s
 class Referable a where
-  type Ref a :: *
+  type Ref a :: Type
   getRef :: a -> Ref a
 
 class HasTags a where

@@ -8,7 +8,7 @@ module WarehousePlanner.Tiling
 where
 import ClassyPrelude hiding (unzip)
 import WarehousePlanner.Base
-import Data.List.NonEmpty (unzip)
+import Data.Functor (unzip)
 
 
 clampTilingMode :: Maybe Int -> Maybe (Int, Int) -> Maybe Int -> TilingMode -> TilingMode

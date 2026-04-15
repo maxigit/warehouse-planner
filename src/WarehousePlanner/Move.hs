@@ -19,10 +19,10 @@ module WarehousePlanner.Move
 , SlotBounds(..)
 )
 where 
-import ClassyPrelude hiding (uncons, stripPrefix, unzip)
+import ClassyPrelude hiding (uncons, stripPrefix)
 import Control.Monad.State(gets)
 import Control.Monad hiding(mapM_,foldM)
-import Data.List.NonEmpty(unzip, NonEmpty(..), nonEmpty)
+import Data.List.NonEmpty(NonEmpty(..), nonEmpty)
 import Data.List.NonEmpty qualified as NE
 import Data.List qualified as List
 import WarehousePlanner.Type

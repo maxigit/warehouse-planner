@@ -28,7 +28,7 @@ import WarehousePlanner.Expr qualified as E
 import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
 import Data.Char(ord,chr)
-import Control.Monad.State hiding(fix,mapM_,foldM)
+import Control.Monad.State 
 
 -- | Dimension info to construct a Shelf
 data ShelfDimension = ShelfDimension

@@ -14,7 +14,7 @@ where
 import ClassyPrelude hiding(tail)
 import WarehousePlanner.Type
 import Data.List.NonEmpty (NonEmpty, nonEmpty)
-import Data.List (nub, tail)
+import Data.List (nub)
 
 -- * Dimensions
 data AffDimension = AffDimension { aBottomLeft , aTopRight :: Dimension }
@@ -129,8 +129,8 @@ tilesFromPoints px py points = let
   xs = nub $ sort $ map px points
   ys = nub $ sort $ map py points
   in [ ((x, y), (x', y'))
-     | (x, x') <- zip xs (tail xs)
-     , (y, y') <- zip ys (tail ys)
+     | (x, x') <- zip xs (drop 1 xs)
+     , (y, y') <- zip ys (drop 1 ys)
      ]
      
 tileSurface :: ((Double, Double), (Double, Double)) -> Double
