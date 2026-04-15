@@ -1,6 +1,6 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.38.0.
+-- This file has been generated from package.yaml by hpack version 0.38.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -105,6 +105,7 @@ library
     , temporary ==1.3.*
     , text
     , time
+    , transformers >=0.6.0.0 && <0.7
     , vector
   default-language: GHC2021
   if flag(brick)
@@ -185,6 +186,7 @@ executable whp
     , temporary ==1.3.*
     , text
     , time
+    , transformers >=0.6.0.0 && <0.7
     , vector
     , warehouse-planner
   default-language: GHC2021
@@ -303,6 +305,7 @@ test-suite test
     , temporary ==1.3.*
     , text
     , time
+    , transformers >=0.6.0.0 && <0.7
     , vector
   default-language: GHC2021
   if flag(brick)
@@ -368,6 +371,7 @@ benchmark bench
     , temporary ==1.3.*
     , text
     , time
+    , transformers >=0.6.0.0 && <0.7
     , vector
     , warehouse-planner
   default-language: GHC2021

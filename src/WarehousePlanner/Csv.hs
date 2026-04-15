@@ -42,7 +42,8 @@ import Control.Monad hiding(mapM_,foldM)
 -- import Data.List.Split (splitOn)
 import Data.List qualified as List
 import ClassyPrelude hiding(readFile)
-import Control.Monad.State hiding(fix,mapM_,foldM)
+import Control.Monad.State
+import Control.Monad.Trans.Except
 import Text.Regex qualified as Rg
 import Text.Regex.Base.RegexLike qualified as Rg
 import Data.Text(splitOn)
@@ -234,7 +235,7 @@ given ceiling.
 readShelves defaultOrientator filename = do
     csvData <- BL.readFile filename
     -- Call Csv.decode but add default value to bottom if not present in header
-    let decode = asum
+    let decode = runExcept $ asum $ map except
           [ Csv.decode Csv.HasHeader csvData
           , fmap (Vec.map (\(name, description, l, w, h, shelfType) ->
                    (name, description, l, w, h, shelfType, "0"))
@@ -325,7 +326,7 @@ same),
 readUpdateShelves :: FilePath-> IO (WH [Shelf s] s)
 readUpdateShelves filename = do
   csvData <- BL.readFile filename
-  let decode =  asum
+  let decode =  runExcept . asum . map except $
           [ Csv.decode Csv.HasHeader csvData
           , fmap (Vec.map (\(name, l, w, h)->
                      (name, l, w, h, "",Nothing))
@@ -482,12 +483,13 @@ readShelfSplit = readFromRecordWith go where
     let boxm = headMay boxes
         withD s = if null s then "{}" else s :: Text
     concat `fmap` mapM (\shelf -> do
-      [ls, ws, hs] <- zipWithM (\xtext f -> 
+      ls'ws'hs <- zipWithM (\xtext f -> 
                             mapM (\x -> do
                               evalExpr (dimForSplit boxm shelf)
                                        (parseExpr (f . sMinD)  $ withD x)
                               ) (splitOnNonEscaped " " xtext)
                             ) [l, w, h] ds
+      let [ls, ws, hs] = ls'ws'hs
       splitShelf shelf ls ws hs
       ) shelves
 
@@ -1256,7 +1258,10 @@ instance Csv.FromField (Either Rg.Regex (Box s -> Int -> WH Rg.Regex s)) where
     case expandAttributeMaybe r of
       Nothing -> Left <$> Rg.makeRegexM (unpack r)
       Just _ -> return . Right $ \box i -> do
-              expandAttribute box i r >>= Rg.makeRegexM . unpack
+              expandAttribute box i r >>= (\r -> case Rg.makeRegexM $ unpack r of
+                                                  Just rg -> return rg
+                                                  Nothing -> error $ unpack r <> " is not valid regexp"
+                                      )
 
 instance Csv.FromField BoxSelector where
   parseField s = do
