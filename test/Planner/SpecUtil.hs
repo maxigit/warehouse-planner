@@ -41,7 +41,8 @@ makeBoxes shelfboxess = do
                  
    return $ concat boxess
    where go shelfname name = do
-            shelfId:_ <- findShelfBySelector (parseSelector shelfname)
+            shelfIds <- findShelfBySelector (parseSelector shelfname)
+            let shelfId:_ = shelfIds
             shelf <- findShelf shelfId
             let (style', tags) = extractTags name
                 (style, drop 1 -> content) = breakOn "-" style'

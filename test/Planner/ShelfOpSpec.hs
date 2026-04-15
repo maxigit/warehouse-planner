@@ -31,8 +31,10 @@ pureSpec = describe "dimForSplit" do
     -}
    let shouldEval ref (minX, maxX) =  do
                   sdim <- execWH (emptyWarehouse $ fromGregorian 2025 10 27) do
-                         [shelf, ignore] <- makeShelves ["S", "ignore"]
-                         boxes@[_,(x,_) ,_] <- makeBoxesWithPartition PRightOnly  ["S A", "S x B"]
+                         shelves <- makeShelves ["S", "ignore"]
+                         let [shelf, ignore] = shelves
+                         boxes_ <- makeBoxesWithPartition PRightOnly  ["S A", "S x B"]
+                         let boxes@[_,(x,_) ,_] = boxes_
                          -- move X to ignore to we have a gap between A and B
                          assignShelf (Just ignore) x
                          dimForSplit Nothing shelf ref
