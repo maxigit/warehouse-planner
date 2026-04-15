@@ -136,7 +136,8 @@ when:
 - condition: flag(brick)
   dependencies:
   - brick
-  - vty
+  - vty >= 6.4 && < 7
+  - vty-crossplatform
   - text-zipper
   - fsnotify
   # for executable

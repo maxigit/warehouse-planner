@@ -26,7 +26,9 @@ import Brick.BChan qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
 import Graphics.Vty qualified as V
+import Graphics.Vty.CrossPlatform qualified as V
 import Control.Monad.State (gets, get, modify, put)
+import Control.Monad (zipWithM)
 import Data.List.NonEmpty(NonEmpty(..), (!!))
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B

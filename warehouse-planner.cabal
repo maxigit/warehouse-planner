@@ -114,7 +114,8 @@ library
       , fsnotify
       , optparse-applicative
       , text-zipper
-      , vty
+      , vty >=6.4 && <7
+      , vty-crossplatform
   if flag(brick)
     exposed-modules:
         WarehousePlanner.Main
@@ -196,7 +197,8 @@ executable whp
       , fsnotify
       , optparse-applicative
       , text-zipper
-      , vty
+      , vty >=6.4 && <7
+      , vty-crossplatform
   if flag(brick)
     buildable: True
 
@@ -314,7 +316,8 @@ test-suite test
       , fsnotify
       , optparse-applicative
       , text-zipper
-      , vty
+      , vty >=6.4 && <7
+      , vty-crossplatform
 
 benchmark bench
   type: exitcode-stdio-1.0
@@ -381,4 +384,5 @@ benchmark bench
       , fsnotify
       , optparse-applicative
       , text-zipper
-      , vty
+      , vty >=6.4 && <7
+      , vty-crossplatform
