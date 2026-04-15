@@ -367,7 +367,7 @@ executeCommand ec command = case command of
                      boxes <- narrowCSelector sel ec >>= getBoxes
                      return $ headMay boxes
         forM shelves \shelf -> do
-           [l, w, h] <-
+           l'w'h <-
              zipWithM (\exp defAcc -> do
                              let exWithRef = replaceRef <$> exp
                                  replaceRef ref = case P.parse (parseRef $ defAcc . sMinD) (unpack ref) ref of
@@ -381,6 +381,7 @@ executeCommand ec command = case command of
                       )
                       [le, we, he]
                       ds
+           let [l, w, h] = l'w'h
            let newMin = Dimension l w h
                newMax  = maxDimension [newMin, maxDim shelf]
            updateShelf (\s  -> s { minDim = newMin, maxDim = newMax }) shelf
