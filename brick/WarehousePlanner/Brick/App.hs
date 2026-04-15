@@ -532,7 +532,7 @@ startFileWatcher dir enqueueEvent = FS.withManager \mgr -> do
   forever $ threadDelay maxBound
   where fileModified event = 
            case event of 
-                FS.Modified _ _ _  | FS.eventIsDirectory event == False -> True
+                FS.Modified _ _ FS.IsFile -> True
                 _ -> False
 
 

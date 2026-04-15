@@ -418,7 +418,7 @@ executeCommand ec command = case command of
                    boxes <- narrowCSelector sel ec >>= getBoxes
                    return $ headMay boxes
       newss <- forM shelves \shelf -> do
-           [ls, ws, hs] <-
+           l'w'hs <-
              zipWithM (\exprs defAcc -> do
                 forM exprs \ar -> 
                     forM ar
@@ -435,6 +435,7 @@ executeCommand ec command = case command of
              )
              [les, wes, hes]
              ds
+           let [ls, ws, hs] = l'w'hs
            splitShelf shelf (absRelsToRels ls) (absRelsToRels ws) (absRelsToRels hs)
       newEc <- executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
       return newEc { ecShelves = ecShelves ec } -- ^ remove newly created shelves.
