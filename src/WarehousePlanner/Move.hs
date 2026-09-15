@@ -129,14 +129,14 @@ bestPositions partitionMode shelf simBoxes = do
 
 bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos s)) s
 bestPositionOrBoxes partitionMode shelf simBoxes = do
-  let SimilarBy (dim,_) box _ = simBoxes
+  let SimilarBy (dim,_) box boxes = simBoxes
   boxesInShelf <- findBoxByShelf shelf
   boxo <- gets boxOrientations
   let orientations = boxo box shelf
-  return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim 
+  return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim  (Just $ length boxes + 1)
 
-bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Slices Double (OrPos b)
-bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode = let
+bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Maybe Int -> Slices Double (OrPos b)
+bestPositions' getAff pmode orientations shelf start used dim howManyM | isOverlap pmode = let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
   solutions = [ 
@@ -176,14 +176,14 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
         justifyPositions = case pmode of
                              POverlap ORight -> justifyRight dim (minDim shelf)
                              POverlap OAligned -> \case 
-                                  slices -> justifyAlign (map getAff used) dim slices
+                                  slices -> justifyAlign (map getAff used) dim slices howManyM
                              _ -> id
         bestPositionsWithOffset offset strategy = 
             let newShelf = shelf { minDim = minDim shelf <> shrink
                                  , maxDim = maxDim shelf <> shrink 
                                  }
                 shrink = Dimension (-offset) 0 0
-                positions = bestPositions' getAff PRightOnly [strategy] newShelf start [] dim
+                positions = bestPositions' getAff PRightOnly [strategy] newShelf start [] dim Nothing
                 offsetBack = fmap (\pos -> pos {pOffset = pOffset pos <> (Dimension offset 0 0)})
             in fmap offsetBack positions
         modFload r q = let p = floor(r / q)
@@ -191,7 +191,7 @@ bestPositions' getAff pmode orientations shelf start used dim | isOverlap pmode 
                              
                       
 
-bestPositions' getAff partitionMode orientations shelf start usedBoxes dim = let
+bestPositions' getAff partitionMode orientations shelf start usedBoxes dim _ = let
   starti = invert start
   topRightCorners = filter (not . outOfBound)
                   . map ((starti <>) . aTopRight)
@@ -286,13 +286,13 @@ justifyRight box shelf slices = let
                 in  fmap (fmap (\Position{..} -> Position {pOffset=pOffset <> offset,..})) slices
 -- | Offset positions to align the first available slot
 -- with the right most corner
-justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Slices Double (OrPos b)
-justifyAlign used box slices = let
+justifyAlign :: [AffDimension] -> Dimension -> Slices Double (OrPos b) -> Maybe Int -> Slices Double (OrPos b)
+justifyAlign used box slices howManyM = let
    (_,poss) = partitionEitherSlices slices
    posAs = map (positionToAffine box) poss
    -- boxes could be grouped by rectangural tiles to speed things up
    usedTiles = used
-   tiles = F.toList posAs
+   tiles = maybe id take howManyM $ F.toList posAs
    offsets :: [ Double ]
    offsets = map minOffset tiles
    minOffset :: AffDimension -> Double

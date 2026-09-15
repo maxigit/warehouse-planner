@@ -434,7 +434,7 @@ executeFillCommand shelf state@FillState{..} = \case
               -- find the next positions 
               let useAllBoxes =  do
                                       used <- findBoxByShelf shelf
-                                      return $ snd $ partitionEitherSlices $ bestPositions' boxAffDimension partitionMode [strategy] shelf offset used fLastBox_
+                                      return $ snd $ partitionEitherSlices $ bestPositions' boxAffDimension partitionMode [strategy] shelf offset used fLastBox_ Nothing
               positions <- case partitionMode of
                         POverlap _ -> useAllBoxes
                         PCorner _ -> useAllBoxes
@@ -442,7 +442,7 @@ executeFillCommand shelf state@FillState{..} = \case
                         PSortedOverlap -> error "Sorted overlap NOT IMPLEMENTED"
                         _ -> do
                               let used = [AffDimension mempty fMaxCorner]
-                              return $ snd $ partitionEitherSlices $ bestPositions' id partitionMode [strategy] shelf offset used fLastBox_
+                              return $ snd $ partitionEitherSlices $ bestPositions' id partitionMode [strategy] shelf offset used fLastBox_ Nothing
               if  Prelude.length positions == 0
               then error . unpack $ "Strategy "  <> tshow partitionMode <> " " <> tshow strategy <> " doesn't allow any boxes.\nCheck if the shelf is deep enough: "
                            <>  (shelfName shelf)
