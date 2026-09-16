@@ -499,17 +499,17 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = mdo
         writeCurrentRef ref shelf
 
         modify \warehouse ->  warehouse { shelves = shelves warehouse |> ShelfId_ uniqueRef }
-        updateShelfTags [] shelf
+        updateShelfTags mempty shelf
 
 newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
 newBox = newBox' Nothing
 newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
 newBox' boxM style content dim or_ shelf ors tagTexts = mdo
-    let tags' = map parseTagOperation tagTexts
+    let tags' = fromTag'Operations $ map parseTagOperation tagTexts
         dtags = dimensionTagOps dim
         -- create "'content" tag
         contentTag = (cons '\'' content, SetTag)
-        tags = fromMaybe mempty $ modifyTags (contentTag : makeContentTags content <> tags' <> dtags) mempty
+        tags = fromMaybe mempty $ modifyTags (fromTag'Operations [contentTag] <>  makeContentTags content <> tags' <> dtags) mempty
                                   --   ^ apply dimension tags after tags so dimension override tags
 
     uniqueRef <- case boxM of 
@@ -540,9 +540,9 @@ newBox' boxM style content dim or_ shelf ors tagTexts = mdo
     return box
     
 -- |  create #content1=A, #content2=B from A&B
-makeContentTags :: Text -> [Tag'Operation]
+makeContentTags :: Text -> TagsOperations
 makeContentTags content = 
-  case splitOnNonEscaped "&" content of
+  fromTag'Operations case splitOnNonEscaped "&" content of
    [_] -> []
    contents -> ("mixed", SetTag) : [ ("content" <> tshow i, SetValues [c])
                                    | (c, i) <- zip contents [1..] 
@@ -599,9 +599,9 @@ parseTagOperation s =
     (tag, val)              -> (tag <> val , SetTag)
   where split = splitOnNonEscaped ";"
  
-parseTagOperations :: Text -> [Tag'Operation]
+parseTagOperations :: Text -> TagsOperations
 parseTagOperations tag =
- case splitOnNonEscaped "#" tag of
+ fromTag'Operations case splitOnNonEscaped "#" tag of
    [] -> []
    [""] -> []
    tags -> map parseTagOperation tags
@@ -618,24 +618,26 @@ printTagOperation (tag, op) = case op of
     | "-" `isPrefixOf` tag -> tag <> "=" <> val
     | otherwise            -> tag <> "=-" <> val
   
-printTagOperations :: [Tag'Operation] -> Text
-printTagOperations = intercalate "#" . map printTagOperation
+printTagOperations :: TagsOperations -> Text
+printTagOperations (TagsOperations tagsOps ) = intercalate "#" $ map printTagOperation tagsOps
 
-negateTagOperations :: [Tag'Operation] -> [Tag'Operation]
-negateTagOperations tags = do
-  (tag, op) <- tags
-  map (tag, ) $ case op of
-    RemoveTag -> [SetTag]
-    SetTag -> [RemoveTag]
-    SetValues values -> map RemoveValue values
-    RemoveValue val -> [AddValue val]
-    AddValue val -> [RemoveValue val]
+negateTagOperations :: TagsOperations -> TagsOperations
+negateTagOperations (TagsOperations tags) = do
+  TagsOperations [ (tag, nop)
+                 | (tag, op) <- tags
+                 , nop <- case op of
+                               RemoveTag -> [SetTag]
+                               SetTag -> [RemoveTag]
+                               SetValues values -> map RemoveValue values
+                               RemoveValue val -> [AddValue val]
+                               AddValue val -> [RemoveValue val]
+                 ]
   
 
 -- | Generates tag operation for dimensions. Used when creating a box
 -- to update the dimension tags. 
-dimensionTagOps :: Dimension  -> [Tag'Operation]
-dimensionTagOps dim = [dshow 'l' dLength, dshow 'w' dWidth, dshow 'h' dHeight]
+dimensionTagOps :: Dimension  -> TagsOperations
+dimensionTagOps dim = fromTag'Operations [dshow 'l' dLength, dshow 'w' dWidth, dshow 'h' dHeight]
   where dshow c f = ( pack $ '\'' : c : []
                     , SetValues [tshow (floor $ 100 * f dim)]
                     )
@@ -680,7 +682,7 @@ it with extra tag
   file/stock.org#@include#stat*
   :END:
 ::rST -}
-parseTagAndPatterns :: [Text] ->  [Text] -> [Tag'Operation]
+parseTagAndPatterns :: [Text] ->  [Text] -> TagsOperations
 parseTagAndPatterns tagsAndPatterns localTags = 
   let (defaultTags, pats) = break (`elem` ["@exclude", "@include"]) tagsAndPatterns
       globs = map (Glob.compile . unpack) $ drop 1 pats
@@ -688,7 +690,7 @@ parseTagAndPatterns tagsAndPatterns localTags =
         "@exclude":_ -> \(tag, _) -> not $ any (flip Glob.match (unpack tag)) globs
         "@include":_ -> \(tag, _) -> any (flip Glob.match (unpack tag)) globs
         _ -> const True
-  in map parseTagOperation defaultTags <> filter keepTagOp (map parseTagOperation localTags)
+  in fromTag'Operations $ map parseTagOperation defaultTags <> filter keepTagOp (map parseTagOperation localTags)
   
 readTagAndPatterns :: [Text] -> [Text] -> [Text]
 readTagAndPatterns tagsAndPatterns localTags = maybe [] flattenTags $ modifyTags (parseTagAndPatterns tagsAndPatterns localTags) mempty 
@@ -818,8 +820,8 @@ updateShelfByName f n = findShelfBySelector (Selector (NameMatches [MatchFull n]
 
 
 -- | Add or remove the given tags to the give box
-updateBoxTags' :: [Tag'Operation] -> Box s -> Box s
-updateBoxTags' [] box = box -- no needed but faster, because we don't have to destruct and 
+updateBoxTags' :: TagsOperations -> Box s -> Box s
+updateBoxTags' (TagsOperations []) box = box -- no needed but faster, because we don't have to destruct and 
 updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
   Nothing -> box
   Just new -> let newContent = getTagValuem new "'content"
@@ -834,8 +836,8 @@ updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
                                     , boxContent = fromMaybe (boxContent box) newContent
                                     }
 
-updateShelfTags' :: [Tag'Operation] -> Shelf s -> Shelf s
-updateShelfTags' [] shelf = shelf -- no needed but faster, because we don't have to destruct and 
+updateShelfTags' :: TagsOperations -> Shelf s -> Shelf s
+updateShelfTags' (TagsOperations []) shelf = shelf -- no needed but faster, because we don't have to destruct and 
 updateShelfTags' tag'ops shelf = case modifyTags tag'ops (shelfTag shelf) of
   Nothing -> shelf
   Just new -> updateCeiling $ shelf { shelfTag = new }
@@ -876,9 +878,9 @@ applyTagOperations tag'ops tags = foldM (flip applyTagOperation) tags tag'ops
 -- | Apply tag operations to a set of tags. Return nothing
 -- if nothing has changed. Knowing nothing has changed should
 -- allow some optimization upstream
-modifyTags :: [Tag'Operation] -> Tags -> Maybe Tags
-modifyTags [] __tags = Nothing
-modifyTags tag'ops tags = Just $ merge  opsOnly tagsOnly tagsAndOp tag'opsMap tags where
+modifyTags :: TagsOperations -> Tags -> Maybe Tags
+modifyTags (TagsOperations []) __tags = Nothing
+modifyTags (TagsOperations tag'ops) tags = Just $ merge  opsOnly tagsOnly tagsAndOp tag'opsMap tags where
     tagsOnly = preserveMissing
     opsOnly = mapMaybeMissing $ \_ ops -> applyTagOperations ops mempty
     tagsAndOp = zipWithMaybeMatched $ \_ -> applyTagOperations
@@ -888,8 +890,8 @@ modifyTags tag'ops tags = Just $ merge  opsOnly tagsOnly tagsAndOp tag'opsMap ta
     tag'opsMap :: Map.Map Text [TagOperation]
     tag'opsMap = Map.fromListWith (<>)  (map (fmap (:[])) tag'ops)
 
-updateBoxTags :: [Tag'Operation] -> Box s -> Int -> WH (Box s) s
-updateBoxTags tags0 box index = do
+updateBoxTags :: TagsOperations -> Box s -> Int -> WH (Box s) s
+updateBoxTags (TagsOperations tags0) box index = do
   -- remove '''
   tags1 <- mapM (mapM $ mapM (expandAttribute box index)) tags0
        --                 ^--  each value in Operation
@@ -898,14 +900,14 @@ updateBoxTags tags0 box index = do
   let tags = [ (tag, values )
              | (tag, values) <- tags1
              ]
-  updateBox (updateBoxTags' tags) box
+  updateBox (updateBoxTags' $ fromTag'Operations tags) box
 
-updateShelfTags :: [Tag'Operation] -> Shelf s -> WH (Shelf s) s
-updateShelfTags tags0 shelf =  do
+updateShelfTags :: TagsOperations -> Shelf s -> WH (Shelf s) s
+updateShelfTags (TagsOperations tags0) shelf =  do
   let tags = [ (tag, values )
              | (tag, values) <- tags0
              ]
-  updateShelf (updateShelfTags' tags) shelf
+  updateShelf (updateShelfTags' $ TagsOperations tags) shelf
 
 boxStyleAndContent :: Box s -> Text
 boxStyleAndContent box = case boxContent box of

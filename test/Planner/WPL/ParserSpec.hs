@@ -195,6 +195,10 @@ instance Arbitrary (TagSelector a) where
                where matchAll = all (== (VMatch MatchAnything))
    shrink = shrinkNothing
    
+deriving instance Generic TagsOperations
+instance Arbitrary TagsOperations where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
 
 deriving instance Generic ValuePattern
 instance Arbitrary ValuePattern where

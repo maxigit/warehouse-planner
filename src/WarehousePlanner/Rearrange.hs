@@ -31,18 +31,19 @@ data ForGrouping = Don'tGroup | GroupByContent | GroupBySelector
      deriving (Show, Eq)
 
 -- * Export {{1
-rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> [Tag'Operation] -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> TagsOperations -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
 rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
   let findBoxWithDebug (boxId, p@(k1, (k2, k3))) = do
         box <- findBox boxId
         newBox <- case debugm of
              Nothing -> return box
-             Just prefix -> updateBoxTags [ (prefix <> "-priority", SetValues [ intercalate "|" $ map showkey [k1, k2, k3]])
-                                          , (prefix <> "-style", SetValues [showkey k1])
-                                          , (prefix <> "-cgroup", SetValues [showkey k2])
-                                          , (prefix <> "-corder", SetValues [showkey k3])
-                                          , (prefix <> "-by", SetValues [tshow groupByContent])
-                                          ]
+             Just prefix -> updateBoxTags ( fromTag'Operations [ (prefix <> "-priority", SetValues [ intercalate "|" $ map showkey [k1, k2, k3]])
+                                                               , (prefix <> "-style", SetValues [showkey k1])
+                                                               , (prefix <> "-cgroup", SetValues [showkey k2])
+                                                               , (prefix <> "-corder", SetValues [showkey k3])
+                                                               , (prefix <> "-by", SetValues [tshow groupByContent])
+                                                               ]
+                                          )
                                           box
                                           1
         return (newBox, p)
@@ -89,11 +90,12 @@ shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
   boxWithBuckets <- case debugPrefix of 
                        Nothing -> return boxWithBuckets0
                        Just prefix -> zipWithM  (\(boxes, strategy) bucket -> do
-                                         newBoxes <- forM  (zip [1..] boxes) \(i,box) ->  updateBoxTags [ (prefix <> "-bucket", SetValues [tshow bucket])
-                                                                                                        , (prefix <> "-strategy", SetValues [tshow strategy])
-                                                                                                        , (prefix <> "-order", SetValues [tshow i])
-                                                                                                        , (prefix <> "-pos", SetValues [tshow bucket <> ":" <> tshow i])
-                                                                                                        ]
+                                         newBoxes <- forM  (zip [1..] boxes) \(i,box) ->  updateBoxTags (fromTag'Operations [ (prefix <> "-bucket", SetValues [tshow bucket])
+                                                                                                                , (prefix <> "-strategy", SetValues [tshow strategy])
+                                                                                                                , (prefix <> "-order", SetValues [tshow i])
+                                                                                                                , (prefix <> "-pos", SetValues [tshow bucket <> ":" <> tshow i])
+                                                                                                                ]
+                                                                                                        )
                                                                                                         box 
                                                                                                         1
                                          return (newBoxes, strategy)) -- boxes, strategy))
@@ -414,9 +416,9 @@ executeFillCommand shelf state@FillState{..} = \case
                  let dim = dimensionFor box (Just or) state
                      offset' = offset <> Dimension 0 0 (dHeight dim)
                      -- tag box if dimension is different
-                     tagOps = if dimensionSame dim (_boxDim box)
-                            then []
-                            else [("@size-forced", SetTag)]
+                     tagOps = fromTag'Operations if dimensionSame dim (_boxDim box)
+                                                    then []
+                                                    else [("@size-forced", SetTag)]
                  box' <- updateBox (\b -> b { orientation = or
                                             , boxOffset = offset 
                                             }

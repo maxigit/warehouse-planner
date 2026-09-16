@@ -195,7 +195,7 @@ makeAppShelvesSummary state = do
                                                                 then "∅"
                                                                 else p'
                                                         -- Hack to store the property value for display
-                                                        updateBoxTags [("@prop", SetValues [p])] b 0
+                                                        updateBoxTags (fromTag'Operations [("@prop", SetValues [p])]) b 0
                                                         return (p , makeBoxesSummary [b])
                                                )
                                                (toList boxes)
@@ -936,7 +936,7 @@ handleWH ev =
                              shelves <- findShelvesByBoxNameAndNames (sSelector ss)
                              newBaseEvent "MOVE %" $ sText bs <> " TO " <> sText ss 
                              leftOver <- excludedList <$> moveBoxes PBestEffort SortBoxes (toList $ sSelected bs) [(ExitLeft, shelves)]
-                             zipWithM (updateBoxTags [("error", SetTag )]) leftOver [1..]
+                             zipWithM (updateBoxTags $ fromTag'Operations [("error", SetTag )]) leftOver [1..]
                              newWH <- get
                              return $ Just (newWH, bs { sSelected = setFromList $ map boxId leftOver } )
                           _ -> return Nothing

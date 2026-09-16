@@ -439,7 +439,7 @@ updateShelfWithFormula dimW dimW' bottomW name tagm = do
         case tags of
           [] -> return new
           _ -> do
-              let tagOps = parseTagOperations =<< tags
+              let tagOps = foldMap parseTagOperations tags
               updateShelfTags tagOps new
     [] -> error $ "Shelf " <> unpack name <> " not found. Can't update it"
     _ -> error $ "To many shelves named " <> unpack name <> " not found. Can't update it"
@@ -1220,7 +1220,7 @@ readFreezeOrder tags0 = readFromRecordWith go
           boxes <- findBoxByNameAndShelfNames style
           freezeOrder $ map boxId boxes
           case parseTagAndPatterns tags0 [] of
-            [] -> return boxes
+            TagsOperations [] -> return boxes
             ops -> zipWithM (updateBoxTags ops) boxes [1..]
 
 
@@ -1244,7 +1244,7 @@ readShelfTags :: FilePath -> IO (WH [Shelf s] s)
 readShelfTags = readFromRecordWith go where
   go (selector, splitOnNonEscaped "#" -> tags) = do
     shelves <- findShelvesByBoxNameAndNames selector
-    let tagOps = map parseTagOperation tags
+    let tagOps = fromTag'Operations $ map parseTagOperation tags
     mapM (updateShelfTags tagOps) shelves
 -- * Read transform tags 
 -- | Temporary type to read a regex using Cassava
@@ -1365,7 +1365,7 @@ transformTags tags style tagPattern tagSub = do
 transformTagsFor :: [Text] -> RegexOrFn s -> Text -> Box s -> Int -> WH (Maybe (Box s)) s
 transformTagsFor tags tagPat' tagSub box index = do
   tagPat <- either return (\f -> f box index) tagPat'
-  let tagOps = case tags of
+  let tagOps = fromTag'Operations $ case tags of
                 [] -> transformTags (const True)
                 [tag] -> transformTag tag
                 _ -> transformTags (`elem` tags)

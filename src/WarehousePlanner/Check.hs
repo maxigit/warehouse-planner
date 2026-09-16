@@ -70,7 +70,8 @@ Check if boxes overlap with other boxes.
 -}
 tagBoxStatus :: Box s -> (StickoutStatus, [Box s]) -> WH () s
 tagBoxStatus box (status, overlappings) = do
-  let cleanOps = [ ("@stickout",  case status of
+  let cleanOps = fromTag'Operations  $
+               [ ("@stickout",  case status of
                                      OutOfMaxShelf stickout -> SetValues [ pack $ printf "%03.0fcm" stickout]
                                      _ -> RemoveTag
                  )
@@ -82,7 +83,7 @@ tagBoxStatus box (status, overlappings) = do
                     | tag <- Map.keys (boxTags box)
                     , "@ogroup-" `isPrefixOf` tag
                     ]
-      newOps = case overlappings of 
+      newOps = fromTag'Operations $ case overlappings of 
                        [] -> map (,RemoveTag) ["@overlap", "@ogroup", "@ogroup-base", "@overlapping", "@ovolume", "@ovol"]
                        _ -> let ids@(base:_) = map (tshow . boxId) allboxes
                                 allboxes = sort (box : overlappings)

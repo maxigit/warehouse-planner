@@ -648,12 +648,12 @@ tagShelvesWithFitData adjustTagM rows = do
            Just [shelfname, style, partitionMode] ->  do
                 shelves <- findShelfBySelector (Selector (matchName shelfname) []) >>= mapM findShelf
                 forM_ shelves \shelf -> do
-                    let tagOps = [ ( adjustTag style key , SetValues [value])
-                                 | (tag, value) <- Map.toList fitMap
-                                 , tag `notElem` keyKeys
-                                 , "debug" `isPrefixOf` tag == False
-                                 , let key = partitionMode <> "-" <> tag 
-                                 ]
+                    let tagOps = fromTag'Operations [ ( adjustTag style key , SetValues [value])
+                                                    | (tag, value) <- Map.toList fitMap
+                                                    , tag `notElem` keyKeys
+                                                    , "debug" `isPrefixOf` tag == False
+                                                    , let key = partitionMode <> "-" <> tag 
+                                                    ]
                     void $ updateShelfTags tagOps shelf
            _ -> error (show fitMap) -- return ()
 

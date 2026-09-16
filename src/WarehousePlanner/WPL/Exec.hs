@@ -175,7 +175,7 @@ executeCommand ec command = case command of
       zipWithM_ (updateBoxTags tagOps) boxes [1..]
       r <- executeStatement ec statement
       --
-      let tags = map fst tagOps
+      let tags = map fst $ tag'operations tagOps
           box'tags :: [(Box s, [(Text, Maybe (Set Text))])]
           box'tags = [( box
                       , map (\tag -> (tag, Map.lookup tag (getTags box))) tags
@@ -185,12 +185,12 @@ executeCommand ec command = case command of
       let untag = negateTagOperations tagOps
       newBaseEvent "TAG WITH" (tshow untag)
       forM box'tags \(box, tag'valuems) ->  do
-                    let untagOps = [(tag, tagOp) 
-                                 | (tag, valuem) <- tag'valuems
-                                 , let tagOp = case valuem of
-                                                 Nothing -> RemoveTag
-                                                 Just vs -> SetValues $ toList vs
-                                 ]
+                    let untagOps = fromTag'Operations [(tag, tagOp) 
+                                                      | (tag, valuem) <- tag'valuems
+                                                      , let tagOp = case valuem of
+                                                                      Nothing -> RemoveTag
+                                                                      Just vs -> SetValues $ toList vs
+                                                      ]
                     updateBoxTags untagOps box 0
       return r
       
@@ -394,10 +394,10 @@ executeCommand ec command = case command of
                                                      MaxDimension -> maxDimension $ toList dims
                                                      MinDimension -> minDimension $ toList dims
                                                      FirstDimension -> head dims
-                                          tagOps d = [ ("'l", mkValue d dLength)
-                                                   , ("'w", mkValue d dWidth)
-                                                   , ("'h", mkValue d dHeight)
-                                                   ]
+                                          tagOps d = fromTag'Operations [ ("'l", mkValue d dLength)
+                                                                        , ("'w", mkValue d dWidth)
+                                                                        , ("'h", mkValue d dHeight)
+                                                                        ]
                                           mkValue d f = SetValues [ tshow $ floor $ 100 * f d ]
                                       -- we can't update the dimension directly because it will
                                       -- be overriden by the value of 'l ... set when creating thebox

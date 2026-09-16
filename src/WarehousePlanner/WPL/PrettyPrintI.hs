@@ -7,6 +7,7 @@ where
 import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Type
+import WarehousePlanner.Base(printTagOperations)
 import Data.List.NonEmpty (NonEmpty(..))
 import WarehousePlanner.Selector (printBoxSelector, printShelfSelector)
 
@@ -50,10 +51,10 @@ prettyCommand indent command =
                                               , prettyCSelector (addIndent indent) prettyShelfSelector dest
                                               ]
        Move{..} -> error "should not happen, as it can not be parsed"
-       Tag tagOps -> "tag ": map tshow tagOps
+       Tag tagOps -> ["tag " , printTagOperations tagOps ] -- map tshow tagOps
        TagFor selector tagOps stmt -> "tag:for " 
                                     : prettyCSelector indent prettyBoxSelector selector
-                                    : map tshow tagOps
+                                    : [ printTagOperations tagOps ] -- map tshow tagOps
                                     <> [prettyStatement True (addIndent indent)  stmt]
        SelectBoxes selector -> [ prettyCSelector indent prettyBoxSelector selector ]
        SelectShelves selector -> [ "/" , prettyCSelector indent prettyShelfSelector selector ]

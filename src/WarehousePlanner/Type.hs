@@ -335,6 +335,11 @@ data TagOperationF s = -- ClearTagValues  use SetValue []
 
 type TagOperation = TagOperationF Text
 type Tag'Operation = (Text, TagOperation)
+newtype TagsOperations = TagsOperations { tag'operations :: [Tag'Operation] }
+        deriving (Eq, Show, Semigroup, Monoid)
+        
+fromTag'Operations :: [Tag'Operation] -> TagsOperations
+fromTag'Operations tag'ops = TagsOperations tag'ops
 
 -- * Classes 
 class ShelfIdable a where

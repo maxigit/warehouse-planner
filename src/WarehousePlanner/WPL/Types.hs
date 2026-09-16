@@ -15,10 +15,10 @@ data Command = Move { cSource :: Maybe CBoxSelector
                     , cOrientationStrategies :: [OrientationStrategy]
                    , cDest   :: NonEmpty (ExitMode, CShelfSelector)
                    }
-             | Tag { cTagOps :: [Tag'Operation] }
-             | TagFor (CSelector BoxSelector) [Tag'Operation] Statement
-             | ToggleTags { cTagOps :: [Tag'Operation] } -- tag included and "un"tag excluded
-             | TagShelves { cTagOps :: [Tag'Operation] }
+             | Tag { cTagOps :: TagsOperations }
+             | TagFor (CSelector BoxSelector) TagsOperations Statement
+             | ToggleTags { cTagOps :: TagsOperations } -- tag included and "un"tag excluded
+             | TagShelves { cTagOps :: TagsOperations }
              | SelectBoxes (CSelector BoxSelector)
              | SelectBoxRanges RangeBoundary (CSelector BoxSelector)
              | SelectShelves (CSelector ShelfSelector)
