@@ -100,7 +100,7 @@ import Data.Text qualified as T
 import Data.Char (isLetter, isDigit, isAlphaNum)
 import Data.Time (diffDays)
 import Data.Semigroup (Arg(..))
-
+import Data.List.Split(split, oneOf, keepDelimsL)
 import Text.Megaparsec qualified as P
 import Text.Megaparsec.Char qualified as P
 import Text.Megaparsec.Char.Lexer qualified as P
@@ -600,11 +600,23 @@ parseTagOperation s =
   where split = splitOnNonEscaped ";"
  
 parseTagOperations :: Text -> TagsOperations
-parseTagOperations tag =
- fromTag'Operations case splitOnNonEscaped "#" tag of
-   [] -> []
-   [""] -> []
-   tags -> map parseTagOperation tags
+parseTagOperations tag = let
+   splitter = keepDelimsL $ oneOf [include, exclude]
+   tags = splitOnNonEscaped "#" tag
+   -- splits = split $ oneOf [include, exclude] $ splitOnNonEscaped "#" tag
+   splits = split splitter tags
+
+   in foldMap go splits
+   where go tokens = case tokens of 
+                         t:ts | t == include -> TagsOperations [] (makeSelectors ts) []
+                         t:ts | t == exclude -> TagsOperations [] [] (makeSelectors ts)
+                         [""] -> mempty
+                         tags -> TagsOperations (map parseTagOperation tags) [] []
+         makeSelectors = mapMaybe parseTagSelector
+         include = "@include" :: Text
+         exclude = "@exclude"
+
+               
   
   
 printTagOperation :: Tag'Operation -> Text
@@ -619,10 +631,14 @@ printTagOperation (tag, op) = case op of
     | otherwise            -> tag <> "=-" <> val
   
 printTagOperations :: TagsOperations -> Text
-printTagOperations (TagsOperations tagsOps ) = intercalate "#" $ map printTagOperation tagsOps
+printTagOperations (TagsOperations tagsOps inc exc) = intercalate "#" $ map printTagOperation tagsOps
+                                                               <> go "@include" inc
+                                                               <> go "@exclude" exc
+    where go _ [] = []
+          go header sels = header : map printTagSelector sels
 
 negateTagOperations :: TagsOperations -> TagsOperations
-negateTagOperations (TagsOperations tags) = do
+negateTagOperations (TagsOperations tags inc exc) = do
   TagsOperations [ (tag, nop)
                  | (tag, op) <- tags
                  , nop <- case op of
@@ -632,6 +648,8 @@ negateTagOperations (TagsOperations tags) = do
                                RemoveValue val -> [AddValue val]
                                AddValue val -> [RemoveValue val]
                  ]
+                 exc 
+                 inc
   
 
 -- | Generates tag operation for dimensions. Used when creating a box
@@ -821,7 +839,7 @@ updateShelfByName f n = findShelfBySelector (Selector (NameMatches [MatchFull n]
 
 -- | Add or remove the given tags to the give box
 updateBoxTags' :: TagsOperations -> Box s -> Box s
-updateBoxTags' (TagsOperations []) box = box -- no needed but faster, because we don't have to destruct and 
+updateBoxTags' (TagsOperations [] [] []) box = box -- no needed but faster, because we don't have to destruct and 
 updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
   Nothing -> box
   Just new -> let newContent = getTagValuem new "'content"
@@ -837,7 +855,7 @@ updateBoxTags' tag'ops box = case modifyTags tag'ops (boxTags box) of
                                     }
 
 updateShelfTags' :: TagsOperations -> Shelf s -> Shelf s
-updateShelfTags' (TagsOperations []) shelf = shelf -- no needed but faster, because we don't have to destruct and 
+updateShelfTags' (TagsOperations [] [] []) shelf = shelf -- no needed but faster, because we don't have to destruct and 
 updateShelfTags' tag'ops shelf = case modifyTags tag'ops (shelfTag shelf) of
   Nothing -> shelf
   Just new -> updateCeiling $ shelf { shelfTag = new }
@@ -879,8 +897,12 @@ applyTagOperations tag'ops tags = foldM (flip applyTagOperation) tags tag'ops
 -- if nothing has changed. Knowing nothing has changed should
 -- allow some optimization upstream
 modifyTags :: TagsOperations -> Tags -> Maybe Tags
-modifyTags (TagsOperations []) __tags = Nothing
-modifyTags (TagsOperations tag'ops) tags = Just $ merge  opsOnly tagsOnly tagsAndOp tag'opsMap tags where
+modifyTags (TagsOperations [] [] []) __tags = Nothing
+modifyTags (TagsOperations tag'ops incSel excSel) tags = Just
+                                                       $ Map.filterWithKey (keep incSel)
+                                                       $ Map.filterWithKey (keepNot excSel)
+                                                       $ merge  opsOnly tagsOnly tagsAndOp tag'opsMap tags
+  where
     tagsOnly = preserveMissing
     opsOnly = mapMaybeMissing $ \_ ops -> applyTagOperations ops mempty
     tagsAndOp = zipWithMaybeMatched $ \_ -> applyTagOperations
@@ -889,9 +911,13 @@ modifyTags (TagsOperations tag'ops) tags = Just $ merge  opsOnly tagsOnly tagsAn
     -- as we group_ each operation by key and respect the order, this should be
     tag'opsMap :: Map.Map Text [TagOperation]
     tag'opsMap = Map.fromListWith (<>)  (map (fmap (:[])) tag'ops)
+    keep [] key values = trace "BYPASS" True
+    keep sel key values = any  (\s -> applyTagSelector s (singletonMap key values)) sel
+    keepNot [] key values = True
+    keepNot sel key values = not $ keep sel key values
 
 updateBoxTags :: TagsOperations -> Box s -> Int -> WH (Box s) s
-updateBoxTags (TagsOperations tags0) box index = do
+updateBoxTags (TagsOperations tags0 incSel excSel) box index = do
   -- remove '''
   tags1 <- mapM (mapM $ mapM (expandAttribute box index)) tags0
        --                 ^--  each value in Operation
@@ -900,14 +926,14 @@ updateBoxTags (TagsOperations tags0) box index = do
   let tags = [ (tag, values )
              | (tag, values) <- tags1
              ]
-  updateBox (updateBoxTags' $ fromTag'Operations tags) box
+  updateBox (updateBoxTags' $ TagsOperations tags incSel excSel) box
 
 updateShelfTags :: TagsOperations -> Shelf s -> WH (Shelf s) s
-updateShelfTags (TagsOperations tags0) shelf =  do
+updateShelfTags (TagsOperations tags0 incSel excSel) shelf =  do
   let tags = [ (tag, values )
              | (tag, values) <- tags0
              ]
-  updateShelf (updateShelfTags' $ TagsOperations tags) shelf
+  updateShelf (updateShelfTags' $ TagsOperations tags incSel excSel) shelf
 
 boxStyleAndContent :: Box s -> Text
 boxStyleAndContent box = case boxContent box of

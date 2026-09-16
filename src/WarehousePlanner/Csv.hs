@@ -1220,7 +1220,7 @@ readFreezeOrder tags0 = readFromRecordWith go
           boxes <- findBoxByNameAndShelfNames style
           freezeOrder $ map boxId boxes
           case parseTagAndPatterns tags0 [] of
-            TagsOperations [] -> return boxes
+            TagsOperations [] [] [] -> return boxes
             ops -> zipWithM (updateBoxTags ops) boxes [1..]
 
 

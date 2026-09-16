@@ -1,6 +1,6 @@
 module WarehousePlanner.Selector
 ( applyNameSelector
-, applyTagSelectors
+, applyTagSelector, applyTagSelectors
 , applyPattern
 , matchName
 , parseBoxSelector

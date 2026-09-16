@@ -5,7 +5,6 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DeriveFunctor, DeriveFoldable #-}
 module WarehousePlanner.Type
 ( module WarehousePlanner.Type
 , module WarehousePlanner.History.Types
@@ -335,11 +334,14 @@ data TagOperationF s = -- ClearTagValues  use SetValue []
 
 type TagOperation = TagOperationF Text
 type Tag'Operation = (Text, TagOperation)
-newtype TagsOperations = TagsOperations { tag'operations :: [Tag'Operation] }
-        deriving (Eq, Show, Semigroup, Monoid)
+data TagsOperations = TagsOperations { tag'operations :: [Tag'Operation]
+                                        , includes :: [TagSelector Text ]
+                                        , excludes :: [TagSelector Text ]
+                                        }
+        deriving (Eq, Show)
         
 fromTag'Operations :: [Tag'Operation] -> TagsOperations
-fromTag'Operations tag'ops = TagsOperations tag'ops
+fromTag'Operations tag'ops = TagsOperations tag'ops [] []
 
 -- * Classes 
 class ShelfIdable a where
@@ -411,6 +413,14 @@ instance HasTags (Box s) where getTags = boxTags
 instance HasTags (Shelf s) where getTags = shelfTag
 instance HasTags (Tags) where getTags = id
 
+
+instance Semigroup TagsOperations where
+   (TagsOperations ops inc exc) <> (TagsOperations ops' inc' exc') = TagsOperations (ops <> ops')
+                                                                                    (inc <> inc')
+                                                                                    (exc <> exc')
+   
+instance Monoid TagsOperations where
+   mempty = TagsOperations [] [] []
 -- * Utilities 
 -- ** Dimensions 
 volume :: Dimension -> Double
