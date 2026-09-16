@@ -911,9 +911,9 @@ modifyTags (TagsOperations tag'ops incSel excSel) tags = Just
     -- as we group_ each operation by key and respect the order, this should be
     tag'opsMap :: Map.Map Text [TagOperation]
     tag'opsMap = Map.fromListWith (<>)  (map (fmap (:[])) tag'ops)
-    keep [] key values = trace "BYPASS" True
+    keep [] _ _ = True
     keep sel key values = any  (\s -> applyTagSelector s (singletonMap key values)) sel
-    keepNot [] key values = True
+    keepNot [] _ _ = True
     keepNot sel key values = not $ keep sel key values
 
 updateBoxTags :: TagsOperations -> Box s -> Int -> WH (Box s) s
