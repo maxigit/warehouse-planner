@@ -41,6 +41,8 @@ data Options = Options
             , oShelfSearch :: Maybe Text
             , oNoCheck :: Maybe Bool
             , oNoWatch :: Bool
+            , oIncludeTags :: Maybe Text
+            , oExcludeTags :: Maybe Text
             }
      deriving (Show, Generic)
      
@@ -108,6 +110,10 @@ optionsParser = do
                         <> help "shelf selector"
   oNoWatch <- switch $ long "no-watch"
                    <> help "Watch for files in datadir"
+  oIncludeTags <- optional $ strOption $ long "include-tags"
+                         <> help "tags to include"
+  oExcludeTags <- optional $ strOption $ long "exclude-tags"
+                         <> help "tags to include"
   return Options{..}
   
 commandArg = flag' Stocktake (long "stocktake"
@@ -305,10 +311,12 @@ defaultMainWith expandSection = do
 
 
 extraScenariosFrom :: Options -> [Text]
-extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM, checkM] where
+extraScenariosFrom Options{..} = mapMaybe (fmap unlines) [deleteM, importM, tamM, checkM, includeM, excludeM ] where
     deleteM = flip fmap oDelete \del -> [ ":DELETE:" , del , ":END:" ]
     importM = flip fmap oImport \imp -> [ ":IMPORT:" , imp , ":END:" ]
     tamM = flip fmap oTagsAndMoves \tam -> [ ":Tags and Moves:" , "stock_id,tam" , tam , ":END:" ]
+    includeM = flip fmap oIncludeTags \tags -> [":WPL:", "tag #@include#" <> tags, ":END:" ]
+    excludeM = flip fmap oExcludeTags \tags -> [":WPL:", "tag #@exclude#" <> tags, ":END:" ]
     checkM = case oNoCheck of
                  Just False -> Just [ ":CHECK_SHELVES:", "shelves", "#@check=-skip", ":END:" ]
                  _ -> Nothing
