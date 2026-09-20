@@ -913,9 +913,19 @@ modifyTags (TagsOperations tag'ops incSel excSel) tags = Just
     tag'opsMap :: Map.Map Text [TagOperation]
     tag'opsMap = Map.fromListWith (<>)  (map (fmap (:[])) tag'ops)
     keep [] _ _ = True
-    keep sel key values = any  (\s -> applyTagSelector s (singletonMap key values)) sel
+    keep sel key values = isVirtual key || any  (\s -> applyTagSelector s (singletonMap key values)) sel
+                        -- ^^^^^^^
+                        --    |
+                        --    +---- don't filter in or out virtual tag (like 'l 'w etc ...
     keepNot [] _ _ = True
-    keepNot sel key values = not $ keep sel key values
+    keepNot sel key values = isVirtual key || not ( keep sel key values)
+                          -- ^^^^^^^
+                          --    |
+                          --    +------ keep them, see above
+    isVirtual tag = case uncons tag of
+                      Just ('\'', _) -> True
+                      _ -> False
+
 
 updateBoxTags :: TagsOperations -> Box s -> Int -> WH (Box s) s
 updateBoxTags (TagsOperations tags0 incSel excSel) box index = do
