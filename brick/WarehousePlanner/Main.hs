@@ -72,9 +72,15 @@ optionsParser :: Parser Options
 optionsParser = do 
   oDir <- optional $ strOption $ long "dir" <> short 'd' <> metavar "DIR" <> help "Base directory"
   oCommand <- commandArg <|> pure Display
-  oParam <- optional $ strOption $ long "param" <> short 'p'
+  oParam <- (optional $ strOption $ long "param" <> short 'p'
                                <> metavar "PARAM"
                                <> help "Extra parameter usually box or shelf selector"
+            ) <|> (do 
+                     def <- switch (long "default-order" <> short 'O' <> help "Use default box order instead of creation")
+                     return $ if def 
+                              then Just "^"
+                              else Nothing
+                  )
   oToday <- optional $ option auto $ long "today" <> long "date"
                                    <> short 'D'
                                    <> metavar "DATE"
