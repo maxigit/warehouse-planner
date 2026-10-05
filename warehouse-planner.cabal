@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           warehouse-planner
-version:        3.1.1
+version:        3.2.0
 license:        UnspecifiedLicense
 build-type:     Simple
 
@@ -72,6 +72,7 @@ library
       ViewPatterns
       MultiWayIf
       LambdaCase
+      StarIsType
   ghc-options: -Werror -W -Wmissing-fields -fwarn-tabs -Wno-type-defaults -Wno-partial-type-signatures -Wincomplete-patterns -Werror=missing-fields
   build-depends:
       Glob
@@ -152,6 +153,7 @@ executable whp
       ViewPatterns
       MultiWayIf
       LambdaCase
+      StarIsType
   ghc-options: -rtsopts -threaded
   build-depends:
       Glob
@@ -268,6 +270,7 @@ test-suite test
       ViewPatterns
       MultiWayIf
       LambdaCase
+      StarIsType
   ghc-options: -w -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       Glob
@@ -335,6 +338,7 @@ benchmark bench
       ViewPatterns
       MultiWayIf
       LambdaCase
+      StarIsType
   ghc-options: -rtsopts
   build-depends:
       Glob

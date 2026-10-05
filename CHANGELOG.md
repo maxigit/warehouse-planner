@@ -1,3 +1,30 @@
+# 3.2.0
+## Brick
+- Brick: Add "Go To" history
+- Brick: add --inc/exclude tags
+## Shelves
+- split formula wonk with < = and >,w
+## Reports
+- limit toFit to max in shelf
+- best fit don't group boxes by dimension
+## Base
+- align use numbof of box to fit
+- align slices by rouding offset
+- OverlapAlign
+## WPL
+Add events  for swap and fillSpec
+# 3.1.1
+- Brick: Add follow box option
+- fix rearrange and sticky
+# 3.1.0
+- Display: add cocardes
+- Brick: Add shelf property
+- Brick: use colormap
+- WPL: Add box 
+- remove replace slashes
+- add selection offset to shelf formula
+- add tag to split shelves
+- Brick: misc cosmetics 
 # 3.0.0
 New WPL without indentation.
 # 2.2.0
@@ -15,7 +42,7 @@ Implement SortedOverlap
     first corresponds to above
     last to "right"
 - fix mixed boxes in mop report.
-# WPL
+## WPL
 - Add passthrough block (; ...)
 - Add trace:shelves
 - add trace:orules
