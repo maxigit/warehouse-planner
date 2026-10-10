@@ -1,4 +1,5 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
@@ -744,10 +745,11 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
                                  , fromMaybe "<tag only>" locationM
                                  , mconcat $ map tshow orientations
                                  ]
-  let withNoEmpty = partition ((== "@noempty") . toLower)
+  let withNoEmpty = partition ((`elem` ["@noempty", "@traceempty"]) . toLower)
       (noEmpty1, tagsAndPatterns) = withNoEmpty tagsAndPatterns_
       (noEmpty2, tags) = withNoEmpty tags_
       noEmpty = not . null $ noEmpty1 <> noEmpty2
+      traceNoEmpty = any ((== "@traceempty") . toLower) (noEmpty1 <> noEmpty2)
 
       -- don't resort boxes if a number selector has been set.
       sortMode = case numberSelector style  of
@@ -756,7 +758,8 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
       tagOps = parseTagAndPatterns tagsAndPatterns tags
   box'prioritys <- narrowBoxes style ec >>= getBoxPs-- findBoxByNameAndShelfNames style
   case (box'prioritys, noEmpty) of
-       ([], True) -> error $ show style ++ " returns an empty set"
+       ([], True) | traceNoEmpty  -> traceM $ "NOEMPTY: " <> unpack (printBoxSelector style)
+                  | otherwise -> error $ unpack (printBoxSelector style) ++ " returns an empty set"
        _         -> return ()
   inEx <- case locationM of
               Just location' -> do
