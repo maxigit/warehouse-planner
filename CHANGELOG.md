@@ -1,3 +1,6 @@
+# 3.2.1
+Add @traceEmpty tag
+Similar to @noEmpty but output a trace instead of throwing an error.
 # 3.2.0
 ## Brick
 - Brick: Add "Go To" history

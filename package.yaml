@@ -1,5 +1,5 @@
 name: warehouse-planner
-version: '3.2.0'
+version: '3.2.1'
 license: UnspecifiedLicense
 dependencies:
 - containers
