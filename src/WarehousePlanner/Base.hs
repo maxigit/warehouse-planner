@@ -33,6 +33,7 @@ module WarehousePlanner.Base
 , findBoxByNameSelector
 , findShelfBySelector
 , findShelfBySelectors
+, findShelfByName
 , findBoxByNameAndShelfNames
 , findBoxByNameAndShelfNamesWithPriority
 , findBoxByShelf
@@ -220,6 +221,13 @@ findShelfBySelectors selectors = do
          , shelf <- sortOn shelfName shelves
          ]
 
+findShelfByName :: Shelfname -> WH (Maybe (Shelf s)) s
+findShelfByName (Shelfname shelfname) = do
+   shelves <- findShelfBySelector' (Selector (matchName shelfname) [])
+   case shelves of 
+    [] -> return Nothing
+    [shelf] -> return $ Just shelf
+    (_:_) -> error $ "Many shelves have the same name : " <> unpack shelfname
 
 
 filterShelfByTag :: [TagSelector Shelf] -> Shelf s -> Bool

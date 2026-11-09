@@ -729,6 +729,11 @@ instance Parsable Command where
             lexeme1 "fill"
             (posM, locM) <- lexeme $ o2 ["pos", "p"]  ["loc", "l"]
             return $ FillShelves locM posM
+        , do
+            lexeme1 "run"
+            sel <- p
+            return $ RunShelfActions sel
+
 
         ]
         where msgK = [ "msg",  "message", "m"]
