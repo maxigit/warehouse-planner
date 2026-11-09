@@ -189,6 +189,7 @@ pCommand = \case
    FillShelves {..} -> "fill"  <> optWithDefault "loc" null pretty cLoc
                                                    <> optWithDefault "pos"  null pretty cPos
                                                    <+> pBlock cStmt
+   RunShelfActions shelves -> "run" <> pCShelf shelves
                                                
 
                                                     

@@ -17,6 +17,7 @@ import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ParserI
 import WarehousePlanner.WPL.ExContext
 import WarehousePlanner.WPL.PrettyPrint
+import WarehousePlanner.WPL.ShelfAction
 import WarehousePlanner.ShelfOp
 import WarehousePlanner.Rearrange
 import Control.Monad(zipWithM_, zipWithM)
@@ -497,6 +498,26 @@ executeCommand ec command = case command of
                          fillCommands'boxs
         
         return newEc
+    RunShelfActions sel -> do
+      shelves <- getShelves =<< narrowCSelector sel ec
+      let names = map shelfName shelves
+          run action = do
+             let sourceSelector = Selector (NameMatches $ map (MatchFull . unShelfname ) $ toList $ saShelves action)
+                                           []
+                 -- ^ narrow context to current source shelves
+                 unlockedSelector = selectAllBoxes { shelfSelectors = Selector AnyNames [ TagHasNotKey (MatchFull "@action-locked") ]
+                                                   }
+                 -- ^ narrow boxes to boxes which have not been used yet 
+             narrowedEc <- narrowShelves (ShelfSelector SelectAnything sourceSelector)
+                                         withAll {ecNoEmptyShelves = True }
+                           >>= narrowBoxes unlockedSelector
+             void $ executeStatement narrowedEc (saAction action)
+      runShelfActions run $ ShelfSelector SelectAnything 
+                                                      (Selector (NameMatches $ map MatchFull names)
+                                                                []
+                                                      )
+      return ec
+      
 
 
 evalCondition :: ExContext s ->  Condition -> WH Bool s

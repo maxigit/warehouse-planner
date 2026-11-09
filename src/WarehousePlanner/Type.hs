@@ -217,7 +217,7 @@ data BoxOrientator = DefaultOrientation
 
 
 -- |
-newtype Shelfname = Shelfname Text deriving Show
+newtype Shelfname = Shelfname { unShelfname :: Text } deriving (Eq, Ord, Show)
 -- | Which way fill shelves
 
 data FillingStrategy = RowFirst | ColumnFirst deriving (Show, Eq, Enum, Ord)

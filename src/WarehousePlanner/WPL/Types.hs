@@ -43,6 +43,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
              | FillShelves { cLoc, cPos :: (Maybe Text)
                            , cStmt ::   Statement
                            }
+             | RunShelfActions (CSelector ShelfSelector)
      deriving (Show, Eq)
      {-
        deriving Eq
@@ -129,6 +130,12 @@ data Option = OText Text
             | ORules [OrientationStrategy]
      deriving Show
      
+data ShelfAction a = ShelfAction
+  { saAction :: a
+  , saShelves :: NonEmpty Shelfname
+  , saDependencies :: [ShelfSelector]
+  } deriving (Eq, Show)
+
      
 -- | Default values which dont' need to be given as argument
 -- or don't need to be pretty printed
