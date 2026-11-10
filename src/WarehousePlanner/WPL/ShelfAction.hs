@@ -74,8 +74,8 @@ getShelfActions = do
 actionFromShelf :: Shelf s -> Maybe (ShelfAction Text)
 actionFromShelf shelf = let
   actionTextM = getTagValuem shelf "@action"
-  shelfDeps = getTagValues shelf "@action-shelf-deps" -- shelf selector 
-  fullDeps = getTagValues shelf "@action-deps" -- can find shelves by box but need "/" for location
+  shelfDeps = getTagValues shelf "@action-deps" -- shelf selector 
+  fullDeps = getTagValues shelf "@action-deps?" -- can find shelves by box but need "/" for location
   deps = parseShelfSelector <$> fullDeps <> map (cons '/') shelfDeps
   in case actionTextM of 
      Nothing -> Nothing
