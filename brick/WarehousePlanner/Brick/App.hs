@@ -2,7 +2,7 @@
 module WarehousePlanner.Brick.App
 (
 whMain
-, makeBoxSelection
+,makeBoxSelection
 , makeShelfSelection
 )
 where
@@ -210,6 +210,7 @@ makeAppShelvesSummary state = do
                                                                vals -> Just $ unwords vals
                                                _ -> Nothing
                             getTagShelfValue tag = case getTagValuem shelf tag of
+                                                    Just "" -> Just "█"
                                                     Just v -> Just v
                                                     Nothing | tagIsPresent shelf tag -> Just tag
                                                             | tag == "min" -> Just $ printDim (minDim shelf)
@@ -663,6 +664,9 @@ keyBindingGroups =  groups
                                                                , mk 'L' (ESetShelfProperty "length (max)") "length (max)"
                                                                , mk 'H' (ESetShelfProperty "height (max)") "height (max)"
                                                                , mk 'W' (ESetShelfProperty "width (max)") "width (max)"
+                                                               , mk 'a' (ESetShelfProperty "@action") "shelf action"
+                                                               , mk 'd' (ESetShelfProperty "@action-done") "Action done"
+                                                               , mk 'D' (ESetShelfProperty "@action-deps") "Action dependencies"
                                                                ])
                                              ]
                   ),(Just ("Title", 't'), [("Preset",          [ mk 't' (EStartInputSelect ISelectTag) "manual"
@@ -1426,7 +1430,7 @@ renderStatus state@AppState{..} = let
                                      B.<+> maybe (B.emptyWidget) (\p -> B.txt $ " " <> p <> "=") asShelfProperty
                                      B.<+> case shelfPropValueM (currentShelf state) of
                                                 Nothing -> B.emptyWidget
-                                                Just v -> withShelfAttr v ( B.str "#" B.<+> B.txt v)
+                                                Just v -> withShelfAttr v ( B.txt v)
                                     , B.center $ maybe (B.str "∅") styleNameWithAttr (asSelectedPropValue ) -- current style
                                     , B.center $ maybe (B.str "∅") (B.txt . sText) (asBoxSelection ) -- current selection
                                     , B.center $ B.str "/" B.<+> maybe (B.str "∅") (B.txt . sText) (asShelfSelection ) -- current selection
