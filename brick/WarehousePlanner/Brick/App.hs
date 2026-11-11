@@ -12,7 +12,7 @@ import WarehousePlanner.Type
 import WarehousePlanner.Move
 import WarehousePlanner.Summary as S
 import WarehousePlanner.History
-import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, matchName)
+import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, matchName, printShelfSelector)
 import WarehousePlanner.Base
 import WarehousePlanner.Brick.Types
 import WarehousePlanner.Brick.Util
@@ -20,6 +20,8 @@ import WarehousePlanner.Brick.RenderBar
 import WarehousePlanner.Brick.BoxDetail
 import WarehousePlanner.Brick.Input
 import WarehousePlanner.Exec (execWH)
+import WarehousePlanner.WPL.Exec (runWPL)
+import qualified WarehousePlanner.WPL.Types as WPL
 import Brick qualified as B
 import Brick.Widgets.Border qualified as B
 import Brick.BChan qualified as B
@@ -118,6 +120,7 @@ data WHEvent = ENextMode
              | EQuit
              -- Action
              | EMove
+             | ERunAction
              -- Yanks
              | EYankBoxDetails EditMode -- ^ editor or yank
              | EYankBoxHistory EditMode -- ^ editor or yank
@@ -571,6 +574,7 @@ keyBindingGroups =  groups
                                                                , mk '<' (EPreviousPropValue) "previous property value"
                                                                ])
                                ,("Warehouss operations",       [ mk '%' EMove "Move selected boxes to selected shelves"
+                                                               , mk 'R' ERunAction "run action on selected shelves"
                                                                ])
                                ,("History",                    [ mK "S-right" (EHistoryEvent HNext) "next event"
                                                                , mK "S-left" (EHistoryEvent HPrevious) "previous event"
@@ -946,6 +950,21 @@ handleWH ev =
                           setNewWHEvent $ whCurrentEvent newWH
                           modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
                      Nothing -> return ()
+         ERunAction -> do
+                 state <- get
+                 let selector = case asShelfSelection state of
+                                  Just ss -> sSelector ss
+                                  Nothing -> let name = sName $ currentShelf state
+                                                 shelfSelector =  Selector (matchName name) []
+                                             in ShelfSelector  SelectAnything shelfSelector
+                 newWH <- liftIO $ execWH (asWarehouse state) do
+                      newBaseEvent "RUN SHELF ACTION" (printShelfSelector selector)
+                      runWPL [ WPL.Action $ WPL.RunShelfActions (WPL.CSelector selector)   ] 
+                      get
+                 setNewWHEvent $ whCurrentEvent newWH
+                 modify \s -> s { asWarehouse = newWH }
+                 
+
          EYankBoxDetails mode -> do
                          s@AppState{..} <- get
                          let text = boxDetailsTextTable  asWarehouse (asHistoryRange s) (currentBoxHistory s)
