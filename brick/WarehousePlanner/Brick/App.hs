@@ -964,7 +964,7 @@ handleWH ev =
                                                  shelfSelector =  Selector (matchName name) []
                                              in ShelfSelector  SelectAnything shelfSelector
                  newWH <- liftIO $ execWH (asWarehouse state) do
-                      newBaseEvent "RUN SHELF ACTION" (printShelfSelector selector)
+                      newWHEvent 0 $ "RUN SHELF ACTION " <> (printShelfSelector selector)
                       runWPL [ WPL.Action $ WPL.RunShelfActions (WPL.CSelector selector)   ] 
                       get
                  setNewWHEvent $ whCurrentEvent newWH
