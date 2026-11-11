@@ -40,7 +40,7 @@ runShelfAction runAction others source = do
       
       -- empty content
       s0 <- defaultShelf
-      boxes <- concat <$> mapM findBoxByShelf shelves
+      boxes <- filter (not . flip tagIsPresent "@action-locked") . concat <$> mapM findBoxByShelf shelves
       void $ mapM (assignShelf $ Just s0) boxes
       forM_ shelves $ void . updateShelfTags (fromTag'Operations $ [ ("@action-done", SetTag)
                                                                    , ("@action-running", RemoveTag)
