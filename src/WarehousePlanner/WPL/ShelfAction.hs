@@ -81,10 +81,10 @@ actionFromShelf shelf = let
   fullDeps = getTagValues shelf "@action-deps?" -- can find shelves by box but need "/" for location
   deps = parseShelfSelector <$> fullDeps <> map (cons '/') shelfDeps
   boxes = map parseBoxSelector $ nub $ sort $ getTagValues shelf "@pick" <> getTagValues shelf "@stock"
-  break = case getTagValuem shelf "@break" of
-           Just "slot" -> Just StartNewSlot
-           Just "slice" -> Just StartNewSlice
-           Just "shelf" -> Just StartNewShelf
+  break = case getTagValuem shelf "@start" of
+           Just "new-slot" -> Just StartNewSlot
+           Just "new-slice" -> Just StartNewSlice
+           Just "new-shelf" -> Just StartNewShelf
            Just b -> error $ show b <> " is not a valid break usi (slot,slice,shelf) for shelf " <> show (shelfName shelf)
            Nothing -> Nothing
 

@@ -526,9 +526,22 @@ executeCommand ec command = case command of
              let statement = selectBoxes $ saAction action
                  selectBoxes a = case nonEmpty  $ map selectBox (saBoxes action) of
                                      Nothing -> a
-                                     Just cases -> Cases cases `Then` a
+                                     Just cases -> Cases cases `Then` setBreak a
                  selectBox sel = Case (Action $ SelectBoxes $ CSelector sel) Nothing
-             traceM . unpack $ prettyWPL statement
+                 setBreak a = case saAutoBreak action of 
+                                   Nothing -> a
+                                   Just break -> let limit1 = CSelector selectAllBoxes { numberSelector = BoxNumberSelector (Limit Nothing (Just 1) [] True)
+                                                                                                                                                   NoLimit
+                                                                                                                                                   NoLimit
+                                                                                                              }
+                                                 in PassThrought . Action $ TagFor limit1
+                                                                                  (fromTag'Operations [("@start", SetValues [breakVal break])])
+                                                                                  a
+                 breakVal break = case break of 
+                                       StartNewSlot -> "new-slot"
+                                       StartNewSlice -> "new-slice"
+                                       StartNewShelf -> "new-shelf"
+             -- traceM . unpack $ prettyWPL statement
              void $ executeStatement narrowedEc statement
       runShelfActions run $ ShelfSelector SelectAnything 
                                                       (Selector (NameMatches $ map MatchFull names)
