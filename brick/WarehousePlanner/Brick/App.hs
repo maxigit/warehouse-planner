@@ -126,6 +126,7 @@ data WHEvent = ENextMode
              | EYankBoxHistory EditMode -- ^ editor or yank
              | EYankSelectedBoxes EditMode -- ^ editor or yank
              | EYankShelfContent EditMode -- ^ editor or yank
+             | EYankShelfTags EditMode -- ^ editor or yank
              | EYankBestAvailableShelfFor EditMode
              | EYankBestShelfFor EditMode
              | EYankBestBoxesFor EditMode
@@ -747,6 +748,7 @@ keyBindingGroups =  groups
                  ,('h', EYankBoxHistory, "box history")
                  ,('/', EYankSelectedBoxes, "box selection")
                  ,('s', EYankShelfContent, "shelf content (boxes)")
+                 ,('T', EYankShelfTags, "shelf tags")
                  ,('a', EYankBestAvailableShelfFor, "best fitted shelf")
                  ,('S', EYankBestShelfFor, "best shelf")
                  ,('B', EYankBestBoxesFor, "best boxes")
@@ -997,6 +999,16 @@ handleWH ev =
             text0 <- execute $ Report.generateStockTakes (Just boxSelector)
             let text = drop 2 . dropEnd 1 $ text0
             yankOrEdit mode (Just "-content.csv") (unlines text)
+         EYankShelfTags mode' -> do
+            let mode = case mode' of
+                         UseVd -> UseVdNoHeader
+                         _ -> mode'
+            shelf_ <- gets currentShelf
+            shelfM <- execute $ findShelfByName (Shelfname $ sName shelf_)
+            forM_ shelfM \shelf -> do
+                 let text = flattenTags $ shelfTag shelf
+                 yankOrEdit mode (Just "-tags.csv") (unlines text)
+
          EYankBestForSelected limit mode -> do
             -- use selection if definied or current box/shelf
             AppState{..} <- get
