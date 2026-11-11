@@ -256,7 +256,7 @@ command = asum $ map lexeme [ toggleTag
             pmode <- optional $ lexeme1 partitionModeParser
             orules <- (lexeme1 "orules"  >> orientationRules) <|> return []
             shelf <-  shelfSelector
-            return $ Move Nothing pmode orules $ singleton (exitMode, shelf)
+            return $ Move Nothing pmode orules $ Right $ singleton (exitMode, shelf)
    tag = do
            lexeme1 "tag"
            tagOps <- lexeme1 $ takeWhile1P (Just "tags") (not . isSpace)

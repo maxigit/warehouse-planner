@@ -582,12 +582,13 @@ instance Parsable Command where
             exitMode <- (lexeme1 "to^" $> ExitOnTop) <|> (lexeme1 "to>" $> ExitLeft) 
             (sourceM, pmode, orules) <- o3 boxesK pmodeK oRulesK
             shelf <-  p
-            return $ Move sourceM pmode (fromMaybe [] orules) $ singleton (exitMode, shelf)
+            return $ Move sourceM pmode (fromMaybe [] orules) $ Right $ singleton (exitMode, shelf)
         , do -- Move, the exitMode is after the options
             lexeme "to " -- avoid collision with toggle
             (sourceM, pmode, orules) <- o3 boxesK pmodeK oRulesK
-            exit'shelves <- some1 $ liftA2 (,) (lexeme p) p
-            return $ Move sourceM pmode (fromMaybe [] orules) exit'shelves
+            exit'shelves <- ( Right <$> some1 ( liftA2 (,) (lexeme p) p)  )
+                           <|> (Left <$> lexeme p ) -- automod just one selector withoun ^ or >
+            return $ Move sourceM pmode (fromMaybe [] orules) $ exit'shelves
         , do -- Tag
            lexeme "tag"
            "#"
