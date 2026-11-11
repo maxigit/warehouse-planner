@@ -190,6 +190,8 @@ pCommand = \case
                                                    <> optWithDefault "pos"  null pretty cPos
                                                    <+> pBlock cStmt
    RunShelfActions shelves -> "run" <> pCShelf shelves
+   SetShelfAction deps action -> "shelf:action" <> opt "deps" pShelfSelector deps
+                                                <+> pBlock action
                                                
 
                                                     

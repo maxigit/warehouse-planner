@@ -733,6 +733,10 @@ instance Parsable Command where
             lexeme1 "run"
             sel <- p
             return $ RunShelfActions sel
+        , withStatement "shelf:action" do
+            lexeme1 ("shelf:action" <|> "saction")
+            depM <- o1 ["dependencies", "dependency", "dep", "deps", "d"]
+            return $ SetShelfAction depM
 
 
         ]
