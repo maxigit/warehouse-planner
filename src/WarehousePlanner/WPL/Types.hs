@@ -135,6 +135,8 @@ data ShelfAction a = ShelfAction
   { saAction :: a
   , saShelves :: NonEmpty Shelfname
   , saDependencies :: [ShelfSelector]
+  , saBoxes :: [ BoxSelector ]
+  , saAutoBreak :: Maybe BoxBreak
   } deriving (Eq, Show)
 
      

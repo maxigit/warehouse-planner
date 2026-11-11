@@ -28,6 +28,7 @@ import Data.List (nub)
 import Data.Proxy
 import GHC.Utils.Monad (mapAccumLM)
 import Data.Text (splitOn, takeEnd)
+import Data.List.NonEmpty (nonEmpty)
 
 
 runWPL :: [Statement] -> WH () s
@@ -518,11 +519,17 @@ executeCommand ec command = case command of
                  -- ^ narrow context to current source shelves
                  unlockedSelector = selectAllBoxes { shelfSelectors = Selector AnyNames [ TagHasNotKey (MatchFull "@action-locked") ]
                                                    }
-                 -- ^ narrow boxes to boxes which have not been used yet 
+                 -- ^ narrow boxes to boxes which have not been used yet  and given boxes 
              narrowedEc <- narrowShelves (ShelfSelector SelectAnything sourceSelector)
                                          withAll {ecNoEmptyShelves = True }
                            >>= narrowBoxes unlockedSelector
-             void $ executeStatement narrowedEc (saAction action)
+             let statement = selectBoxes $ saAction action
+                 selectBoxes a = case nonEmpty  $ map selectBox (saBoxes action) of
+                                     Nothing -> a
+                                     Just cases -> Cases cases `Then` a
+                 selectBox sel = Case (Action $ SelectBoxes $ CSelector sel) Nothing
+             traceM . unpack $ prettyWPL statement
+             void $ executeStatement narrowedEc statement
       runShelfActions run $ ShelfSelector SelectAnything 
                                                       (Selector (NameMatches $ map MatchFull names)
                                                                 []
