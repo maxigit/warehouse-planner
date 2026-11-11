@@ -6,11 +6,12 @@ import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.WPL.Parser (wplParser)
-import WarehousePlanner.Selector (parseShelfSelector)
+import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, printBoxSelector)
 import Text.Megaparsec qualified as P
 import Data.Map qualified as Map
 import Control.Monad.State (gets)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
+import Data.List(nub)
 
 runShelfActions :: (ShelfAction Statement -> WH () s) -> ShelfSelector -> WH () s
 runShelfActions runAction sel = do
@@ -61,14 +62,16 @@ getShelfActions = do
   shelves <- mapM findShelf ids
   let actions = mapMaybe actionFromShelf $ toList shelves
       -- group actions 
-      actionBy = Map.fromListWith mergeAction [ (saAction a, a) 
+      actionBy = Map.fromListWith mergeAction [ (key a, a) 
                                               | a <- actions
                                               ]
   return  $ toList actionBy
-  where mergeAction a1 a2 = ShelfAction (saAction a1) (saShelves a1 <> saShelves a2) (saDependencies a1 <> saDependencies a2)
-                            --          ^^^^^^^^^^^^
-                            --             |
-                            --             +- we know a1 and a2 have the same action because we are grouping them by action
+  where mergeAction a1 a2 = ShelfAction (saAction a1) -- ^ we know a1 and a2 have the same action because we are grouping them by action
+                                        (saShelves a1 <> saShelves a2)
+                                        (saDependencies a1 <> saDependencies a2)
+                                        (saBoxes a1)
+                                        (headMay $ catMaybes [ saAutoBreak a1, saAutoBreak a2 ]) -- get first autBreak
+        key ShelfAction{..} = (saAction, printBoxSelector <$> saBoxes)
 
   
 actionFromShelf :: Shelf s -> Maybe (ShelfAction Text)
@@ -77,12 +80,22 @@ actionFromShelf shelf = let
   shelfDeps = getTagValues shelf "@action-deps" -- shelf selector 
   fullDeps = getTagValues shelf "@action-deps?" -- can find shelves by box but need "/" for location
   deps = parseShelfSelector <$> fullDeps <> map (cons '/') shelfDeps
+  boxes = map parseBoxSelector $ nub $ sort $ getTagValues shelf "@pick" <> getTagValues shelf "@stock"
+  break = case getTagValuem shelf "@break" of
+           Just "slot" -> Just StartNewSlot
+           Just "slice" -> Just StartNewSlice
+           Just "shelf" -> Just StartNewShelf
+           Just b -> error $ show b <> " is not a valid break usi (slot,slice,shelf) for shelf " <> show (shelfName shelf)
+           Nothing -> Nothing
+
   in case actionTextM of 
      Nothing -> Nothing
      Just "" -> Nothing
      Just action -> Just $ ShelfAction { saAction = action
                                        , saShelves = pure (Shelfname $ shelfName shelf)
                                        , saDependencies = deps
+                                       , saBoxes = boxes
+                                       , saAutoBreak = break
                                        }
   
   
@@ -93,6 +106,8 @@ parseAction sa = case P.runParser wplParser (show $ saShelves sa) (saAction sa) 
                   Right (a:as) -> Right ShelfAction { saAction = Ors (a :| as)
                                                     , saShelves = saShelves sa
                                                     , saDependencies = saDependencies sa
+                                                    , saBoxes = saBoxes sa
+                                                    , saAutoBreak = saAutoBreak sa
                                                     }
   
 partitionActions :: ShelfSelector -> [ShelfAction a] -> WH ([ShelfAction a], [ShelfAction a]) s
