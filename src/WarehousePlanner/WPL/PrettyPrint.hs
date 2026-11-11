@@ -88,7 +88,7 @@ pShelfCase (ShelfCase com (Just com2)) = group $ pStatement com  <> nest 4 (line
 pCommand :: Command -> Doc a
 pCommand = \case
    -- old syntax
-   Move sourceM pModeM strats ((exitMode, dest):|[]) ->
+   Move sourceM pModeM strats (Right ((exitMode, dest):|[])) ->
         hcat [  case exitMode of
                         ExitLeft -> "to>"
                         ExitOnTop -> "to^"
@@ -111,15 +111,16 @@ pCommand = \case
                , optWithDefault "orules" null pRules (Just strats)
                , space
                ]
-               <>
-               [ case exitMode of
-                    ExitOnTop -> "^"
-                    ExitLeft -> ">"
-                 <> if isDefault sel
-                 then "*"
-                 else pCShelf sel
-               | (exitMode, sel) <- toList dest
-               ]
+               <> case dest of 
+                      Left sel -> [ " " , pCShelf sel ]
+                      Right dest -> [ case exitMode of
+                                         ExitOnTop -> "^"
+                                         ExitLeft -> ">"
+                                      <> if isDefault sel
+                                      then "*"
+                                      else pCShelf sel
+                                    | (exitMode, sel) <- toList dest
+                                    ]
                      
             
    Tag tagOps -> "tag#" <> pretty (printTagOperations tagOps)

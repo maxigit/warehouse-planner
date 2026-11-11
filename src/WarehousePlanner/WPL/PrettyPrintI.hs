@@ -40,7 +40,7 @@ prettyStatement raw indent stmt =
 prettyCommand :: Text -> Command -> Text
 prettyCommand indent command = 
     join case command of
-       Move source pmode ors ((exitMode, dest):| []) -> [ maybe "" (prettyCSelector "" prettyBoxSelector) source
+       Move source pmode ors (Right ((exitMode, dest):| [])) -> [ maybe "" (prettyCSelector "" prettyBoxSelector) source
                                               , case exitMode of
                                                  ExitLeft -> "to>"
                                                  ExitOnTop -> "to^"

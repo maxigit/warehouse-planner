@@ -27,7 +27,7 @@ import Control.Monad.State(gets)
 import Data.List (nub)
 import Data.Proxy
 import GHC.Utils.Monad (mapAccumLM)
-import Data.Text (splitOn)
+import Data.Text (splitOn, takeEnd)
 
 
 runWPL :: [Statement] -> WH () s
@@ -146,15 +146,26 @@ showExitMode'Sel (exitMode, sel) = show exitMode <> showCSelector showShelfSelec
 executeCommand :: forall s . ExContext s -> Command -> WH (ExContext s) s
 executeCommand ec command = case command of
     --------
-    Move boxm pmodem orules exit'sels -> do
-      newBaseEvent "TO" (maybe "" (pack . showCSelector showBoxSelector)   boxm <> " -> " <> pack (sconcat (map showExitMode'Sel  exit'sels)))
+    Move boxm pmodem orules exit'selsE -> do
+      let selector = case exit'selsE of
+                       Left  sel -> showCSelector showShelfSelector sel
+                       Right x'ss -> (sconcat (map showExitMode'Sel  x'ss))
+
+      newBaseEvent "TO" (maybe "" (pack . showCSelector showBoxSelector)   boxm <> " -> " <> pack selector )
       boxes <- getBoxPs =<< case boxm of 
                  Nothing -> return ec
                  Just sel -> narrowCSelector sel ec
       -- traceShowM ("BOXOS", length boxes)
-      exit'shelves <-  forM (toList exit'sels) \(exitMode, sel) -> do
-         shelves <- getShelves =<< narrowCSelector sel ec
-         return (exitMode, shelves)
+      exit'shelves <-  case exit'selsE of 
+          Left sel -> do -- auto mode, assume ^ but breaks when shelf is "lower" than the previous one
+                         -- example A.1 A.2 B.1 will split to ^A.1|A.2 ^B.1
+                        shelves <- getShelves =<< narrowCSelector sel ec
+                        let shelvess = groupBy (\s1 s2 -> takeEnd 1 (shelfName s1) < takeEnd 1 (shelfName s2)) $ toList shelves
+                        return $ map (ExitOnTop,) shelvess
+
+          Right exit'sels -> forM (toList exit'sels) \(exitMode, sel) -> do
+                                  shelves <- getShelves =<< narrowCSelector sel ec
+                                  return (exitMode, shelves)
 
       let rules = case orules of
                        _ -> (Nothing, orules) : ecOrientationStrategies ec

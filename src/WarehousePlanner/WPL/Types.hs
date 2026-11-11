@@ -13,7 +13,7 @@ import Data.List.NonEmpty as NE
 data Command = Move { cSource :: Maybe CBoxSelector
                     , cPartitionMode :: Maybe PartitionMode
                     , cOrientationStrategies :: [OrientationStrategy]
-                   , cDest   :: NonEmpty (ExitMode, CShelfSelector)
+                   , cDest   :: Either CShelfSelector (NonEmpty (ExitMode, CShelfSelector))
                    }
              | Tag { cTagOps :: TagsOperations }
              | TagFor (CSelector BoxSelector) TagsOperations Statement
