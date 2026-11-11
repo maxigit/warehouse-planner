@@ -44,6 +44,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
                            , cStmt ::   Statement
                            }
              | RunShelfActions (CSelector ShelfSelector)
+             | SetShelfAction (Maybe ShelfSelector) Statement
      deriving (Show, Eq)
      {-
        deriving Eq

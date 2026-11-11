@@ -11,7 +11,7 @@ import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import WarehousePlanner.Move
-import WarehousePlanner.Selector (parseBoxSelector, matchName)
+import WarehousePlanner.Selector (parseBoxSelector, matchName, printShelfSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ParserI
@@ -517,7 +517,12 @@ executeCommand ec command = case command of
                                                                 []
                                                       )
       return ec
-      
+    SetShelfAction deps action -> do
+       let tagOps = ("@action", SetValues [prettyWPL action])
+                    : case deps of
+                       Nothing -> []
+                       Just dep -> [("@action-deps", SetValues [ printShelfSelector dep ])]
+       executeCommand ec $ TagShelves $ fromTag'Operations tagOps
 
 
 evalCondition :: ExContext s ->  Condition -> WH Bool s
