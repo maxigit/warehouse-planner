@@ -46,7 +46,7 @@ data BoxNumberSelector = BoxNumberSelector
    { nsPerContent :: !(Limit)
    , nsPerShelf :: !(Limit)
    , nsTotal :: !(Limit)
-   } deriving (Show, Eq)
+   } deriving (Show, Eq, Ord)
 
 -- | How to take slice of a selection
 data Limit = Limit 
@@ -54,15 +54,15 @@ data Limit = Limit
   , liEnd :: !(Maybe Int) -- ^ last box to take
   , liOrderingKey :: ![(OrderingKey, SortingOrder)] -- ^ which tag to use to sort boxes
   , liUseBase :: !Bool -- ^ if true add the base key when sorting
-  } deriving (Show, Eq)
+  } deriving (Show, Eq, Ord)
   
 pattern NoLimit <- Limit Nothing Nothing []  _  where
         NoLimit = Limit Nothing Nothing [] True
   
 data OrderingKey = OrdTag Text | OrdAttribute Text
-     deriving (Show, Eq)
+     deriving (Show, Eq, Ord)
 data SortingOrder = NormalOrder | ReverseOrder
-    deriving (Show, Eq)
+    deriving (Show, Eq, Ord)
 
 -- | How something is oriented. It indicates  the direction of
 -- the normal of the given face.
