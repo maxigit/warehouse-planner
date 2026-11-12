@@ -6,7 +6,7 @@ import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.WPL.Parser (wplParser)
-import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, printBoxSelector)
+import WarehousePlanner.Selector (parseBoxSelector, parseShelfSelector, printBoxSelector, parseBoxNumberSelector)
 import Text.Megaparsec qualified as P
 import Data.Map qualified as Map
 import Control.Monad.State (gets)
@@ -71,7 +71,8 @@ getShelfActions = do
                                         (saDependencies a1 <> saDependencies a2)
                                         (saBoxes a1)
                                         (headMay $ catMaybes [ saAutoBreak a1, saAutoBreak a2 ]) -- get first autBreak
-        key ShelfAction{..} = (saAction, printBoxSelector <$> saBoxes)
+                                        (saOrder a1) -- ^ part of the key
+        key ShelfAction{..} = (saAction, printBoxSelector <$> saBoxes, saOrder )
 
   
 actionFromShelf :: Shelf s -> Maybe (ShelfAction Text)
@@ -87,6 +88,15 @@ actionFromShelf shelf = let
            Just "new-shelf" -> Just StartNewShelf
            Just b -> error $ show b <> " is not a valid break usi (slot,slice,shelf) for shelf " <> show (shelfName shelf)
            Nothing -> Nothing
+  order = parseBoxNumberSelector True . dropHat  <$> getTagValuem shelf "@order"
+  --                                    ^^^^^^
+  --                                      |
+  --                                      +-- parseBoxNumberSelector doesn't expect a starting ^
+  --                                          this is different from a normal selector
+  --                                          so we remove a leading ^ to make it compatible with selectors
+  dropHat t = case uncons t of 
+                     Just ('^', number ) -> number
+                     _ -> t
 
   in case actionTextM of 
      Nothing -> Nothing
@@ -96,6 +106,7 @@ actionFromShelf shelf = let
                                        , saDependencies = deps
                                        , saBoxes = boxes
                                        , saAutoBreak = break
+                                       , saOrder = order
                                        }
   
   
@@ -108,6 +119,7 @@ parseAction sa = case P.runParser wplParser (show $ saShelves sa) (saAction sa) 
                                                     , saDependencies = saDependencies sa
                                                     , saBoxes = saBoxes sa
                                                     , saAutoBreak = saAutoBreak sa
+                                                    , saOrder = saOrder sa
                                                     }
   
 partitionActions :: ShelfSelector -> [ShelfAction a] -> WH ([ShelfAction a], [ShelfAction a]) s

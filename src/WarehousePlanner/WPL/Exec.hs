@@ -29,6 +29,7 @@ import Data.Proxy
 import GHC.Utils.Monad (mapAccumLM)
 import Data.Text (splitOn, takeEnd)
 import Data.List.NonEmpty (nonEmpty)
+import Data.Foldable(foldr1)
 
 
 runWPL :: [Statement] -> WH () s
@@ -523,10 +524,20 @@ executeCommand ec command = case command of
              narrowedEc <- narrowShelves (ShelfSelector SelectAnything sourceSelector)
                                          withAll {ecNoEmptyShelves = True }
                            >>= narrowBoxes unlockedSelector
-             let statement = selectBoxes $ saAction action
-                 selectBoxes a = case nonEmpty  $ map selectBox (saBoxes action) of
-                                     Nothing -> a
-                                     Just cases -> Cases cases `Then` setBreak a
+             let statements = [ selectBoxes
+                              , setOrder
+                              , Just $ setBreak ( saAction action)
+                              ]
+                 statement = case nonEmpty $ catMaybes statements of
+                              Nothing -> saAction action
+                              Just ne -> foldr1 Then ne
+                 selectBoxes = case nonEmpty  $ map selectBox (saBoxes action) of
+                                     Nothing -> Nothing 
+                                     Just cases -> Just $ Cases cases
+                 setOrder = case saOrder action of 
+                              Nothing -> Nothing
+                              Just number -> let sel = selectAllBoxes { numberSelector = number }
+                                             in Just $ Action (SelectBoxes $ CSelector sel)
                  selectBox sel = Case (Action $ SelectBoxes $ CSelector sel) Nothing
                  setBreak a = case saAutoBreak action of 
                                    Nothing -> a
@@ -534,14 +545,15 @@ executeCommand ec command = case command of
                                                                                                                                                    NoLimit
                                                                                                                                                    NoLimit
                                                                                                               }
-                                                 in PassThrought . Action $ TagFor limit1
-                                                                                  (fromTag'Operations [("@start", SetValues [breakVal break])])
-                                                                                  a
+                                                 in Action $ TagFor limit1
+                                                                    (fromTag'Operations [("@start", SetValues [breakVal break])])
+                                                                    a
                  breakVal break = case break of 
                                        StartNewSlot -> "new-slot"
                                        StartNewSlice -> "new-slice"
                                        StartNewShelf -> "new-shelf"
-             -- traceM . unpack $ prettyWPL statement
+             -- @t traceShowM (saShelves action)
+             -- @t traceM . unpack $ prettyWPL statement
              void $ executeStatement narrowedEc statement
       runShelfActions run $ ShelfSelector SelectAnything 
                                                       (Selector (NameMatches $ map MatchFull names)
