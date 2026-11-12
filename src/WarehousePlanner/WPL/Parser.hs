@@ -732,8 +732,9 @@ instance Parsable Command where
             return $ FillShelves locM posM
         , do
             lexeme1 "run"
+            debug  <- (lexeme1 "debug:" $> True) <|> return False
             sel <- p
-            return $ RunShelfActions sel
+            return $ RunShelfActions debug sel
         , withStatement "shelf:action" do
             lexeme1 ("shelf:action" <|> "saction")
             depM <- o1 ["dependencies", "dependency", "dep", "deps", "d"]

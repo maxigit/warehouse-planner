@@ -27,7 +27,7 @@ import Control.Monad.State(gets)
 import Data.List (nub)
 import Data.Proxy
 import GHC.Utils.Monad (mapAccumLM)
-import Data.Text (splitOn, takeEnd)
+import Data.Text (splitOn, takeEnd, replace)
 import Data.List.NonEmpty (nonEmpty)
 import Data.Foldable(foldr1)
 
@@ -511,7 +511,7 @@ executeCommand ec command = case command of
                          fillCommands'boxs
         
         return newEc
-    RunShelfActions sel -> do
+    RunShelfActions debug sel -> do
       shelves <- getShelves =<< narrowCSelector sel ec
       let names = map shelfName shelves
           run action = do
@@ -552,8 +552,9 @@ executeCommand ec command = case command of
                                        StartNewSlot -> "new-slot"
                                        StartNewSlice -> "new-slice"
                                        StartNewShelf -> "new-shelf"
-             -- @t traceShowM (saShelves action)
-             -- @t traceM . unpack $ prettyWPL statement
+             when debug do
+                  traceShowM (saShelves action)
+                  traceM . unpack $ prettyWPL statement
              void $ executeStatement narrowedEc statement
       runShelfActions run $ ShelfSelector SelectAnything 
                                                       (Selector (NameMatches $ map MatchFull names)
@@ -561,7 +562,7 @@ executeCommand ec command = case command of
                                                       )
       return ec
     SetShelfAction deps action -> do
-       let tagOps = ("@action", SetValues [prettyWPL action])
+       let tagOps = ("@action", SetValues [replace ";" "$<semicolumn>" $ prettyWPL action])
                     : case deps of
                        Nothing -> []
                        Just dep -> [("@action-deps", SetValues [ printShelfSelector dep ])]

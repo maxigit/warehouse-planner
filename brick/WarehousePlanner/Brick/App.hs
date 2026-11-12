@@ -120,7 +120,7 @@ data WHEvent = ENextMode
              | EQuit
              -- Action
              | EMove
-             | ERunAction
+             | ERunAction Bool
              -- Yanks
              | EYankBoxDetails EditMode -- ^ editor or yank
              | EYankBoxHistory EditMode -- ^ editor or yank
@@ -576,7 +576,8 @@ keyBindingGroups =  groups
                                                                , mk '<' (EPreviousPropValue) "previous property value"
                                                                ])
                                ,("Warehouss operations",       [ mk '%' EMove "Move selected boxes to selected shelves"
-                                                               , mk 'R' ERunAction "run action on selected shelves"
+                                                               , mk 'R' (ERunAction True) "run action (debug) on selected shelves"
+                                                               , mk 'r' (ERunAction False) "run action on selected shelves"
                                                                ])
                                ,("History",                    [ mK "S-right" (EHistoryEvent HNext) "next event"
                                                                , mK "S-left" (EHistoryEvent HPrevious) "previous event"
@@ -956,7 +957,7 @@ handleWH ev =
                           setNewWHEvent $ whCurrentEvent newWH
                           modify \s -> s { asDiffEvent = currentEvent, asDisplayHistory = True }
                      Nothing -> return ()
-         ERunAction -> do
+         ERunAction debug -> do
                  state <- get
                  let selector = case asShelfSelection state of
                                   Just ss -> sSelector ss
@@ -965,7 +966,7 @@ handleWH ev =
                                              in ShelfSelector  SelectAnything shelfSelector
                  newWH <- liftIO $ execWH (asWarehouse state) do
                       newWHEvent 0 $ "RUN SHELF ACTION " <> (printShelfSelector selector)
-                      runWPL [ WPL.Action $ WPL.RunShelfActions (WPL.CSelector selector)   ] 
+                      runWPL [ WPL.Action $ WPL.RunShelfActions debug (WPL.CSelector selector)   ] 
                       get
                  setNewWHEvent $ whCurrentEvent newWH
                  modify \s -> s { asWarehouse = newWH }

@@ -43,7 +43,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
              | FillShelves { cLoc, cPos :: (Maybe Text)
                            , cStmt ::   Statement
                            }
-             | RunShelfActions (CSelector ShelfSelector)
+             | RunShelfActions Bool (CSelector ShelfSelector)
              | SetShelfAction (Maybe ShelfSelector) Statement
      deriving (Show, Eq)
      {-
