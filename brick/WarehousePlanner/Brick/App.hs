@@ -211,7 +211,7 @@ makeAppShelvesSummary state = do
                                                                vals -> Just $ unwords vals
                                                _ -> Nothing
                             getTagShelfValue tag = case getTagValuem shelf tag of
-                                                    Just "" -> Just "█"
+                                                    Just "" -> Just "✓"
                                                     Just v -> Just v
                                                     Nothing | tagIsPresent shelf tag -> Just tag
                                                             | tag == "min" -> Just $ printDim (minDim shelf)
