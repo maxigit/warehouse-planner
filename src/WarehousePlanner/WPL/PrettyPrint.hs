@@ -199,8 +199,7 @@ pCommand = \case
                                         <> opt' "pick" pBoxSelector ssaPick
                                         <> opt' "stock" pBoxSelector ssaStock
                                         <+> pBlock ssaAction
-                                               
-
+   FreezeBoxesOrder boxm -> "freeze:order" <> opt "boxes" pCBox boxm
                                                     
                                               
 

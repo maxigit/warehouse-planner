@@ -589,6 +589,13 @@ executeCommand ec command = case command of
          error $ "Shelf action already set for " <> show ( map shelfName shelves)
            
        executeCommand ec $ TagShelves $ fromTag'Operations tagOps
+    FreezeBoxesOrder boxm -> do
+       boxes <- getBoxes =<< case boxm of
+                   Nothing -> return ec
+                   Just sel -> narrowCSelector sel ec
+       freezeOrder (map boxId boxes)
+       return ec
+
 
 
 evalCondition :: ExContext s ->  Condition -> WH Bool s

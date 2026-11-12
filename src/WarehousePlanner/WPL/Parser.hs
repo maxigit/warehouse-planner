@@ -749,7 +749,10 @@ instance Parsable Command where
                                     , ssaPick = pickM, ssaStock = stockM
                                     , ssaAction = action
                                     }
-
+        , do 
+           lexeme1 "freeze:order"
+           selM <- o1 boxesK
+           return $ FreezeBoxesOrder selM
 
         ]
         where msgK = [ "msg",  "message", "m"]

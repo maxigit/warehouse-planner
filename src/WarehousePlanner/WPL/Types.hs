@@ -52,6 +52,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
                               , ssaOrder :: Maybe BoxNumberSelector
                               , ssaAction:: Statement
                               }
+             | FreezeBoxesOrder (Maybe (CSelector BoxSelector))
      deriving (Show, Eq)
      {-
        deriving Eq
