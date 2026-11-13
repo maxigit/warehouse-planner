@@ -12,6 +12,7 @@ import Data.Map qualified as Map
 import Control.Monad.State (gets)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Data.List(nub, nubBy)
+import Data.Text (replace)
 
 runShelfActions :: (ShelfAction Statement -> WH () s) -> ShelfSelector -> WH () s
 runShelfActions runAction sel = do
@@ -104,7 +105,7 @@ actionFromShelf shelf = let
   in case actionTextM of 
      Nothing -> Nothing
      Just "" -> Nothing
-     Just action -> Just $ ShelfAction { saAction = action
+     Just action -> Just $ ShelfAction { saAction = replace "$<semicolon>" ";" action
                                        , saShelves = pure (Shelfname $ shelfName shelf)
                                        , saDependencies = deps
                                        , saBoxes = boxes
