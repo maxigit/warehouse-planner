@@ -738,7 +738,8 @@ instance Parsable Command where
         , withStatement "shelf:action" do
             lexeme1 ("shelf:action" <|> "saction")
             depM <- o1 ["dependencies", "dependency", "dep", "deps", "d"]
-            return $ SetShelfAction depM
+            extraM <- o1 ["extra", "extra-dep", "x-dep", "x"]
+            return $ SetShelfAction depM extraM
 
 
         ]
