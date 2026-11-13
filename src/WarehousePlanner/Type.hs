@@ -136,7 +136,7 @@ data OrientationStrategy  = OrientationStrategy
 
 showOrientationStratety OrientationStrategy{..} =
      (if not osUseDiagonal then "!" else "")
-     <> mshow osMaxLenght
+     <> maybe "" tshow osMaxLenght
      <> "x"
      <> case osMinDepth of 
             d | d > 1 -> tshow d<> ":"
