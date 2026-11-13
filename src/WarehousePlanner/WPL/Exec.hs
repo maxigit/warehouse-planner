@@ -564,7 +564,7 @@ executeCommand ec command = case command of
                                                       )
       return ec
     SetShelfAction deps extras action -> do
-       let tagOps = ("@action", SetValues [replace ";" "$<semicolumn>" $ prettyWPL action])
+       let tagOps = ("@action", SetValues [replace ";" "$<semicolon>" $ prettyWPL action])
                     : case deps of
                        Nothing -> []
                        Just dep -> [("@action-deps", SetValues [ printShelfSelector dep ])]
