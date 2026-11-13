@@ -11,7 +11,7 @@ import Text.Megaparsec qualified as P
 import Data.Map qualified as Map
 import Control.Monad.State (gets)
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
-import Data.List(nub)
+import Data.List(nub, nubBy)
 
 runShelfActions :: (ShelfAction Statement -> WH () s) -> ShelfSelector -> WH () s
 runShelfActions runAction sel = do
@@ -35,9 +35,9 @@ runShelfAction runAction others source = do
       -- marks has running first to avoid loop
       forM_ shelves $ void . updateShelfTags (fromTag'Operations $ [("@action-running", SetTag)])
       -- exec dependencies first
-      (depss, _) <- unzip <$> mapM (\dep -> partitionActions dep others) (saDependencies source)
+      (depss, _) <- unzip <$> mapM (\dep -> partitionActions dep others) (saDependencies source <> saExtraShelves source)
       let deps = concat depss
-      mapM (runShelfAction runAction others) deps
+      mapM (runShelfAction runAction others) $ nubBy ((==) `on` saShelves) deps
       
       -- empty content
       s0 <- defaultShelf
@@ -72,6 +72,7 @@ getShelfActions = do
                                         (saBoxes a1)
                                         (headMay $ catMaybes [ saAutoBreak a1, saAutoBreak a2 ]) -- get first autBreak
                                         (saOrder a1) -- ^ part of the key
+                                        (saExtraShelves a1 <> saExtraShelves a2)
         key ShelfAction{..} = (saAction, printBoxSelector <$> saBoxes, saOrder )
 
   
@@ -80,7 +81,9 @@ actionFromShelf shelf = let
   actionTextM = getTagValuem shelf "@action"
   shelfDeps = getTagValues shelf "@action-deps" -- shelf selector 
   fullDeps = getTagValues shelf "@action-deps?" -- can find shelves by box but need "/" for location
+  extras = getTagValues shelf "@action-extra-deps"
   deps = parseShelfSelector <$> fullDeps <> map (cons '/') shelfDeps
+  extra = parseShelfSelector <$> map (cons '/') extras
   boxes = map parseBoxSelector $ nub $ sort $ getTagValues shelf "@pick" <> getTagValues shelf "@stock"
   break = case getTagValuem shelf "@start" of
            Just "new-slot" -> Just StartNewSlot
@@ -107,6 +110,7 @@ actionFromShelf shelf = let
                                        , saBoxes = boxes
                                        , saAutoBreak = break
                                        , saOrder = order
+                                       , saExtraShelves = extra
                                        }
   
   
@@ -120,6 +124,7 @@ parseAction sa = case P.runParser wplParser (show $ saShelves sa) (saAction sa) 
                                                     , saBoxes = saBoxes sa
                                                     , saAutoBreak = saAutoBreak sa
                                                     , saOrder = saOrder sa
+                                                    , saExtraShelves = saExtraShelves sa
                                                     }
   
 partitionActions :: ShelfSelector -> [ShelfAction a] -> WH ([ShelfAction a], [ShelfAction a]) s

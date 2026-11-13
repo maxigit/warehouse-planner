@@ -515,7 +515,9 @@ executeCommand ec command = case command of
       shelves <- getShelves =<< narrowCSelector sel ec
       let names = map shelfName shelves
           run action = do
-             let sourceSelector = Selector (NameMatches $ map (MatchFull . unShelfname ) $ toList $ saShelves action)
+             extraIds <- concat <$> mapM findShelvesByBoxNameAndNames (saExtraShelves action)
+             extras <- mapM findShelf extraIds
+             let sourceSelector = Selector (NameMatches $ map (MatchFull . unShelfname ) $ toList ( saShelves action) <> map (Shelfname . shelfName) extras)
                                            []
                  -- ^ narrow context to current source shelves
                  unlockedSelector = selectAllBoxes { shelfSelectors = Selector AnyNames [ TagHasNotKey (MatchFull "@action-locked") ]
@@ -561,11 +563,14 @@ executeCommand ec command = case command of
                                                                 []
                                                       )
       return ec
-    SetShelfAction deps action -> do
+    SetShelfAction deps extras action -> do
        let tagOps = ("@action", SetValues [replace ";" "$<semicolumn>" $ prettyWPL action])
                     : case deps of
                        Nothing -> []
                        Just dep -> [("@action-deps", SetValues [ printShelfSelector dep ])]
+                    <> case extras of
+                           Nothing -> []
+                           Just extra -> [("@action-extra-deps", SetValues [printShelfSelector extra])]
        executeCommand ec $ TagShelves $ fromTag'Operations tagOps
 
 

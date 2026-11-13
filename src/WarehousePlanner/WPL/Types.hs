@@ -44,7 +44,7 @@ data Command = Move { cSource :: Maybe CBoxSelector
                            , cStmt ::   Statement
                            }
              | RunShelfActions Bool (CSelector ShelfSelector)
-             | SetShelfAction (Maybe ShelfSelector) Statement
+             | SetShelfAction (Maybe ShelfSelector) (Maybe ShelfSelector) Statement
      deriving (Show, Eq)
      {-
        deriving Eq
@@ -138,6 +138,7 @@ data ShelfAction a = ShelfAction
   , saBoxes :: [ BoxSelector ]
   , saAutoBreak :: Maybe BoxBreak
   , saOrder :: Maybe BoxNumberSelector
+  , saExtraShelves :: [ ShelfSelector ] -- both shelves AND dependencies
   } deriving (Eq, Show)
 
      

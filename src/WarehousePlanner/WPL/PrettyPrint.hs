@@ -192,7 +192,8 @@ pCommand = \case
                                                    <+> pBlock cStmt
    RunShelfActions debug shelves -> "run" <> (if debug then "debug:" else mempty)
                                           <> pCShelf shelves
-   SetShelfAction deps action -> "shelf:action" <> opt "deps" pShelfSelector deps
+   SetShelfAction deps extras action -> "shelf:action" <> opt "deps" pShelfSelector deps
+                                                      <> opt "extra-dep" pShelfSelector extras
                                                 <+> pBlock action
                                                
 
