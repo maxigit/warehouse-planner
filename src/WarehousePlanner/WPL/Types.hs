@@ -136,7 +136,7 @@ data ShelfAction a = ShelfAction
   , saShelves :: NonEmpty Shelfname
   , saDependencies :: [ShelfSelector]
   , saBoxes :: [ BoxSelector ]
-  , saAutoBreak :: Maybe BoxBreak
+  , saAutoBreak :: Maybe SlotBreak
   , saOrder :: Maybe BoxNumberSelector
   , saExtraShelves :: [ ShelfSelector ] -- both shelves AND dependencies
   } deriving (Eq, Show)

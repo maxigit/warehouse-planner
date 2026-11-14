@@ -86,13 +86,7 @@ actionFromShelf shelf = let
   deps = parseShelfSelector <$> fullDeps <> map (cons '/') shelfDeps
   extra = parseShelfSelector <$> map (cons '/') extras
   boxes = map parseBoxSelector $ nub $ sort $ getTagValues shelf "@pick" <> getTagValues shelf "@stock"
-  break = case getTagValuem shelf "@start" of
-           Just "new-slot" -> Just StartNewSlot
-           Just "new-slice" -> Just StartNewSlice
-           Just "new-shelf" -> Just StartNewShelf
-           Just "drop" -> Nothing
-           Just b -> error $ show b <> " is not a valid break usi (slot,slice,shelf) for shelf " <> show (shelfName shelf)
-           Nothing -> Nothing
+  break = parseSlotBreak <$> getTagValuem shelf "@start"
   order = parseBoxNumberSelector True . dropHat  <$> getTagValuem shelf "@order"
   --                                    ^^^^^^
   --                                      |

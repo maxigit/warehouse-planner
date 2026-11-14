@@ -28,6 +28,8 @@ module WarehousePlanner.Base
 , extractTag
 , extractTags
 , extractModes
+, extractBoxBreak
+, parseSlotBreak
 , filterBoxByTag
 , filterShelfByTag
 , findBoxByNameSelector
@@ -1609,12 +1611,17 @@ or column depending of the shelf filling strategy) or a new slot (no box
 ::rST -}
 extractBoxBreak :: Tags -> Maybe BoxBreak
 extractBoxBreak tags = case maybe [] (Set.toList) (Map.lookup "@start" tags) of
-  ["new-slot"] -> Just StartNewSlot
-  ["new-slice"] -> Just StartNewSlice 
-  ["new-shelf"] ->Just StartNewShelf 
-  ["drop"] ->Just DropOnNewSlot 
-  _ -> Nothing
+                            [break] | Just start <- stripPrefix "drop-" break -> Just (Drop, start)
+                                    | otherwise                              -> Just $ (Start, break)
+                            _ -> Nothing
+                       <&> \(action, break) -> BoxBreak action (parseSlotBreak break)
 
+parseSlotBreak :: Text -> SlotBreak
+parseSlotBreak breaks = case breaks of 
+  "new-slot" -> NewSlot
+  "new-slice" -> NewSlice 
+  "new-shelf" -> NewShelf 
+  _ -> error $ unpack breaks <> " is not a valid slot break"
 -- * Misc 
 -- | reorder box so they are ordered by column across all
 -- the given shelves.

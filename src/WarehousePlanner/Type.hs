@@ -158,10 +158,20 @@ instance Show (BoxId s) where
 
 -- Tag equivalent to a page break in a document
 -- Indicate if the given box should start a new row or a new shelf
-data BoxBreak = StartNewSlot
-              | StartNewSlice -- new row or column according to shelf strategy
-              | StartNewShelf
-              | DropOnNewSlot deriving (Eq, Show, Ord)
+data BoxBreak = BoxBreak { bbAction :: StartDrop
+                         , bbSlot :: SlotBreak
+                         } deriving (Eq, Show, Ord)
+              
+data SlotBreak = NewSlot
+                | NewSlice -- new row or column according to shelf strategy
+                | NewShelf
+              deriving (Eq, Show, Ord)
+data StartDrop = Start | Drop deriving (Eq, Show, Ord)
+
+pattern StartNewSlot = BoxBreak Start NewSlot
+pattern StartNewSlice = BoxBreak Start NewSlice
+pattern StartNewShelf = BoxBreak Start NewShelf
+
 -- | Tags with optionals value
 type Tags = Map Text (Set Text)
 data Box s = Box { _boxId      :: BoxId s

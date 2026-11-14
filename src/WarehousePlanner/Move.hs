@@ -527,9 +527,9 @@ assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (
 assignBoxesToPositions slices simBoxes = do
   let boxes = unSimilar simBoxes
   let go _ _ [] = return []
-      go prevShelf slices (box:boxes) |Just DropOnNewSlot <-  boxBreak box =
+      go prevShelf slices (box:boxes) | Just (BoxBreak Drop break) <-  boxBreak box =
          -- we check that next available slot is not a new slot (compare with new slot)
-         case (unconsSlicesTo fst prevShelf (Just StartNewSlot) slices, unconsSlicesTo fst prevShelf Nothing slices) of
+         case (unconsSlicesTo fst prevShelf (Just break) slices, unconsSlicesTo fst prevShelf Nothing slices) of
             (Just ((shelf'posNew),_,_),  Just (shelf'pos,_,newSlices)) | shelf'pos /= shelf'posNew -> do
                   shiftBox box shelf'pos 
                   result <- go (Just $ fst shelf'pos) newSlices boxes 
@@ -538,7 +538,7 @@ assignBoxesToPositions slices simBoxes = do
                   result <- go prevShelf slices boxes
                   return $ Left box : result
       go prevShelf slices allboxes@(box:boxes) =
-        case (unconsSlicesTo fst prevShelf (boxBreak box) slices) of
+        case (unconsSlicesTo fst prevShelf (startBreakM box) slices) of
              Nothing -> return $ map Left allboxes
              Just ((shelf'pos), _, newSlices) -> do
                   shiftBox box shelf'pos 
@@ -548,6 +548,9 @@ assignBoxesToPositions slices simBoxes = do
             _ <- updateBox (\box_ -> box_ { orientation = orientation
                                           , boxOffset = offset}) box
             assignShelf (Just shelf) box
+      startBreakM box = case boxBreak box of 
+                                              Just (BoxBreak Start b) -> Just b
+                                              _ -> Nothing
   leftOrMoveds <- go Nothing (numSlices slices) boxes 
   let (leftOver, moved) = partitionEithers leftOrMoveds
   return (mkSimilar moved, mkSimilar leftOver)
