@@ -90,6 +90,7 @@ actionFromShelf shelf = let
            Just "new-slot" -> Just StartNewSlot
            Just "new-slice" -> Just StartNewSlice
            Just "new-shelf" -> Just StartNewShelf
+           Just "drop" -> Nothing
            Just b -> error $ show b <> " is not a valid break usi (slot,slice,shelf) for shelf " <> show (shelfName shelf)
            Nothing -> Nothing
   order = parseBoxNumberSelector True . dropHat  <$> getTagValuem shelf "@order"

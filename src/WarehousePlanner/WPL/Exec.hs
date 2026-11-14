@@ -554,6 +554,7 @@ executeCommand ec command = case command of
                                        StartNewSlot -> "new-slot"
                                        StartNewSlice -> "new-slice"
                                        StartNewShelf -> "new-shelf"
+                                       DropOnNewSlot -> "drop"
              when debug do
                   traceShowM (saShelves action)
                   traceM . unpack $ prettyWPL statement
