@@ -582,6 +582,12 @@ executeCommand ec command = case command of
                    <> case ssaStock of 
                        Nothing -> []
                        Just stock -> [("@stock", SetValues [ printBoxSelector stock ])]
+       -- check values are not set
+       shelves <- getShelves ec
+       let existingTags = foldMap shelfTag shelves
+       when  (any (`member` existingTags) (map fst tagOps)) do
+         error $ "Shelf action already set for " <> show ( map shelfName shelves)
+           
        executeCommand ec $ TagShelves $ fromTag'Operations tagOps
 
 
