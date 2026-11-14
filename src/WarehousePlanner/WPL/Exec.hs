@@ -547,9 +547,12 @@ executeCommand ec command = case command of
                                                                                                                                                    NoLimit
                                                                                                                                                    NoLimit
                                                                                                               }
-                                                 in Action $ TagFor limit1
+                                                 in Action $ TagFor (CSelector selectAllBoxes)
+                                                             (fromTag'Operations [("@start", SetValues [breakVal DropOnNewSlot])])
+                                                             (Action $ TagFor limit1
                                                                     (fromTag'Operations [("@start", SetValues [breakVal break])])
                                                                     a
+                                                             )
                  breakVal break = case break of 
                                        StartNewSlot -> "new-slot"
                                        StartNewSlice -> "new-slice"
