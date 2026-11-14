@@ -147,7 +147,7 @@ unconsSlicesTo getShelf js@(Just prevShelf) (Just NewShelf) slices =
 unconsSlicesTo _ _ (Just NewSlice) slices =
   case unconsSlices slices of
     Nothing -> Nothing
-    Just new@(_, (_,(0,_),_), _) -> Just new
+    Just new@(_, (_,(0,_),(0,_)), _) -> Just new
     --               ^
     --               +-- new slices mean slot number = 0
     _ -> unconsSlices (dropTillSlice slices)
