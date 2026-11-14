@@ -3,7 +3,7 @@
 module WarehousePlanner.Move
 ( aroundArrangement 
 , bestArrangement
-, bestPositions, bestPositions'
+, bestPositions
 , cornerHull
 , stairsFromCorners
 , generatePositions
@@ -123,10 +123,6 @@ type OrPos b = Either (NonEmpty b) Position
 -- This takes into account the boxes already present in the shelf and
 -- the possible orientation and shelf strategy.
 -- Returns a slices of either an available position or the list of boxes overlapping with the position.
-bestPositions :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double Position) s
-bestPositions partitionMode shelf simBoxes = do
-  bOrPs <- bestPositionOrBoxes partitionMode shelf simBoxes
-  return . snd $ partitionEitherSlices bOrPs
 
 bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos s)) s
 bestPositionOrBoxes partitionMode shelf simBoxes = do
@@ -134,10 +130,10 @@ bestPositionOrBoxes partitionMode shelf simBoxes = do
   boxesInShelf <- findBoxByShelf shelf
   boxo <- gets boxOrientations
   let orientations = boxo box shelf
-  return $ bestPositions' boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim  (Just $ length boxes + 1)
+  return $ bestPositions boxAffDimension partitionMode orientations shelf mempty boxesInShelf dim  (Just $ length boxes + 1)
 
-bestPositions' :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Maybe Int -> Slices Double (OrPos b)
-bestPositions' getAff pmode orientations shelf start used dim howManyM | isOverlap pmode = let
+bestPositions :: forall b s . (b -> AffDimension ) -> PartitionMode -> [OrientationStrategy] -> Shelf s -> Dimension -> [b] -> Dimension -> Maybe Int -> Slices Double (OrPos b)
+bestPositions getAff pmode orientations shelf start used dim howManyM | isOverlap pmode = let
    -- try each orientation strategy individually as if the box was empty
    -- and remove the "used" positions. Then get the best one
   solutions = [ 
@@ -184,7 +180,7 @@ bestPositions' getAff pmode orientations shelf start used dim howManyM | isOverl
                                  , maxDim = maxDim shelf <> shrink 
                                  }
                 shrink = Dimension (-offset) 0 0
-                positions = bestPositions' getAff PRightOnly [strategy] newShelf start [] dim Nothing
+                positions = bestPositions getAff PRightOnly [strategy] newShelf start [] dim Nothing
                 offsetBack = fmap (\pos -> pos {pOffset = pOffset pos <> (Dimension offset 0 0)})
             in fmap offsetBack positions
         modFload r q = let p = floor(r / q)
@@ -192,7 +188,7 @@ bestPositions' getAff pmode orientations shelf start used dim howManyM | isOverl
                              
                       
 
-bestPositions' getAff partitionMode orientations shelf start usedBoxes dim _ = let
+bestPositions getAff partitionMode orientations shelf start usedBoxes dim _ = let
   starti = invert start
   topRightCorners = filter (not . outOfBound)
                   . map ((starti <>) . aTopRight)
