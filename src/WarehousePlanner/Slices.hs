@@ -156,6 +156,7 @@ unconsSlicesTo _ _ (Just StartNewSlot) slices =
     Nothing -> Nothing
     Just new@(_, (_,_,(0,_)), _) -> Just new
     _ -> unconsSlices (dropTillSlot slices)
+unconsSlicesTo getShelf js (Just DropOnNewSlot) slices = unconsSlicesTo getShelf js Nothing slices
 
 dropTillSlice, dropTillSlot :: Slices k a -> Slices k a
 dropTillSlice (SlicesO slices) = cleanSlices $ SlicesO (drop 1 slices)

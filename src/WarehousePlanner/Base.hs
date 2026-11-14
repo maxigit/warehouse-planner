@@ -1612,6 +1612,7 @@ extractBoxBreak tags = case maybe [] (Set.toList) (Map.lookup "@start" tags) of
   ["new-slot"] -> Just StartNewSlot
   ["new-slice"] -> Just StartNewSlice 
   ["new-shelf"] ->Just StartNewShelf 
+  ["drop"] ->Just DropOnNewSlot 
   _ -> Nothing
 
 -- * Misc 

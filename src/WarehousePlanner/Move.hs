@@ -531,6 +531,16 @@ assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (
 assignBoxesToPositions slices simBoxes = do
   let boxes = unSimilar simBoxes
   let go _ _ [] = return []
+      go prevShelf slices (box:boxes) |Just DropOnNewSlot <-  boxBreak box =
+         -- we check that next available slot is not a new slot (compare with new slot)
+         case (unconsSlicesTo fst prevShelf (Just StartNewSlot) slices, unconsSlicesTo fst prevShelf Nothing slices) of
+            (Just ((shelf'posNew),_,_),  Just (shelf'pos,_,newSlices)) | shelf'pos /= shelf'posNew -> do
+                  shiftBox box shelf'pos 
+                  result <- go (Just $ fst shelf'pos) newSlices boxes 
+                  return $ Right box : result
+            _ -> do 
+                  result <- go prevShelf slices boxes
+                  return $ Left box : result
       go prevShelf slices allboxes@(box:boxes) =
         case (unconsSlicesTo fst prevShelf (boxBreak box) slices) of
              Nothing -> return $ map Left allboxes
