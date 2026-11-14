@@ -11,7 +11,7 @@ import ClassyPrelude
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Base
 import WarehousePlanner.Move
-import WarehousePlanner.Selector (parseBoxSelector, matchName, printShelfSelector)
+import WarehousePlanner.Selector (parseBoxSelector, matchName, printShelfSelector, printNumberSelector)
 import Text.Megaparsec qualified as P
 import WarehousePlanner.WPL.Parser
 import WarehousePlanner.WPL.ParserI
@@ -548,15 +548,11 @@ executeCommand ec command = case command of
                                                                                                                                                    NoLimit
                                                                                                               }
                                                  in Action $ TagFor (CSelector selectAllBoxes)
-                                                             (fromTag'Operations [("@start", SetValues ["drop-" <> breakVal break])])
+                                                             (fromTag'Operations [("@start", SetValues ["drop-" <> printSlotBreak break])])
                                                              (Action $ TagFor limit1
-                                                                    (fromTag'Operations [("@start", SetValues [breakVal break])])
+                                                                    (fromTag'Operations [("@start", SetValues [printSlotBreak break])])
                                                                     a
                                                              )
-                 breakVal break = case break of 
-                                       NewSlot -> "new-slot"
-                                       NewSlice -> "new-slice"
-                                       NewShelf -> "new-shelf"
              when debug do
                   traceShowM (saShelves action)
                   traceM . unpack $ prettyWPL statement
@@ -566,7 +562,7 @@ executeCommand ec command = case command of
                                                                 []
                                                       )
       return ec
-    SetShelfAction deps extras action -> do
+    SetShelfAction deps extras breakM orderM action-> do
        let tagOps = ("@action", SetValues [replace ";" "$<semicolon>" $ prettyWPL action])
                     : case deps of
                        Nothing -> []
@@ -574,6 +570,12 @@ executeCommand ec command = case command of
                     <> case extras of
                            Nothing -> []
                            Just extra -> [("@action-extra-deps", SetValues [printShelfSelector extra])]
+                    <> case breakM of 
+                        Nothing -> []
+                        Just break -> [("@start", SetValues [printSlotBreak break])]
+                    <> case orderM of
+                        Nothing -> []
+                        Just order -> [("@order", SetValues [ "^" <> printNumberSelector order ])]
        executeCommand ec $ TagShelves $ fromTag'Operations tagOps
 
 

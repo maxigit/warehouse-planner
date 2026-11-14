@@ -11,7 +11,7 @@ module WarehousePlanner.Selector
 , parseNameSelector
 , parseMatchPattern
 , parseTagSelector
-, printSelector, printBoxSelector, printShelfSelector, printTagSelector, printPattern
+, printSelector, printBoxSelector, printShelfSelector, printTagSelector, printPattern, printNumberSelector
 , MParser
 , between
 , Selectable(..)

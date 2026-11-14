@@ -7,9 +7,9 @@ where
 import ClassyPrelude hiding(group)
 import WarehousePlanner.WPL.Types
 import WarehousePlanner.Type
-import WarehousePlanner.Base(printTagOperations)
+import WarehousePlanner.Base(printTagOperations, printSlotBreak)
 import Data.List.NonEmpty (NonEmpty(..))
-import WarehousePlanner.Selector (printBoxSelector, printShelfSelector)
+import WarehousePlanner.Selector (printBoxSelector, printShelfSelector, printNumberSelector)
 import Prettyprinter
 import Prettyprinter.Render.Text
 import Data.Map qualified as Map
@@ -192,8 +192,10 @@ pCommand = \case
                                                    <+> pBlock cStmt
    RunShelfActions debug shelves -> "run" <> (if debug then "debug:" else mempty)
                                           <> pCShelf shelves
-   SetShelfAction deps extras action -> "shelf:action" <> opt "deps" pShelfSelector deps
-                                                      <> opt "extra-dep" pShelfSelector extras
+   SetShelfAction deps extras breakM orderM action -> "shelf:action" <> opt' "deps" pShelfSelector deps
+                                                      <> opt' "extra-dep" pShelfSelector extras
+                                                      <> opt' "start"  (pretty . printSlotBreak) breakM
+                                                      <> opt' "order" (\t -> pretty $ "^" <> printNumberSelector t) orderM
                                                 <+> pBlock action
                                                
 

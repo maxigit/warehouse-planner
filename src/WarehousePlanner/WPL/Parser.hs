@@ -7,7 +7,7 @@ wplParser
 where 
 
 import ClassyPrelude hiding(some, many, try, (<|))
-import WarehousePlanner.Selector (MParser, parseSelector, parseShelfSelector, parseBoxSelectorWithDef, splitOnNonEscaped)
+import WarehousePlanner.Selector (MParser, parseSelector, parseShelfSelector, parseBoxSelectorWithDef, splitOnNonEscaped, parseBoxNumberSelector)
 import WarehousePlanner.WPL.Types
 import Text.Megaparsec as P hiding((<?>))
 import Text.Megaparsec.Char.Lexer qualified as L
@@ -737,9 +737,11 @@ instance Parsable Command where
             return $ RunShelfActions debug sel
         , withStatement "shelf:action" do
             lexeme1 ("shelf:action" <|> "saction")
-            depM <- o1 ["dependencies", "dependency", "dep", "deps", "d"]
-            extraM <- o1 ["extra", "extra-dep", "x-dep", "x"]
-            return $ SetShelfAction depM extraM
+            (depM, extraM, breakM, orderM) <- o4 ["dependencies", "dependency", "dep", "deps", "d"]
+                                              ["extra", "extra-dep", "x-dep", "x"]
+                                              ["start", "break"]
+                                              ["order"]
+            return $ SetShelfAction depM extraM breakM orderM
 
 
         ]
@@ -862,7 +864,16 @@ instance Parsable ExitMode where
   p = ("^" $> ExitOnTop) <|> (">" $> ExitLeft )
 -- * Option utilites
 
+instance Parsable SlotBreak where
+   p = do
+        t <- lexeme1 str
+        return $ parseSlotBreak t
    
+instance Parsable BoxNumberSelector where
+   p = do
+         "^"
+         t <- lexeme1 str
+         return $ parseBoxNumberSelector True t
 instance Parsable Text
   where p = str
   
@@ -928,7 +939,13 @@ o3 ka kb kc = do
     (abm, cm) <- fromMaybe (Nothing, Nothing) <$> ( optional $ combine2 (combine2 (o0 ka) (o kb)) (o kc) )
     let (am, bm) = fromMaybe (Nothing, Nothing) abm
     return (am, bm, cm)
-
+o4 :: (Parsable a, Parsable b, Parsable c, Parsable d, Show a, Show b, Show c, Show d) => [Text] -> [Text] -> [Text] -> [Text] -> MParser (Maybe a, Maybe b, Maybe c, Maybe d)
+o4 ka kb kc kd = do
+    checkForDuplicate [ka, kb, kc, kd]
+    (abcM, dM) <- fromMaybe (Nothing, Nothing) <$> (optional $ combine2 (combine2 (combine2 (o0 ka) (o kb)) (o kc)) (o kd))
+    let (abM, cM) = fromMaybe (Nothing, Nothing) abcM
+        (aM, bM) = fromMaybe (Nothing, Nothing) abM
+    return (aM, bM, cM, dM)
 -- | Check that all set of key don't have duplicate
 -- raise a parsing in error if needed
 checkForDuplicate :: [[Text]] -> MParser ()

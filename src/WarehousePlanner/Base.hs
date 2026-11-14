@@ -62,6 +62,7 @@ module WarehousePlanner.Base
 , partitionShelves
 , printTagOperation, printTagOperations
 , printDim
+, printSlotBreak
 , readOrientations
 , readTagAndPatterns
 , shelfBoxes
@@ -1622,6 +1623,12 @@ parseSlotBreak breaks = case breaks of
   "new-slice" -> NewSlice 
   "new-shelf" -> NewShelf 
   _ -> error $ unpack breaks <> " is not a valid slot break"
+
+printSlotBreak :: SlotBreak -> Text
+printSlotBreak b  = case b of
+   NewSlot -> "new-slot"
+   NewSlice -> "new-slice"
+   NewShelf -> "new-shelf"
 -- * Misc 
 -- | reorder box so they are ordered by column across all
 -- the given shelves.
