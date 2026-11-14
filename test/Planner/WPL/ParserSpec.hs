@@ -96,6 +96,13 @@ instance {-# OVERLAPPING #-} Arbitrary (Maybe BoxSelector) where
                    SelectAllBoxes -> Nothing
                    s -> Just s
 
+instance {-# OVERLAPPING #-} Arbitrary (Maybe BoxNumberSelector) where
+   arbitrary = do
+                p <- arbitrary
+                return $ if isDefault p
+                         then Nothing
+                         else Just p
+
 deriving instance Generic (Selector a)
 instance Arbitrary (Selector a) where
    arbitrary = do 
@@ -149,6 +156,11 @@ instance Arbitrary OrderingKey where
 
 deriving instance Generic (BoxNumberSelector)
 instance Arbitrary (BoxNumberSelector) where
+   arbitrary = genericArbitrary
+   shrink = genericShrink
+
+deriving instance Generic SlotBreak
+instance Arbitrary SlotBreak where
    arbitrary = genericArbitrary
    shrink = genericShrink
 

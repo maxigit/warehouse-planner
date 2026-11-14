@@ -15,7 +15,7 @@ extra-deps:
   commit: 576bac0b0b4ad99b415a92c5bd2ef05e944f2dae
 allow-newer: true
 nix:
-  enable: true
+  enable: false
   pure: true
   shell-file: shell.nix
     

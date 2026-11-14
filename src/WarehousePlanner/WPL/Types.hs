@@ -44,7 +44,14 @@ data Command = Move { cSource :: Maybe CBoxSelector
                            , cStmt ::   Statement
                            }
              | RunShelfActions Bool (CSelector ShelfSelector)
-             | SetShelfAction (Maybe ShelfSelector) (Maybe ShelfSelector) Statement
+             | SetShelfAction { ssaDependencies :: Maybe ShelfSelector
+                              , ssaExtraDependencies :: Maybe ShelfSelector
+                              , ssaPick :: Maybe BoxSelector
+                              , ssaStock :: Maybe BoxSelector 
+                              , ssaBreak :: Maybe SlotBreak
+                              , ssaOrder :: Maybe BoxNumberSelector
+                              , ssaAction:: Statement
+                              }
      deriving (Show, Eq)
      {-
        deriving Eq
@@ -163,6 +170,11 @@ instance HasDefault ShelfSelector where
    isDefault SelectAllShelves = True
    isDefault _ = False
    
+instance HasDefault BoxNumberSelector where 
+  def = BoxNumberSelector NoLimit NoLimit NoLimit
+  isDefault (BoxNumberSelector NoLimit NoLimit NoLimit) = True
+  isDefault _ = False
+
 instance HasDefault s => HasDefault (CSelector s) where
     def = CSelector def
     isDefault (CSelector x) = isDefault x
