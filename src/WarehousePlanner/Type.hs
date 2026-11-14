@@ -136,7 +136,7 @@ data OrientationStrategy  = OrientationStrategy
 
 showOrientationStratety OrientationStrategy{..} =
      (if not osUseDiagonal then "!" else "")
-     <> maybe "" tshow osMaxLenght
+     <> mshow osMaxLenght
      <> "x"
      <> case osMinDepth of 
             d | d > 1 -> tshow d<> ":"
@@ -145,9 +145,8 @@ showOrientationStratety OrientationStrategy{..} =
      <> "x"
      <> mshow osMaxHeight
      <> showOrientation' osOrientations
-     where mshow mi = case mi of
-                        Just i | i > 1 -> tshow i
-                        _ -> ""
+     where mshow = maybe "" tshow 
+
 -- | Every box belongs to a shelf.
 -- Non placed boxes belongs to the special default shelf
 newtype BoxId s = BoxId_ (Arg Int (HiSTRef Box s)) deriving (Eq, Ord)
