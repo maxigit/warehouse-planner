@@ -548,16 +548,15 @@ executeCommand ec command = case command of
                                                                                                                                                    NoLimit
                                                                                                               }
                                                  in Action $ TagFor (CSelector selectAllBoxes)
-                                                             (fromTag'Operations [("@start", SetValues [breakVal DropOnNewSlot])])
+                                                             (fromTag'Operations [("@start", SetValues ["drop-" <> breakVal break])])
                                                              (Action $ TagFor limit1
                                                                     (fromTag'Operations [("@start", SetValues [breakVal break])])
                                                                     a
                                                              )
                  breakVal break = case break of 
-                                       StartNewSlot -> "new-slot"
-                                       StartNewSlice -> "new-slice"
-                                       StartNewShelf -> "new-shelf"
-                                       DropOnNewSlot -> "drop"
+                                       NewSlot -> "new-slot"
+                                       NewSlice -> "new-slice"
+                                       NewShelf -> "new-shelf"
              when debug do
                   traceShowM (saShelves action)
                   traceM . unpack $ prettyWPL statement

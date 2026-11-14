@@ -15,7 +15,7 @@ module WarehousePlanner.Slices
 , groupSlicesWithKey
 )where 
 import ClassyPrelude hiding (uncons, stripPrefix )
-import WarehousePlanner.Type (BoxBreak(..))
+import WarehousePlanner.Type (SlotBreak(..))
 import Data.Foldable qualified as F
 import Data.Bifoldable (Bifoldable(..))
 -- | An ordered list. Modifying it using fmap doesn't reorder it.
@@ -133,30 +133,29 @@ unconsSlices (Slices (OrderedList key'slices)) =
 
   
 
-unconsSlicesTo :: Eq shelf => (a -> shelf) -> Maybe shelf -> Maybe BoxBreak -> Slices (Int, k) a -> Maybe (a, ((Int, k),(Int, k),(Int, k)), Slices (Int, k) a)
+unconsSlicesTo :: Eq shelf => (a -> shelf) -> Maybe shelf -> Maybe SlotBreak -> Slices (Int, k) a -> Maybe (a, ((Int, k),(Int, k),(Int, k)), Slices (Int, k) a)
 unconsSlicesTo _ _ Nothing slices = unconsSlices slices
 unconsSlicesTo _ _ _ (Slices (OrderedList [])) = Nothing
-unconsSlicesTo getShelf  Nothing (Just StartNewShelf) slices = unconsSlicesTo getShelf Nothing (Just StartNewSlice) slices
-unconsSlicesTo getShelf js@(Just prevShelf) (Just StartNewShelf) slices = 
+unconsSlicesTo getShelf  Nothing (Just NewShelf) slices = unconsSlicesTo getShelf Nothing (Just NewSlice) slices
+unconsSlicesTo getShelf js@(Just prevShelf) (Just NewShelf) slices = 
   -- try next slice until different shelf
-  case unconsSlicesTo getShelf Nothing (Just StartNewSlice) slices of
+  case unconsSlicesTo getShelf Nothing (Just NewSlice) slices of
     Nothing -> Nothing
     Just new@(a, _, _) | getShelf a /= prevShelf -> Just new
     Just (_, _, newSlices) -> 
-      unconsSlicesTo getShelf js (Just StartNewShelf) newSlices
-unconsSlicesTo _ _ (Just StartNewSlice) slices =
+      unconsSlicesTo getShelf js (Just NewShelf) newSlices
+unconsSlicesTo _ _ (Just NewSlice) slices =
   case unconsSlices slices of
     Nothing -> Nothing
     Just new@(_, (_,(0,_),_), _) -> Just new
     --               ^
     --               +-- new slices mean slot number = 0
     _ -> unconsSlices (dropTillSlice slices)
-unconsSlicesTo _ _ (Just StartNewSlot) slices =
+unconsSlicesTo _ _ (Just NewSlot) slices =
   case unconsSlices slices of
     Nothing -> Nothing
     Just new@(_, (_,_,(0,_)), _) -> Just new
     _ -> unconsSlices (dropTillSlot slices)
-unconsSlicesTo getShelf js (Just DropOnNewSlot) slices = unconsSlicesTo getShelf js Nothing slices
 
 dropTillSlice, dropTillSlot :: Slices k a -> Slices k a
 dropTillSlice (SlicesO slices) = cleanSlices $ SlicesO (drop 1 slices)
