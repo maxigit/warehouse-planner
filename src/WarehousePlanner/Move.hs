@@ -533,15 +533,25 @@ assignBoxesToPositions slices simBoxes = do
   let go _ _ [] = return []
       go prevShelf slices allboxes@(box:boxes) =
         case (unconsSlicesTo fst prevShelf (boxBreak box) slices) of
-             Nothing -> return allboxes
-             Just ((shelf'pos), _, newSlices) ->
-              shiftBox box shelf'pos >> go (Just $ fst shelf'pos) newSlices boxes 
+             Nothing -> return $ map Left allboxes
+             Just ((shelf'pos), _, newSlices) -> do
+                  shiftBox box shelf'pos 
+                  result <- go (Just $ fst shelf'pos) newSlices boxes 
+                  return $ Right box : result
       shiftBox box (shelf, Position offset orientation) = do
             _ <- updateBox (\box_ -> box_ { orientation = orientation
                                           , boxOffset = offset}) box
             assignShelf (Just shelf) box
-  leftOver <- go Nothing (numSlices slices) boxes 
-  return $ splitSimilar (length boxes - length leftOver) simBoxes
+  leftOrMoveds <- go Nothing (numSlices slices) boxes 
+  let (leftOver, moved) = partitionEithers leftOrMoveds
+  return (mkSimilar moved, mkSimilar leftOver)
+  where mkSimilar ss = case groupSimilar key ss of
+                          [g] -> Just g
+                          [] -> Nothing
+                          _ -> error "the unexpected happened : boxes are guaranteed to be similar"
+        key = const (similarKey simBoxes)
+
+
 
 data SlotBounds = SlotBounds { lowerB, upperB :: Maybe Text }
     deriving (Show, Eq, Ord)
