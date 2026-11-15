@@ -32,7 +32,7 @@ spec = describe "Full scenario" do
                , ["_pending", "370" , ""     , ""    , ""     , ""   ]
                , ["top"     , "53"  , "353"  , "300" , "15"   , "224"]
                ]
-             , [              "782" , "1155" , "373" , "68"   , "886"]
+             , ["<Total>"   , "782" , "1155" , "373" , "68"   , "886"]
              )
    context "rearrange" do
       let dir = "data/Rearrange"

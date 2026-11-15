@@ -160,6 +160,7 @@ instance Arbitrary (BoxNumberSelector) where
    shrink = genericShrink
 
 deriving instance Generic SlotBreak
+
 instance Arbitrary SlotBreak where
    arbitrary = genericArbitrary
    shrink = genericShrink

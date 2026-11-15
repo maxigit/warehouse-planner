@@ -174,7 +174,7 @@ pureSpec = describe "Parsing" do
                                      ]
                                )
    it "bug" do
-     let move s = Action $ Move Nothing Nothing [] (pure $ NE.singleton (ExitLeft, s))
+     let move s = Action $ Move Nothing Nothing [] (Right $ NE.singleton (ExitLeft, s))
      [   "#batch=M "
        , "     | #-first to> C2"
        , "     | #first tam @C1"
