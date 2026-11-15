@@ -737,7 +737,7 @@ summary = do
                           ( (words "used total free %used floor")
                           : (map renderSI $ Map'.elems infos)
                           )
-            , (renderSI total)
+            , ("<Total>" : renderSI total)
             )
 
 
