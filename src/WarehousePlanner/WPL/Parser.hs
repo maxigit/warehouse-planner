@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.WPL.Parser
 (
 wplParser
@@ -735,7 +736,7 @@ instance Parsable Command where
             debug  <- (lexeme1 "debug:" $> True) <|> return False
             sel <- p
             return $ RunShelfActions debug sel
-        , withStatement "shelf:action" do
+        , fmap traceShowId $ withStatement "shelf:action" do
             lexeme1 ("shelf:action" <|> "saction")
             (depM, extraM, breakM, orderM, pickM, stockM) <- o6 ["dependencies", "dependency", "dep", "deps", "d"]
                                               ["extra", "extra-dep", "x-dep", "x"]
@@ -938,8 +939,7 @@ o2 a b = do
 o3 :: (Parsable a, Parsable b, Parsable c, Show a, Show b, Show c) => [Text] -> [Text] -> [Text] -> MParser (Maybe a, Maybe b, Maybe c)
 o3 ka kb kc = do
     checkForDuplicate [ka, kb, kc]
-    (abm, cm) <- fromMaybe (Nothing, Nothing) <$> ( optional $ combine2 (combine2 (o0 ka) (o kb)) (o kc) )
-    let (am, bm) = fromMaybe (Nothing, Nothing) abm
+    (am, bm, cm) <- fromMaybe (Nothing, Nothing, Nothing) <$> ( optional $ combine3 (o0 ka) (o kb) (o kc))
     return (am, bm, cm)
 
 o4 :: (Parsable a, Parsable b, Parsable c, Parsable d, Show a, Show b, Show c, Show d) => [Text] -> [Text] -> [Text] -> [Text] -> MParser (Maybe a, Maybe b, Maybe c, Maybe d)
@@ -961,7 +961,7 @@ o5 ka kb kc kd ke = do
     return (a, b, c, d, e)
 
 o6 :: (Parsable a, Parsable b, Parsable c, Parsable d, Parsable e, Parsable f, Show a, Show b, Show c, Show d, Show e, Show f) => [Text] -> [Text] -> [Text] -> [Text] -> [Text] -> [Text] -> MParser (Maybe a, Maybe b, Maybe c, Maybe d, Maybe e, Maybe f)
-o6 ka kb kc kd ke kf = do
+o6 ka kb kc kd ke  kf = do
     checkForDuplicate [ka, kb, kc, kd, ke, kf]
     (abc, def) <- fromMaybe (Nothing, Nothing) <$>
         optional (combine2 (combine3 (o0 ka) (o kb) (o kc)) (combine3 (o kd) (o ke) (o kf)))
