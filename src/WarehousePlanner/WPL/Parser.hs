@@ -736,7 +736,7 @@ instance Parsable Command where
             debug  <- (lexeme1 "debug:" $> True) <|> return False
             sel <- p
             return $ RunShelfActions debug sel
-        , fmap traceShowId $ withStatement "shelf:action" do
+        , withStatement "shelf:action" do
             lexeme1 ("shelf:action" <|> "saction")
             (depM, extraM, breakM, orderM, pickM, stockM) <- o6 ["dependencies", "dependency", "dep", "deps", "d"]
                                               ["extra", "extra-dep", "x-dep", "x"]
