@@ -6261,10 +6261,6 @@ E03.02/3,=5:2:1,M32L07DC-WEY#top,69,42,38,|=
 E03.02/3,=5:3:1,M32L07DC-WEY#top,69,42,38,|=
 :END:
 
-:FreezeOrder:
-header
-M32L07DC#ghost^^^-{ow}
-:END:
 
 :Rearrange_done_@sticky_low_top_slotted:
 box,actions
@@ -6759,10 +6755,6 @@ E02.04/3,=5:2:1,M71L07DF-THW*,69,42,38,|=
 E02.04/3,=5:3:1,M71L07DF-THW*,69,42,38,|=
 :END:
 
-:FreezeOrder:
-header
-M71L07DF#ghost^^^-{ow}
-:END:
 
 :Rearrange_done:
 box,actions
@@ -7012,10 +7004,6 @@ E04.01/3,=4:1:1,M22L07DL-GRO*#top,68,42,54,=|
 E04.01/3,=4:2:1,M22L07DL-GRO*#top,68,42,54,=|
 :END:
 
-:FreezeOrder:
-header
-M22L07DL#ghost^^^-{ow}
-:END:
 
 :Rearrange_done:
 box,actions

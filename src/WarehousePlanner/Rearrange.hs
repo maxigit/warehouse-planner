@@ -15,12 +15,12 @@ import Data.Text(splitOn, split)
 import Data.Text qualified as Text
 -- import Data.Map qualified as Map
 import Control.Monad (zipWithM)
-import Control.Monad.State (modify)
+import Control.Monad.State (modify, gets)
 import Data.Set qualified as Set
 import Data.Map qualified as Map
 import GHC.Utils.Monad (mapAccumLM)
 import Data.List (unfoldr)
-
+import Data.Semigroup(Arg(..))
 -- * Type {{{1
 data ShiftStrategy = ShiftAll | StayInPlace deriving (Show, Eq)
 
@@ -243,19 +243,32 @@ shiftUsedInBucketsWithStrategy isUsed bucket'strategies =  let
 -- for given boxes in the given order
 freezeOrder :: [BoxId s] -> WH () s
 freezeOrder boxesInOrder =  do
-  let inOrderSet = Set.fromList boxesInOrder
-      go [] bs = bs
-      go _ [] = []
-      go (o:os) (b:bs) = 
-                -- replace the current box with the first in boxesInOrder  if current
-                -- box is part of the boxesInOrder
-                if b `member` inOrderSet
-                then o : go os bs
-                else b : go (o:os) bs
-  modify \warehouse -> warehouse {boxMap = fmap (fromList . go (toList boxesInOrder) . toList) (boxMap warehouse) }
-            
-  
+  let idsInOrder = [ i | BoxId_ (Arg i _ ) <- boxesInOrder ]
+      idsInOriginalOrder = sort idsInOrder
+      idMap :: Map Int Int
+      idMap = mapFromList $ zip idsInOrder idsInOriginalOrder
+      swapId :: BoxId s -> BoxId s
+      swapId b@(BoxId_ (Arg i ref)) = case lookup i idMap of 
+                                     Just newId -> BoxId_ (Arg newId ref)
+                                     Nothing -> b
+  -- update boxId in shelves (without reordering)
+  shelves_ <- mapM findShelf =<< gets shelves
+  void $ forM shelves_ \shelf -> do
+      let updatedBoxes = fmap swapId (_shelfBoxes shelf)
+      updateShelf  (\s -> s { _shelfBoxes = updatedBoxes } ) shelf
 
+  -- update the boxId in the box itself
+  forM boxesInOrder (updateBox (\b -> b { _boxId = swapId (_boxId b) }))
+      
+  -- reorder boxMap
+  modify \warehouse -> do 
+          warehouse { boxMap = fmap (sort . fmap swapId) (boxMap warehouse)
+                          --   ^^^^         ^^^^
+                          --     |           |
+                          --     |           +---- sequence
+                          --     +---------------- Map Style
+                    }
+            
 -- * Filling shelve
 data MakeDimension = MakeDimension 
                      { mdShelfBoxToDim :: Dimension -> Dimension -> Dimension -> Dimension -- ^ shelf box dimension to update

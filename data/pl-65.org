@@ -6119,10 +6119,6 @@ E04.01/3,=4:1:1,M22L07DL-GRO*#top,68,42,54,=|
 E04.01/3,=4:2:1,M22L07DL-GRO*#top,68,42,54,=|
 :END:
 
-:FreezeOrder:
-header
-M22L07DL#ghost^^^-{ow}
-:END:
 
 :Rearrange_done:
 box,actions
