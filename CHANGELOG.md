@@ -1,3 +1,18 @@
+# 3.3.0
+Add ShelfAction
+- Wpl action are saven in shelf tags. Actions can be executed later
+  accordnig to dependency graph.
+  Actions start by empty the shelves they work on and lock every boxes moved by their dependencies.
+  Auto break (start and drop) can be added using the start: option.
+
+Replace BoxBreak by Start and Drop
+- Allows to drop boxes 
+
+
+FreezeOrder
+- works (was bugged previously)
+- add freeze:order WPL command
+
 # 3.2.1
 Add @traceEmpty tag
 Similar to @noEmpty but output a trace instead of throwing an error.
