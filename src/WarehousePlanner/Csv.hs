@@ -42,7 +42,8 @@ import Control.Monad hiding(mapM_,foldM)
 -- import Data.List.Split (splitOn)
 import Data.List qualified as List
 import ClassyPrelude hiding(readFile)
-import Control.Monad.State hiding(fix,mapM_,foldM)
+import Control.Monad.State
+import Control.Monad.Trans.Except
 import Text.Regex qualified as Rg
 import Text.Regex.Base.RegexLike qualified as Rg
 import Data.Text(splitOn)
@@ -234,7 +235,7 @@ given ceiling.
 readShelves defaultOrientator filename = do
     csvData <- BL.readFile filename
     -- Call Csv.decode but add default value to bottom if not present in header
-    let decode = asum
+    let decode = runExcept $ asum $ map except
           [ Csv.decode Csv.HasHeader csvData
           , fmap (Vec.map (\(name, description, l, w, h, shelfType) ->
                    (name, description, l, w, h, shelfType, "0"))
@@ -325,7 +326,7 @@ same),
 readUpdateShelves :: FilePath-> IO (WH s [Shelf s])
 readUpdateShelves filename = do
   csvData <- BL.readFile filename
-  let decode =  asum
+  let decode =  runExcept $ asum $ map except
           [ Csv.decode Csv.HasHeader csvData
           , fmap (Vec.map (\(name, l, w, h)->
                      (name, l, w, h, "",Nothing))

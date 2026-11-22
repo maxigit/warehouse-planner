@@ -53,11 +53,12 @@ sameAs' xs ys = do
       y = parse "right" ys
   x `shouldSatisfy` isRight
   x `shouldBe` y
-  where parse desc ts = P.parse wplParserI desc (intercalate "\n" ts) 
+  where parse desc ts = P.parse wplParserI desc (intercalate "\n" $ "version:1": ts) 
 
 parse :: Text -> Either _ [Statement]
 -- parse = P.parse (P.dbg "WPL" wplParser) "test"
-parse = P.parse wplParserI "test"
+parse = P.parse wplParserI "test" . ("version:1\n" <>) -- @g
+-- @G parse = P.parse wplParserI "test"
 
 parse' :: [Text] -> Either _ [Statement]
 parse' = parse . unlines
@@ -97,7 +98,7 @@ pureSpec = describe "Parsing" do
                    )
    it "parses cases with initial break (smaller)" do
       --  123456789
-      [  "BOXES"
+      [ "BOXES"
        , "  | A to^ S1"
        , "  | B to^ S2"
        ] `sameAs'` [  "BOXES"

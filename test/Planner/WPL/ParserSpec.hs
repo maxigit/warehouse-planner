@@ -324,10 +324,6 @@ instance Arbitrary Text where
 
    shrink _ = []
 
-instance Arbitrary  a => Arbitrary (NonEmpty a) where
-    arbitrary = liftA2 (:|) arbitrary arbitrary
-    shrink _ = []
-
 
 spec :: Spec
 -- spec = parallel pureSpec

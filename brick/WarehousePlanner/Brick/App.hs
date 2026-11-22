@@ -28,7 +28,9 @@ import Brick.BChan qualified as B
 import Graphics.Vty.Attributes qualified as V
 import Graphics.Vty.Input.Events qualified as V
 import Graphics.Vty qualified as V
-import Control.Monad.State (gets, get, modify, put, zipWithM)
+import Graphics.Vty.CrossPlatform qualified as V
+import Control.Monad.State (gets, get, modify, put)
+import Control.Monad (zipWithM)
 import Data.List.NonEmpty(NonEmpty(..), (!!))
 import Data.Foldable qualified as F
 import Brick.Widgets.Center qualified as B
@@ -535,7 +537,7 @@ startFileWatcher dir enqueueEvent = FS.withManager \mgr -> do
   forever $ threadDelay maxBound
   where fileModified event = 
            case event of 
-                FS.Modified _ _ _  | FS.eventIsDirectory event == False -> True
+                FS.Modified _ _ _  | FS.eventIsDirectory event == FS.IsFile -> True
                 _ -> False
 
 

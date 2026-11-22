@@ -381,7 +381,7 @@ executeCommand ec command = case command of
                      boxes <- narrowCSelector sel ec >>= getBoxes
                      return $ headMay boxes
         forM shelves \shelf -> do
-           [l, w, h] <-
+           lwh_ <-
              zipWithM (\exp defAcc -> do
                              let exWithRef = replaceRef <$> exp
                                  replaceRef ref = case P.parse (parseRef $ defAcc . sMinD) (unpack ref) ref of
@@ -395,9 +395,13 @@ executeCommand ec command = case command of
                       )
                       [le, we, he]
                       ds
-           let newMin = Dimension l w h
-               newMax  = maxDimension [newMin, maxDim shelf]
-           updateShelf (\s  -> s { minDim = newMin, maxDim = newMax }) shelf
+
+           case lwh_ of 
+             [l, w, h] -> do
+                       let newMin = Dimension l w h
+                           newMax  = maxDimension [newMin, maxDim shelf]
+                       updateShelf (\s  -> s { minDim = newMin, maxDim = newMax }) shelf
+             _ -> error "Shouldn't happend: l w and h should be provided"
         executeStatement ec statement <* forM shelves (\orig -> updateShelf (\s -> s { minDim = minDim orig, maxDim = maxDim orig }) orig )
     ResizeBox mode selector statement -> do 
         boxes <- narrowCSelector selector ec >>= getBoxes
@@ -431,7 +435,7 @@ executeCommand ec command = case command of
                    boxes <- narrowCSelector sel ec >>= getBoxes
                    return $ headMay boxes
       newss <- forM shelves \shelf -> do
-           [ls, ws, hs] <-
+           lwhss_ <-
              zipWithM (\exprs defAcc -> do
                 forM exprs \ar -> 
                     forM ar
@@ -448,7 +452,10 @@ executeCommand ec command = case command of
              )
              [les, wes, hes]
              ds
-           splitShelf shelf (absRelsToRels ls) (absRelsToRels ws) (absRelsToRels hs)
+           case lwhss_ of
+             [ls, ws, hs] -> 
+                          splitShelf shelf (absRelsToRels ls) (absRelsToRels ws) (absRelsToRels hs)
+             _ -> error "Shouldn't happend: l w and h should be provided"
       newEc <- executeStatement ec { ecShelves = ecShelves ec <> InExcluded (Just $ concatMap (map shelfId) newss) Nothing }  statement <* forM newss \(updated:_) ->  unSplitShelf updated
       return newEc { ecShelves = ecShelves ec } -- ^ remove newly created shelves.
     ---------

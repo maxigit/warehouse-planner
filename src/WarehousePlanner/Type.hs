@@ -14,6 +14,8 @@ import ClassyPrelude
 import Control.Monad.State
 import Diagrams.Prelude(Colour)
 import Control.Monad.ST
+import Control.Monad.Fix(MonadFix(..))
+import Control.Monad.Fail(MonadFail(..))
 import Data.Set qualified as Set
 import Data.Map qualified as Map 
 import System.FilePath.Glob qualified as Glob
@@ -23,6 +25,7 @@ import Data.Text qualified as Text
 import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import WarehousePlanner.History.Types
 import Data.Foldable qualified as F
+import Data.Kind(Type)
 
 -- * Types 
 data Dimension = Dimension { dLength :: !Double
@@ -373,7 +376,7 @@ class BoxIdable a where
 class (BoxIdable b) => Box' b where
   findBox :: b s  -> WH s (Box s)
 class Referable a where
-  type Ref a :: *
+  type Ref a :: Type
   getRef :: a -> Ref a
 
 class HasTags a where

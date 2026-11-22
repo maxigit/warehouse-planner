@@ -65,7 +65,7 @@ lexeme1 p = do
 
 newLine = hspaces >> (void eol <|> eof)
 wplParserI ::  MParser [Statement]
-wplParserI = (optional "version:1") *> (some $ L.nonIndented spaces $ statement) <*  spaces <* eof
+wplParserI = "version:1" *> (some $ L.nonIndented spaces $ statement) <*  spaces <* eof
 
 
 statement :: MParser Statement

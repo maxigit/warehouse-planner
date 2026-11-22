@@ -164,7 +164,7 @@ select wpl = do
 runWith wpl action = execWH (emptyWarehouse $ fromGregorian 2024 07 22) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes
-   let statements = case parseWPL "<source>" wpl of
+   let statements = case parseWPL "<source>" ("version:1\n" <> wpl) of
                          Right st -> st
                          Left err -> error $ unpack err
    runWPLWith action statements
