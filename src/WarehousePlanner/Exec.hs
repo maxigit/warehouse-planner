@@ -12,14 +12,14 @@ import Unsafe.Coerce (unsafeCoerce)
 import Data.Semigroup(Arg(..))
 
 -- * Exec 
-execWH :: MonadIO m => Warehouse RealWorld -> WH a RealWorld -> m a
-execWH warehouse0 wh = liftIO $ stToIO $ evalStateT wh warehouse0
+execWH :: MonadIO m => Warehouse RealWorld -> WH RealWorld a -> m a
+execWH warehouse0 (WH wh) = liftIO $ stToIO $ evalStateT wh warehouse0
 
-runWH :: MonadIO m => Warehouse RealWorld -> WH a RealWorld -> m (a, Warehouse RealWorld)
-runWH warehouse0 wh = liftIO $ stToIO $ runStateT wh warehouse0
+runWH :: MonadIO m => Warehouse RealWorld -> WH RealWorld a -> m (a, Warehouse RealWorld)
+runWH warehouse0 (WH wh) = liftIO $ stToIO $ runStateT wh warehouse0
 
 -- * Deep copy 
-copyWarehouse :: forall t s . WH (WH (Warehouse s) s) t
+copyWarehouse :: forall t s . WH t (WH s (Warehouse s))
 copyWarehouse = do
   wh0 <- get
   shelfBuilders <- mapM copyShelf (toList $ shelves wh0)
@@ -42,7 +42,7 @@ copyWarehouse = do
     get
 
 
-copyShelf :: ShelfId t -> WH (WH (ShelfId t, ShelfId s) s) t
+copyShelf :: ShelfId t -> WH t (WH s (ShelfId t, ShelfId s))
 copyShelf sId = do
   Shelf{..} <- findShelf sId
   return $ do
@@ -54,7 +54,7 @@ copyShelf sId = do
     updateShelf (\s ->  s {flow = flow} ) nshelf
     return (sId, nId)
   
-copyBox :: Box t -> WH (ShelfId s -> Map (ShelfId t) (ShelfId s) -> WH (Box s) s) t
+copyBox :: Box t -> WH t (ShelfId s -> Map (ShelfId t) (ShelfId s) -> WH s (Box s))
 copyBox Box{..} = return $ \defaultShelf shelfMapId -> do
   let shelf = case boxShelf of
                 Just s -> findWithDefault defaultShelf s shelfMapId 

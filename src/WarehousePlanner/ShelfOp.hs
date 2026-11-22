@@ -46,11 +46,11 @@ sTopOffset s = dHeight (sMaxD s) + sBottomOffset s
 sAvailableD :: (ShelfDimension -> Dimension) -> ShelfDimension -> Dimension
 sAvailableD d s = d s <> invert ( sUsedD s)
 
-shelfDimension :: Shelf s -> WH ShelfDimension s
+shelfDimension :: Shelf s -> WH s ShelfDimension
 shelfDimension shelf = ShelfDimension (minDim  shelf) (maxDim shelf) (bottomOffset  shelf) <$> maxUsedOffset shelf
 
 -- | Split a shelf into 2, 4 or 8 subshelves
-splitShelf :: Shelf s -> [Double] -> [Double] -> [Double] ->  WH [Shelf s] s
+splitShelf :: Shelf s -> [Double] -> [Double] -> [Double] ->  WH s [Shelf s]
 splitShelf shelf@Shelf{..} ls ws hs = do
   let splits = generateGrid minDim ls ws hs
       adjustMax last accessor gDim = 
@@ -153,7 +153,7 @@ dimInSplit Split{..} dim = let
 
 -- | Unsplit a shelf by combining all its "children<
 -- to it
-unSplitShelf :: Shelf s -> WH (Shelf s) s
+unSplitShelf :: Shelf s -> WH s (Shelf s)
 unSplitShelf shelf = do
   children <- findShelfBySelector (parseSelector $ shelfName shelf ++ "/*") >>= mapM findShelf
   let oMaps = [offsetsFromIndex (minDim shelf) i f children
@@ -266,18 +266,18 @@ parseAccessor = P.choice $ map  (\(s ,a) -> P.try (P.string s) >> return a)
   where pre (names, a) = [(name, a) | name <- names ]
 
 
-type RefToSDim s = Text -> WH ShelfDimension s
+type RefToSDim s = Text -> WH s ShelfDimension
 
-evalExpr :: RefToSDim s -> Expr -> WH Double s
+evalExpr :: RefToSDim s -> Expr -> WH s Double
 evalExpr refToSDim expr = do
    exprDouble <- traverse (evalRef refToSDim) expr
    return $ E.evalExpr exprDouble
 
-evalRef :: RefToSDim s -> RefE -> WH Double s
+evalRef :: RefToSDim s -> RefE -> WH s Double
 evalRef refToSDim (RefE ref accessor) = do
   fmap accessor (refToSDim ref)
 
-dimFromRef :: Text -> Text -> WH ShelfDimension s
+dimFromRef :: Text -> Text -> WH s ShelfDimension
 dimFromRef shelfName ref = do
   let refName = transformRef shelfName ref
   ids <- findShelfBySelector (Selector (NameMatches [MatchFull refName]) [])
@@ -287,7 +287,7 @@ dimFromRef shelfName ref = do
               _ -> error $ "Find multiple shelves for " ++ unpack shelfName ++ "when evaluating formula."
   shelfDimension $ shelf
 
-evalExprFromShelf :: Text -> Expr -> WH Double s
+evalExprFromShelf :: Text -> Expr -> WH s Double
 evalExprFromShelf shelfname = evalExpr (dimFromRef shelfname)
 
 transformRef :: Text -> Text -> Text
@@ -317,20 +317,20 @@ transformRef' _ [] = []
 -- transformRef os cs = error $ "Non-exhaustive patterns catch "
 --    ++ "\n\t[" ++ os ++ "]\n\t[" ++ cs  ++ "]"
 
-dimToFormula :: (ShelfDimension -> Dimension) -> RefToSDim s -> (Text, Text, Text) -> WH Dimension s
+dimToFormula :: (ShelfDimension -> Dimension) -> RefToSDim s -> (Text, Text, Text) -> WH s Dimension
 dimToFormula sDim refToDim (ls, ws, hs) = do
   l <- eval (dLength . sDim) ls
   w <- eval (dWidth . sDim) ws
   h <- eval (dHeight . sDim) hs
   return $ Dimension l w h
-  where -- eval :: (ShelfDimension -> Double) -> Text -> WH Double s
+  where -- eval :: (ShelfDimension -> Double) -> Text -> WH s Double
         eval accessor s = evalExpr refToDim (parseExpr accessor s)
 
 
-bottomToFormula :: Text -> Text -> WH Double s
+bottomToFormula :: Text -> Text -> WH s Double
 bottomToFormula name bs = evalExprFromShelf name  (parseExpr sBottomOffset bs)
 -- | Create a new shelf using formula
-newShelfWithFormula :: (WH Dimension s) -> (WH Dimension s) -> (WH Double s) -> BoxOrientator -> FillingStrategy -> Text -> Maybe Text ->  WH (Shelf s) s
+newShelfWithFormula :: (WH s Dimension) -> (WH s Dimension) -> (WH s Double) -> BoxOrientator -> FillingStrategy -> Text -> Maybe Text ->  WH s (Shelf s)
 newShelfWithFormula dimW dimW' bottomW boxo strategy name tags = do
   dim <- dimW
   dim' <- dimW'
@@ -385,7 +385,7 @@ Extra objects
 
 
 ::rST -}
-dimForSplit :: Maybe (Box s) -> Shelf s -> Text -> WH ShelfDimension s
+dimForSplit :: Maybe (Box s) -> Shelf s -> Text -> WH s ShelfDimension
 dimForSplit boxm shelf ref = 
   case unpack ref of
     "" -> shelfDimension shelf

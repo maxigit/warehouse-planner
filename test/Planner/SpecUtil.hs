@@ -16,7 +16,7 @@ import Data.Text (breakOn, splitOn)
 
 -- | Create shelves from a list on name.
 -- ex: "S1 S2" creates two shelves S1 and S2
-makeShelves :: (?dim :: Map Text Dimension) => [Text] -> WH [Shelf s] s
+makeShelves :: (?dim :: Map Text Dimension) => [Text] -> WH s [Shelf s]
 makeShelves = mapM go where
     go name0 = let (name, tags) = breakOn "#" name0
                    tagm = case tags of
@@ -33,7 +33,7 @@ makeShelves = mapM go where
 --       "S2 B#2"
 --       "S1 C-1"
 -- create boxes A-1 A-2 B & C1 in the corresponding shelves (S1 and S2)
-makeBoxes :: (?dim :: Map Text Dimension) => [Text] -> WH [(Box s, Shelf s)] s
+makeBoxes :: (?dim :: Map Text Dimension) => [Text] -> WH s [(Box s, Shelf s)]
 makeBoxes shelfboxess = do
    boxess <- forM shelfboxess  \shelf'boxes  -> do
                   let (shelf:boxes) = words shelf'boxes
@@ -51,7 +51,7 @@ makeBoxes shelfboxess = do
          dimFor style = findWithDefault dim style ?dim
 
 -- | Create boxes but moves them according to the partition mode
-makeBoxesWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH [(Box s, Shelf s)] s
+makeBoxesWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH s [(Box s, Shelf s)]
 makeBoxesWithPartition mode shelfboxess = do
    boxess <- forM shelfboxess \shelf'boxes -> do
        def0 <- defaultShelf

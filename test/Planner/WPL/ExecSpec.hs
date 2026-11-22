@@ -160,7 +160,7 @@ select wpl = do
                              boxes <- mapM (findBox . fst) ids
                              return $ boxesWithId boxes
 
--- runWith  :: MonadIO (mio r) => Text -> (Maybe (ExContext s) -> WH r s) -> mio r s
+-- runWith  :: MonadIO (mio r) => Text -> (Maybe (ExContext s) -> WH s r) -> mio r s
 runWith wpl action = execWH (emptyWarehouse $ fromGregorian 2024 07 22) do
    shelves <- makeShelves ?shelves
    boxes <- makeBoxes ?boxes

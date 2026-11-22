@@ -133,24 +133,24 @@ isSorted _ _ = True
 -- | Computes the max length or height used within a shelf
 -- | by all the boxes. Should be able to be cached.
 -- maxUsedOffset :: (Dimension -> Double) -> Shelf -> WH
-maxUsedOffset ::  Shelf s -> WH Dimension s
+maxUsedOffset ::  Shelf s -> WH s Dimension
 maxUsedOffset shelf = do
     boxes <- findBoxByShelf shelf
     return $ maxDimension $ map boxCorner boxes
 
-minUsedOffset ::  Shelf s -> WH Dimension s
+minUsedOffset ::  Shelf s -> WH s Dimension
 minUsedOffset shelf = do
     boxes <- findBoxByShelf shelf
     return $ minDimension $ map boxOffset boxes
 -- | Nested groups of shelves, used for display
 
-buildWarehouse :: NonEmpty (NonEmpty (NonEmpty Text)) -> WH (RunsWithId s) s
+buildWarehouse :: NonEmpty (NonEmpty (NonEmpty Text)) -> WH s (RunsWithId s)
 buildWarehouse xsss = mapM buildRun xsss
 
-buildRun :: NonEmpty (NonEmpty Text) -> WH (Run NonEmpty (ShelfId s) ) s
+buildRun :: NonEmpty (NonEmpty Text) -> WH s (Run NonEmpty (ShelfId s) )
 buildRun xss = mapM buildBay xss
 
-buildBay :: NonEmpty Text -> WH (Bay NonEmpty (ShelfId s) ) s
+buildBay :: NonEmpty Text -> WH s (Bay NonEmpty (ShelfId s) )
 buildBay xs = do
     idsS <- mapM ( \x ->  do
             case x of
@@ -165,22 +165,22 @@ buildBay xs = do
       Just bay -> return bay
 
  -- -| shelf use as error, ie everything not fitting anywhere
-defaultShelf :: WH (ShelfId s) s
+defaultShelf :: WH s (ShelfId s)
 defaultShelf = (flip Seq.index) 0 <$> gets shelves
 
 -- | shelf use to put incoming boxes
-incomingShelf :: WH (ShelfId s) s
+incomingShelf :: WH s (ShelfId s)
 incomingShelf = do
   shelves <- gets shelves
   return $ Seq.index shelves (min 1 (length shelves -1))
 
-findBoxByShelf :: Shelf' shelf => shelf s -> WH [Box s] s
+findBoxByShelf :: Shelf' shelf => shelf s -> WH s [Box s]
 findBoxByShelf shelf = do
   boxIds <- _shelfBoxes <$> findShelf shelf
   mapM findBox $ toList boxIds
 
 
-findBoxByNameSelector :: (NameSelector Box) -> WH [Box s] s
+findBoxByNameSelector :: (NameSelector Box) -> WH s [Box s]
 findBoxByNameSelector selector = do
   boxIdMap <- gets boxMap
   let matcher = applyNameSelector (coerce selector) runIdentity
@@ -198,15 +198,15 @@ findBoxByNameSelector selector = do
                   else return mempty
   return $ toList $  mconcat boxess
 
-findShelfByBox :: Box' box => box s -> WH (Maybe (ShelfId s)) s
+findShelfByBox :: Box' box => box s -> WH s (Maybe (ShelfId s))
 findShelfByBox box' = do
   box <- findBox box'
   return $ boxShelf box
 
 -- | find shelf by name and tag
-findShelfBySelector :: Selector Shelf -> WH [ShelfId s] s
+findShelfBySelector :: Selector Shelf -> WH s [ShelfId s]
 findShelfBySelector selector = map shelfId <$> findShelfBySelector' selector
-findShelfBySelector' :: Selector Shelf -> WH [Shelf s] s 
+findShelfBySelector' :: Selector Shelf -> WH s [Shelf s] 
 findShelfBySelector' (Selector nameSel tagSels ) = do
   shelfIds <- toList <$> gets shelves
   shelves0 <-  filterByNameSelector (mapM findShelf shelfIds) shelfName  nameSel
@@ -216,7 +216,7 @@ findShelfBySelector' (Selector nameSel tagSels ) = do
 -- but respect alternative order
 -- ie B|A will return B before A
 -- B*|A* will return Bs (sorted alphabetically) the A* (alphabetically)
-findShelfBySelectors :: [Selector Shelf] -> WH [ShelfId s] s
+findShelfBySelectors :: [Selector Shelf] -> WH s [ShelfId s]
 findShelfBySelectors selectors = do
   shelvess <- mapM findShelfBySelector' selectors
   return [ shelfId shelf
@@ -224,7 +224,7 @@ findShelfBySelectors selectors = do
          , shelf <- sortOn shelfName shelves
          ]
 
-findShelfByName :: Shelfname -> WH (Maybe (Shelf s)) s
+findShelfByName :: Shelfname -> WH s (Maybe (Shelf s))
 findShelfByName (Shelfname shelfname) = do
    shelves <- findShelfBySelector' (Selector (matchName shelfname) [])
    case shelves of 
@@ -241,7 +241,7 @@ filterBoxByTag selectors box =  applyTagSelectors selectors boxTags box
 
 -- | Compiles a match against a glob pattern if Necessary
 
-filterByNameSelector :: WH [a s] s -> (a s -> Text) -> (NameSelector a) -> WH [a s] s
+filterByNameSelector :: WH s [a s] -> (a s -> Text) -> (NameSelector a) -> WH s [a s]
 filterByNameSelector objects objectName selector = do
    let matcher= applyNameSelector selector objectName
    filter matcher <$> objects
@@ -260,9 +260,9 @@ orTrue bs = or bs
 -- it needs to be before the shelf condition
 --
 -- syntax is  Box#tag^3/shelf#tag : 3 box from shelf shelf
-findBoxByNameAndShelfNames :: BoxSelector -> WH [Box s] s
+findBoxByNameAndShelfNames :: BoxSelector -> WH s [Box s]
 findBoxByNameAndShelfNames selector = map fst <$> findBoxByNameAndShelfNamesWithPriority selector
-findBoxByNameAndShelfNamesWithPriority :: BoxSelector -> WH [(Box s, Priority)] s
+findBoxByNameAndShelfNamesWithPriority :: BoxSelector -> WH s [(Box s, Priority)]
 findBoxByNameAndShelfNamesWithPriority ( BoxSelector ( Selector (NameMatches [])
                                                     [ TagIsKeyAndValues (MatchFull prop)
                                                                         [VMatch (MatchFull value)]
@@ -396,7 +396,7 @@ boxFinalPriority useDefault BoxNumberSelector{..} ((box, shelf), pm) = let -- re
 
   
 -- | Use similar syntax to boxes but returns shelves instead
-findShelvesByBoxNameAndNames :: ShelfSelector -> WH [Shelf s] s
+findShelvesByBoxNameAndNames :: ShelfSelector -> WH s [Shelf s]
 findShelvesByBoxNameAndNames (ShelfSelector SelectAnything shelfSel) = findShelfBySelector shelfSel >>= mapM findShelf
 findShelvesByBoxNameAndNames (ShelfSelector (Selector (NameDoesNotMatch [MatchAnything]) []) shelfSel)= do
     -- only get empty shelves
@@ -417,7 +417,7 @@ findShelvesByBoxNameAndNames (ShelfSelector (Selector boxNameSel boxTagSel) shel
 
 
 
-partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s, Priority) -> WH ([(Box s, Priority)], [(Box s, Priority)]) s
+partitionBoxes :: (Traversable f, Box' boxId) => BoxSelector -> f (boxId s, Priority) -> WH s ([(Box s, Priority)], [(Box s, Priority)])
 partitionBoxes BoxSelector{..} bid'ps = do
   let (bids, priorities) = List.unzip $ Foldable.toList bid'ps
   box'shelves <-  flip zip priorities <$> findBoxesWithShelf bids
@@ -431,7 +431,7 @@ partitionBoxes BoxSelector{..} bid'ps = do
   
 
 -- | Only returns boxes which have a shelf, which should be all, in theory
-findBoxesWithShelf :: (Traversable f, Box' boxId) => f (boxId s) -> WH (f (Box s, Shelf s)) s
+findBoxesWithShelf :: (Traversable f, Box' boxId) => f (boxId s) -> WH s (f (Box s, Shelf s))
 findBoxesWithShelf = mapM go where
    go bId = do 
        box <- findBox bId
@@ -440,7 +440,7 @@ findBoxesWithShelf = mapM go where
          Nothing -> error $ "No shelf for box" <> show (box, boxTags box)
          Just shelf -> return (box, shelf)
 
-partitionShelves :: (Traversable f, Shelf' shelfId) => ShelfSelector -> f (shelfId s) -> WH ([Shelf s], [Shelf s]) s
+partitionShelves :: (Traversable f, Shelf' shelfId) => ShelfSelector -> f (shelfId s) -> WH s ([Shelf s], [Shelf s])
 partitionShelves ShelfSelector{..} sIds = do
   shelf'boxess <- mapM findShelfWithBoxes sIds
   let (goods, bads) = partition isSelected $ Foldable.toList shelf'boxess
@@ -450,7 +450,7 @@ partitionShelves ShelfSelector{..} sIds = do
                                        SelectAnything -> True
                                        bsel -> any (applySelector bsel) boxes
                                      
-findShelfWithBoxes :: Shelf' shelfId => shelfId s -> WH (Shelf s, [Box s]) s
+findShelfWithBoxes :: Shelf' shelfId => shelfId s -> WH s (Shelf s, [Box s])
 findShelfWithBoxes shelfId = do
    shelf <- findShelf shelfId
    boxes <- findBoxByShelf shelf
@@ -498,7 +498,7 @@ emptyWarehouse today = Warehouse mempty mempty (error "No layout defined")
                                  0
                                  NoHistory []
 
-newShelf :: Text -> Maybe Text -> Dimension -> Dimension -> Double -> BoxOrientator -> FillingStrategy -> WH (Shelf s) s
+newShelf :: Text -> Maybe Text -> Dimension -> Dimension -> Double -> BoxOrientator -> FillingStrategy -> WH s (Shelf s)
 newShelf name tagm minD maxD bottom boxOrientator fillStrat = mdo
         let -- tags = case splitOn "#" <$> tagm of
             --   Nothing -> mempty
@@ -512,9 +512,9 @@ newShelf name tagm minD maxD bottom boxOrientator fillStrat = mdo
         modify \warehouse ->  warehouse { shelves = shelves warehouse |> ShelfId_ uniqueRef }
         updateShelfTags mempty shelf
 
-newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
+newBox :: Shelf' shelf => Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH s (Box s)
 newBox = newBox' Nothing
-newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH (Box s) s
+newBox' :: forall s shelf . Shelf' shelf => Maybe (Box s) -> Text -> Text ->  Dimension -> Orientation -> shelf s  -> [Orientation]-> [Text] -> WH s (Box s)
 newBox' boxM style content dim or_ shelf ors tagTexts = mdo
     let tags' = fromTag'Operations $ map parseTagOperation tagTexts
         dtags = dimensionTagOps dim
@@ -574,18 +574,18 @@ multipleContentToSingles box =
      _ -> box :| []
   where toKeep t _ = not ("content" `isPrefixOf` t || t == ("'" <> boxContent box))
 
-newUniqueSTRef :: a s -> WH (Arg Int (HiSTRef a s)) s
+newUniqueSTRef :: a s -> WH s (Arg Int (HiSTRef a s))
 newUniqueSTRef object = do
-  ref <- lift $ newHiSTRef NoHistory object
+  ref <- WH . lift $ newHiSTRef NoHistory object
   unique0 <- gets whUnique
   let unique = unique0 + 1
   modify (\w -> w { whUnique = unique })
   return $ Arg unique ref
 
-writeCurrentRef :: HiSTRef a s -> a s -> WH () s
+writeCurrentRef :: HiSTRef a s -> a s -> WH s ()
 writeCurrentRef ref a = do
    current <- gets whCurrentEvent
-   lift $ writeHiSTRef current ref a
+   WH . lift $ writeHiSTRef current ref a
    
 -- | Parses a string  to Tag operation
 -- the general syntax [-]tag[=[-+]value]
@@ -750,7 +750,7 @@ updateDimFromTags box = case extractDimensions (_boxDim box) (boxTags box) of
 -- | Assign a box to shelf regardless of if there is enough space
 -- left or not.
 -- For a "real" move see moveBox
-assignShelf :: (Box' box,  Shelf' shelf) => Maybe (shelf s) -> box s -> WH (Box s) s
+assignShelf :: (Box' box,  Shelf' shelf) => Maybe (shelf s) -> box s -> WH s (Box s)
 assignShelf s box0 = do
     box <- findBox box0
     oldShelfM <- traverse findShelf (boxShelf box)
@@ -768,7 +768,7 @@ assignShelf s box0 = do
 
 -- | Unlink a box from a shelf without
 -- checking anything. Shoudn't be exported
-unlinkBox :: BoxId s -> Shelf s -> WH () s
+unlinkBox :: BoxId s -> Shelf s -> WH s ()
 unlinkBox box shelf = do
   let boxes = _shelfBoxes shelf
       boxes' = delete box boxes
@@ -779,7 +779,7 @@ unlinkBox box shelf = do
 
 -- | link a box from a shelf without
 -- checking anything. Shoudn't be exported
-linkBox :: BoxId s -> Shelf s -> WH () s
+linkBox :: BoxId s -> Shelf s -> WH s ()
 linkBox box shelf = do
   let boxes = _shelfBoxes shelf
       boxes' = boxes |> box  
@@ -788,7 +788,7 @@ linkBox box shelf = do
   _ <- updateShelf (const shelf') shelf'
   return ()
 
-deleteBoxes :: [Box s] -> WH [Box s] s
+deleteBoxes :: [Box s] -> WH s [Box s]
 deleteBoxes boxes_ = do
   let boxIds = Set.fromList $ map boxId boxes_
   deleted <- forM boxes_ $ \box -> do
@@ -804,7 +804,7 @@ deleteBoxes boxes_ = do
     
 
 
-deleteShelf :: ShelfId s -> WH () s
+deleteShelf :: ShelfId s -> WH s ()
 deleteShelf shelfId = do
   findBoxByShelf shelfId >>= deleteBoxes
   warehouse <- get
@@ -830,14 +830,14 @@ boxGlobalPriority  box = p where (p, _, _) = boxPriorities box
 
 
 
-updateBox :: (Box' box) =>  (Box s ->  Box s) -> box s-> WH (Box s) s
+updateBox :: (Box' box) =>  (Box s ->  Box s) -> box s-> WH s (Box s)
 updateBox f box0 = do
     box <- findBox box0
     let box' = f box
     writeCurrentRef (getRef box') box'
     return box'
 
-updateShelf :: (Shelf' shelf) => (Shelf s -> Shelf s ) -> shelf s -> WH (Shelf s) s
+updateShelf :: (Shelf' shelf) => (Shelf s -> Shelf s ) -> shelf s -> WH s (Shelf s)
 updateShelf f s =  do
     shelf <- findShelf s
     let shelf' = f shelf
@@ -845,7 +845,7 @@ updateShelf f s =  do
     return shelf'
 
 
-updateShelfByName :: (Shelf s -> Shelf s) -> Text -> WH [Shelf s] s
+updateShelfByName :: (Shelf s -> Shelf s) -> Text -> WH s [Shelf s]
 updateShelfByName f n = findShelfBySelector (Selector (NameMatches [MatchFull n]) [] ) >>= mapM (updateShelf f)
 
 
@@ -938,7 +938,7 @@ modifyTags (TagsOperations tag'ops incSel excSel) tags = Just
                       _ -> False
 
 
-updateBoxTags :: TagsOperations -> Box s -> Int -> WH (Box s) s
+updateBoxTags :: TagsOperations -> Box s -> Int -> WH s (Box s)
 updateBoxTags (TagsOperations tags0 incSel excSel) box index = do
   -- remove '''
   tags1 <- mapM (mapM $ mapM (expandAttribute box index)) tags0
@@ -950,7 +950,7 @@ updateBoxTags (TagsOperations tags0 incSel excSel) box index = do
              ]
   updateBox (updateBoxTags' $ TagsOperations tags incSel excSel) box
 
-updateShelfTags :: TagsOperations -> Shelf s -> WH (Shelf s) s
+updateShelfTags :: TagsOperations -> Shelf s -> WH s (Shelf s)
 updateShelfTags (TagsOperations tags0 incSel excSel) shelf =  do
   let tags = [ (tag, values )
              | (tag, values) <- tags0
@@ -1000,7 +1000,7 @@ boxPositionSpec box = let
 -- | Box attribute can be used to create new tag
 -- example, /pending,#previous=$shelfname on a
 -- will add the tag previous=pending to all items in the pending shelf
-expandAttribute :: Box s -> Int -> Text -> WH Text s
+expandAttribute :: Box s -> Int -> Text -> WH s Text
 expandAttribute box index toExpand = maybe (return toExpand) (\f -> f box index) (expandAttributeMaybe toExpand)
 
 
@@ -1008,9 +1008,9 @@ expandAttribute box index toExpand = maybe (return toExpand) (\f -> f box index)
 -- to know if it needs expansion or not
 -- If an attribute is found, we can safely call expandAttribute (recursively), as we are
 -- only interested in doest in need expansion or not
-expandAttributeMaybe :: forall s . Text -> Maybe (Box s -> Int -> WH Text s)
+expandAttributeMaybe :: forall s . Text -> Maybe (Box s -> Int -> WH s Text)
 expandAttributeMaybe text = let
-  wrap :: Box s -> Int -> (Text -> Box s -> Int -> WH Text s) -> Text -> WH Text s
+  wrap :: Box s -> Int -> (Text -> Box s -> Int -> WH s Text) -> Text -> WH s Text
   wrap box index f subtext =
     case (uncons subtext, T.breakOn "}" subtext) of
       -- (_, "") -> f subtext box
@@ -1024,7 +1024,7 @@ expandAttributeMaybe text = let
          -- "" indicate a $$ but we need to skip the expansion of {hello} 
          -- We want $${comma}  to be parsed as $$ {comma} 
          -- not as $ ${comma}
-          let expand :: [Text] -> WH [Text] s
+          let expand :: [Text] -> WH s [Text]
               expand [] = return []
               expand ("":x:xs) = do
                 expanded <- expand xs
@@ -1036,7 +1036,7 @@ expandAttributeMaybe text = let
           expandeds <- expand segments  -- mapM (wrap box i expandAttribute') segments
           return $ concat (prefix : expandeds)
      _ -> Nothing
-expandAttribute' :: Text -> Box s -> Int -> WH Text s
+expandAttribute' :: Text -> Box s -> Int -> WH s Text
 expandAttribute' "" = \_ _ -> return "$"
 expandAttribute' (uncons -> Just ('{', prop)) = \box _i -> do
   shelfId <- case boxShelf box of
@@ -1383,7 +1383,7 @@ expandIntrinsic' prop _box _shelf =
        _ -> error . unpack $ prop <> " is not a property"  -- Right $ "${" <> prop <> "}"
 
 
-expandStatistic :: (PropertyStats -> Map Text Int) -> Maybe (Char, Int) -> Box s -> OrderingKey -> Text -> WH Text s
+expandStatistic :: (PropertyStats -> Map Text Int) -> Maybe (Char, Int) -> Box s -> OrderingKey -> Text -> WH s Text
 expandStatistic fn arg box prop xs = do
   values <- expandOrdkey box Nothing prop
   stats <- propertyStatsFor prop
@@ -1398,7 +1398,7 @@ expandStatistic fn arg box prop xs = do
       in maybe xs (\i -> tshow (adjust i) <> xs) (lookup value $ fn stats) 
 
 -- | Expand Tag or Attribute. Fetch the shelf if not provided
-expandOrdkey :: Box s -> Maybe (Shelf s) ->  OrderingKey -> WH [Text] s
+expandOrdkey :: Box s -> Maybe (Shelf s) ->  OrderingKey -> WH s [Text]
 expandOrdkey box shelfm key = do
    case key of
     OrdTag tag -> return$ getTagValues box tag
@@ -1634,7 +1634,7 @@ printSlotBreak b  = case b of
 -- * Misc 
 -- | reorder box so they are ordered by column across all
 -- the given shelves.
--- sortAccross :: Shelf' shelf => [shelf s] -> WH [Box s] s
+-- sortAccross :: Shelf' shelf => [shelf s] -> WH s [Box s]
 -- sortAccross ss = do
 --     -- first we need to remove the boxes from their current location
 --     boxes <- concat `fmap` mapM findBoxByShelf ss
@@ -1652,7 +1652,7 @@ printSlotBreak b  = case b of
 --               then return left
 --               else iteration ss left
 
-usedDepth :: Shelf' shelf => shelf s -> WH (Text, Double) s
+usedDepth :: Shelf' shelf => shelf s -> WH s (Text, Double)
 usedDepth s = do
   boxes <- findBoxByShelf s
   return $ List.maximumBy (comparing snd) (("<empty>",0)
@@ -1665,7 +1665,7 @@ usedDepth s = do
 
 -- * Denormalizing 
 --
-shelfBoxes :: WH [(Shelf s, Box s)] s
+shelfBoxes :: WH s [(Shelf s, Box s)]
 shelfBoxes = do
     ss <- mapM findShelf =<< (toList <$> gets shelves)
     sbsS <- mapM (\s -> do bs <- findBoxByShelf s ; return (s, bs)) ss
@@ -1716,10 +1716,10 @@ extractTags name = (style, maybe [] (splitOnNonEscaped "#") tagM) where
   (style, tagM) = extractTag name
 
 
-withBoxOrientations :: [OrientationStrategy] -> WH a s -> WH a s
+withBoxOrientations :: [OrientationStrategy] -> WH s a -> WH s a
 withBoxOrientations strats = withBoxOrientations' [(Nothing, strats)]
   
-withBoxOrientations' :: [(Maybe ShelfSelector, [OrientationStrategy])] -> WH a s -> WH a s
+withBoxOrientations' :: [(Maybe ShelfSelector, [OrientationStrategy])] -> WH s a -> WH s a
 withBoxOrientations' [] action = action
 withBoxOrientations' (r:rs) action = withBoxOrientations' rs $ go r action where
   go (_, []) action =  action
@@ -1884,16 +1884,16 @@ partitionModeParser = do
 -- * Warehouse Cache 
 -- ** Property stats 
 -- | Retrieve property stats (and compute if needed)
-propertyStatsFor :: OrderingKey -> WH PropertyStats s
+propertyStatsFor :: OrderingKey -> WH s PropertyStats
 propertyStatsFor prop = do
   cacheRef <- whCache
-  cache <- lift $ readSTRef cacheRef
+  cache <- WH . lift $ readSTRef cacheRef
   case lookup (tshow prop) (propertyStats cache) of
     Just stat -> return stat
     Nothing -> computePropertyStats prop
 
 -- | Computes or refresh the statistics for the given property
-computePropertyStats :: OrderingKey -> WH PropertyStats s
+computePropertyStats :: OrderingKey -> WH s PropertyStats
 computePropertyStats prop = do
   -- scann all object and make a map of the different values
   wh <- get
@@ -1903,7 +1903,7 @@ computePropertyStats prop = do
   let stats = mkPropertyStats $ concat values
   -- update cache
   cacheRef <- whCache
-  lift $ modifySTRef cacheRef  (\cache -> cache {propertyStats = Map.insert (tshow prop) stats (propertyStats cache) })
+  WH . lift $ modifySTRef cacheRef  (\cache -> cache {propertyStats = Map.insert (tshow prop) stats (propertyStats cache) })
   return stats
   
 mkPropertyStats :: [Text] -> PropertyStats
@@ -1916,38 +1916,38 @@ mkPropertyStats values = PropertyStats{..} where
                                  [1..]
   valueIndex = Map.fromList $ zip (sort $ keys valueRank) [1..]
   
-clearCache :: WH () s
+clearCache :: WH s ()
 clearCache = do
   cachem <- gets whCacheM
   case cachem of
     Nothing -> return ()
-    Just cache -> lift $ writeSTRef cache (emptyOperationCache)
+    Just cache -> WH . lift $ writeSTRef cache (emptyOperationCache)
   
 -- | Create an empty cache if necessary
-whCache :: WH (STRef s (OperationCache s)) s
+whCache :: WH s (STRef s (OperationCache s))
 whCache = do
   cachem <- gets whCacheM
   case cachem of
     Just cache -> return cache
     Nothing -> do
-      cacheRef <- lift $ newSTRef emptyOperationCache 
+      cacheRef <- WH . lift $ newSTRef emptyOperationCache 
       wh <- get
       put wh {whCacheM = Just cacheRef}
       return $ cacheRef
       
   
-getOrCreateBoxTagMap :: Text -> WH (Map Text [Box s])  s
+getOrCreateBoxTagMap :: Text -> WH s (Map Text [Box s])
 getOrCreateBoxTagMap prop = do
   cacheRef <- whCache
-  cache <- lift $ readSTRef cacheRef 
+  cache <- WH . lift $ readSTRef cacheRef 
   case lookup prop (boxTagMapMap cache) of
     Just boxMap -> {-traceShow ("Reuse cache for prop: " <> prop) $ -} return boxMap
     Nothing -> do
       boxMap <- __getBoxTagMap prop
-      lift $ modifySTRef cacheRef (\cache' -> cache' {boxTagMapMap = Map.insert prop boxMap (boxTagMapMap cache')})
+      WH . lift $ modifySTRef cacheRef (\cache' -> cache' {boxTagMapMap = Map.insert prop boxMap (boxTagMapMap cache')})
       return boxMap
 
-__getBoxTagMap :: Text -> WH (Map Text [Box s]) s
+__getBoxTagMap :: Text -> WH s (Map Text [Box s])
 __getBoxTagMap prop = do
   boxIds <- gets boxes
   boxes <- mapM findBox boxIds
@@ -1959,7 +1959,7 @@ __getBoxTagMap prop = do
 -- | Create a new even only if the previous one is not NoHistory
 -- or level is 0.
 -- Effectively , setting a 0 level will activate history
-newWHEvent :: Int -> Text -> WH () s
+newWHEvent :: Int -> Text -> WH s ()
 newWHEvent level title = do
     wh <- get
     -- | if 
@@ -1970,7 +1970,7 @@ newWHEvent level title = do
     else 
       put wh { whCurrentEvent = new, whEventHistory = new : whEventHistory wh } 
 
-newBaseEvent :: Text -> Text -> WH () s
+newBaseEvent :: Text -> Text -> WH s ()
 newBaseEvent header = newWHEvent baseLevel . addHeader header where
    addHeader "" t = t
    addHeader h t = h <> ": " <> t

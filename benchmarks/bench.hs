@@ -91,7 +91,7 @@ main = defaultMain
                  
 -- | Generate a warehouse
 -- with shelvesv repeated for each styles
-mockWH :: Show n => [n] -> [n] -> WH () s
+mockWH :: Show n => [n] -> [n] -> WH s ()
 mockWH styles shelves = do
    let dim = Dimension 60 50 30
        bdim = Dimension 10 20 50
@@ -107,7 +107,7 @@ mockWH styles shelves = do
                    void $ newBox style (tshow content) bdim tiltedForward shelf allOrientations ("index-" <> tshow i : [])
                    
                    
-withMock :: Show n => [n] -> [n] -> WH a RealWorld -> IO a
+withMock :: Show n => [n] -> [n] -> WH RealWorld a -> IO a
 withMock styles shelves action = do
   initRepl ""
   exec (mockWH styles shelves >> action)

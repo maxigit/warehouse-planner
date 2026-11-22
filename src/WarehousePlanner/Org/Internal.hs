@@ -458,7 +458,7 @@ sSortedSteps Scenario{..} = let
 
 -- * Rendering 
 
-executeStep :: Step -> IO (WH () s)
+executeStep :: Step -> IO (WH s ())
 executeStep SavingPoint = return (return ())
 executeStep (NewFile path) = return $ newWHEvent 0 $ "FILE: " <> pack path
 executeStep (Step header sha txt) = do

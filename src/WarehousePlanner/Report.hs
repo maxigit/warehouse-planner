@@ -55,7 +55,7 @@ import Data.Foldable qualified as F
 
 -- pattern (:<) :: Text -> Maybe (Char, Text)
 pattern x :< xs <- (uncons -> Just (x, xs))
-reportAll :: WH [Text] s
+reportAll :: WH s [Text]
 reportAll = do
     sb <- shelfBoxes
     let groups =  Map'.fromListWith (+) (map (\(s,b) -> ((shelfName s, boxDim b, orientation b, boxStyle b), (1::Int))) sb)
@@ -79,7 +79,7 @@ only the given boxes and shelves will be taken into account for the
 report.
 ::rST -}
 -- | Find the box which fit a given shelf  the best
-bestBoxesFor :: Text -> WH [Text] s
+bestBoxesFor :: Text -> WH s [Text]
 bestBoxesFor (extractRanking -> (ranking, shelf)) = do
     boxIds <- toList <$> gets boxes
     boxes' <- mapM findBox boxIds
@@ -100,7 +100,7 @@ bestBoxesFor (extractRanking -> (ranking, shelf)) = do
     mapM (report ranking s) (map snd bests)
 
 -- | Find best boxes ignoring the shelve height
-bestHeightForShelf :: Text -> WH (IO ()) s
+bestHeightForShelf :: Text -> WH s (IO ())
 bestHeightForShelf shelf = do
     boxIds <- toList <$> gets boxes
     boxes' <- mapM findBox boxIds
@@ -145,7 +145,7 @@ bestHeightForShelf shelf = do
     ios <- mapM (reportHeight s) (map snd bests)
     return $ sequence_ ios
 
-report :: Ranking -> Shelf s -> Box s -> WH Text s
+report :: Ranking -> Shelf s -> Box s -> WH s Text
 report ranking shelf box = do
     getOr <- gets boxOrientations
     similarBoxes <- findBoxByNameSelector (matchName $ boxStyle box)
@@ -170,7 +170,7 @@ extractRanking s = case uncons s of
                         _ -> (Rank3D, s)
 -- | find the best shelf for a given style
 -- Doesn't take into account boxes already there.
-bestShelvesFor :: Text -> WH [Text]s
+bestShelvesFor :: Text -> WH s [Text]
 bestShelvesFor (extractRanking -> (ranking, style'shelf)) = do
     (boxes, shelves, or) <- boxAndShelvesFor style'shelf
 
@@ -179,7 +179,7 @@ bestShelvesFor (extractRanking -> (ranking, style'shelf)) = do
 
     mapM (\shelf ->  report ranking shelf box) bests
 
-boxAndShelvesFor :: Text -> WH ([Box s], [Shelf s], Box s -> Shelf s -> [OrientationStrategy]) s
+boxAndShelvesFor :: Text -> WH s ([Box s], [Shelf s], Box s -> Shelf s -> [OrientationStrategy])
 boxAndShelvesFor style'shelf'ors = do
   ors0 <- gets boxOrientations
   let (style, shelfSelector, ors) = case (splitOnNonEscaped "," style'shelf'ors) of
@@ -193,7 +193,7 @@ boxAndShelvesFor style'shelf'ors = do
 
 -- | find the best shelf for a given style
 -- depends on what's already there.
-bestAvailableShelvesFor :: PartitionMode ->Text -> WH [Text] s
+bestAvailableShelvesFor :: PartitionMode ->Text -> WH s [Text]
 bestAvailableShelvesFor pmode (extractRanking -> (ranking, style'shelf)) = do
     (boxes, shelves, or) <- boxAndShelvesFor style'shelf
     let  box = headEx boxes
@@ -477,12 +477,12 @@ The value of the tag(s) can be visualized for all shelves by setting the shelf p
 
  ::rST -}
  
-bestFitReport :: forall s . Bool -> [Box s] -> [Shelf s] -> WH [Map Text Text] s
+bestFitReport :: forall s . Bool -> [Box s] -> [Shelf s] -> WH s [Map Text Text]
 bestFitReport limitToBoxNb boxes shelves = do
    getOrs <- gets boxOrientations
    let groups  = groupSimilar getKey $ sortOn getKey boxes --  (\b -> (_boxDim b, boxStyle b)) boxes
        getKey b = (_boxDim b, boxStyle b)
-   let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH [Map Text Text] s
+   let go :: SimilarBy (Dimension, Text) (Box s) -> Shelf s -> WH s [Map Text Text]
        go (SimilarBy (bdim,_) box bxs) shelf = do
            boxesInShelf <- findBoxByShelf shelf
            let toPick = max 1 $ length $ filter (flip tagIsPresent "@topick") (box : bxs)
@@ -633,7 +633,7 @@ _numberToFakePicking tm toFit toPick = fst $ go tm toPick (toFit - toPick)
     
 -- | Tag all shelves with the result of fit report.
 -- Tag keys are by default "style-tag"
-tagShelvesWithFitData :: Maybe (Text -> Text -> Text) -> [Map Text  Text] -> WH () s
+tagShelvesWithFitData :: Maybe (Text -> Text -> Text) -> [Map Text  Text] -> WH s ()
 tagShelvesWithFitData adjustTagM rows = do 
    let adjustTag = fromMaybe (\style key -> style <> "-" <> key) adjustTagM
        keyKeys =  ["shelf", "style", "part"]
@@ -691,7 +691,7 @@ mPlus Nothing x = x
 mPlus (Just x) (Just y) = Just (x+y)
 mPlus x Nothing =  x
 
-summarizeShelves :: Seq (Shelf s) -> WH (SummaryInfo) s
+summarizeShelves :: Seq (Shelf s) -> WH s (SummaryInfo)
 summarizeShelves shelves | null shelves = return $ SummaryInfo Nothing Nothing 0
 summarizeShelves shelves = do
     summaries <- traverse (summaryFromShelf $ const $ return ()) shelves
@@ -701,7 +701,7 @@ summarizeShelves shelves = do
         used = suVolume sBoxSummary / 1e6
     return $ SummaryInfo (Just totalFloor) (Just totalVolume) used
 
-summary :: forall s. WH ([[Text]], [Text])  s
+summary :: forall s. WH s ([[Text]], [Text])
 summary = do
     ss <- gets shelves >>= mapM findShelf
     -- group shelves using summary property
@@ -751,12 +751,12 @@ _unused_seqFilterM test s = fmap Seq.fromList (filterM test (toList s))
 -- * Shelve report 
 -- | Display shelf information including, depth really used
 --
-shelvesReport :: WH [Text] s
+shelvesReport :: WH s [Text]
 shelvesReport = do
   ss <- toList <$> gets shelves >>= mapM findShelf
   shelvesReportFor ss
   
-shelvesReportFor :: [Shelf s] -> WH [Text] s
+shelvesReportFor :: [Shelf s] -> WH s [Text]
 shelvesReportFor ss = do
   let sorted = sortOn shelfRank ss
       shelfRank shelf = fromMaybe (shelfName shelf) $ getTagValuem shelf "@key"
@@ -766,7 +766,7 @@ shelvesReportFor ss = do
             ",lengthRatio,widthRatio,heightRatio,boxVolume,usedVolume,packingEfficiency"
            ) : ls
 
-  where report_ :: Shelf s -> WH Text s
+  where report_ :: Shelf s -> WH s Text
         report_ shelf = do
           let (Dimension l w h) = minDim shelf
           boxes <- findBoxByShelf shelf
@@ -796,26 +796,26 @@ shelvesReportFor ss = do
 
 
 -- returns the lis
-listShelfTags :: WH ([Text]) s
+listShelfTags :: WH s ([Text])
 listShelfTags = do
   ss <- toList <$> gets shelves >>= mapM findShelf
   return . List.nub . sort $ concat (map (flattenTags . shelfTag) ss)
 
-shelfTagsReport :: WH (IO ()) s
+shelfTagsReport :: WH s (IO ())
 shelfTagsReport = do
   tags <- listShelfTags
   return $ (mapM_ putStrLn tags)
 
 -- * box report 
 -- | Display list of all individual boxes and their location
-boxesReport :: WH (IO ()) s
+boxesReport :: WH s (IO ())
 boxesReport = do
   sbS <- shelfBoxes
   ios <- mapM report_ sbS
 
   return $ sequence_ ((putStrLn "style,content,location"):ios)
 
-  where -- report_ :: Box s -> WH (IO ()) s
+  where -- report_ :: Box s -> WH s (IO ())
         report_ (shelf, box) = do
           let tilingMode = howManyWithDiagonal (minDim shelf) (maxDim shelf) (boxDim box)
           return $ printf "%s,%s,%s,%s,%s\n" (boxStyle box) (boxContent box) (shelfName shelf) (showOrientationWithDiag (orientation box) tilingMode) (showHowManysFor tilingMode)
@@ -867,17 +867,17 @@ boxStyleWithTags b = let
 shelvesToNames :: [Shelf s ] -> [Text]
 shelvesToNames = List.nub . sort . map shelfName
 
-generateMoves :: SortBoxes -> Maybe BoxSelector -> (Box s -> Text) -> WH [Text] s
+generateMoves :: SortBoxes -> Maybe BoxSelector -> (Box s -> Text) -> WH s [Text]
 generateMoves sortMode selectorm boxName0 = generateMoves' sortMode (Just "stock_id,location") (Just . boxName0) printGroup selectorm where
      printGroup  boxName' _ shelves = boxName' <> "," <> intercalate "|" (groupNames $ shelvesToNames shelves)
--- generateMoves' :: (Box s -> Text) -> (Box s -> [Text]) -> WH [Text] s
+-- generateMoves' :: (Box s -> Text) -> (Box s -> [Text]) -> WH s [Text]
 generateMoves' :: (Ord k, Eq k)
                => SortBoxes
                -> Maybe t --  ^ Header
                -> (Box s -> Maybe k) --  ^ box key
                ->  (k -> [Box s] -> [Shelf s]  -> t) --  ^ string from key, boxes and unique shelfnames
                -> Maybe BoxSelector
-               -> WH [t] s
+               -> WH s [t]
 generateMoves' sortMode header boxKey0 printGroup selectorm = do
  s'bS <- case selectorm of
           Nothing -> shelfBoxes
@@ -942,7 +942,7 @@ used. To force a particula box to be used force, ``@content`` and
 will be used first when deciding which shelf is to display first.
 Shelves with the tag ``mop-excluded`` will be excluded.
 ::rST -}
-generateMOPLocations :: Maybe BoxSelector -> WH [Text] s
+generateMOPLocations :: Maybe BoxSelector -> WH s [Text]
 generateMOPLocations selectorm = do
   shelf'boxSMulti <- case selectorm of
                       Nothing -> shelfBoxes
@@ -1031,7 +1031,7 @@ Note the presence of quotes wich allow a comma to be used inside the tag
 field and the use of ``$[report-key]`` to display the barcode in the
 report
 ::rST -}
-generateGenericReport :: Day -> Text -> WH [Text] s
+generateGenericReport :: Day -> Text -> WH s [Text]
 generateGenericReport today prefix = do
   s'bS <- shelfBoxes
   -- group by group if exists
@@ -1059,7 +1059,7 @@ generateGenericReport today prefix = do
     texts -> return texts
         
   
-generateGenericReport':: Day -> Text -> [(Shelf s, Box s)] -> WH [Text] s
+generateGenericReport':: Day -> Text -> [(Shelf s, Box s)] -> WH s [Text]
 generateGenericReport' today prefix s'bs = generateMovesFor SortBoxes Nothing boxKey0 printGroup s'bs where
   boxKey0 box = getTagValuem box (prefix <> "-key")
   printGroup boxKey_ [] __shelfNames = boxKey_
@@ -1068,7 +1068,7 @@ generateGenericReport' today prefix s'bs = generateMovesFor SortBoxes Nothing bo
     value = maybe boxKey_ (expandReportValue today boxes $ shelvesToNames shelfNames ) value0
     in value
 
-generateStockTakes :: Maybe BoxSelector ->  WH [Text] s
+generateStockTakes :: Maybe BoxSelector ->  WH s [Text]
 generateStockTakes selectorm= do
     boxes_ <- case selectorm of
             Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])
@@ -1095,7 +1095,7 @@ printStockTake (shelf, box) posititionSpec =
         , (concat $ map showOrientation' $ boxBoxOrientations box)
         ]
 -- | Like stocktake but don't use set offest but use a FillCommand syntax
-generateFuzzyStockTakes :: Maybe BoxSelector ->  WH [Text] s
+generateFuzzyStockTakes :: Maybe BoxSelector ->  WH s [Text]
 generateFuzzyStockTakes selectorm= do
     boxes_ <- case selectorm of
             Nothing -> findBoxByNameSelector (NameMatches [])
@@ -1246,7 +1246,7 @@ shelfKey = (,,)
 
 
 -- | group identical shelves, keep the first one as example
-groupShelves :: (Shelf s -> Bool) -> WH [(Shelf s, [Text])] s
+groupShelves :: (Shelf s -> Bool) -> WH s [(Shelf s, [Text])]
 groupShelves exclude = do
   ss <- toList <$> gets shelves >>= mapM findShelf
   let groups = Map'.fromListWith (<>) [ (shelfKey s, [s])
@@ -1261,7 +1261,7 @@ groupShelves exclude = do
 
 
 -- | Displays shelf groups summary
-groupShelvesReport :: WH [Text] s
+groupShelvesReport :: WH s [Text]
 groupShelvesReport = do
   groups <- groupShelves (const False)
   let sorted = sortOn ( headEx . snd  ) groups
@@ -1272,7 +1272,7 @@ groupShelvesReport = do
 
 
 -- Displays shelf group Map (ie what belong to  which group)
-groupShelvesReport' :: WH (IO ()) s
+groupShelvesReport' :: WH s (IO ())
 groupShelvesReport' = do
   groups <- groupShelves (const False)
   return $ do
@@ -1285,13 +1285,13 @@ boxKeyForGroup = (,,) <$> _boxDim <*> boxStyle <*> boxBoxOrientations
 
 -- | Group boxes by style and dimension
 -- keep the first one as an example
-groupBoxes :: (Box s -> Bool) -> WH [(Box s, Int)] s
+groupBoxes :: (Box s -> Bool) -> WH s [(Box s, Int)]
 groupBoxes exclude = do
     boxIds <- toList <$> gets boxes
     boxes <- mapM findBox boxIds
     groupBoxes' (filter (not . exclude) boxes)
 
-groupBoxes' :: [Box s] -> WH [(Box s, Int)] s
+groupBoxes' :: [Box s] -> WH s [(Box s, Int)]
 groupBoxes' boxes =  do
     let groups = Map'.fromListWith (<>) [ (boxKeyForGroup b, [b])
                                         | b <- boxes
@@ -1299,7 +1299,7 @@ groupBoxes' boxes =  do
         regroup bs = (lastEx bs, length bs)
     return $ map regroup (Map'.elems groups)
 
-groupBoxesReport :: [Box s] -> WH [Text] s
+groupBoxesReport :: [Box s] -> WH s [Text]
 groupBoxesReport boxes = do
   groups <- groupBoxes' boxes
   let withVolumes = [(volume (boxDim b) * (fromIntegral q), b'q) | b'q@(b,q) <- groups ]
@@ -1396,7 +1396,7 @@ newPair wh res (Just res') =
                                              (boxBoxOrientations box)
                                              (getTagList box)
 
-        tryW = do
+        WH tryW = do
           -- traceShowM ("NEW PAIR", res, res')
           def <- addShelf (rShelf res)
           shelf <- addShelf (rShelf res)
@@ -1466,7 +1466,7 @@ lookupResidual residualMap box = fromMaybe [] $ Map'.lookup (boxKeyForGroup box)
 -- | List all pairs of style and sorted efficiency
 -- Residual (shelf,box) with insufficient ration of volume occupation
 -- can be filtered.
-reportPairs :: Int-> WH (IO ()) s
+reportPairs :: Int-> WH s (IO ())
 reportPairs percThreshold = do
   -- removes every boxes which are already in and the shelf itself
   ss <- mapM findShelf =<< toList <$> gets shelves
@@ -1533,7 +1533,7 @@ showPair pair = let res = pRes1 pair
 
 --
 
-generateBoxesHistory :: Maybe BoxSelector -> WH [Text] s
+generateBoxesHistory :: Maybe BoxSelector -> WH s [Text]
 generateBoxesHistory selectorm = do
     events <- gets whEventHistory
     
@@ -1547,7 +1547,7 @@ generateBoxesHistory selectorm = do
            <> concatMap history boxReports
     where history xs = replicate 50 '*' : xs
            
-boxHistory :: History Box s -> WH [Text] s
+boxHistory :: History Box s -> WH s [Text]
 boxHistory e'boxs@((_,lastBox) :| _) = do
     history <- mapM go e'boxs
     return $  tshow lastBox
@@ -1564,7 +1564,7 @@ boxHistory e'boxs@((_,lastBox) :| _) = do
        
      
 
-generateTags :: Maybe BoxSelector -> WH [Text] s
+generateTags :: Maybe BoxSelector -> WH s [Text]
 generateTags selectorm = do
   boxes <- case selectorm of
              Nothing -> sortOn boxId <$> findBoxByNameSelector (NameMatches [])

@@ -5,6 +5,7 @@
 {-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DerivingVia #-}
 module WarehousePlanner.Type
 ( module WarehousePlanner.Type
 , module WarehousePlanner.History.Types
@@ -257,7 +258,16 @@ data Warehouse s = Warehouse { boxMap :: Map Text  (Seq (BoxId s))
 boxes :: Warehouse s -> Seq (BoxId s)
 boxes warehouse = mconcat $ map snd $ Map.toAscList $ boxMap  warehouse
 
-type WH a s = StateT  (Warehouse s) (ST s) a
+newtype WH s a = WH (StateT  (Warehouse s) (ST s) a)
+   deriving(Functor, Applicative, Monad)
+   deriving(MonadState (Warehouse s)) via StateT (Warehouse s) (ST s)
+   deriving(MonadFix) via StateT (Warehouse s) (ST s)
+   
+   
+instance MonadFail (WH s) where 
+  fail = error
+   
+
 data ExitMode = ExitOnTop | ExitLeft deriving (Show, Eq, Ord, Enum)
 -- | Strategry to find available rectangle to fill in
 data PartitionMode
@@ -357,11 +367,11 @@ fromTag'Operations tag'ops = TagsOperations tag'ops [] []
 class ShelfIdable a where
     shelfId :: a s -> ShelfId s
 class (ShelfIdable b) => Shelf' b where
-  findShelf :: b s  -> WH (Shelf s) s
+  findShelf :: b s  -> WH s (Shelf s)
 class BoxIdable a where
     boxId :: a s -> BoxId s
 class (BoxIdable b) => Box' b where
-  findBox :: b s  -> WH (Box s) s
+  findBox :: b s  -> WH s (Box s)
 class Referable a where
   type Ref a :: *
   getRef :: a -> Ref a
@@ -388,7 +398,7 @@ instance Box' Box where
 instance Box' BoxId where
   findBox (BoxId ref) = do
           ev <- gets whCurrentEvent 
-          lift $ readHiSTRef ev ref
+          WH . lift $ readHiSTRef ev ref
 
 
 instance Referable (Box s) where
@@ -417,7 +427,7 @@ instance Shelf' Shelf where
 instance Shelf' ShelfId where
   findShelf (ShelfId ref) = do
             ev <- gets whCurrentEvent
-            lift $ readHiSTRef ev ref
+            WH . lift $ readHiSTRef ev ref
 
 instance HasTags (Box s) where getTags = boxTags
 instance HasTags (Shelf s) where getTags = shelfTag

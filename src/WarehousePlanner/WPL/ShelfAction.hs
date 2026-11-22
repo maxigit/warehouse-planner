@@ -14,7 +14,7 @@ import Data.List.NonEmpty (NonEmpty(..), nonEmpty)
 import Data.List(nub, nubBy)
 import Data.Text (replace)
 
-runShelfActions :: (ShelfAction Statement -> WH () s) -> ShelfSelector -> WH () s
+runShelfActions :: (ShelfAction Statement -> WH s ()) -> ShelfSelector -> WH s () 
 runShelfActions runAction sel = do
    actionTexts <- getShelfActions
    case partitionEithers (map parseAction actionTexts) of
@@ -23,7 +23,7 @@ runShelfActions runAction sel = do
           mapM_ (runShelfAction runAction actions) sources
        (errs,_) -> error . unpack $ unlines errs
           
-runShelfAction :: (ShelfAction a -> WH () s) -> [ShelfAction a] -> ShelfAction a -> WH () s
+runShelfAction :: (ShelfAction a -> WH s ()) -> [ShelfAction a] -> ShelfAction a -> WH s ()
 runShelfAction runAction others source = do
    -- check if done
    shelves <- getShelfActionShelves source
@@ -57,7 +57,7 @@ runShelfAction runAction others source = do
       
   
 
-getShelfActions :: WH [ShelfAction Text] s
+getShelfActions :: WH s [ShelfAction Text]
 getShelfActions = do
   ids <- gets shelves
   shelves <- mapM findShelf ids
@@ -123,7 +123,7 @@ parseAction sa = case P.runParser wplParser (show $ saShelves sa) (saAction sa) 
                                                     , saExtraShelves = saExtraShelves sa
                                                     }
   
-partitionActions :: ShelfSelector -> [ShelfAction a] -> WH ([ShelfAction a], [ShelfAction a]) s
+partitionActions :: ShelfSelector -> [ShelfAction a] -> WH s ([ShelfAction a], [ShelfAction a])
 partitionActions sel actions = do
    fromSelectorI <- findShelvesByBoxNameAndNames sel
    fromSelector <- mapM findShelf fromSelectorI
@@ -133,7 +133,7 @@ partitionActions sel actions = do
    
   
    
-getShelfActionShelves :: ShelfAction a -> WH (NonEmpty (Shelf s)) s
+getShelfActionShelves :: ShelfAction a -> WH s (NonEmpty (Shelf s))
 getShelfActionShelves sa = do
   shelves <- traverse findShelfByName (saShelves sa)
   case nonEmpty $ catMaybes $ toList shelves of 

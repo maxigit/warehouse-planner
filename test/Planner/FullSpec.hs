@@ -269,9 +269,9 @@ spec = describe "Full scenario" do
 -- |  Load a scenario and compare the exported stocktake (ie boxes and exact position)
 -- to a given result.
   
-loadAndExec :: FilePath -> FilePath -> WH a RealWorld -> IO a
+loadAndExec :: FilePath -> FilePath -> WH RealWorld a -> IO a
 loadAndExec ipath path action = loadsAndExec ipath [path] action
-loadsAndExec :: FilePath -> [FilePath] -> WH a RealWorld -> IO a
+loadsAndExec :: FilePath -> [FilePath] -> WH RealWorld a -> IO a
 loadsAndExec ipath paths action = do
   initRepl ipath
   loads paths

@@ -23,15 +23,15 @@ _reverseDiff :: DiffStatus a -> DiffStatus a
 _reverseDiff d = d { dsBoxOut = dsBoxIn d, dsBoxIn = dsBoxOut d }
 
 --------------------------------------------------
-getBoxHistory :: Box' box => box s -> WH (History Box s) s
+getBoxHistory :: Box' box => box s -> WH s (History Box s)
 getBoxHistory box = do
    let BoxId (HiSTRef ref) = boxId box
-   lift $ readSTRef ref
+   WH . lift $ readSTRef ref
   
-getShelfHistory :: Shelf' shelf => shelf s -> WH (History Shelf s) s
+getShelfHistory :: Shelf' shelf => shelf s -> WH s (History Shelf s)
 getShelfHistory shelf = do
    let ShelfId (HiSTRef ref) = shelfId shelf
-   lift $ readSTRef ref
+   WH . lift $ readSTRef ref
 -------------------------------------------------- 
 computeBoxDiff :: Box s -> Box s -> DiffStatus (Set (ShelfId s))
 computeBoxDiff box1 box2 = DiffStatus{..} where
@@ -139,7 +139,7 @@ toZHistory ev history = let
   zBefore = maybe mempty (Map.singleton ev) currentm <> before
   in ZHistory{..}
 
-historyFor :: History a s -> WH (History a s) s
+historyFor :: History a s -> WH s (History a s)
 historyFor history = do
    ev <- gets whCurrentEvent
    case NE.dropWhile ((> ev) . fst) history of

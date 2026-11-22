@@ -62,7 +62,7 @@ import WarehousePlanner.Styling (Kolor, valueToKolorE)
 --  example for A123
 --  {B%} -> B123
 --  {B_+-} -> B132
-readShelves :: BoxOrientator -> FilePath-> IO (WH [Shelf s] s)
+readShelves :: BoxOrientator -> FilePath-> IO (WH s [Shelf s])
 {- rST::shelves 
 Create or update set of shelves. CSV with the following header :
 
@@ -322,7 +322,7 @@ Expand A and shrink B by the same amount (so that A+B stays the
 same),
 ::rST
 -}
-readUpdateShelves :: FilePath-> IO (WH [Shelf s] s)
+readUpdateShelves :: FilePath-> IO (WH s [Shelf s])
 readUpdateShelves filename = do
   csvData <- BL.readFile filename
   let decode =  asum
@@ -367,7 +367,7 @@ is given by tagging the checked boxes.
 .. ihaskell:: Check::status
 
 ::rST -}
-readCheckShelves :: FilePath -> IO (WH () s)
+readCheckShelves :: FilePath -> IO (WH s ())
 readCheckShelves filename = do
     csvData <- BL.readFile filename
     case Csv.decode Csv.HasHeader csvData of
@@ -413,7 +413,7 @@ expand name = let
 
 
 -- | Update an existing shelf
-updateShelfWithFormula :: (WH Dimension s) -> (WH Dimension s) -> (WH Double s) -> Text -> Maybe Text ->  WH (Shelf s) s
+updateShelfWithFormula :: (WH s Dimension) -> (WH s Dimension) -> (WH s Double) -> Text -> Maybe Text ->  WH s (Shelf s)
 updateShelfWithFormula dimW dimW' bottomW name tagm = do
   shelfIds <- findShelfBySelector (Selector (NameMatches [MatchFull name]) [])
   case shelfIds of
@@ -472,7 +472,7 @@ with a 3 letter suffix separated with ``/`` index added. Example
    ,A, {B:height},, -- cut length using shelf B height
    box,A,{|}*2,, cut at two time the lenght of box with | orientation
 ::rST -}
-readShelfSplit :: FilePath -> IO (WH [Shelf s] s)
+readShelfSplit :: FilePath -> IO (WH s [Shelf s])
 readShelfSplit = readFromRecordWith go where
   go (style, location, l, w, h) = do
     let locations = splitOn "|" location
@@ -509,7 +509,7 @@ must refer to the base shelf (not the split ones)
    :END:
 
 ::rST -}
-readShelfJoin :: FilePath -> IO (WH [Shelf s] s)
+readShelfJoin :: FilePath -> IO (WH s [Shelf s])
 readShelfJoin = readFromRecordWith go where
   go (Csv.Only location) = do
     let locations = splitOnNonEscaped "|" location
@@ -530,7 +530,7 @@ A set of boxes without initial location. They will be put in the
 Tags provided in the section name, will be applied to the created
 boxes.
 ::rST -}
-readBoxes :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH [Box s] s)
+readBoxes :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH s [Box s])
 readBoxes tagOrPatterns boxOrientations splitter filename = do
     csvData <- BL.readFile filename
 
@@ -611,7 +611,7 @@ specification with a ``!``.
    A^1,4,!new-content
    A^1,4,!new-content#ghost
 ::rST -}
-readClones :: [Text] -> FilePath-> IO (WH [Box s] s)
+readClones :: [Text] -> FilePath-> IO (WH s [Box s])
 readClones tagOrPatterns filename = do
     csvData <- BL.readFile filename
     case Csv.decode  Csv.HasHeader csvData of
@@ -658,7 +658,7 @@ Delete the selected boxes.
 Delete all ``A`` boxes with the ``ghost`` tag.
 
 ::rST -}
-readDeletes :: FilePath-> IO (WH [Box s] s)
+readDeletes :: FilePath-> IO (WH s [Box s])
 readDeletes filename = do
   content <- readFile filename
   return $ do -- IO
@@ -732,7 +732,7 @@ readColourMap filename = do
 
 
     
-readWarehouse :: FilePath -> IO (WH (RunsWithId s) s)
+readWarehouse :: FilePath -> IO (WH s (RunsWithId s))
 readWarehouse filename = buildWarehouse `fmap` readLayout filename
 
 
@@ -871,7 +871,7 @@ detect such cases setting the tag ``@noEmpty`` will raise an error
 (and stop) if there is nothing to moves.
 
 ::rST -}-- returns left boxes
-readMoves :: [Text] -> FilePath -> IO ( WH [Box s] s)
+readMoves :: [Text] -> FilePath -> IO ( WH s [Box s])
 readMoves tagOrPatterns = readFromRecordWithPreviousStyle (\style (Moves location orientations) -> processMovesAndTags tagOrPatterns (style, [], Just location, orientations))
 
 -- | Hack to allow different csv format
@@ -882,7 +882,7 @@ instance Csv.FromRecord (Moves s) where
                         (\(location, orientations) -> Moves location $ parseOrientationRule [tiltedForward, tiltedFR] orientations) <$> Csv.parseRecord v
          
 
-readFromRecordWith :: Csv.FromRecord r => (r -> WH [a s] s) -> FilePath -> IO (WH [a s] s)
+readFromRecordWith :: Csv.FromRecord r => (r -> WH s [a s]) -> FilePath -> IO (WH s [a s])
 readFromRecordWith  rowProcessor filename = do
     csvData <- BL.readFile filename
     case Csv.decode  Csv.HasHeader csvData of
@@ -957,7 +957,7 @@ If only one delimiter is present, reference will set as follow
 This at the moment only works for the box selectors of the section
 related to moving or tagging boxes.
 ::rST -}
-readFromRecordWithPreviousStyle :: Csv.FromRecord r => (BoxSelector -> r -> WH [a s] s) -> FilePath -> IO (WH [a s] s)
+readFromRecordWithPreviousStyle :: Csv.FromRecord r => (BoxSelector -> r -> WH s [a s]) -> FilePath -> IO (WH s [a s])
 readFromRecordWithPreviousStyle rowProcessor filename = do
     csvData <- BL.readFile filename
     case Csv.decode Csv.HasHeader csvData of
@@ -1015,7 +1015,7 @@ readFromRecordWithPreviousStyle rowProcessor filename = do
 -- \^A|B C|D will exit B to A  until A and B are full
 -- Tag can be exclude using a glob pattern
 -- This is to allows script to import partial tagging.
-processMovesAndTags :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH [Box s] s
+processMovesAndTags :: [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH s [Box s]
 processMovesAndTags tagsAndPatterns param = do
   inEx <- moveAndTag withAll tagsAndPatterns param 
   return (includedList $ fmap fst inEx)
@@ -1047,7 +1047,7 @@ of the box tagged with ``tag1`` to red.
 
 
 ::rST -}-- returns left boxes
-readTags :: [Text] -> FilePath -> IO ( WH [Box s] s)
+readTags :: [Text] -> FilePath -> IO ( WH s [Box s])
 readTags tagOrPatterns = readFromRecordWithPreviousStyle (\style (Csv.Only tag) -> processMovesAndTags tagOrPatterns (style, splitOnNonEscaped "#" tag, Nothing, []))
 
 -- | Hack to allow different csv format
@@ -1093,7 +1093,7 @@ in ``:Moves`` tags are applied positively to boxes successfully moved
 and negatively to leftover.
 
 ::rST -}
-readMovesAndTags :: [Text] -> FilePath -> IO (WH [Box s] s)
+readMovesAndTags :: [Text] -> FilePath -> IO (WH s [Box s])
 readMovesAndTags tags0 = readFromRecordWithPreviousStyle go where
   go style (ForMovesAndTags tag'location orientations) =
     let (tags, locM) = splitTagsAndLocation tag'location
@@ -1182,7 +1182,7 @@ Example (letters indicate content, lowercase denotes dead boxes):
    --ND:
 
 ::rST -}
-readRearrangeBoxes :: [Text] -> FilePath -> IO (WH [Box s] s)
+readRearrangeBoxes :: [Text] -> FilePath -> IO (WH s [Box s])
 readRearrangeBoxes tags'Sticky = readFromRecordWithPreviousStyle go
   where go style (Csv.Only action) = do
            let (deleteUnused, grouping, actions) = parseActions action
@@ -1214,7 +1214,7 @@ or provide with a stable order.
    :END:
 
 ::rST -}
-readFreezeOrder :: [Text] -> FilePath -> IO (WH [Box s] s)
+readFreezeOrder :: [Text] -> FilePath -> IO (WH s [Box s])
 readFreezeOrder tags0 = readFromRecordWith go
   where go (Csv.Only style) = do
           boxes <- findBoxByNameAndShelfNames style
@@ -1240,7 +1240,7 @@ specify the styling of a shelves. Example
 
 
 ::rST -}
-readShelfTags :: FilePath -> IO (WH [Shelf s] s)
+readShelfTags :: FilePath -> IO (WH s [Shelf s])
 readShelfTags = readFromRecordWith go where
   go (selector, splitOnNonEscaped "#" -> tags) = do
     shelves <- findShelvesByBoxNameAndNames selector
@@ -1249,8 +1249,8 @@ readShelfTags = readFromRecordWith go where
 -- * Read transform tags 
 -- | Temporary type to read a regex using Cassava
 -- Usefull so that regex validation is done when reading the file
-type RegexOrFn s =  Either Rg.Regex (Box s -> Int -> WH Rg.Regex s)
-instance Csv.FromField (Either Rg.Regex (Box s -> Int -> WH Rg.Regex s)) where
+type RegexOrFn s =  Either Rg.Regex (Box s -> Int -> WH s Rg.Regex)
+instance Csv.FromField (Either Rg.Regex (Box s -> Int -> WH s Rg.Regex)) where
   parseField s = do
     r <- Csv.parseField s
     case expandAttributeMaybe r of
@@ -1347,14 +1347,14 @@ of the shelf name have changed :
    ,A,B -- rename the value of short shelf from A to B
    :E
 ::rST -}
-readTransformTags :: FilePath -> [Text] -> IO (WH [Box s] s)
+readTransformTags :: FilePath -> [Text] -> IO (WH s [Box s])
 readTransformTags path tags = readFromRecordWith (\(style, tagPat, tagSub) -> transformTags tags style tagPat tagSub) path
 
  -- -| Apply {transformTagsFor} to the matching boxes
  -- if tags are given only the given tags will be process.
  -- If only one tag is given, the substition will only apply
  -- to the tag value instead of the chain #tag=value
-transformTags :: [Text] -> BoxSelector -> RegexOrFn s -> Text -> WH [Box s] s
+transformTags :: [Text] -> BoxSelector -> RegexOrFn s -> Text -> WH s [Box s]
 transformTags tags style tagPattern tagSub = do
   boxes0 <- findBoxByNameAndShelfNames style
   boxes <- mapM findBox boxes0
@@ -1362,7 +1362,7 @@ transformTags tags style tagPattern tagSub = do
   
 -- | Regex tags substitutions. Each tags is matched and applied separately
 -- The tag is not removed. To do so add a `#-\0` at the end
-transformTagsFor :: [Text] -> RegexOrFn s -> Text -> Box s -> Int -> WH (Maybe (Box s)) s
+transformTagsFor :: [Text] -> RegexOrFn s -> Text -> Box s -> Int -> WH s (Maybe (Box s))
 transformTagsFor tags tagPat' tagSub box index = do
   tagPat <- either return (\f -> f box index) tagPat'
   let tagOps = fromTag'Operations $ case tags of
@@ -1398,10 +1398,10 @@ the ``@throwError`` is given and box doesn't fit in the given shelf.
 Instead of moving the box to the error shelf, the planner will stop
 and generate an error message.
 ::rST -}
-readStockTake :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH ([Box s], [Text]) s)
+readStockTake :: [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH s ([Box s], [Text]))
 readStockTake tagOrPatterns0 newBoxOrientations splitStyle filename= do
     let (unique, tagOrPatterns) = partition ("@unique=" `isPrefixOf`) tagOrPatterns0
-        lookupWH :: forall z . WH ([Text] -> Maybe (Box z)) z
+        lookupWH :: forall z . WH z ([Text] -> Maybe (Box z))
         lookupWH = case unique of 
                   (x:_) | Just by <- stripPrefix "@unique=" x -> do
                       boxMap <- getOrCreateBoxTagMap by
@@ -1414,7 +1414,7 @@ readStockTake tagOrPatterns0 newBoxOrientations splitStyle filename= do
 
 -- | Create new boxes unless a lookup function is given. In that case, lookup if the box already exists
 -- and modify it. Usefull to merge to diff two warehouses.
-readStockTakeWithLookup :: (WH ([Text] -> Maybe (Box s)) s)  ->  [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH ([Box s], [Text]) s)
+readStockTakeWithLookup :: (WH s ([Text] -> Maybe (Box s)))  ->  [Text] -> [Orientation] -> (Text -> (Text, Text)) -> FilePath -> IO (WH s ([Box s], [Text]))
 readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle filename = do
     csvData <- BL.readFile filename
     case Csv.decode  Csv.HasHeader csvData of
@@ -1496,10 +1496,10 @@ readStockTakeWithLookup lookupM tagOrPatterns newBoxOrientations splitStyle file
 
 -- | Like stocktake but put boxes at the given position (without checking overlapps)
 -- or execute a list of FillCommands to place the box depending on the previous one
-processStockTakeWithPosition :: ([Text] -> Maybe (Box s)) -> [Text] -> [Orientation] -> (Text -> (Text, Text)) -> [(Text, Text, Text, Double, Double, Double, Text)] -> WH ([Box s], [Text]) s
+processStockTakeWithPosition :: ([Text] -> Maybe (Box s)) -> [Text] -> [Orientation] -> (Text -> (Text, Text)) -> [(Text, Text, Text, Double, Double, Double, Text)] -> WH s ([Box s], [Text])
 processStockTakeWithPosition lookupM tagOrPatterns newBoxOrientations splitter rows  =  do
   s0 <- defaultShelf
-  let -- go :: Map Text FillState -> _ -> WH (FillState, _) s
+  let -- go :: Map Text FillState -> _ -> WH s (FillState, _)
       go (previousShelf, fillStateMap) (shelfname, posSpec, style', l, w, h, os) =  do
               let fillState = findWithDefault emptyFillState {fLastBox_ = Dimension l w h} shelfname fillStateMap
                   (name, tags ) = extractTags style'
@@ -1647,7 +1647,7 @@ or all of the limit can be specified as follow
    ,xx3 -- max height 3
 
 ::rST -}
-setOrientationRules :: [Orientation] -> FilePath -> IO (WH () s)
+setOrientationRules :: [Orientation] -> FilePath -> IO (WH s ())
 setOrientationRules defOrs filename = do
   fn <- readOrientationRules defOrs filename
 

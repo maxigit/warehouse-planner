@@ -84,7 +84,7 @@ instance Rendered (Widget n) where
     
 
 -- * Percentatge
-percUsed :: [Shelf s] -> WH Double s
+percUsed :: [Shelf s] -> WH s Double
 percUsed shelves = do
   boxess <- mapM findBoxByShelf shelves
   let boxesV = sum $ map boxVolume $ concat boxess

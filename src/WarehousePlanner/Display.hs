@@ -11,7 +11,7 @@ import Diagrams.Backend.Cairo
 -- import Data.Maybe
 import Data.Map qualified as Map
 
-display :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> WH (Diagram B) s
+display :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> WH s (Diagram B)
 display shelfStyling boxStyling= do
     runs <- gets shelfGroup
     g <- renderRuns shelfStyling boxStyling runs
@@ -23,12 +23,12 @@ renderRuns shelfStyling boxStyling = renderGroup shelfStyling boxStyling vcat re
 renderRun shelfStyling boxStyling = renderGroup shelfStyling boxStyling hcat renderBay
 renderBay shelfStyling boxStyling = renderGroup shelfStyling boxStyling (vcat . reverse) renderShelf
 
--- renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> RunsWithId s -> WH (Diagram B) s
+-- renderGroup :: (Shelf s -> ShelfStyling ) -> (Box s -> BoxStyling) -> RunsWithId s -> WH s (Diagram B)
 renderGroup shelfStyling boxStyling cat_ renderChildren gs = do
     rendered <- mapM (renderChildren shelfStyling boxStyling) gs
     return $ pad (1.05) $ cat_ (map alignB $ toList rendered)
     
-renderShelf :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> ShelfId s -> WH (Diagram B) s
+renderShelf :: (Shelf s -> ShelfStyling) -> (Box s -> BoxStyling) -> ShelfId s -> WH s (Diagram B)
 renderShelf shelfStyling boxStyling shelfId = do            
     shelf <- findShelf shelfId
     (_, used) <- usedDepth shelf
@@ -65,7 +65,7 @@ renderShelf shelfStyling boxStyling shelfId = do
 
     return $ alignBL $ centerX ((align_ boxes) `atop` (align_ diagram)) === (centerX bar')
 
-renderBoxes :: (Box s -> BoxStyling) -> Shelf s -> WH (Diagram B) s
+renderBoxes :: (Box s -> BoxStyling) -> Shelf s -> WH s (Diagram B)
 renderBoxes boxStyling shelf = let 
     in do
         boxesNotSorted <- findBoxByShelf shelf
@@ -130,7 +130,7 @@ offsetBox fromBoxCenter shelf box diagram  = let
           
     in diagram # translate (r2 (offset (flow shelf)))
 
-renderBox :: (Box s -> BoxStyling) -> Shelf s -> Box s -> WH [(Int, Diagram B)] s
+renderBox :: (Box s -> BoxStyling) -> Shelf s -> Box s -> WH s [(Int, Diagram B)]
 renderBox boxStyling shelf box = do
     let BoxStyling{..} = boxStyling box
     let   Dimension l __w h = boxDim box

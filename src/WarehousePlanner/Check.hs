@@ -33,14 +33,14 @@ boxOverlappWith box boxes = filter (affDimensionOverlap (boxAffDimension box) . 
 
 
 -- | Return box status for all boxes of a shelf
-checkShelfStatus :: Shelf s -> WH [ (Box s, (StickoutStatus, [Box s])) ] s
+checkShelfStatus :: Shelf s -> WH s [ (Box s, (StickoutStatus, [Box s])) ]
 checkShelfStatus shelf = do
   boxes <- findBoxByShelf shelf
   let   go box = (box, (isBoxStickingOut box shelf, boxOverlappWith box $ filter (/=box) boxes))
   return $ map go $ reverse boxes
                 
 -- | Tag all boxes with their check status (shelf + overlaps) if needed
-tagBoxesStatus :: Shelf s -> WH () s
+tagBoxesStatus :: Shelf s -> WH s ()
 tagBoxesStatus shelf = do
   status <- checkShelfStatus shelf
   mapM_ (uncurry tagBoxStatus) status
@@ -68,7 +68,7 @@ Check if boxes overlap with other boxes.
 
 ::rST
 -}
-tagBoxStatus :: Box s -> (StickoutStatus, [Box s]) -> WH () s
+tagBoxStatus :: Box s -> (StickoutStatus, [Box s]) -> WH s ()
 tagBoxStatus box (status, overlappings) = do
   let cleanOps = fromTag'Operations  $
                [ ("@stickout",  case status of

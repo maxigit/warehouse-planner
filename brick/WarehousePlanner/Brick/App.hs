@@ -157,7 +157,7 @@ data HistoryEvent = HPrevious
 data ReloadStage = ReloadRequest | ReloadStart
   deriving (Eq, Show, Ord) -- , Enum, Bounded)
 
-makeAppShelvesSummary :: AppState -> WH (Runs SumVec (SumVec  (ZHistory1 Box RealWorld))) RealWorld
+makeAppShelvesSummary :: AppState -> WH RealWorld (Runs SumVec (SumVec  (ZHistory1 Box RealWorld)))
 makeAppShelvesSummary state = do
   runs <-  adjustedShelfGroup state
   shelvesSummary <- traverseRuns findShelf runs
@@ -279,7 +279,7 @@ updateHLState :: AppState -> AppState
 updateHLState state = state { asShelvesSummary = updateHLStatus (boxHLStatus state . zCurrentEx) (shelfHLStatus state) (asShelvesSummary state) }
 
 
-adjustedShelfGroup :: AppState -> WH (RunsWithId s) s
+adjustedShelfGroup :: AppState -> WH s (RunsWithId s)
 adjustedShelfGroup state = do
   runs <- gets shelfGroup
   case asAdjustedShelvesMode state of
@@ -322,7 +322,7 @@ adjustedShelfGroup state = do
 
   
   
-initState :: Day -> (AppState -> WH AppState RealWorld) -> (IO (Either Text (Warehouse RealWorld)), IO ()) -> String -> WH (AppState) RealWorld
+initState :: Day -> (AppState -> WH RealWorld AppState) -> (IO (Either Text (Warehouse RealWorld)), IO ()) -> String -> WH RealWorld (AppState)
 initState asToday adjust asReload title = do
   let asSummaryView = SVVolume
       asDisplayHistory = False
@@ -474,7 +474,7 @@ submapHelp cm = let
    --           | (section, handlers) <- section'handlers
    --           ]
   
-whMain :: (AppState -> WH AppState RealWorld ) -> String -> Maybe FilePath -> (IO (Either Text (Warehouse RealWorld, Map Text Kolor))) -> IO ()
+whMain :: (AppState -> WH RealWorld AppState ) -> String -> Maybe FilePath -> (IO (Either Text (Warehouse RealWorld, Map Text Kolor))) -> IO ()
 whMain adjust title watchM reload= do
   -- error $ unpack
   --       $ unlines 
@@ -1142,7 +1142,7 @@ setNewWHEvent ev = do
        return $ updateHLState s {asWarehouse = newWH, asShelvesSummary  }
    put new
    
-execute :: WH a RealWorld -> B.EventM  n AppState a
+execute :: WH RealWorld a -> B.EventM  n AppState a
 execute action = do 
    s@AppState{..} <- get
    (newState, r) <- liftIO $ execWH asWarehouse do
@@ -1615,7 +1615,7 @@ executeCommand command = do
       Just n -> navigateHistory (HGotTo n)
 
 
-makeBoxSelection :: Text -> WH (Maybe (Selection BoxSelector (BoxId s))) s
+makeBoxSelection :: Text -> WH s (Maybe (Selection BoxSelector (BoxId s)))
 makeBoxSelection "" = return Nothing
 makeBoxSelection sText = do 
    let sSelector = parseBoxSelector sText
@@ -1623,7 +1623,7 @@ makeBoxSelection sText = do
    let sSelected = Set.fromList $ map boxId boxeIds 
    return $ Just Selection{..}
 
-makeShelfSelection :: Text -> WH (Maybe (Selection ShelfSelector Text)) s
+makeShelfSelection :: Text -> WH s (Maybe (Selection ShelfSelector Text))
 makeShelfSelection "" = return Nothing
 makeShelfSelection sText = do 
    let sSelector = parseShelfSelector sText

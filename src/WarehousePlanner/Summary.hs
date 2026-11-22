@@ -77,7 +77,7 @@ ratio f ShelvesSummary{sShelvesSummary,sBoxSummary} = case f sShelvesSummary of
   x -> f sBoxSummary / x
   
 
-summaryFromShelf :: (Shelf s -> WH e s) -> Shelf s -> WH (ShelvesSummary e NonEmpty (Shelf s)) s
+summaryFromShelf :: (Shelf s -> WH s e) -> Shelf s -> WH s (ShelvesSummary e NonEmpty (Shelf s))
 summaryFromShelf makeExtra shelf = do
    boxes <- mapM findBox (_shelfBoxes shelf)
    e <- makeExtra shelf
@@ -87,7 +87,7 @@ summaryFromShelf makeExtra shelf = do
                            (makeShelfSummary shelf)
                            e
                            
-summaryFromShelves :: Semigroup e => (Shelf s -> WH e s) -> NonEmpty (Shelf s) -> WH (ShelvesSummary e NonEmpty (Shelf s)) s
+summaryFromShelves :: Semigroup e => (Shelf s -> WH s e) -> NonEmpty (Shelf s) -> WH s (ShelvesSummary e NonEmpty (Shelf s))
 summaryFromShelves makeExtra shelves = sconcat <$> mapM (summaryFromShelf makeExtra) shelves
 
 makeShelfSummary :: Shelf s -> Summary
@@ -114,7 +114,7 @@ makeBoxesSummary boxes = Summary{..} where
 data R' f a = R' (Runs f a)
      deriving (Functor, Foldable, Traversable)
 
-makeRunsSummary :: Semigroup e => (Shelf s -> WH e s) -> Runs NonEmpty (Shelf s)  -> WH (Runs (ShelvesSummary e NonEmpty) (ShelvesSummary e NonEmpty (Shelf s))) s
+makeRunsSummary :: Semigroup e => (Shelf s -> WH s e) -> Runs NonEmpty (Shelf s)  -> WH s (Runs (ShelvesSummary e NonEmpty) (ShelvesSummary e NonEmpty (Shelf s)))
 makeRunsSummary makeExtra runs = do
   runs' <- traverseRuns (summaryFromShelf makeExtra) runs
   return $ fromRuns3 (sconcat . fmap promote) (sconcat . fmap promote) (sconcat . fmap promote) runs'

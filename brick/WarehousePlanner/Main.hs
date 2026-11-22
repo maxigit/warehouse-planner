@@ -210,7 +210,7 @@ defaultMainWith expandSection = do
       title = intercalate "-" $ map takeBaseName oFiles
       withHistory = oCommand `elem` [BoxHistory, Display]
                   && not oNoHistory
-      getExec :: forall a . IO (Either Text (WH a RealWorld -> IO a, Scenario))
+      getExec :: forall a . IO (Either Text (WH RealWorld a -> IO a, Scenario))
       getExec = do
                     scenarioE <- readScenarioFromPaths withHistory (expandSection dir) oDir oFiles
                     extraScenarios <- case extraScenariosFrom o of
@@ -228,7 +228,7 @@ defaultMainWith expandSection = do
                               isCheck s = case s of 
                                            Step CheckShelvesH _ _ -> True
                                            _ -> False
-                          let exec :: forall a . WH a RealWorld -> IO a
+                          let exec :: forall a . WH RealWorld a -> IO a
                               exec action = do
                                    let ?cache = if withHistory then refCache else noCache
                                        ?today = today

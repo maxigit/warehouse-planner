@@ -62,7 +62,7 @@ summary = do
   -- mapM_ print extra
 
 
-exec :: WH a RealWorld -> IO a
+exec :: WH RealWorld a -> IO a
 exec wh = do
   state <- readIORef stateRef
   (r, state') <- runWH (warehouse state) wh

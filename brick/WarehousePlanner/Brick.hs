@@ -15,13 +15,13 @@ import Data.Foldable qualified as Foldable
 import Data.Text (commonPrefixes)
 
 {-
-renderWarehouse :: WH (Widget n) s
+renderWarehouse :: WH s (Widget n)
 renderWarehouse = do
    groups <- gets shelfGroup
    slices <- mapM renderSlice $ toGroups groups
    return $ vBox {- $ intersperse hBorder -} $  slices
    
-renderSlice :: RunsWithId s -> WH (Widget n) s
+renderSlice :: RunsWithId s -> WH s (Widget n)
 renderSlice slice = do
   bays <- mapM renderBay $ toGroups slice
   shelves <- mapM (findShelf @(ShelfId)) (Foldable.toList slice)
@@ -31,14 +31,14 @@ renderSlice slice = do
   return $ hBox $ {- intersperse vBorder -} txt (title <> ": ") : bays
   where commonPrefix a b = maybe "" (\(p,_,_) -> p) (commonPrefixes a b)
   
-renderBay :: forall s n. RunsWithId s -> WH (Widget n) s
+renderBay :: forall s n. RunsWithId s -> WH s (Widget n)
 renderBay bay = do
   shelves <- mapM (findShelf @(ShelfId)) (Foldable.toList bay)
   let (bottoms, tops) = partition (not . isTop) shelves
   renderBayTo2Halves bottoms tops
   where isTop s = tagIsPresent s "top"
   
-renderShelf :: RunsWithId s -> WH (Widget n) s
+renderShelf :: RunsWithId s -> WH s (Widget n)
 renderShelf (ShelfProxy sid) = do
     shelf <- findShelf sid 
     return $ txt $ shelfName shelf
@@ -48,7 +48,7 @@ renderShelf group = renderSlice group
 
 
 -- | render one bay to 
-renderBayTo2Halves :: [Shelf s ] -> [Shelf s] -> WH (Widget  n) s
+renderBayTo2Halves :: [Shelf s ] -> [Shelf s] -> WH s (Widget  n)
 renderBayTo2Halves bottoms tops = do
   -- calculate the percentage in 8th of bottom vs top shelfs
   let [nb, nt] = map length [bottoms, tops]

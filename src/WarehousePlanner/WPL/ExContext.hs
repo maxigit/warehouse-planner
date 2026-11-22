@@ -120,7 +120,7 @@ withAll = ExContext allIncluded allIncluded Nothing (BoxNumberSelector NoLimit N
 -- | Boxes of the current which satisfy the given selector.
 -- At the moment, it is implemented as the intersection of 
 -- the context boxes and all boxes 
-narrowBoxes :: BoxSelector -> ExContext s -> WH (ExContext s) s
+narrowBoxes :: BoxSelector -> ExContext s -> WH s (ExContext s)
 narrowBoxes selector ec = do
    let finalSelector = combineSelector (ecSelector ec) selector
    -- traceShowM("SELECTOR", selector, ecSelector ec , " => ", finalSelector)
@@ -138,7 +138,7 @@ narrowBoxes selector ec = do
             <> "' excluded: " <> show (fmap length $ excluded $ ecBoxes ec)
    return $ ec { ecBoxes = fmap (first boxId) ecB, ecSelector = numberSelector finalSelector, ecParent = Just ec }
    
-narrowShelves :: ShelfSelector -> ExContext s -> WH (ExContext s) s
+narrowShelves :: ShelfSelector -> ExContext s -> WH s (ExContext s)
 narrowShelves selector ec = do
     (ecS, incs) <- case included (ecShelves ec) of 
       Nothing {- AllOf -} -> do
@@ -155,18 +155,18 @@ narrowShelves selector ec = do
                <> "' excluded: " <> show (fmap length $ excluded $ ecShelves ec)
     return ec { ecShelves = fmap shelfId ecS, ecParent = Just ec }
 
-getBoxPs :: ExContext s -> WH [(Box s, Priority)] s
+getBoxPs :: ExContext s -> WH s [(Box s, Priority)]
 getBoxPs ec = do
      case included (ecBoxes ec) of
          Nothing -> findBoxByNameAndShelfNamesWithPriority selectAllBoxes
          Just incs -> mapM (firstM findBox)  incs
   where firstM f (a,b) = (,b) <$> f a
 
-getBoxes :: ExContext s -> WH [Box s] s
+getBoxes :: ExContext s -> WH s [Box s]
 getBoxes ec = map fst <$> getBoxPs ec 
 
   
-getShelves :: ExContext s -> WH [Shelf s] s
+getShelves :: ExContext s -> WH s [Shelf s]
 getShelves ec = do
     sIds <- case included (ecShelves ec) of 
         Nothing -> toList <$> gets shelves

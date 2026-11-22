@@ -251,13 +251,13 @@ exec0 = execWH (emptyWarehouse $ fromGregorian 2025 02 21) . (withBoxOrientation
 
 addSorted a b = addWithPartition PSortedOverlap a b
 addAligned a b= addWithPartition (POverlap OAligned) a b
-addWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> [Text] -> WH [Text] s
+addWithPartition :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> [Text] -> WH s [Text]
 addWithPartition pmode boxes newBoxes =  do
         prepare PRightOnly boxes
         newBoxes <- map fst <$> makeBoxesWithPartition pmode newBoxes
         showBoxWithPosition newBoxes
         
-prepare :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH [Text] s
+prepare :: (?dim :: Map Text Dimension) => PartitionMode -> [Text] -> WH s [Text]
 prepare pmode boxes = do
         makeShelves $ words "S T pending"
         boxes <- map fst <$> makeBoxesWithPartition pmode boxes
@@ -265,12 +265,12 @@ prepare pmode boxes = do
         -- showBoxWithPosition boxes
         
              
-showBoxWithPosition :: [Box s] -> WH [Text] s
+showBoxWithPosition :: [Box s] -> WH s [Text]
 showBoxWithPosition boxes = mapM (\(box,i) -> expandAttribute box i "${boxname} ${shelfname} ${position-spec}" ) 
                                  (zip boxes [1..])
 
 
-shouldWH :: Ord a => Show a => WH [a] RealWorld  -> [a] -> IO ()
+shouldWH :: Ord a => Show a => WH RealWorld [a] -> [a] -> IO ()
 shouldWH action expected =  fmap sort (exec0 action) `shouldReturn` sort expected
      
       

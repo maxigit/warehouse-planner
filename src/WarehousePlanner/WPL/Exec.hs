@@ -32,15 +32,15 @@ import Data.List.NonEmpty (nonEmpty)
 import Data.Foldable(foldr1)
 
 
-runWPL :: [Statement] -> WH () s
+runWPL :: [Statement] -> WH s ()
 runWPL = runWPLWith (const $ return ())
 
-runWPLWith :: (Maybe (ExContext s) -> WH r s) -> [Statement] -> WH r s
+runWPLWith :: (Maybe (ExContext s) -> WH s r) -> [Statement] -> WH s r
 runWPLWith action statements = do
   ecs <- mapM (executeStatement withAll {ecNoEmptyShelves = True }) statements
   action $ lastMay ecs
 
-executeStatement :: ExContext s -> Statement -> WH (ExContext s) s
+executeStatement :: ExContext s -> Statement -> WH s (ExContext s)
 executeStatement ec command = 
     case command of 
         Action command -> do
@@ -145,7 +145,7 @@ showExitMode'Sel :: (ExitMode, CSelector ShelfSelector ) -> String
 showExitMode'Sel (exitMode, sel) = show exitMode <> showCSelector showShelfSelector sel 
 
 
-executeCommand :: forall s . ExContext s -> Command -> WH (ExContext s) s
+executeCommand :: forall s . ExContext s -> Command -> WH s (ExContext s)
 executeCommand ec command = case command of
     --------
     Move boxm pmodem orules exit'selsE -> do
@@ -283,7 +283,7 @@ executeCommand ec command = case command of
        return ec
     TraceBoxes desc propM -> do
        let ExContext{..} = ec
-       let boxTitleM :: Box s -> Int -> WH Text s
+       let boxTitleM :: Box s -> Int -> WH s Text
            boxTitleM = case propM >>= expandAttributeMaybe of
                       Nothing -> \box _ -> return $ boxStyleAndContent box
                       Just exp -> exp
@@ -471,7 +471,7 @@ executeCommand ec command = case command of
     ---------
     FillShelves shelfPropM fillTagM stmt -> do
         let fillTag = fromMaybe "fill-spec" fillTagM
-            getShelfName :: Box s -> Int -> WH (Maybe Text) s
+            getShelfName :: Box s -> Int -> WH s (Maybe Text)
             getShelfName = case shelfPropM of
                           Nothing -> \box _ -> return $ getTagValuem box "fill-shelf"
                           jp@(Just prop) | Just exp <- expandAttributeMaybe prop -> \box i -> Just <$> exp box i 
@@ -598,7 +598,7 @@ executeCommand ec command = case command of
 
 
 
-evalCondition :: ExContext s ->  Condition -> WH Bool s
+evalCondition :: ExContext s ->  Condition -> WH s Bool
 evalCondition ec (CondNot cond) = not <$> evalCondition ec cond
 evalCondition ec (CondBox selector) = do
   n <- narrowCSelector selector ec
@@ -636,8 +636,8 @@ parseWPL source content =
        Right statements -> return statements
 
 class Narrowing selector where
-  narrow :: selector -> ExContext s -> WH (ExContext s) s
-  useContext :: ExContext s -> WH selector s
+  narrow :: selector -> ExContext s -> WH s (ExContext s)
+  useContext :: ExContext s -> WH s selector
   narrowFor :: Proxy selector -> ExContext s -> ExContext s -> ExContext s
   -- ^            new context , original
   
@@ -667,7 +667,7 @@ instance Narrowing ShelfSelector where
            return selectAllShelves {sShelfSelectors}
   narrowFor _ new ec = ec { ecShelves = ecShelves new }
 
-narrowCSelector :: forall selector s . Narrowing selector => CSelector selector -> ExContext s -> WH (ExContext s) s
+narrowCSelector :: forall selector s . Narrowing selector => CSelector selector -> ExContext s -> WH s (ExContext s)
 narrowCSelector cselector ec = do
    let sel = Proxy :: Proxy selector
    ec' <- case cselector of

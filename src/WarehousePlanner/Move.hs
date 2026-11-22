@@ -46,13 +46,13 @@ import Data.Bifoldable qualified as F
 -- aroundArrangement  :: WH a -> WH a
 aroundArrangement :: (Shelf' shelf, Box' box, Box' box2)
                   => forall s . AddOldBoxes 
-                  -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s)
-                -> [box s] -> [shelf s] -> WH (InExcluded (box2 s)) s
+                  -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH s (InExcluded (box2 s)))
+                -> [box s] -> [shelf s] -> WH s (InExcluded (box2 s))
 aroundArrangement useOld arrangement newBoxishs shelves =  do
   inEx <- aroundArrangementWithP useOld arrangement (map (,()) newBoxishs) shelves
   return $ fmap fst inEx
 
-aroundArrangementWithP :: (Shelf' shelf, Box' box, Box' box2) => forall s p . AddOldBoxes -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH (InExcluded (box2 s)) s) -> [(box s, p)] -> [shelf s] -> WH (InExcluded (box2 s, p)) s
+aroundArrangementWithP :: (Shelf' shelf, Box' box, Box' box2) => forall s p . AddOldBoxes -> (forall b . Box' b =>  [b s] -> [shelf s] -> WH s (InExcluded (box2 s))) -> [(box s, p)] -> [shelf s] -> WH s (InExcluded (box2 s, p))
 aroundArrangementWithP useOld arrangement newBoxishs shelves = do
     newBox'Ps <- mapM (firstM findBox) newBoxishs
     let -- priorityMap :: Map (BoxId s) p
@@ -124,7 +124,7 @@ type OrPos b = Either (NonEmpty b) Position
 -- the possible orientation and shelf strategy.
 -- Returns a slices of either an available position or the list of boxes overlapping with the position.
 
-bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH (Slices Double (BoxesOrPos s)) s
+bestPositionOrBoxes :: PartitionMode -> Shelf s -> SimilarBoxes s -> WH s (Slices Double (BoxesOrPos s))
 bestPositionOrBoxes partitionMode shelf simBoxes = do
   let SimilarBy (dim,_) box boxes = simBoxes
   boxesInShelf <- findBoxByShelf shelf
@@ -347,7 +347,7 @@ bestEffort boxes = let
   in stairsFromCorners $ cornerHull allCorners
   
 -- | Move boxes of similar size to the given shelf if possible
-moveSimilarBoxes :: (Shelf' shelf) => forall s . PartitionMode -> SimilarBoxes s -> [(ExitMode, [shelf s])] -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
+moveSimilarBoxes :: (Shelf' shelf) => forall s . PartitionMode -> SimilarBoxes s -> [(ExitMode, [shelf s])] -> WH s (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s))
 moveSimilarBoxes partitionMode boxes exit'shelves' = do
   slotGroups :: [(ExitMode, [(Shelf s, _)])] <- forM exit'shelves' \(exitMode, shelves') ->  do
      shelves <- mapM findShelf shelves'
@@ -523,7 +523,7 @@ alignColumnMap tolerance xs@(x:_) = Map.fromList $ zip xs columns where
   
 -- | Assign boxes to positions in order (like a zip) but with respect to box breaks.
 -- (skip to the next column if column break for example)
-assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s)) s
+assignBoxesToPositions :: Slices k (Shelf s, Position) -> SimilarBoxes s -> WH s (Maybe (SimilarBoxes s), Maybe (SimilarBoxes s))
 assignBoxesToPositions slices simBoxes = do
   let boxes = unSimilar simBoxes
   let go _ _ [] = return []
@@ -721,7 +721,7 @@ Settings those two priorities will result in the following order :
 The content priority could be used for example, to select which one
 of the B-Black boxes to get first.
 ::rST -}
-moveBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> SortBoxes -> [(box s)] -> [(ExitMode, [shelf s])] -> WH (InExcluded (Box s)) s
+moveBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> SortBoxes -> [(box s)] -> [(ExitMode, [shelf s])] -> WH s (InExcluded (Box s))
 moveBoxes partitionMode sortMode bs exit'ss = do
   boxes <- mapM findBox bs
   let sorted = (if sortMode == SortBoxes then sortOnIf boxGlobalRank else id)
@@ -734,7 +734,7 @@ moveBoxes partitionMode sortMode bs exit'ss = do
   return $ fmap fst inEx
 
 
-moveSortedBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> [(box s, p)] -> [(ExitMode, [shelf s])] -> WH (InExcluded (Box s, p)) s
+moveSortedBoxes :: (Box' box , Shelf' shelf) => PartitionMode -> [(box s, p)] -> [(ExitMode, [shelf s])] -> WH s (InExcluded (Box s, p))
 moveSortedBoxes partitionMode bs exit'ss = do
   boxes <- mapM (firstM findBox) bs
   let layers = groupBy ((==)  `on` boxBreak . fst ) boxes
@@ -758,7 +758,7 @@ moveSortedBoxes partitionMode bs exit'ss = do
     return (concatMap unSimilar $ catMaybes moveds, concatMap unSimilar $ catMaybes lefts)
   return $ InExcluded (Just $ concat ins) (Just $ concat exs)
 
-moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH (InExcluded (Box s, Priority))  s
+moveAndTag :: ExContext s -> [Text] -> (BoxSelector, [Text], Maybe Text, [OrientationStrategy]) -> WH s (InExcluded (Box s, Priority))
 moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBoxOrientations orientations $ do
   newBaseEvent "TAM" $ intercalate "," [ intercalate "#" (printBoxSelector style :  tags_)
                                  , fromMaybe "<tag only>" locationM
@@ -802,7 +802,7 @@ moveAndTag ec tagsAndPatterns_ (style, tags_, locationM, orientations) = withBox
 
 -- with each group having "mode" and locations
 -- A|B ^C|D means try A or B, then C or D with exit on top mode
-moveToLocations :: Ord p => ExContext s -> SortBoxes -> [(Box s, p)] -> Text -> WH (InExcluded (Box s, p)) s
+moveToLocations :: Ord p => ExContext s -> SortBoxes -> [(Box s, p)] -> Text -> WH s (InExcluded (Box s, p))
 moveToLocations ec sortMode boxes location = do
    foldM (\boxInEx locations -> do
              let (location, (exitMode, partitionMode, addOldBoxes, sortModeM)) = extractModes locations

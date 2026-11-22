@@ -31,7 +31,7 @@ data ForGrouping = Don'tGroup | GroupByContent | GroupBySelector
      deriving (Show, Eq)
 
 -- * Export {{1
-rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> TagsOperations -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+rearrangeBoxesByContent ::  Maybe Text -> ForUnused -> ForGrouping -> TagsOperations -> (Box s -> Bool) -> (Text -> Bool) -> BoxSelector -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH s [Box s]
 rearrangeBoxesByContent debugm deleteUnused groupByContent tagOps isUsed isSticky boxsel actions = do
   let findBoxWithDebug (boxId, p@(k1, (k2, k3))) = do
         box <- findBox boxId
@@ -82,7 +82,7 @@ showkey = intercalate " " . map go where
    showv (Right t) = t
         
   
-shiftUsedBoxes :: forall s . Maybe Text -> (Box s -> Bool) -> (Text -> Bool) -> [Box s] -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH [Box s] s
+shiftUsedBoxes :: forall s . Maybe Text -> (Box s -> Bool) -> (Text -> Bool) -> [Box s] -> [(Box s -> Maybe (Shelf s) -> Bool, ShiftStrategy)] -> WH s [Box s]
 shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
   box'shelves <- mapM (\b -> (return $ boxShelf b) >>= mapM findShelf >>= \s -> return (b, s)) boxes
   let boxWithBuckets0 = map mkBucket inBucket'strategies
@@ -109,7 +109,7 @@ shiftUsedBoxes debugPrefix isUsed isSticky boxes inBucket'strategies = do
 -- | Do half a swap ie move the source to the destination.
 -- To work full a series of swap involving all boxes (exactly once as a source and
 -- once as a destination) shoud be called
-halfSwap :: Maybe Text -> (Text -> Bool) -> (Box s, Box s) -> WH (Maybe (Box s)) s
+halfSwap :: Maybe Text -> (Text -> Bool) -> (Box s, Box s) -> WH s (Maybe (Box s))
 halfSwap _ _ (source, dest) | source == dest = return Nothing
 halfSwap debugPrefix isSticky (source, dest) = do
         let sticky = Map.filterWithKey (\k _ -> isSticky k) (boxTags dest)
@@ -241,7 +241,7 @@ shiftUsedInBucketsWithStrategy isUsed bucket'strategies =  let
 
 -- | Modify the intrinsic order (in Warehouse) of boxes
 -- for given boxes in the given order
-freezeOrder :: [BoxId s] -> WH () s
+freezeOrder :: [BoxId s] -> WH s ()
 freezeOrder boxesInOrder =  do
   let idsInOrder = [ i | BoxId_ (Arg i _ ) <- boxesInOrder ]
       idsInOriginalOrder = sort idsInOrder
@@ -321,7 +321,7 @@ emptyFillState = FillState { fOffset = Dimension 0 0 0
 -- Checking can be done later if needed.
 -- This is used force boxes in a shelf when we know (from barcode scanning
 -- that the box is there.
-fillShelf:: [FillCommand s] -> Shelf s -> WH [Box s] s
+fillShelf:: [FillCommand s] -> Shelf s -> WH s [Box s]
 fillShelf commands shelf = do
   -- empty the shelf first
   existingBoxes <- findBoxByShelf shelf
@@ -329,7 +329,7 @@ fillShelf commands shelf = do
   mapM (assignShelf $ Just s0) existingBoxes
   fmap (catMaybes . snd)  $ mapAccumLM (executeFillCommand shelf) emptyFillState commands 
 
-executeFillCommand :: Shelf s -> FillState -> FillCommand s -> WH (FillState, Maybe (Box s)) s
+executeFillCommand :: Shelf s -> FillState -> FillCommand s -> WH s (FillState, Maybe (Box s))
 executeFillCommand shelf state@FillState{..} = \case
            FCBox box orm -> 
                  case unconsSlices fNextPositions of
