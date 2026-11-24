@@ -14,3 +14,5 @@ results/*.html
 wt-*
 doc/build
 __pycache__
+cabal.project.local
+.viminfo
