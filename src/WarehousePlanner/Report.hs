@@ -243,13 +243,16 @@ Boxes that we want to be in *pickable* zone can be marked with the tag ``@topick
 In the report ``to_pick`` is the number of box we want to be pickable (``@topick``), whereas ``pickable`` is the number of boxes that can be picked from the given layout.
 ``picking_shelves`` is the number of identical shelves required to make all box to pick as pickable.
 
+Generally given numbers are ignores the *pickability* of boxes that is ``fit`` or ``required`` is how many we can fit how the volume required to by those fit regardless of pickable slot. 
+Fields like ``prequired`` ,``pefficiency100`` or ``extra_stock_ratio`` takes pickable slots and into account.
+
 Required vs Fitted
 ``````````````````
-Depending on the ``limitToBoxNb`` parameter the report will try to fit either as much boxes as possible (**fitted**) or just the number of box selected (**to fit**).
-**required* or field starting with **r** refers to either the fitted or to fit boxes.
+Depending on the ``limitToBoxNb`` parameter the report will try to fit either as much boxes as possible (``fit``) or just the number of box selected (``to fit``
+**required** or field starting with **r** refers to either the fitted or to fit boxes.
 
-Field description
-`````````````````
+Field descriptions
+``````````````````
 
 - ``shelf``:  the shelf name
 - ``content``:  styles of boxes in the shelf
@@ -260,6 +263,7 @@ Field description
 - ``to_fit``:  how many boxes are selected
 - ``to_pick``:  how many boxes are ``@topick``
 - ``pickable``: how many boxes can be picked easyly
+
     .. code-block:: text
     
        +-----------------+
@@ -284,27 +288,68 @@ Field description
         // used
 
 - ``l100``:  required length / available length
-- ``w100``:  required witd / available width
+- ``w100``:  required width / available width
 - ``h100``:  required heigh / available height
-- ``wh100``:  
-- ``lh100``: 
-- ``lw100``: 
+- ``wh100``: required width*height / available width*height
+- ``lh100``: requiried length*height / available length*height
+- ``lw100``: requiried length*width / available length8width
+
     .. code-block:: text
-    
-       +-----------------+ ^        +-------------+
-       |                 | .        |.............|
-       |   +---+---+---+ | #        |###########..|
-       +---|@XX|X::|:::| | #        |###########..|
-       |///+---+---+---+ | #        |###########..|
-       |///|@XX|@XX|:::| | #        |###########..|
-       +---+---+---+---+-+ v  h100  +-------------+  
-                                        lh100
+                                          
+       +-----------------+ ^           +   +-------------+
+       |                 | .               |.............|
+       |   +---+---+---+ | #               |###########..|
+       +---|@XX|X::|:::| | #               |###########..|
+       |///+---+---+---+ | #               |###########..|
+       |///|@XX|@XX|:::| | #               |###########..|
+       +---+---+---+---+-+ v  h100     +///+-------------+  
+                                            lh100
            <###########..> : l100
 
+- ``r2100``: **wh100** or **lw100** depending on the "best" orientation. 
+For a horizontal slice, this **wh100**, that is, how we good we are at saving space above and behind
+regardless of the remaining space on the right (and how much columns of boxes we can fit).
+This is usefull if we are planning to put something else on the right and therefore only making sure
+we are not wasting **w** and **h**. **l** is not wasted because the gap will be used by something else.
+
+However, the result is not just the max between **wh100** and **lh100**, as the direction of the slice (horizontal or vertical)
+is chosen to maximize the volume to fit)
+
+   .. code-block:: text
+
+       right is best                 |      above
+       +-----------------+ ^         |    +-----------------+ ^            
+       |                 | ...       |    +---+---+---+---+ | -            
+       |   +---+ - + - + | ##.       |    |@XX|@XX|@XX|X::| | #            
+       +---|@XX|...:...: | ##.       |    +---+---+---+---+ | #            
+       |///+---+ - +.-.+ | ##.       |    |///|             | .            
+       |///|@XX|...:...: | ##.       |    |///|             | .            
+       +---+---+---+---+-+ v h100    |    +---+---+---+---+-+ .                   
+
+               r2100= w100*h100
+       
+       =============================================================
+       above is best                            right
+       +-----------------+ ^               +-----------------+
+       +---+---+---+---+ | -               |                 |
+       |@XX|@XX|@XX|X::| | #               |           +---+ |
+       +---+---+---+---+ | # h100          +-----------+@XX| |
+       |///////////|     | .               |///////////+---+ |
+       |///////////|     | .               |///////////|@XX| |
+       +---+---+---+---+-+ v               +---+---+---+---+-+    
+                       
+       <###############..>                 
+        ###############..
+        .................
+        r2100 = l100*w100                                
+
 - ``fit100``:  fitted / to fit
+- ``shelves_needed``:  how many shelves to fit all required
+- ``picking_shelves``: how many shelves to have enough pickable
+
     .. code-block:: text
     
-       to_fit > fit
+       to_fit (21) > fit (18)
               +-----------------+-----------------+                  
               |                 |                 |                  
               |   +---+---+---+ |   +---+---+---+ |                  
@@ -313,17 +358,17 @@ Field description
               |///|@XX|@XX|XXX| |///|XXX|:::|:::| |                  
               +---+---+---+---+-+---+---+---+---+-+                  
 
+                       1         2
               123456789012345678901
               @XX@XX@XXXXXXXXXXXxxx                  : to_fit  21
               ##################+++                  : fit100: 21/18 >100%
               ##################+++                  : shelves_needed = 1.17
               #  #  #  -  -  -                       : picking_shelves = 3/6 = 0.5
-              #########------------
               
     .. code-block:: text
     
 
-       to_fit <= fit
+       to_fit (10) <= fit (18)
               +-----------------+-----------------+                  
               |                 |                 |                  
               |   +---+---+---+ |   +---+---+---+ |                  
@@ -332,12 +377,12 @@ Field description
               |///|@XX|@XX|:::| |///|:::|:::|:::| |                  
               +---+---+---+---+-+---+---+---+---+-+                  
 
+                       1         2
               123456789012345678901
-              @XX@XX@XXXxxxxxxxxxxx  : to_fit  10
-              ##########-----------  : fit100: 10/18 55%
-              ##########-----------  : shelves_needed = 10/18 = 0.55
+              @XX@XX@XXXxxxxxxxx     : to_fit  10
+              ##########--------     : fit100: 10/18 55%
+              ##########--------     : shelves_needed = 10/18 = 0.55
               #  #  #  -  -  -       : picking_shelves = 3/6 = 0.5
-              ##########--           :  needed__picking_ratio  = 
     
               +-----------------+   +-----------------+                                 
               |                 |   |                 |                                 
@@ -349,7 +394,7 @@ Field description
 
     .. code-block:: text
     
-       to_pick >  shelves
+       to_pick (8) >  pickable (6) 
               +-----------------+-----------------+                  
               |                 |                 |                  
               |   +---+---+---+ |   +---+---+---+ |                  
@@ -358,12 +403,13 @@ Field description
               |///|@::|@::|@::| |///|@X:|:::|:::| |                  
               +---+---+---+---+-+---+---+---+---+-+                  
 
+                       1         2
               123456789012345678901
-              @@@@@@@X@Xxxxxxxxxxxx  : to_fit  10
-              ##########-----------  : fit100: 10/18 55%
-              ##########-----------  : shelves_needed = 10/18 = 0.55
+              @@@@@@@X@X             : to_fit  10
+              ##########--------     : fit100: 10/18 55%
+              ##########--------     : shelves_needed = 10/18 = 0.55
               ######+ +              : picking_shelves = 8/6 = 1.33
-              ##########--           :  needed__picking_ratio  = 
+
               +-----------------+-----------------+                  
               |                 |                 |                  
               |   +---+---+---+ |   +---+---+---+ |                  
@@ -372,26 +418,84 @@ Field description
               |///|#  |#  |#  | |///|+  |   |   | |                  
               +---+---+---+---+-+---+---+---+---+-+                  
 
-- ``refficiency100``: Ratio between the volume occupied by the fitted boxes and the required bouding boxes.
-- ``pefficiency100``: Ratio between the volume occupied by the fitted boxes and the bouding boxes required to make everything pickable.
-- ``shelves_needed``:  how many shelves to fit all required
-- ``picking_shelves``: how many shelves to have enough pickable
-- ``extra_stock_ratio``:  shelves_needed / picking_shelves.
--      If > 1
--      shelves_needed > picking_shelves. We need extra "stock" shelves
--
--      If < 1
--      shelves_needed < picking_shelves. Allowing everything to be picked involded more shelves than required
--      to store everything.
-- ``rvolmin100``: required volume / available volume
+- ``extra_stock_ratio``:  to fit / pickable and hidden
+If <=1, means that there is enough space to "hide" every stock box behind a pickable one
+
+If > 1, means that there all stock boxes don't fit in pickable slot and we therefore need some *stock* slots (or shelves).
+
+    .. code-block:: text
+    
+      Fitting AAA B C DD in 2 deep shelf results in a extra A needing its on stock slot
+      +--+--+--+
+      |B:|DD|::|
+      |--+--+--+
+      |AA|C:|A:|
+      +--+--+--+
+      
+      to fit = 6
+      pickable and hidden = 5
+      extra_stock_ratio = 6/5 = 1.2 or is it 12/8 ?
+      ^^^ BUG ?
+      
+    .. code-block:: text
+    
+      Same in 3 deep shelf gives
+      +---+---+
+      |B::|DD:|
+      |---+---+
+      |AAA|C::|
+      +--+--+--
+      
+      to fit = 6
+      pickable and hidden = 6
+      extra_stock_ratio = 6/6 = 1 or is it 6/12 ?
+
+
 - ``rvolmax100``:  required volume / available max volume (use  max shelf dimension - used)
 - ``fvolmin100``:  fitted volume / available volume
+- ``refficiency100``: Ratio between the volume occupied by the fitted boxes and the required bouding boxes (ignoring pickable issue)
+
+    .. code-block:: text
+                          
+              +-----------------+   +-----------------+                                 
+              |                 |   |                 |                                 
+              |   +---+---+ --+ |   |   +---+---+ - + |                                 
+              +---|XXX|:::|   : |   +---|###|###|   : |                                 
+              |///+---+---+ - + |   |///+---+---+ - + |                                 
+              |///|XXX|XXX|   : |   |///|###|###|   : |                                 
+              +---+---+---+---+-+   +---+---+---+-----+-+                                 
+              
+                 to fit = 9             bounding box = 12
+                 refficiency100 = 9/12 = 75%
+       
+
+
+- ``pefficiency100``: Ratio between the volume occupied by the fitted boxes and the bouding boxes required to make everything pickable.
+
+    .. code-block:: text
+                          
+              +-----------------+   +-----------------+                                 
+              |                 |   |                 |                                 
+              |   +---+---+---+ |   |   +---+---+---+ |                                 
+              +---|@XX|@::|:::| |   +---|###|###|###| |                                 
+              |///+---+---+---+ |   |///+---+---+---+ |                                 
+              |///|@XX|@::|@::| |   |///|###|###|###| |                                 
+              +---+---+---+---+-+   +---+---+---+-----+-+                                 
+              
+                 to fit = 9             bounding box = 18
+                 refficiency100 = 9/18 = 50%
+       
+
+- ``rvolmin100``: required volume / available volume
 - ``fvolmax100``:  fitted volume / availabe max volume
-- ``orientation``: 
-- ``how``: 
-- ``fVSused``: fitted (=/= not to_fit) volume / used volume (by existing boxes)
-- ``required``: required dimensions
-- ``used``: used dimensions (by exists boxes)
+- ``orientation``:  tiling mode
+- ``how``: tiling mode
+- ``fVSused``: fitted versus used = fitted  volume / used volume (by existing boxes).
+  How the new fit compares with the existing content. ``>1`` means that the new fit is better than the actual one.
+
+- ``required``: required bounding boxes (ignoring pickables)
+- ``prequired``: bouding boxes so that everything is pickable.
+- ``used``: used dimensions (by existing boxes)
 - ``leftover``: shelf - used - required
 - ``minShelf``:  available shelf
 - ``maxShelf``: availabe max shelf
