@@ -624,6 +624,7 @@ bestFitFor limitToBoxNb (shelfMin, shelfMax@(Dimension sl sw sh)) current bdim o
    [ ("box", printDim  bdim)
    , ("fit",  pack $ printf "%3d"  fitted)
    , ("to_fit", pack $ printf "%3d" toFit)
+   , ("limit", if limitToBoxNb then "no" else "to_fit")
    , ("to_pick", pack $ printf "%3d" toPick)
    , ("pickable", tshow pickable)
    , ("l100", percent requiredl sl) 
