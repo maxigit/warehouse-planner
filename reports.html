@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Reports &mdash; WarehousePlanner 2.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b21de401"></script>
-        <script src="_static/doctools.js?v=9bcbadda"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -58,8 +56,10 @@
 <li class="toctree-l3"><a class="reference internal" href="#shelf-mode">Shelf mode</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pickable">Pickable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#required-vs-fitted">Required vs Fitted</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#field-description">Field description</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#field-descriptions">Field descriptions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#practical-use">Practical use</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-case">use case</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#brick-shortcuts">Brick shortcuts</a></li>
 </ul>
 </li>
@@ -160,6 +160,10 @@ be expanded using</p>
 <li><p><code class="docutils literal notranslate"><span class="pre">$&lt;comma&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">,</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">$&lt;divide&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">/</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">$&lt;dollar&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">$</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;semicolon&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;space&gt;</span></code> `` ``</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;tab&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">\t</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">$&lt;newline&gt;</span></code> <code class="docutils literal notranslate"><span class="pre">\n</span></code></p></li>
 </ul>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -170,7 +174,7 @@ barcode tag with its location</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:TAGS:
 stock_id,tag
 ,report-key=<span class="si">$[barcode]</span>
-,&quot;report-value=<span class="si">$[report-key]</span>,$location&quot;
+,"report-value=<span class="si">$[report-key]</span>,$location"
 </pre></div>
 </div>
 <p>Note the presence of quotes wich allow a comma to be used inside the tag
@@ -216,12 +220,12 @@ For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4
 </section>
 <section id="required-vs-fitted">
 <h3>Required vs Fitted<a class="headerlink" href="#required-vs-fitted" title="Link to this heading"></a></h3>
-<p>Depending on the <code class="docutils literal notranslate"><span class="pre">limitToBoxNb</span></code> parameter the report will try to fit either as much boxes as possible (<strong>fitted</strong>) or just the number of box selected (<strong>to fit</strong>).
-<strong>required* or field starting with **r</strong> refers to either the fitted or to fit boxes.</p>
+<p>Depending on the <code class="docutils literal notranslate"><span class="pre">limitToBoxNb</span></code> parameter the report will try to fit either as much boxes as possible (<code class="docutils literal notranslate"><span class="pre">fit</span></code>) or just the number of box selected (<code class="docutils literal notranslate"><span class="pre">to</span> <span class="pre">fit</span></code>
+<strong>required</strong> or field starting with <strong>r</strong> refers to either the fitted or to fit boxes.</p>
 </section>
-<section id="field-description">
-<h3>Field description<a class="headerlink" href="#field-description" title="Link to this heading"></a></h3>
-<ul class="simple">
+<section id="field-descriptions">
+<h3>Field descriptions<a class="headerlink" href="#field-descriptions" title="Link to this heading"></a></h3>
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">shelf</span></code>:  the shelf name</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">content</span></code>:  styles of boxes in the shelf</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">part</span></code>: the shelf/partition mode</p></li>
@@ -230,25 +234,238 @@ For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4
 <li><p><code class="docutils literal notranslate"><span class="pre">fit</span></code>: how many can fit (according to part mode)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">to_fit</span></code>:  how many boxes are selected</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">to_pick</span></code>:  how many boxes are <code class="docutils literal notranslate"><span class="pre">&#64;topick</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pickable</span></code>: how many boxes can be picked easyly</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pickable</span></code>: how many boxes can be picked easyly</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-----------------+
+|                 |
+|   +---+---+---+ |
++---|@XX|X::|:::| |
+|///+---+---+---+ |
+|///|@XX|@XX|:::| |
++---+---+---+---+-+
+
+@XX@XX@XXX::::::::::
+#  #  #  #           : to_pick  =  3
+#  #  #  #  #  #  #  : pickable =  6
+##########           : to_fit   = 10
+#################### : fit      = 18
+
+----------------------
+ @ box to pick
+ X box
+ : empty slot
+ (boxes in the same cell are behind each others)
+ // used
+</pre></div>
+</div>
+</div></blockquote>
+</li>
 <li><p><code class="docutils literal notranslate"><span class="pre">l100</span></code>:  required length / available length</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">w100</span></code>:  required witd / available width</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w100</span></code>:  required width / available width</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">h100</span></code>:  required heigh / available height</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">wh100</span></code>:</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lh100</span></code>:</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lw100</span></code>:</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">wh100</span></code>: required width*height / available width*height</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lh100</span></code>: requiried length*height / available length*height</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lw100</span></code>: requiried length*width / available length8width</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-----------------+ ^           +   +-------------+
+|                 | .               |.............|
+|   +---+---+---+ | #               |###########..|
++---|@XX|X::|:::| | #               |###########..|
+|///+---+---+---+ | #               |###########..|
+|///|@XX|@XX|:::| | #               |###########..|
++---+---+---+---+-+ v  h100     +///+-------------+
+                                     lh100
+    &lt;###########..&gt; : l100
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">r2100</span></code>: <strong>wh100</strong> or <strong>lw100</strong> depending on the “best” orientation.</p></li>
+</ul>
+<p>For a horizontal slice, this <strong>wh100</strong>, that is, how we good we are at saving space above and behind
+regardless of the remaining space on the right (and how much columns of boxes we can fit).
+This is usefull if we are planning to put something else on the right and therefore only making sure
+we are not wasting <strong>w</strong> and <strong>h</strong>. <strong>l</strong> is not wasted because the gap will be used by something else.</p>
+<p>However, the result is not just the max between <strong>wh100</strong> and <strong>lh100</strong>, as the direction of the slice (horizontal or vertical)
+is chosen to maximize the volume to fit)</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>right is best                 |      above
++-----------------+ ^         |    +-----------------+ ^
+|                 | ...       |    +---+---+---+---+ | -
+|   +---+ - + - + | ##.       |    |@XX|@XX|@XX|X::| | #
++---|@XX|...:...: | ##.       |    +---+---+---+---+ | #
+|///+---+ - +.-.+ | ##.       |    |///|             | .
+|///|@XX|...:...: | ##.       |    |///|             | .
++---+---+---+---+-+ v h100    |    +---+---+---+---+-+ .
+
+        r2100= w100*h100
+
+=============================================================
+above is best                            right
++-----------------+ ^               +-----------------+
++---+---+---+---+ | -               |                 |
+|@XX|@XX|@XX|X::| | #               |           +---+ |
++---+---+---+---+ | # h100          +-----------+@XX| |
+|///////////|     | .               |///////////+---+ |
+|///////////|     | .               |///////////|@XX| |
++---+---+---+---+-+ v               +---+---+---+---+-+
+
+&lt;###############..&gt;
+ ###############..
+ .................
+ r2100 = l100*w100
+</pre></div>
+</div>
+</div></blockquote>
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">fit100</span></code>:  fitted / to fit</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">shelves_needed</span></code>:  how many shelves to fit all required</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code>: how many shelves to have enough pickable</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rvolmin100</span></code>: required volume / available volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code>: how many shelves to have enough pickable</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>to_fit (21) &gt; fit (18)
+       +-----------------+-----------------+
+       |                 |                 |
+       |   +---+---+---+ |   +---+---+---+ |
+       +---|@XX|XXX|XXX| +---|:::|:::|:::| |
+       |///+---+---+---+ |///+---+---+---+ |
+       |///|@XX|@XX|XXX| |///|XXX|:::|:::| |
+       +---+---+---+---+-+---+---+---+---+-+
+
+                1         2
+       123456789012345678901
+       @XX@XX@XXXXXXXXXXXxxx                  : to_fit  21
+       ##################+++                  : fit100: 21/18 &gt;100%
+       ##################+++                  : shelves_needed = 1.17
+       #  #  #  -  -  -                       : picking_shelves = 3/6 = 0.5
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>to_fit (10) &lt;= fit (18)
+       +-----------------+-----------------+
+       |                 |                 |
+       |   +---+---+---+ |   +---+---+---+ |
+       +---|@XX|X::|:::| +---|:::|:::|:::| |
+       |///+---+---+---+ |///+---+---+---+ |
+       |///|@XX|@XX|:::| |///|:::|:::|:::| |
+       +---+---+---+---+-+---+---+---+---+-+
+
+                1         2
+       123456789012345678901
+       @XX@XX@XXXxxxxxxxx     : to_fit  10
+       ##########--------     : fit100: 10/18 55%
+       ##########--------     : shelves_needed = 10/18 = 0.55
+       #  #  #  -  -  -       : picking_shelves = 3/6 = 0.5
+
+       +-----------------+   +-----------------+
+       |                 |   |                 |
+       |   +---+---+---+ |   |   +---+---+---+ |
+       +---|@XX|:::|:::| +   +---|###|###|:::| +
+       |///+---+---+---+ |   |///+---+---+---+ |
+       |///|@XX|@X:|:::| |   |///|###|###|:::| |
+       +---+---+---+---+-+   +---+---+---+---+-+
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>to_pick (8) &gt;  pickable (6)
+       +-----------------+-----------------+
+       |                 |                 |
+       |   +---+---+---+ |   +---+---+---+ |
+       +---|@::|@::|@::| +---|@X:|:::|:::| |
+       |///+---+---+---+ |///+---+---+---+ |
+       |///|@::|@::|@::| |///|@X:|:::|:::| |
+       +---+---+---+---+-+---+---+---+---+-+
+
+                1         2
+       123456789012345678901
+       @@@@@@@X@X             : to_fit  10
+       ##########--------     : fit100: 10/18 55%
+       ##########--------     : shelves_needed = 10/18 = 0.55
+       ######+ +              : picking_shelves = 8/6 = 1.33
+
+       +-----------------+-----------------+
+       |                 |                 |
+       |   +---+---+---+ |   +---+---+---+ |
+       +---|#  |#  |#  | +---|+  |   |   | |
+       |///+---+---+---+ |///+---+---+---+ |
+       |///|#  |#  |#  | |///|+  |   |   | |
+       +---+---+---+---+-+---+---+---+---+-+
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">extra_stock_ratio</span></code>:  to fit / pickable and hidden</p></li>
+</ul>
+<p>If &lt;=1, means that there is enough space to “hide” every stock box behind a pickable one</p>
+<p>If &gt; 1, means that there all stock boxes don’t fit in pickable slot and we therefore need some <em>stock</em> slots (or shelves).</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Fitting AAA B C DD in 2 deep shelf results in a extra A needing its on stock slot
++--+--+--+
+|B:|DD|::|
+|--+--+--+
+|AA|C:|A:|
++--+--+--+
+
+to fit = 6
+pickable and hidden = 5
+extra_stock_ratio = 6/5 = 1.2 or is it 12/8 ?
+^^^ BUG ?
+</pre></div>
+</div>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Same in 3 deep shelf gives
++---+---+
+|B::|DD:|
+|---+---+
+|AAA|C::|
++--+--+--
+
+to fit = 6
+pickable and hidden = 6
+extra_stock_ratio = 6/6 = 1 or is it 6/12 ?
+</pre></div>
+</div>
+</div></blockquote>
+<ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">rvolmax100</span></code>:  required volume / available max volume (use  max shelf dimension - used)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fvolmin100</span></code>:  fitted volume / available volume</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">refficiency100</span></code>: Ratio between the volume occupied by the fitted boxes and the required bouding boxes (ignoring pickable issue)</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-----------------+   +-----------------+
+|                 |   |                 |
+|   +---+---+ --+ |   |   +---+---+ - + |
++---|XXX|:::|   : |   +---|###|###|   : |
+|///+---+---+ - + |   |///+---+---+ - + |
+|///|XXX|XXX|   : |   |///|###|###|   : |
++---+---+---+---+-+   +---+---+---+-----+-+
+
+   to fit = 9             bounding box = 12
+   refficiency100 = 9/12 = 75%
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pefficiency100</span></code>: Ratio between the volume occupied by the fitted boxes and the bouding boxes required to make everything pickable.</p>
+<blockquote>
+<div><div class="highlight-text notranslate"><div class="highlight"><pre><span></span>+-----------------+   +-----------------+
+|                 |   |                 |
+|   +---+---+---+ |   |   +---+---+---+ |
++---|@XX|@::|:::| |   +---|###|###|###| |
+|///+---+---+---+ |   |///+---+---+---+ |
+|///|@XX|@::|@::| |   |///|###|###|###| |
++---+---+---+---+-+   +---+---+---+-----+-+
+
+   to fit = 9             bounding box = 18
+   refficiency100 = 9/18 = 50%
+</pre></div>
+</div>
+</div></blockquote>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rvolmin100</span></code>: required volume / available volume</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">fvolmax100</span></code>:  fitted volume / availabe max volume</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">orientation</span></code>:</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">how</span></code>:</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fVSused</span></code>: fitted (=/= not to_fit) volume / used volume (by existing boxes)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">required</span></code>: required dimensions</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">used</span></code>: used dimensions (by exists boxes)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orientation</span></code>:  tiling mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">how</span></code>: tiling mode</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fVSused</span></code>: fitted versus used = fitted  volume / used volume (by existing boxes).
+How the new fit compares with the existing content. <code class="docutils literal notranslate"><span class="pre">&gt;1</span></code> means that the new fit is better than the actual one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">required</span></code>: required bounding boxes (ignoring pickables)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">prequired</span></code>: bouding boxes so that everything is pickable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">used</span></code>: used dimensions (by existing boxes)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">leftover</span></code>: shelf - used - required</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">minShelf</span></code>:  available shelf</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">maxShelf</span></code>: availabe max shelf</p></li>
@@ -264,7 +481,12 @@ For example, if a layout allow to fit 8 boxes  as 2x2x2 cube  in a shelf. Only 4
 <p><code class="docutils literal notranslate"><span class="pre">fit100</span></code> allows to check if the present boxes will fill nicely in the available space.</p>
 <p>Finding the best shelf for a style is done by selecting all shelves and only all boxes of a given style.
 Finding the best box for a shelf by selecting all boxes and only the desired shelf.</p>
-<p>To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">&gt;=</span> <span class="pre">picking_shelves</span></code>. If shelves_needed &lt; picking_shelves this mean that extra space is required to pick everything</p>
+<p>To make sure that there is no waste in depth, that is that if using enough slots to make everything pickable the full depth used, one need to check that <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">&gt;=</span> <span class="pre">picking_shelves</span></code> or <code class="docutils literal notranslate"><span class="pre">extra_stock_ratio</span></code> &gt; 1 . If shelves_needed &lt; picking_shelves this mean that extra space is required to pick everything</p>
+<p><code class="docutils literal notranslate"><span class="pre">refficiency</span></code> gives the ratio of boxes actually in the shelf with the number of slots used.
+For example for a nx3x3 layout. 10 boxes will require n=2 resulting in 18 slots available even though only 10 are used. The efficiency will be 10/18.</p>
+<p>For effecive efficiency (taking into account waste around boxes), use <code class="docutils literal notranslate"><span class="pre">refficiency*r2100</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">pefficiency</span></code> same as <code class="docutils literal notranslate"><span class="pre">refficiency</span></code> but for the space required to make everything pickable.
+For a nx3x3 layout and 10 boxes. If we have 7 boxes to pick, this will require n=3 result in 27 slots from which only 10 are used. The efficiency will drop to 10/27</p>
 <div class="admonition hint">
 <p class="admonition-title">Hint</p>
 <p>Let’s imagine that a layout of 6x2x1 (depth of 2). 12 boxes fit in a shelf but only 6 can be picked.
@@ -273,6 +495,19 @@ We can fit a shelves with 12 boxes and are left with 6 which don’t need to be 
 <p>If we have only 7 boxes, <code class="docutils literal notranslate"><span class="pre">shelves_needed</span> <span class="pre">=</span> <span class="pre">7/12</span> <span class="pre">=</span> <span class="pre">0.58</span></code> where <code class="docutils literal notranslate"><span class="pre">picking_shelves</span></code> is still 1 which is now greater than 0.58.
 This is telling us than we need more shelves or space to allow all pickable to be picked that the space we need to store everything.</p>
 </div>
+<p><strong>******</strong> Todos  <strong>***********</strong></p>
+</section>
+<section id="use-case">
+<h3>use case<a class="headerlink" href="#use-case" title="Link to this heading"></a></h3>
+<p>A/ needs to be pickable (1 of each column)</p>
+<p>B/ we don’t care just store them  but we don’t want wasted slots</p>
+</section>
+<section id="configuration">
+<h3>configuration<a class="headerlink" href="#configuration" title="Link to this heading"></a></h3>
+<p>X/ more pickables than stocks
+X/ pickables = stocks
+Y/ more stocks than pickables</p>
+<p>less</p>
 </section>
 <section id="brick-shortcuts">
 <h3>Brick shortcuts<a class="headerlink" href="#brick-shortcuts" title="Link to this heading"></a></h3>

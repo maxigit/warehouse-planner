@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>File Formats &mdash; WarehousePlanner 2.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b21de401"></script>
-        <script src="_static/doctools.js?v=9bcbadda"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -241,7 +239,7 @@ is given by tagging the checked boxes.</p>
 (ghosts) which will make sure a slot is full and the remove later.
 For example</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
-stock_id,quantity,content&#39;tag
+stock_id,quantity,content'tag
 A^1,4,<span class="nt">#ghost</span>
 </pre></div>
 </div>
@@ -268,8 +266,8 @@ A<span class="nt">#ghost</span>
 </div>
 <p>The content of a new box can specified before the tag. For example</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
-stock_id,quantity,content&#39;tag
-A#&#39;BLK^1,4,RED<span class="nt">#ghost</span>
+stock_id,quantity,content'tag
+A#'BLK^1,4,RED<span class="nt">#ghost</span>
 </pre></div>
 </div>
 <p>Will create 4 red boxes for each BLK. By default only tags that are
@@ -277,7 +275,7 @@ specified either as default tag or for each line will be applied to
 the box. To copy a box and ALL its tags, start the content/tag
 specification with a <code class="docutils literal notranslate"><span class="pre">!</span></code>.</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>:Clones:
-stock_id,quantity,content&#39;tag
+stock_id,quantity,content'tag
 A^1,4,!<span class="nt">#ghost</span>
 A^1,4,!new-content
 A^1,4,!new-content<span class="nt">#ghost</span>
@@ -523,7 +521,7 @@ no diagonal allowed.</p>
 = <span class="c">-- tilted forward</span>
 &gt; <span class="c">-- tilted right</span>
 | <span class="c">-- tilted forward &amp; right</span>
-&#39; <span class="c">-- rotated up</span>
+' <span class="c">-- rotated up</span>
 @ <span class="c">-- rotated side</span>
 </pre></div>
 </div>
@@ -567,7 +565,7 @@ shifted, allowing some boxes to remain in their original positions.</p>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">actions</span></code> is a list of box selectors indicating where to shift the box
 with.The syntax is as follow</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[-%/] [!]action1 &#39;&gt;&#39; [!]</span>action2 &#39;&gt;&#39; ...
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="nv">[-%/] [!]action1 '&gt;' [!]</span>action2 '&gt;' ...
 </pre></div>
 </div>
 <p>Within the actions, box selectors exclusively choose a subset of the
@@ -861,7 +859,7 @@ stock_id,tag
 A,tag <span class="c">-- tag all shelves containing A</span>
 /S,tag <span class="c">-- tag shelves with name S</span>
 /<span class="nt">#sep</span>,fg=blue <span class="c">-- set the foreground of all shelves having the `sep` tag</span>
-<span class="nt">#new</span>/<span class="nt">#top</span>,tag <span class="c">-- tag all &#39;top&#39; shelves containing a items with the new tag</span>
+<span class="nt">#new</span>/<span class="nt">#top</span>,tag <span class="c">-- tag all 'top' shelves containing a items with the new tag</span>
 </pre></div>
 </div>
 </section>
@@ -938,7 +936,7 @@ stock_id,tag
 :END:
 :TRANSFORM:
 stock_id,pat,sub
-,location=.*<span class="si">$[shelfname]</span>,unmoved <span class="c">-- detect boxes which haven&#39;t changed</span>
+,location=.*<span class="si">$[shelfname]</span>,unmoved <span class="c">-- detect boxes which haven't changed</span>
 </pre></div>
 </div>
 <p>In this example, we need to use an intermediate property

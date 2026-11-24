@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WPL &mdash; WarehousePlanner 2.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b21de401"></script>
-        <script src="_static/doctools.js?v=9bcbadda"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -220,10 +218,10 @@ In order to avoid chaining ambiguity the next statement needs to be enclosed bet
 <h3>Property argument<a class="headerlink" href="#property-argument" title="Link to this heading"></a></h3>
 <p>Some commands accepts optional arguments. The general syntax is <code class="docutils literal notranslate"><span class="pre">command</span> <span class="pre">name:value</span> <span class="pre">name2:value2</span> <span class="pre">...</span></code>. Most properties have an alias (usually the first letter) and if only argument exists the name of the argument doesn’t need to be specified. If the command also accept a blok argument the property arguments need to be written before.</p>
 <p>Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:count message:&quot;box count&quot;
-trace:count msg:&quot;box count&quot;
-trace:count m:&quot;box count&quot;
-trace:count :&quot;box count&quot;
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:count message:"box count"
+trace:count msg:"box count"
+trace:count m:"box count"
+trace:count :"box count"
 
 fill pos:<span class="si">$[old_position]</span> <span class="nn">{ A }</span>
 </pre></div>
@@ -365,14 +363,6 @@ The selector can be a box or a shelf (starting with <code class="docutils litera
 </dl>
 </li>
 </ul>
-<div class="admonition-todo admonition" id="id6">
-<p class="admonition-title">Todo</p>
-<p>pmode</p>
-</div>
-<div class="admonition-todo admonition" id="id7">
-<p class="admonition-title">Todo</p>
-<p>orules</p>
-</div>
 <ul>
 <li><dl>
 <dt><code class="docutils literal notranslate"><span class="pre">swap</span> <span class="pre">debug:sticky</span> <span class="pre">selector</span></code>: Swap the current boxes to match the order given by the selector.</dt><dd><p>The selector should only reorder the current selection. “Sticky” tags stays in place instead of moving with boxes.</p>
@@ -383,10 +373,10 @@ The selector can be a box or a shelf (starting with <code class="docutils litera
 </dd>
 </dl>
 </li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fill</span> <span class="pre">pos:loc</span> <span class="pre">{</span> <span class="pre">boxes</span> <span class="pre">}</span></code>:  Move boxes using to the given position and location specified by <code class="docutils literal notranslate"><span class="pre">pos</span></code> and <code class="docutils literal notranslate"><span class="pre">loc</span></code> <a class="reference internal" href="tags.html#evaluation"><span class="std std-ref">property</span></a>. The default uses the <code class="docutils literal notranslate"><span class="pre">#fill-shelf</span></code> and <code class="docutils literal notranslate"><span class="pre">#fill-shelf</span></code> tags.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fill</span> <span class="pre">pos:loc</span> <span class="pre">{</span> <span class="pre">boxes</span> <span class="pre">}</span></code>:  Move boxes using to the given position and location specified by <code class="docutils literal notranslate"><span class="pre">pos</span></code> and <code class="docutils literal notranslate"><span class="pre">loc</span></code> <a class="reference internal" href="tags.html#evaluation"><span class="std std-ref">property</span></a>. The default uses the <code class="docutils literal notranslate"><span class="pre">#fill-shelf</span></code> and <code class="docutils literal notranslate"><span class="pre">#fill-spec</span></code> tags.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">tag</span> <span class="pre">#tag1#tag2</span></code>: tags the current boxes with tag1 and tag2</p></li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">boxes?</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: execute stmt with tag set temporaly.</dt><dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">(tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">,</span> <span class="pre">smt,</span> <span class="pre">tag</span> <span class="pre">#-tag1#-tag2)</span></code>.
+<dt><code class="docutils literal notranslate"><span class="pre">tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">boxes:boxes?</span> <span class="pre">{</span> <span class="pre">stmt</span> <span class="pre">}</span></code>: execute stmt with tag set temporaly.</dt><dd><p>Similar to <code class="docutils literal notranslate"><span class="pre">(tag</span> <span class="pre">#tag1#tag2</span> <span class="pre">,</span> <span class="pre">smt,</span> <span class="pre">tag</span> <span class="pre">#-tag1#-tag2)</span></code>.
 If the boxes parameter is given, only the boxes will be tag (without narrowing the context to those boxes)</p>
 </dd>
 </dl>
@@ -430,10 +420,6 @@ If the boxes parameter is given, only the boxes will be tag (without narrowing t
 <li><p><code class="docutils literal notranslate"><span class="pre">after</span> <span class="pre">selector</span></code>: after selector (excluded)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">before</span> <span class="pre">selector</span></code>: before selector (excluded)</p></li>
 </ul>
-<div class="admonition-todo admonition" id="id8">
-<p class="admonition-title">Todo</p>
-<p>selector syntax</p>
-</div>
 </section>
 </section>
 <section id="shelf-selectors">
@@ -504,7 +490,7 @@ When enabled, the WHP will stop and display a message if the condition is met.</
 </ul>
 <p>Example</p>
 <blockquote>
-<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:boxes prop:&quot;boxname = <span class="si">${boxname}</span> <span class="si">$[dead?]</span>&quot;
+<div><div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>trace:boxes prop:"boxname = <span class="si">${boxname}</span> <span class="si">$[dead?]</span>"
 </pre></div>
 </div>
 </div></blockquote>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tags and Attributes &mdash; WarehousePlanner 2.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b21de401"></script>
-        <script src="_static/doctools.js?v=9bcbadda"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -106,16 +104,16 @@
 set depending the box content and/or the box itself. It allows to select
 style by variations (<code class="docutils literal notranslate"><span class="pre">'</span></code>content) and dimensions (in 1/10th of mm)
 (<code class="docutils literal notranslate"><span class="pre">'l</span></code>length, <code class="docutils literal notranslate"><span class="pre">'w</span></code>width,<code class="docutils literal notranslate"><span class="pre">'h</span></code>height ). Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt#&#39;l3500 =&gt; all T-shirt with boxes with a length of 35cm.
-TShirt#&#39;RED  =&gt; all red T-shirt (with a content of Red)
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>TShirt#'l3500 =&gt; all T-shirt with boxes with a length of 35cm.
+TShirt#'RED  =&gt; all red T-shirt (with a content of Red)
 </pre></div>
 </div>
 <p>Virtual tags can also be used to change the dimension of a box. Setting
 for example the tag <code class="docutils literal notranslate"><span class="pre">'h3400</span></code> will change the box size to 34 cm. If
 more than one values is assign to a dimension, the sum of all is used.
 This can be used to add a subtract a value to dimension. Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>#&#39;l3500,#&#39;l=+50 =&gt; add 50 to the length
-#&#39;l3500,#&#39;l=+-50 =&gt; subtract 50 to the length
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>#'l3500,#'l=+50 =&gt; add 50 to the length
+#'l3500,#'l=+-50 =&gt; subtract 50 to the length
 </pre></div>
 </div>
 <p>Note that <code class="docutils literal notranslate"><span class="pre">=+-50</span></code> adds a value of -50 (see
@@ -132,7 +130,7 @@ then <code class="docutils literal notranslate"><span class="pre">color-green</s
 one tag <code class="docutils literal notranslate"><span class="pre">color=green</span></code>. In this case, <code class="docutils literal notranslate"><span class="pre">color</span></code> is a property therefore
 tagging with <code class="docutils literal notranslate"><span class="pre">color=green</span></code> change the value of color (previously red)
 to green.Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A,prop=first <span class="c">--&gt; A boxes have the tag &#39;prop=first&#39;</span>
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>A,prop=first <span class="c">--&gt; A boxes have the tag 'prop=first'</span>
 B,prop=second
 ,XXX<span class="si">$[prop]</span> <span class="c">-- create XXXfirst tag for A and XXXsecond for B</span>
 </pre></div>
@@ -319,7 +317,7 @@ char.</p></li>
 </ul>
 <p>For example, given box inh shelf <code class="docutils literal notranslate"><span class="pre">E01.03/2</span></code>, and <code class="docutils literal notranslate"><span class="pre">#top</span></code> is present</p>
 <div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span><span class="si">$[top?]</span>  =&gt; top
-<span class="si">$[bottom?]</span>  =&gt; &#39;&#39;
+<span class="si">$[bottom?]</span>  =&gt; ''
 <span class="si">$[top?on]</span>  =&gt; on
 <span class="si">$[bottom?Y:N]</span>  =&gt; N
 <span class="si">$[top??on top]</span>  =&gt; top
@@ -391,7 +389,7 @@ boxes) (start at 1)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">#{dollar}</span></code>: the character <code class="docutils literal notranslate"><span class="pre">$</span></code></p></li>
 </ul>
 <p>Example</p>
-<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>/pending,loc=<span class="si">${shelfname}</span>  =&gt; All boxes in the pending location will be tagged with &quot;loc=pending&quot;.
+<div class="highlight-commentonly notranslate"><div class="highlight"><pre><span></span>/pending,loc=<span class="si">${shelfname}</span>  =&gt; All boxes in the pending location will be tagged with "loc=pending".
 </pre></div>
 </div>
 </section>

@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -6,18 +8,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Usage &mdash; WarehousePlanner 2.2.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
-      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=b21de401"></script>
-        <script src="_static/doctools.js?v=9bcbadda"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=b21de401"></script>
+      <script src="_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -66,6 +64,7 @@
 <li class="toctree-l1"><a class="reference internal" href="selectors.html">Boxes and shelves selector</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tags.html">Tags and Attributes</a></li>
 <li class="toctree-l1"><a class="reference internal" href="reports.html">Reports</a></li>
+<li class="toctree-l1"><a class="reference internal" href="wpl.html">WPL</a></li>
 </ul>
 
         </div>
@@ -116,16 +115,12 @@ A <code class="docutils literal notranslate"><span class="pre">wpl</span></code>
 <h3>Packing and Including Files<a class="headerlink" href="#packing-and-including-files" title="Link to this heading"></a></h3>
 <p>An <a class="reference external" href="https://orgmode.org/">orgmode</a> file can be use to “pack” different whp files into one using orgmode <a class="reference external" href="https://orgmode.org/manual/Drawers.html">drawers</a>. This is the main way to include different sections in one file.</p>
 <p>Each drawer corresponds to a section. The name of the drawer determines the section type and optional parameters.
-Section type are parameters are separated by <code class="docutils literal notranslate"><span class="pre">_</span></code>. For examples <code class="docutils literal notranslate"><span class="pre">:BOXES_coming:</span></code> describe a <code class="docutils literal notranslate"><span class="pre">boxes</span></code> section with one parameter <code class="docutils literal notranslate"><span class="pre">coming</span></code> <a class="footnote-reference brackets" href="#coming" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
+Section type are parameters are separated by <code class="docutils literal notranslate"><span class="pre">_</span></code>. For examples <code class="docutils literal notranslate"><span class="pre">:BOXES_coming:</span></code> describe a <code class="docutils literal notranslate"><span class="pre">boxes</span></code> section with one parameter <code class="docutils literal notranslate"><span class="pre">coming</span></code> <a class="footnote-reference brackets" href="#coming" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p>
 <p>Apart from those special drawers it, is a normal orgmode document and all orgmode features can be used to document and/or structure the warehouse specifications.</p>
 <p>Files can also be reused between different warehouse specifications using the <cite>Import</cite> section.</p>
-<div class="admonition-todo admonition" id="id2">
-<p class="admonition-title">Todo</p>
-<p>link to import section</p>
-</div>
 <aside class="footnote-list brackets">
 <aside class="footnote brackets" id="coming" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">1</a><span class="fn-bracket">]</span></span>
 <p>In that case, it will add the <code class="docutils literal notranslate"><span class="pre">coming</span></code> tag to all the created boxes.</p>
 </aside>
 </aside>
@@ -136,7 +131,7 @@ Section type are parameters are separated by <code class="docutils literal notra
 <ul class="simple">
 <li><p>shelves related</p>
 <ul>
-<li><p><a class="reference internal" href="sections.html#id5"><span class="std std-ref">Shelves</span></a>: create or update shelves</p></li>
+<li><p><a class="reference internal" href="sections.html#id6"><span class="std std-ref">Shelves</span></a>: create or update shelves</p></li>
 <li><p><a class="reference internal" href="sections.html#shelf-tags"><span class="std std-ref">ShelfTags</span></a>: modify shelf tags</p></li>
 <li><p><a class="reference internal" href="sections.html#shelf-split"><span class="std std-ref">ShelfSplit</span></a>: split shelves into subshelves</p></li>
 <li><p><a class="reference internal" href="sections.html#shelf-join"><span class="std std-ref">ShelfJoin</span></a>: opposite of split</p></li>
@@ -164,7 +159,7 @@ Section type are parameters are separated by <code class="docutils literal notra
 <li><p><a class="reference internal" href="sections.html#import"><span class="std std-ref">Import</span></a>: include local files</p></li>
 <li><p><a class="reference internal" href="sections.html#colour-map"><span class="std std-ref">Colour</span></a>: rgb colour description</p></li>
 <li><p><a class="reference internal" href="sections.html#check-shelves"><span class="std std-ref">CheckShelves</span></a>: Check box overlap or out of box status</p></li>
-<li><p><a class="reference internal" href="sections.html#wpl"><span class="std std-ref">WPL</span></a>: Warehouse Programming Languge.</p></li>
+<li><p><a class="reference internal" href="wpl.html#wpl"><span class="std std-ref">WPL</span></a>: Warehouse Programming Languge.</p></li>
 </ul>
 </li>
 </ul>
@@ -173,10 +168,6 @@ Section type are parameters are separated by <code class="docutils literal notra
 <section id="outputs">
 <h2>Outputs<a class="headerlink" href="#outputs" title="Link to this heading"></a></h2>
 <p>On top the interactive explorer, <code class="docutils literal notranslate"><span class="pre">whp</span></code> can produce text outputs to generate miscellaneous <a class="reference internal" href="reports.html#reports"><span class="std std-ref">reports</span></a>, “freeze” the content of a warehouse and even generate high quality image (<code class="docutils literal notranslate"><span class="pre">.png</span></code>).</p>
-<div class="admonition-todo admonition" id="id3">
-<p class="admonition-title">Todo</p>
-<p>add reference to whp –help</p>
-</div>
 </section>
 <section id="core-concepts">
 <h2>Core concepts<a class="headerlink" href="#core-concepts" title="Link to this heading"></a></h2>
