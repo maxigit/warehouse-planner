@@ -44,10 +44,10 @@ data Command = Move { cSource :: Maybe CBoxSelector
                            , cStmt ::   Statement
                            }
              | RunShelfActions Bool (CSelector ShelfSelector)
-             | SetShelfAction { ssaDependencies :: Maybe ShelfSelector
-                              , ssaExtraDependencies :: Maybe ShelfSelector
-                              , ssaPick :: Maybe BoxSelector
-                              , ssaStock :: Maybe BoxSelector 
+             | SetShelfAction { ssaDependencies :: [ ShelfSelector ]
+                              , ssaExtraDependencies :: [ ShelfSelector ]
+                              , ssaPick :: [ BoxSelector ]
+                              , ssaStock :: [ BoxSelector  ]
                               , ssaBreak :: Maybe SlotBreak
                               , ssaOrder :: Maybe BoxNumberSelector
                               , ssaAction:: Statement

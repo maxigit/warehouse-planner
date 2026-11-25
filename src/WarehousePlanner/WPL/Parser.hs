@@ -744,9 +744,9 @@ instance Parsable Command where
                                               ["order"]
                                               ["pick"]
                                               ["stock"]
-            return $ \action -> SetShelfAction {ssaDependencies=depM, ssaExtraDependencies=extraM
-                                    , ssaBreak = breakM, ssaOrder=orderM
-                                    , ssaPick = pickM, ssaStock = stockM
+            return $ \action -> SetShelfAction {ssaDependencies=unoptm depM, ssaExtraDependencies=unoptm extraM
+                                    , ssaBreak =breakM, ssaOrder=orderM
+                                    , ssaPick = unoptm pickM, ssaStock = unoptm stockM
                                     , ssaAction = action
                                     }
         , do 
@@ -898,10 +898,21 @@ instance Parsable (AbsRel (Expr Text)) where
             , Rel <$> p
             ]
 instance Parsable [Expr Text] where
-  p = lexeme $ exprParser `P.sepBy1` lexeme ":"
+  p = lexeme $ p `P.sepBy1` lexeme ":"
 
 instance Parsable [AbsRel(Expr Text)] where
   p = lexeme $ p `P.sepBy1` lexeme ":"
+
+newtype Options a = Options {unOptions :: [a] } 
+   deriving (Show, Eq)
+unoptm :: Maybe (Options a) -> [a]
+unoptm = maybe [] unOptions
+
+instance Parsable a => Parsable (Options a) where
+  p = do
+       as <- lexeme $ p `P.sepBy1` lexeme ":"
+       return $ Options as
+
 str :: MParser Text
 str = asum [ pack <$> (char '"' >> manyTill L.charLiteral (char '"' ))
            , do "{" ; fail "string are not allowed to start with {"

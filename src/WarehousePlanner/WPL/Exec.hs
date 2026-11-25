@@ -572,11 +572,11 @@ executeCommand ec command = case command of
     SetShelfAction{..} -> do
        let tagOps = ("@action", SetValues [replace ";" "$<semicolon>" $ prettyWPL ssaAction])
                     : case ssaDependencies of
-                       Nothing -> []
-                       Just dep -> [("@action-deps", SetValues [ printShelfSelector dep ])]
+                       [] -> []
+                       dep -> [("@action-deps", SetValues $ map printShelfSelector dep )]
                     <> case ssaExtraDependencies of
-                           Nothing -> []
-                           Just extra -> [("@action-extra-deps", SetValues [printShelfSelector extra])]
+                           [] -> []
+                           extra -> [("@action-extra-deps", SetValues $ map printShelfSelector extra)]
                     <> case ssaBreak of 
                         Nothing -> []
                         Just break -> [("@start", SetValues [printSlotBreak break])]
@@ -584,11 +584,11 @@ executeCommand ec command = case command of
                         Nothing -> []
                         Just order -> [("@order", SetValues [ printNumberSelector order ])]
                    <> case ssaPick of 
-                       Nothing -> []
-                       Just pick -> [("@pick", SetValues [ printBoxSelector pick ])]
+                       [] -> []
+                       pick -> [("@pick", SetValues $ map printBoxSelector pick )]
                    <> case ssaStock of 
-                       Nothing -> []
-                       Just stock -> [("@stock", SetValues [ printBoxSelector stock ])]
+                       [] -> []
+                       stock -> [("@stock", SetValues $ map printBoxSelector stock )]
        -- check values are not set
        shelves <- getShelves ec
        let existingTags = foldMap shelfTag shelves

@@ -192,12 +192,12 @@ pCommand = \case
                                                    <+> pBlock cStmt
    RunShelfActions debug shelves -> "run" <+> (if debug then "debug:" else mempty)
                                           <+> pCShelf shelves
-   SetShelfAction{..} -> "shelf:action" <> opt' "deps" pShelfSelector ssaDependencies
-                                        <> opt' "extra-dep" pShelfSelector ssaExtraDependencies
+   SetShelfAction{..} -> "shelf:action" <> opts "deps" (pShelfSelector) ssaDependencies
+                                        <> opts "extra-dep" pShelfSelector ssaExtraDependencies
                                         <> opt' "start"  (pretty . printSlotBreak) ssaBreak
-                                        <> opt "order" (pretty . printNumberSelector) ssaOrder
-                                        <> opt' "pick" pBoxSelector ssaPick
-                                        <> opt' "stock" pBoxSelector ssaStock
+                                        <> opt'"order" (pretty . printNumberSelector) ssaOrder
+                                        <> opts "pick" pBoxSelector ssaPick
+                                        <> opts "stock" pBoxSelector ssaStock
                                         <+> pBlock ssaAction
    FreezeBoxesOrder boxm -> "freeze:order" <> opt "boxes" pCBox boxm
                                                     
@@ -299,6 +299,10 @@ opt' ::  Text -> (a -> Doc d) -> Maybe a -> Doc d
 opt' _ _ Nothing = mempty
 opt' key p (Just x) = space <> pretty key <> ":" <> p x
 
+opts :: Text -> (a -> Doc d) -> [ a ] -> Doc d
+opts _ _ [] = mempty
+opts key p vals = space <> cat ( punctuate ":" $ pretty key : map p vals )
+   
 
 ----- Condition
 pCond :: Condition -> Doc a
