@@ -340,8 +340,8 @@ Expand A and shrink B by the same amount (so that A+B stays the
 same),
 ::rST
 -}
-readUpdateShelves :: FilePath-> IO (WH s [Shelf s])
-readUpdateShelves filename = do
+readUpdateShelves :: Bool -> FilePath-> IO (WH s [Shelf s])
+readUpdateShelves parallel filename = do
   csvData <- BL.readFile filename
   let decode =  runExcept $ asum $ map except
           [ Csv.decode Csv.HasHeader csvData
@@ -356,24 +356,28 @@ readUpdateShelves filename = do
   case decode of
         Left err ->  error $ "File:" <> filename <> " " <>  err -- putStrLn err >> return (return [])
         Right (rows) -> return $ do
-          v <- Vec.forM rows $ \(name, l, w, h, bottom,tag) -> do
-            let (dim, dim') = dimsToMinMax (def l) (def w) (def h)
-                def "" = "{%}"
-                def t = t
-            shelfIds <- findShelvesByBoxNameAndNames name
-            updates <- mapM (\shelfId ->  do
-              shelf <- findShelf shelfId
-              let name = shelfName shelf
-                  r = dimFromRef name
-              mkUpdateShelvesWithFormula 
-                (dimToFormula sMinD r dim)
-                (dimToFormula sMaxD r dim')
-                (bottomToFormula name (def bottom))
-                tag
-                shelf
-              ) shelfIds
-            sequence updates
-          return $ concat (Vec.toList v)
+          let rowws = if parallel
+                      then [ Vec.toList rows ]
+                      else  map pure $ Vec.toList rows
+          shelvess <- forM rowws \row -> do
+                   updatess <- forM row \(name, l, w, h, bottom,tag) -> do
+                         let (dim, dim') = dimsToMinMax (def l) (def w) (def h)
+                             def "" = "{%}"
+                             def t = t
+                         shelfIds <- findShelvesByBoxNameAndNames name
+                         mapM (\shelfId ->  do
+                           shelf <- findShelf shelfId
+                           let name = shelfName shelf
+                               r = dimFromRef name
+                           mkUpdateShelvesWithFormula 
+                             (dimToFormula sMinD r dim)
+                             (dimToFormula sMaxD r dim')
+                             (bottomToFormula name (def bottom))
+                             tag
+                             shelf
+                           ) shelfIds
+                   sequence $ concat updatess
+          return $ concat shelvess
               
 
           

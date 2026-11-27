@@ -150,7 +150,7 @@ parseDrawer h = case splitOn "_" h of
                                       , ["shelf join"]
                                       , ["join shelves"]
                                       ])
-                 ,(UpdateShelvesH,    [ ["update shelves"]])
+                 ,(UpdateShelvesH [],    [ ["update shelves"]])
                  ,(TransformTagsH [], [ ["transform tags"]
                                       , ["transform", "tags"]
                                       , ["transform"]
@@ -489,7 +489,7 @@ executeStep (Step header sha txt) = do
           ShelfTagsH -> execute $ readShelfTags path
           ShelfSplitH -> execute $ readShelfSplit path
           ShelfJoinH -> execute $ readShelfJoin path
-          UpdateShelvesH -> execute $ readUpdateShelves path
+          UpdateShelvesH tags -> execute $ readUpdateShelves ("@parallel" `elem` tags) path
           OrientationsH -> execute $ setOrientationRules defaultOrientations path
           TransformTagsH tags -> execute $ readTransformTags path tags
           ClonesH tags -> execute $ readClones (tags) path
