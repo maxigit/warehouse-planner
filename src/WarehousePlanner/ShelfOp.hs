@@ -1,4 +1,3 @@
-{-# OPTIONS_GHC -Wno-deprecations #-}
 module WarehousePlanner.ShelfOp 
 ( splitShelf
 , unSplitShelf
@@ -17,7 +16,9 @@ module WarehousePlanner.ShelfOp
 , dimForSplit
 , AbsRel(..)
 , absRelsToRels
+, sAvailableD 
 ) where
+
 import ClassyPrelude
 import WarehousePlanner.Base
 import WarehousePlanner.Selector
@@ -272,7 +273,7 @@ type RefToSDim s = Text -> WH s ShelfDimension
 evalExpr :: RefToSDim s -> Expr -> WH s Double
 evalExpr refToSDim expr = do
    exprDouble <- traverse (evalRef refToSDim) expr
-   return $ traceShowId $ E.evalExpr $ traceShowId exprDouble
+   return $ E.evalExpr exprDouble
 
 evalRef :: RefToSDim s -> RefE -> WH s Double
 evalRef refToSDim (RefE ref accessor) = do
@@ -280,7 +281,7 @@ evalRef refToSDim (RefE ref accessor) = do
 
 dimFromRef :: Text -> Text -> WH s ShelfDimension
 dimFromRef shelfName ref = do
-  let refName = traceShowId $ transformRef shelfName ref
+  let refName = transformRef shelfName ref
   ids <- findShelfBySelector (Selector (NameMatches [MatchFull refName]) [])
   shelf <- case ids of
               [] -> error $ "Can't find shelf " ++ unpack refName ++ " when evaluating formula"

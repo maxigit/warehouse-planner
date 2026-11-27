@@ -54,6 +54,7 @@ import System.FSNotify as FS
 import Control.Concurrent (forkIO, threadDelay)
 import WarehousePlanner.Styling (Kolor)
 import Data.Char (isPunctuation)
+import WarehousePlanner.ShelfOp
 -- import System.Clipboard(setClipboardString)
 
 type WHApp = B.App AppState WHEvent Resource
@@ -207,6 +208,7 @@ makeAppShelvesSummary state = do
                                                (toList boxes)
                                                [1..]
 
+                        shelfdims <- shelfDimension shelf
                         let shelfPropValueM = case fmap (splitOn "#") (asShelfProperty state) of
                                                Just tags -> case  mapMaybe getTagShelfValue tags of
                                                                [] -> Nothing
@@ -225,6 +227,7 @@ makeAppShelvesSummary state = do
                                                             | tag == "height" -> Just $ tshow $ dHeight $ minDim shelf
                                                             | tag == "length" -> Just $ tshow $ dLength $ minDim shelf
                                                             | tag == "width" -> Just $ tshow $ dWidth $ minDim shelf
+                                                            | tag == "awidth" -> Just $ tshow $ dWidth $ sAvailableD sMaxD shelfdims
                                                             | tag == "height (max)" -> Just $ tshow $ dHeight $ maxDim shelf
                                                             | tag == "length (max)" -> Just $ tshow $ dLength $ maxDim shelf
                                                             | tag == "width (max)" -> Just $ tshow $ dWidth $ maxDim shelf
@@ -662,6 +665,7 @@ keyBindingGroups =  groups
                                                                , mk 'l' (ESetShelfProperty "length") "length"
                                                                , mk 'h' (ESetShelfProperty "height") "height"
                                                                , mk 'w' (ESetShelfProperty "width") "width"
+                                                               , mk 'A' (ESetShelfProperty "awidth") "available width"
                                                                , mk 'S' (ESetShelfProperty "filling") "filling strategy"
                                                                , mk 'v' (ESetShelfProperty "volume") "volume (min)"
                                                                , mk 'V' (ESetShelfProperty "Volume Max") "volume (max)"
