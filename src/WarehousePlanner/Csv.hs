@@ -227,7 +227,7 @@ Special Tag: Ceiling
 ''''''''''''''''''''
 
 The special attribute ``ceiling=`` set the height of the ceiling. If
-the total height + bottom offset is greater than the ceiling value,
+tfhe total height + bottom offset is greater than the ceiling value,
 the shelf is considered to high. It will be tagged with ``'tooHigh``,
 and the height of the shelf will be truncated accordingly to fit the
 given ceiling.
@@ -253,32 +253,49 @@ readShelves defaultOrientator filename = do
                                 "deadzone" ->  (AddOrientations [] [up, rotatedUp ], RowFirst)
                                 "shelf" -> (ForceOrientations [tiltedForward, tiltedFR], ColumnFirst)
                                 _ -> (defaultOrientator, ColumnFirst)
-                            updateShelfWithFormula' d d' bot _boxo _strat name tags=
-                              updateShelfWithFormula d d' bot name  tags
+                            minFormulas r = dimToFormula sMinD r dim
+                            maxFormulas r = dimToFormula sMaxD r dim'
+                            bottomFormula n  = bottomToFormula n bottom
+                            name'tags = expand =<< splitOnNonEscaped "|" name
+                            name'tagms = map (fmap \tags -> case tags of
+                                                         [] -> Nothing
+                                                         _ -> Just $ intercalate "#" tags
+                                            )
+                                            name'tags
+
                               
 
-                        (name'tagS, go) <-
-                            if toLower shelfType == "update"
-                            then do
-                              names <- shelvesFromSelector name
-                              return ( map (,[]) names , updateShelfWithFormula')
-                            else
-                              return ( expand =<< splitOnNonEscaped "|" name
-                                     , newShelfWithFormula
-                                     )
-                        mapM (\(n, tags) ->
-                            let r = dimFromRef n
-                            in go
-                                    (dimToFormula sMinD r dim)
-                                    (dimToFormula sMaxD r dim')
-                                    (bottomToFormula n bottom)
-                                    defaultOrientator
-                                    fillStrat
-                                    n
-                                    (case tags of 
-                                       [] -> Nothing 
-                                       _ -> Just $ intercalate "#" tags)
-                                    ) name'tagS
+                        if toLower shelfType == "update"
+                        then do
+                           updates <- forM name'tagms (\(n, tagm) -> do
+                                          shelfM <- findShelfByName (Shelfname n)
+                                          case shelfM of
+                                             Nothing -> error $ "shelf '" <> unpack n <> "' not found"
+                                             Just shelf -> do
+                                                  let r = dimFromRef n
+                                                      n = shelfName shelf
+                                                  mkUpdateShelvesWithFormula (minFormulas r)
+                                                                             (maxFormulas r)
+                                                                             (bottomFormula n)
+                                                                             tagm
+                                                                             shelf
+                                                  )
+                           sequence updates
+                           
+
+                        else
+                          mapM (\(n, tagm) -> do
+                                   let r = dimFromRef n
+                                   newShelfWithFormula (minFormulas r)
+                                                       (maxFormulas r)
+                                                       (bottomFormula n)
+                                                       defaultOrientator
+                                                       fillStrat
+                                                       n
+                                                       tagm
+                               )
+                               name'tagms
+                            
 
             return $ concat (Vec.toList v)
 
@@ -294,7 +311,7 @@ dimsToMinMax l w h =
                          _ -> (d, d)
     in (dim, dim')
 
-shelvesFromSelector name = do
+_shelvesFromSelector name = do
     let (BoxSelector boxSel shelfSel _) = parseBoxSelector name
         selector = ShelfSelector boxSel shelfSel
     shelfIds <- findShelvesByBoxNameAndNames selector
@@ -343,17 +360,19 @@ readUpdateShelves filename = do
             let (dim, dim') = dimsToMinMax (def l) (def w) (def h)
                 def "" = "{%}"
                 def t = t
-            names <- shelvesFromSelector name
-            mapM (\n -> 
-              let r = dimFromRef n
-              in 
-                updateShelfWithFormula 
-                  (dimToFormula sMinD r dim)
-                  (dimToFormula sMaxD r dim')
-                  (bottomToFormula n (def bottom))
-                  n 
-                  tag
-              ) names
+            shelfIds <- findShelvesByBoxNameAndNames name
+            updates <- mapM (\shelfId ->  do
+              shelf <- findShelf shelfId
+              let name = shelfName shelf
+                  r = dimFromRef name
+              mkUpdateShelvesWithFormula 
+                (dimToFormula sMinD r dim)
+                (dimToFormula sMaxD r dim')
+                (bottomToFormula name (def bottom))
+                tag
+                shelf
+              ) shelfIds
+            sequence updates
           return $ concat (Vec.toList v)
               
 
@@ -414,36 +433,31 @@ expand name = let
 
 
 -- | Update an existing shelf
-updateShelfWithFormula :: (WH s Dimension) -> (WH s Dimension) -> (WH s Double) -> Text -> Maybe Text ->  WH s (Shelf s)
-updateShelfWithFormula dimW dimW' bottomW name tagm = do
-  shelfIds <- findShelfBySelector (Selector (NameMatches [MatchFull name]) [])
-  case shelfIds of
-    [shelfId] -> do
-        shelf <- findShelf shelfId
-        dim <- dimW
-        dim' <- dimW'
-        bottom <- bottomW
-        new <- updateShelf (\s -> s { minDim = dim, maxDim = dim', bottomOffset = bottom }) shelf
-        let extraTags = (if minDim shelf /= dim
-                         then [ "'debug-minShelf=+" <> printDim (minDim shelf) ]
-                         else []
-                        ) ++
-                       ( if maxDim shelf /= dim'
-                         then ["'debug-maxShelf=+" <> printDim (maxDim shelf) ]
-                         else []
-                       ) ++
-                       ( if bottomOffset shelf /= bottom 
-                         then ["'debug-bottom=+" <> tshow (bottomOffset shelf) ]
-                         else []
-                       )
-        let tags = toList tagm <> (if tagIsPresent shelf "debug" then extraTags else [])
-        case tags of
-          [] -> return new
-          _ -> do
-              let tagOps = foldMap parseTagOperations tags
-              updateShelfTags tagOps new
-    [] -> error $ "Shelf " <> unpack name <> " not found. Can't update it"
-    _ -> error $ "To many shelves named " <> unpack name <> " not found. Can't update it"
+mkUpdateShelvesWithFormula :: (WH s Dimension) -> (WH s Dimension) -> (WH s Double) -> Maybe Text -> Shelf s  -> WH s (WH s (Shelf s))
+mkUpdateShelvesWithFormula dimW dimW' bottomW tagm shelf = do
+    dim <- dimW
+    dim' <- dimW'
+    bottom <- bottomW
+    let extraTags = (if minDim shelf /= dim
+                     then [ "'debug-minShelf=+" <> printDim (minDim shelf) ]
+                     else []
+                    ) ++
+                   ( if maxDim shelf /= dim'
+                     then ["'debug-maxShelf=+" <> printDim (maxDim shelf) ]
+                     else []
+                   ) ++
+                   ( if bottomOffset shelf /= bottom 
+                     then ["'debug-bottom=+" <> tshow (bottomOffset shelf) ]
+                     else []
+                   )
+    let tags = toList tagm <> (if tagIsPresent shelf "debug" then extraTags else [])
+    return do
+            new <- updateShelf (\s -> s { minDim = dim, maxDim = dim', bottomOffset = bottom }) shelf
+            case tags of
+              [] -> return new
+              _ -> do
+                  let tagOps = foldMap parseTagOperations tags
+                  updateShelfTags tagOps new
 
 -- | Read a csv describing how to split a shelf
 -- The user basically gives a new length, width, and depth
