@@ -307,6 +307,16 @@ transformRef' (o:os) ('[':c:d:']':cs) = chr ni : transformRef' os cs where
   di = ord(d)
   oi = ord(o)
   ni = ci + di - oi
+transformRef' (o:os) ('[':c:']':cs) | c `elem` ['0','1'] = chr ni : transformRef' os cs where
+  -- swap mod 2 0: 01 23 45 or 1; 12 34 56 
+  -- ie +1 or -1 depending ing c is 
+  oi = ord(o)
+  ni =  case (c, (oi - ord('0')) `mod` 2) of
+         ('0', 0 ) -> oi + 1
+         ('1', 1) -> oi  +1
+         _-> oi -1
+
+transformRef' os ('[':c:']':cs) = transformRef' os ('[':'1':c:']':cs) where
 transformRef' (o:os) (c:cs) = case c of
   '_' -> o:transformRef' os cs
   '+' -> (succ o):transformRef' os cs
